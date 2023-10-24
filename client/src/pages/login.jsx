@@ -2,6 +2,7 @@ import React from "react";
 import { Col, Row, Card, Button, Form, Input, message } from 'antd';
 import logo from '../assets/logo_white.jpg'
 import { useNavigate } from 'react-router-dom'
+import request from '../service/request'
 
 function Login() {
     const navigate = useNavigate()
@@ -22,9 +23,23 @@ function Login() {
                     <Form
                         labelCol={{ md: { span: 4 } }}
                         onFinish={(values) => {
-                            console.log('Success:', values);
-                            message.success('success: login')
-                            navigate('/admin/workbench')
+                            console.log('values: ', values)
+                            request({
+                                method: 'post',
+                                url: '/user/login',
+                                data: values
+                            }).then((res) => {
+                                if (res.status == 200) {
+                                    localStorage.setItem('u_id', res.data.data.u_id)
+                                    localStorage.setItem('name', res.data.data.name)
+                                    localStorage.setItem('position', res.data.data.position)
+                                    console.log('localStorage: ', localStorage)
+                                    message.success('success: login')
+                                    navigate('/admin/workbench')
+                                }
+                            }).catch((err) => {
+                                console.error(err)
+                            })
                         }}
                         onFinishFailed={(errorInfo) => {
                             console.log('Failed:', errorInfo);

@@ -11,7 +11,6 @@ import {
 import { Layout, Menu, Button, theme, Dropdown, Breadcrumb, message } from 'antd';
 import logo from '../assets/logo_white.jpg'
 import { useLocation, useNavigate } from 'react-router-dom'
-import BreadcrumbItem from 'antd/es/breadcrumb/BreadcrumbItem';
 
 const { Header, Sider, Content } = Layout;
 // 下拉菜单 items
@@ -38,6 +37,21 @@ const menuItems = [
         label: '工作台',
     },
     {
+        key: '/admin/user',
+        icon: <UserOutlined />,
+        label: '账号管理',
+        children: [
+            {
+                label: '账号列表',
+                key: '/admin/user/user_list'
+            },
+            {
+                label: '职位类型',
+                key: '/admin/user/user_type'
+            }
+        ]
+    },
+    {
         key: '/admin/talent',
         icon: <UserOutlined />,
         label: '达人管理',
@@ -45,7 +59,7 @@ const menuItems = [
             {
                 label: '达人列表',
                 key: '/admin/talent/talent_list'
-            },
+            }
         ]
     },
     {
@@ -56,7 +70,7 @@ const menuItems = [
             {
                 label: '排班列表',
                 key: '/admin/live/live_list'
-            },
+            }
         ]
     },
     {
@@ -71,7 +85,7 @@ const menuItems = [
             {
                 label: '商品库存',
                 key: '/admin/pallet/product_list'
-            },
+            }
         ]
     },
     {
@@ -82,7 +96,7 @@ const menuItems = [
             {
                 label: '合同列表',
                 key: '/admin/contract/contract_list'
-            },
+            }
         ]
     }
 ]
@@ -197,6 +211,7 @@ const MyLayout = ({ children }) => {
                     >
                         <img src={logo} style={{ width: '30px', borderRadius: '100%', float: 'right', margin: '20px 20px 0 0' }} />
                     </Dropdown>
+                    <span  style={{ float: 'right', margin: 'auto 20px' }}>欢迎你，{localStorage.getItem('name')}</span>
                 </Header>
                 <Content
                     style={{
