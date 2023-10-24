@@ -23,7 +23,6 @@ function Login() {
                     <Form
                         labelCol={{ md: { span: 4 } }}
                         onFinish={(values) => {
-                            console.log('values: ', values)
                             request({
                                 method: 'post',
                                 url: '/user/login',
