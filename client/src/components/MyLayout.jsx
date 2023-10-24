@@ -111,11 +111,9 @@ const createBreadcrumb = (key) => {
     const demoFn = (_arr) => {
         _arr.forEach(n => {
             const { children, ...info } = n
-            
+            arrObj.push(info)
             if (n.children) {
                 demoFn(n.children)
-            } else {
-                arrObj.push(info)
             }
         })
     }
