@@ -105,7 +105,7 @@ function UserList() {
         })
     };
 
-    // 查询
+    // 查询、清空筛选
     const onFinish = (values) => {
         setTableParams({
             ...tableParams,

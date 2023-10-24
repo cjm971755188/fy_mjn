@@ -9,10 +9,10 @@ router.post('/login', (req, res) => {
   db.query(sql, (err, results) => {
     if (err) throw err;
     if (results.length == 0) {
-      res.send({ code: 200, data: {}, msg: '用户名错误' })
+      res.send({ code: 201, data: {}, msg: '用户名错误' })
     } else {
       if (params.password != results[0].password) {
-        res.send({ code: 200, data: {}, msg: '密码错误' })
+        res.send({ code: 201, data: {}, msg: '密码错误' })
       } else {
         res.send({ code: 200, data: results[0], msg: '登录成功' })
       }

@@ -28,13 +28,15 @@ function Login() {
                                 url: '/user/login',
                                 data: values
                             }).then((res) => {
-                                if (res.status == 200) {
+                                if (res.data.code == 200) {
                                     localStorage.setItem('u_id', res.data.data.u_id)
                                     localStorage.setItem('name', res.data.data.name)
                                     localStorage.setItem('position', res.data.data.position)
                                     console.log('localStorage: ', localStorage)
                                     message.success('success: login')
                                     navigate('/admin/workbench')
+                                } else {
+                                    message.error(`error: ${res.data.msg}`)
                                 }
                             }).catch((err) => {
                                 console.error(err)
