@@ -60,14 +60,8 @@ function UserPositionType() {
             console.error(err)
         })
     };
-
-    useEffect(() => {
-        fetchData();
-    }, [JSON.stringify(tableParams)])
+    
     const handleTableChange = (pagination, filters, sorter) => {
-        console.log('pagination: ', pagination)
-        console.log('filters: ', filters)
-        console.log('sorter: ', sorter)
         setTableParams({
             pagination,
             filters,
@@ -80,6 +74,9 @@ function UserPositionType() {
         }
     }
 
+    useEffect(() => {
+        fetchData();
+    }, [JSON.stringify(tableParams)])
     return (
         <div>
             <Card

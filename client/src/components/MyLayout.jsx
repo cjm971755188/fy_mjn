@@ -7,6 +7,7 @@ import {
     AreaChartOutlined,
     CarryOutOutlined,
     AuditOutlined,
+    TeamOutlined
 } from '@ant-design/icons';
 import { Layout, Menu, Button, theme, Dropdown, Breadcrumb, message } from 'antd';
 import logo from '../assets/logo_white.jpg'
@@ -39,10 +40,10 @@ const menuItems = [
     {
         key: '/admin/user',
         icon: <UserOutlined />,
-        label: '账号管理',
+        label: '用户管理',
         children: [
             {
-                label: '账号列表',
+                label: '用户列表',
                 key: '/admin/user/user_list'
             },
             {
@@ -53,7 +54,7 @@ const menuItems = [
     },
     {
         key: '/admin/talent',
-        icon: <UserOutlined />,
+        icon: <TeamOutlined />,
         label: '达人管理',
         children: [
             {
@@ -155,6 +156,7 @@ const MyLayout = ({ children }) => {
         } else if (key == 'changePassword') {
             message.info('error: changePassword incomplete')
         } else if (key == 'logOut') {
+            localStorage.clear()
             navigate('/')
         } else {
             message.error('error: Dropdown onClick')
@@ -167,10 +169,10 @@ const MyLayout = ({ children }) => {
     let tempMenu = searchUrlKey(pathname)
     // 面包屑
     let [bread, setBread] = useState([])
+
     useEffect(() => {
         setBread(createBreadcrumb(pathname))
     }, [pathname])
-
     return (
         <Layout style={{ width: '100vw', height: '100vh' }}>
             <Sider trigger={null} collapsible collapsed={collapsed}>

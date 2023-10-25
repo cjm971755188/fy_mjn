@@ -28,23 +28,23 @@ function Login() {
                                 url: '/user/login',
                                 data: values
                             }).then((res) => {
-                                if (res.data.code == 200) {
-                                    localStorage.setItem('u_id', res.data.data.u_id)
-                                    localStorage.setItem('name', res.data.data.name)
-                                    localStorage.setItem('position', res.data.data.position)
-                                    console.log('localStorage: ', localStorage)
-                                    message.success('success: login')
-                                    navigate('/admin/workbench')
-                                } else {
-                                    message.error(`error: ${res.data.msg}`)
+                                if (res.status == 200) {
+                                    if (res.data.code == 200) {
+                                        localStorage.setItem('u_id', res.data.data.u_id)
+                                        localStorage.setItem('name', res.data.data.name)
+                                        localStorage.setItem('up_id', res.data.data.up_id)
+                                        console.log('localStorage: ', localStorage)
+                                        message.success('登录成功')
+                                        navigate('/admin/workbench')
+                                    } else {
+                                        message.error(res.data.msg)
+                                    }
                                 }
                             }).catch((err) => {
                                 console.error(err)
                             })
                         }}
-                        onFinishFailed={(errorInfo) => {
-                            console.log('Failed:', errorInfo);
-                        }}
+                        onFinishFailed={(errorInfo) => { console.log('Failed:', errorInfo) }}
                     >
                         <Form.Item
                             label="账号"
