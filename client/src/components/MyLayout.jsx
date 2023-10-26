@@ -9,19 +9,16 @@ import {
     AuditOutlined,
     TeamOutlined
 } from '@ant-design/icons';
-import { Layout, Menu, Button, theme, Dropdown, Breadcrumb, message } from 'antd';
+import { Layout, Menu, Button, theme, Dropdown, Breadcrumb, Form, Modal, Input, message } from 'antd';
 import logo from '../assets/logo_white.jpg'
 import { useLocation, useNavigate } from 'react-router-dom'
+import request from '../service/request'
 
 const { Header, Sider, Content } = Layout;
 // 下拉菜单 items
 const items = [
     {
-        key: 'userCenter',
-        label: (<a>个人中心</a>)
-    },
-    {
-        key: 'changePassword',
+        key: 'editPassword',
         label: (<a>修改密码</a>)
     },
     {
@@ -93,11 +90,13 @@ const menuItemsTotal = [
             {
                 label: '用户列表',
                 key: '/admin/user/user_list'
-            },
+            }
+            /*
             {
                 label: '职位类型',
                 key: '/admin/user/user_type'
             }
+            */
         ]
     }
 ]
@@ -167,10 +166,12 @@ const MyLayout = ({ children }) => {
     const navigate = useNavigate()
     // 个人中心conclick
     const onClick = ({ key }) => {
-        if (key == 'userCenter') {
-            message.info('error: userCenter incomplete')
-        } else if (key == 'changePassword') {
-            message.info('error: changePassword incomplete')
+        if (key == 'editPassword') {
+            setIsShowEdit(true)
+            editForm.setFieldsValue({
+                uid: localStorage.getItem('uid'),
+                name: localStorage.getItem('name')
+            })
         } else if (key == 'logOut') {
             localStorage.clear()
             navigate('/')
@@ -187,7 +188,11 @@ const MyLayout = ({ children }) => {
     let [bread, setBread] = useState([])
     // 权限菜单配置
     let menuItems = getMenuItems(localStorage.getItem('ut_id'))
-    
+
+    // 修改用户信息
+    const [isShowEdit, setIsShowEdit] = useState(false)
+    const [editForm] = Form.useForm()
+
     useEffect(() => {
         setBread(createBreadcrumb(pathname))
     }, [pathname])
@@ -231,6 +236,54 @@ const MyLayout = ({ children }) => {
                     >
                         <img src={logo} style={{ width: '30px', borderRadius: '100%', float: 'right', margin: '20px 20px 0 0' }} />
                     </Dropdown>
+                    <Modal
+                        title='修改密码'
+                        open={isShowEdit}
+                        maskClosable={false}
+                        onOk={() => { editForm.submit() }}
+                        onCancel={() => setIsShowEdit(false)}
+                    >
+                        <Form
+                            form={editForm}
+                            onFinish={(values) => {
+                                request({
+                                    method: 'post',
+                                    url: '/user/editPassword',
+                                    data: values
+                                }).then((res) => {
+                                    if (res.status == 200) {
+                                        if (res.data.code == 200) {
+                                            setIsShowEdit(false)
+                                            editForm.resetFields();
+                                            message.success(res.data.msg)
+                                        } else {
+                                            message.error(res.data.msg)
+                                        }
+                                    } else {
+                                        message.error(res.data.msg)
+                                    }
+                                }).catch((err) => {
+                                    console.error(err)
+                                })
+                            }}
+                        >
+                            <Form.Item label="编号" name="uid" rules={[{ required: true, message: '编号不能为空' }]}>
+                                <Input disabled={true} />
+                            </Form.Item>
+                            <Form.Item label="姓名" name="name" rules={[{ required: true, message: '姓名不能为空' }]}>
+                                <Input disabled={true} />
+                            </Form.Item>
+                            <Form.Item label="原密码" name="password" rules={[{ required: true, message: '原密码不能为空' }]}>
+                                <Input type='password' />
+                            </Form.Item>
+                            <Form.Item label="新密码" name="password2" rules={[{ required: true, message: '新密码不能为空' }]}>
+                                <Input type='password' />
+                            </Form.Item>
+                            <Form.Item label="确认新密码" name="password3" rules={[{ required: true, message: '确认新密码不能为空' }]}>
+                                <Input type='password' />
+                            </Form.Item>
+                        </Form>
+                    </Modal>
                     <span style={{ float: 'right', margin: 'auto 20px' }}>欢迎你，{localStorage.getItem('name')}</span>
                 </Header>
                 <Content

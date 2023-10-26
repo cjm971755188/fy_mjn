@@ -35,7 +35,6 @@ function Login() {
                                         localStorage.setItem('uc_id', res.data.data.uc_id)
                                         localStorage.setItem('ud_id', res.data.data.ud_id)
                                         localStorage.setItem('ut_id', res.data.data.ut_id)
-                                        console.log('localStorage: ', localStorage)
                                         message.success('登录成功')
                                         navigate('/admin/workbench')
                                     } else {
@@ -50,7 +49,7 @@ function Login() {
                     >
                         <Form.Item
                             label="账号"
-                            name="username"
+                            name="uid"
                             rules={[
                                 {
                                     required: true,

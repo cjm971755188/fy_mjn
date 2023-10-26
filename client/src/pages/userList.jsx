@@ -53,7 +53,6 @@ function UserList() {
             render: (_, record) => (
                 <Space size="middle">
                     <a onClick={() => {
-                        console.log('record: ', record);
                         editForm.setFieldsValue(record)
                         setIsShowEdit(true)
                     }}>修改信息</a>
@@ -384,7 +383,6 @@ function UserList() {
                 <Form
                     form={editForm}
                     onFinish={(values) => {
-                        console.log('editUser: ', values);
                         request({
                             method: 'post',
                             url: '/user/editUser',

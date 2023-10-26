@@ -5,7 +5,7 @@ const db = require('../config/db')
 // 登录
 router.post('/login', (req, res) => {
   let params = req.body
-  let sql = `SELECT * FROM user where uid = '${params.username}'`
+  let sql = `SELECT * FROM user where uid = '${params.uid}'`
   db.query(sql, (err, results) => {
     if (err) throw err;
     if (results.length == 0) {
@@ -16,6 +16,30 @@ router.post('/login', (req, res) => {
       res.send({ code: 201, data: {}, msg: '该用户已被禁用' })
     } else {
       res.send({ code: 200, data: results[0], msg: '登录成功' })
+    }
+  })
+})
+
+// 修改密码
+router.post('/editPassword', (req, res) => {
+  let params = req.body
+  let sql = `SELECT * FROM user where uid = '${params.uid}'`
+  db.query(sql, (err, results) => {
+    if (err) throw err;
+    if (results.length == 0) {
+      res.send({ code: 201, data: {}, msg: '用户名错误' })
+    } else if (params.password != results[0].password) {
+      res.send({ code: 201, data: {}, msg: '密码错误' })
+    } else if (params.password2 != params.password3) {
+      res.send({ code: 201, data: {}, msg: '两次密码输入不一致' })
+    } else if (params.password == params.password2) {
+      res.send({ code: 201, data: {}, msg: '新密码与原密码相同' })
+    } else {
+      let sql = `UPDATE user SET password = ${params.password2} where uid = '${params.uid}'`
+      db.query(sql, (err, results) => {
+        if (err) throw err;
+        res.send({ code: 200, data: {}, msg: '修改成功' })
+      })
     }
   })
 })
@@ -267,6 +291,7 @@ router.post('/getAllType', (req, res) => {
   })
 })
 
+/*
 // 获取职位列表
 router.post('/getTypeList', (req, res) => {
   let params = req.body
@@ -296,5 +321,6 @@ router.post('/getTypeList', (req, res) => {
     }
   })
 })
+*/
 
 module.exports = router
