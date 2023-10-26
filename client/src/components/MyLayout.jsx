@@ -31,26 +31,11 @@ const items = [
 ];
 
 // 左侧菜单 menus
-const menuItems = [
+const menuItemsTotal = [
     {
         key: '/admin/workbench',
         icon: <AreaChartOutlined />,
         label: '工作台',
-    },
-    {
-        key: '/admin/user',
-        icon: <UserOutlined />,
-        label: '用户管理',
-        children: [
-            {
-                label: '用户列表',
-                key: '/admin/user/user_list'
-            },
-            {
-                label: '职位类型',
-                key: '/admin/user/user_type'
-            }
-        ]
     },
     {
         key: '/admin/talent',
@@ -99,8 +84,39 @@ const menuItems = [
                 key: '/admin/contract/contract_list'
             }
         ]
+    },
+    {
+        key: '/admin/user',
+        icon: <UserOutlined />,
+        label: '用户管理',
+        children: [
+            {
+                label: '用户列表',
+                key: '/admin/user/user_list'
+            },
+            {
+                label: '职位类型',
+                key: '/admin/user/user_type'
+            }
+        ]
     }
 ]
+
+// 查找对应的menu
+const getMenuItems = (key) => {
+    let arrObj = []
+    for (let i = 0; i < menuItemsTotal.length; i++) {
+        let menu = menuItemsTotal[i];
+        if (key >= '3') {
+            if (menu.label != '用户管理') {
+                arrObj.push(menu)
+            }
+        } else {
+            arrObj = menuItemsTotal
+        }
+    }
+    return arrObj
+}
 
 // 查找对应的menu
 const searchUrlKey = (key) => {
@@ -116,7 +132,7 @@ const searchUrlKey = (key) => {
             }
         })
     }
-    demoFn(menuItems)
+    demoFn(menuItemsTotal)
     return arrObj
 }
 
@@ -132,7 +148,7 @@ const createBreadcrumb = (key) => {
             }
         })
     }
-    demoFn(menuItems)
+    demoFn(menuItemsTotal)
     // 过滤
     const temp = arrObj.filter(m => key.includes(m.key))
     if (temp.length > 0) {
@@ -169,7 +185,9 @@ const MyLayout = ({ children }) => {
     let tempMenu = searchUrlKey(pathname)
     // 面包屑
     let [bread, setBread] = useState([])
-
+    // 权限菜单配置
+    let menuItems = getMenuItems(localStorage.getItem('ut_id'))
+    
     useEffect(() => {
         setBread(createBreadcrumb(pathname))
     }, [pathname])
@@ -213,7 +231,7 @@ const MyLayout = ({ children }) => {
                     >
                         <img src={logo} style={{ width: '30px', borderRadius: '100%', float: 'right', margin: '20px 20px 0 0' }} />
                     </Dropdown>
-                    <span  style={{ float: 'right', margin: 'auto 20px' }}>欢迎你，{localStorage.getItem('name')}</span>
+                    <span style={{ float: 'right', margin: 'auto 20px' }}>欢迎你，{localStorage.getItem('name')}</span>
                 </Header>
                 <Content
                     style={{
@@ -223,13 +241,13 @@ const MyLayout = ({ children }) => {
                         background: colorBgContainer,
                     }}
                 >
-                    <Breadcrumb 
-                        style={{marginBottom: '20px'}}
+                    <Breadcrumb
+                        style={{ marginBottom: '20px' }}
                         items={
                             bread.map(n => {
                                 return { title: <a href={n.key}>{n.label}</a> }
                             })
-                        } 
+                        }
                     />
                     {children}
                 </Content>

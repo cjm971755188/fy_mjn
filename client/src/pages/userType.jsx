@@ -1,44 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Space, Form, Input, Modal, Button, message } from 'antd';
+import { Card, Table, Space, Form, Input, Modal, Button, Select, Switch, Popconfirm, message } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import request from '../service/request'
 
-const columns = [
-    {
-        title: '编号',
-        dataIndex: 'up_id',
-        key: 'up_id',
-    },
-    {
-        title: '职位名称',
-        dataIndex: 'position',
-        key: 'position',
-    },
-    {
-        title: '操作',
-        key: 'action',
-        render: (_, record) => (
-            <Space size="middle">
-                <a>删除</a>
-            </Space>
-        ),
-    }
-]
+function UserType() {
+    const columns = [
+        { title: '编号', dataIndex: 'ut_id', key: 'ut_id' },
+        { title: '职位', dataIndex: 'type', key: 'type' }
+    ]
 
-function UserPositionType() {
-    const [data, setData] = useState([{up_id: 0}]);
+    // 传入数据，分页
+    const [data, setData] = useState();
     const [loading, setLoading] = useState(false);
     const [tableParams, setTableParams] = useState({
-        pagination: {
-            current: 1,
-            pageSize: 10,
-        },
+        filters: {},
+        pagination: {}
     });
     const fetchData = () => {
         setLoading(true)
         request({
             method: 'post',
-            url: '/user/getPositionList',
+            url: '/user/getTypeList',
             data: {
+                ut_id: localStorage.getItem('ut_id'),
+                filters: tableParams.filters,
                 pagination: {
                     current: tableParams.pagination.current - 1,
                     pageSize: tableParams.pagination.pageSize,
@@ -46,29 +31,30 @@ function UserPositionType() {
             }
         }).then((res) => {
             if (res.status == 200) {
-                setData(res.data.data)
-                setLoading(false)
-                setTableParams({
-                    ...tableParams,
-                    pagination: {
-                        ...tableParams.pagination,
-                        total: res.data.pagination.total,
-                      },
+                if (res.data.code == 200) {
+                    setData(res.data.data)
+                    setLoading(false)
+                    setTableParams({
+                        ...tableParams,
+                        pagination: {
+                            ...tableParams.pagination,
+                            total: res.data.pagination.total,
+                        },
                 })
+                } else {
+                    message.error(res.data.msg)
+                }
             }
         }).catch((err) => {
             console.error(err)
         })
     };
-    
     const handleTableChange = (pagination, filters, sorter) => {
         setTableParams({
             pagination,
             filters,
             ...sorter,
         });
-
-        // `dataSource` is useless since `pageSize` changed
         if (pagination.pageSize !== tableParams.pagination?.pageSize) {
             setData([]);
         }
@@ -79,21 +65,19 @@ function UserPositionType() {
     }, [JSON.stringify(tableParams)])
     return (
         <div>
-            <Card
-                title="职位列表"
-            >
+            <Card title="职位列表" >
                 <Table
-                    rowKey={(data) => data.up_id}
+                    style={{ margin: '20px auto' }}
+                    rowKey={(data) => data.ut_id}
                     columns={columns}
                     dataSource={data}
                     pagination={tableParams.pagination}
                     loading={loading}
                     onChange={handleTableChange}
-                    style={{ margin: '20px auto' }}
                 />
             </Card>
         </div>
     )
 }
 
-export default UserPositionType
+export default UserType

@@ -3,7 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 
 import Workbench from './pages/workbench.jsx'
 import UserList from './pages/userList.jsx'
-import UserPositionType from './pages/userPositionType.jsx'
+import UserType from './pages/userType.jsx'
 import TalentList from './pages/talentList.jsx'
 import LiveList from './pages/liveList.jsx'
 import PalletList from './pages/palletList.jsx'
@@ -16,7 +16,7 @@ function App() {
             <Routes>
                 <Route path='/workbench' element={<Workbench />} />
                 <Route path='/user/user_list' element={<UserList />} />
-                <Route path='/user/user_type' element={<UserPositionType />} />
+                <Route path='/user/user_type' element={<UserType />} />
                 <Route path='/talent/talent_list' element={<TalentList />} />
                 <Route path='/live/live_list' element={<LiveList />} />
                 <Route path='/pallet/pallet_list' element={<PalletList />} />

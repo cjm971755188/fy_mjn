@@ -30,9 +30,11 @@ function Login() {
                             }).then((res) => {
                                 if (res.status == 200) {
                                     if (res.data.code == 200) {
-                                        localStorage.setItem('u_id', res.data.data.u_id)
+                                        localStorage.setItem('uid', res.data.data.uid)
                                         localStorage.setItem('name', res.data.data.name)
-                                        localStorage.setItem('up_id', res.data.data.up_id)
+                                        localStorage.setItem('uc_id', res.data.data.uc_id)
+                                        localStorage.setItem('ud_id', res.data.data.ud_id)
+                                        localStorage.setItem('ut_id', res.data.data.ut_id)
                                         console.log('localStorage: ', localStorage)
                                         message.success('登录成功')
                                         navigate('/admin/workbench')

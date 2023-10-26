@@ -5,21 +5,11 @@ import request from '../service/request'
 
 function UserList() {
     const columns = [
-        {
-            title: '编号',
-            dataIndex: 'u_id',
-            key: 'u_id',
-        },
-        {
-            title: '姓名',
-            dataIndex: 'name',
-            key: 'name',
-        },
-        {
-            title: '职位',
-            dataIndex: 'position',
-            key: 'position',
-        },
+        { title: '编号', dataIndex: 'uid', key: 'uid' },
+        { title: '姓名', dataIndex: 'name', key: 'name' },
+        { title: '公司', dataIndex: 'company', key: 'company' },
+        { title: '部门', dataIndex: 'department', key: 'department' },
+        { title: '职位', dataIndex: 'type', key: 'type' },
         {
             title: '状态',
             dataIndex: 'status',
@@ -27,18 +17,18 @@ function UserList() {
             render: (_, record) => (
                 <Switch
                     defaultChecked={() => {
-                        if (record.status == '正常') {
+                        if (record.status == '1') {
                             return true
                         } else {
                             return false
                         }
                     }}
-                    onChange={(checked, e) => {
+                    onChange={(checked) => {
                         request({
                             method: 'post',
                             url: '/user/editUserStatus',
                             data: {
-                                u_id: record.u_id,
+                                uid: record.uid,
                                 checked: checked
                             }
                         }).then((res) => {
@@ -63,17 +53,18 @@ function UserList() {
             render: (_, record) => (
                 <Space size="middle">
                     <a onClick={() => {
+                        console.log('record: ', record);
                         editForm.setFieldsValue(record)
                         setIsShowEdit(true)
-                    }}>修改</a>
+                    }}>修改信息</a>
                     <Popconfirm
-                        title="确认要删除改用户吗"
+                        title="确认要删除该用户吗"
                         onConfirm={() => {
                             request({
                                 method: 'post',
                                 url: '/user/deleteUser',
                                 data: {
-                                    u_id: record.u_id,
+                                    uid: record.uid,
                                     name: record.name,
                                 }
                             }).then((res) => {
@@ -105,7 +96,10 @@ function UserList() {
     const [loading, setLoading] = useState(false);
     const [tableParams, setTableParams] = useState({
         filters: {},
-        pagination: {}
+        pagination: {
+            current: 1,
+            pageSize: 10
+        }
     });
     const fetchData = () => {
         setLoading(true)
@@ -113,7 +107,12 @@ function UserList() {
             method: 'post',
             url: '/user/getUserList',
             data: {
-                up_id: localStorage.getItem('up_id'),
+                ids: {
+                    uid: localStorage.getItem('uid'),
+                    uc_id: localStorage.getItem('uc_id'),
+                    ud_id: localStorage.getItem('ud_id'),
+                    ut_id: localStorage.getItem('ut_id')
+                },
                 filters: tableParams.filters,
                 pagination: {
                     current: tableParams.pagination.current - 1,
@@ -151,22 +150,83 @@ function UserList() {
         }
     }
 
-    // 获取所有职位
-    const [positionData, setPositionData] = useState();
-    const [loadingSelect, setLoadingSelect] = useState(false);
-    const getPositionData = () => {
-        setLoadingSelect(true)
+    // 添加新用户
+    const [isShowAdd, setIsShowAdd] = useState(false)
+    const [addForm] = Form.useForm()
+
+    // 修改用户信息
+    const [isShowEdit, setIsShowEdit] = useState(false)
+    const [editForm] = Form.useForm()
+
+    // 获取所有公司
+    const [companyData, setCompanyData] = useState();
+    const [loadingCompany, setLoadingCompany] = useState(false);
+    const getCompanyData = () => {
+        setLoadingCompany(true)
         request({
             method: 'post',
-            url: '/user/getAllPosition',
+            url: '/user/getAllCompany',
             data: {
-                up_id: localStorage.getItem('up_id')
+                uc_id: localStorage.getItem('uc_id'),
+                ut_id: localStorage.getItem('ut_id')
             }
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setPositionData(res.data.data)
-                    setLoadingSelect(false)
+                    setCompanyData(res.data.data)
+                    setLoadingCompany(false)
+                } else {
+                    message.error(res.data.msg)
+                }
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    };
+
+    // 获取所有部门
+    const [departmentData, setDepartmentData] = useState();
+    const [loadingDepartment, setLoadingDepartment] = useState(false);
+    const getDepartmentData = () => {
+        setLoadingDepartment(true)
+        request({
+            method: 'post',
+            url: '/user/getAllDepartment',
+            data: {
+                ud_id: localStorage.getItem('ud_id'),
+                ut_id: localStorage.getItem('ut_id')
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setDepartmentData(res.data.data)
+                    setLoadingDepartment(false)
+                } else {
+                    message.error(res.data.msg)
+                }
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    };
+
+    // 获取所有职位
+    const [typeData, setTypeData] = useState();
+    const [loadingType, setLoadingType] = useState(false);
+    const getTypeData = () => {
+        setLoadingType(true)
+        request({
+            method: 'post',
+            url: '/user/getAllType',
+            data: {
+                uc_id: localStorage.getItem('uc_id'),
+                ut_id: localStorage.getItem('ut_id')
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setTypeData(res.data.data)
+                    setLoadingType(false)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -193,14 +253,6 @@ function UserList() {
         })
     };
 
-    // 添加新用户
-    const [isShowAdd, setIsShowAdd] = useState(false)
-    const [addForm] = Form.useForm()
-
-    // 修改用户信息
-    const [isShowEdit, setIsShowEdit] = useState(false)
-    const [editForm] = Form.useForm()
-
     useEffect(() => {
         fetchData();
     }, [JSON.stringify(tableParams)])
@@ -221,14 +273,30 @@ function UserList() {
                     form={selectForm}
                     onFinish={onFinish}
                 >
-                    <Form.Item label='编号' name='u_id'><Input /></Form.Item>
-                    <Form.Item label='姓名' name='name'><Input /></Form.Item>
-                    <Form.Item label='职位' name='up_id'>
+                    <Form.Item label='编号' name='uid' style={{marginBottom: '20px'}}><Input /></Form.Item>
+                    <Form.Item label='姓名' name='name' style={{marginBottom: '20px'}}><Input /></Form.Item>
+                    <Form.Item label='公司' name='uc_id' style={{marginBottom: '20px'}}>
                         <Select
                             style={{ width: 160 }}
-                            loading={loadingSelect}
-                            options={positionData}
-                            onFocus={getPositionData}
+                            loading={loadingCompany}
+                            options={companyData}
+                            onFocus={getCompanyData}
+                        />
+                    </Form.Item>
+                    <Form.Item label='部门' name='ud_id' style={{marginBottom: '20px'}}>
+                        <Select
+                            style={{ width: 160 }}
+                            loading={loadingDepartment}
+                            options={departmentData}
+                            onFocus={getDepartmentData}
+                        />
+                    </Form.Item>
+                    <Form.Item label='职位' name='ut_id' style={{marginBottom: '20px'}}>
+                        <Select
+                            style={{ width: 160 }}
+                            loading={loadingType}
+                            options={typeData}
+                            onFocus={getTypeData}
                         />
                     </Form.Item>
                     <Form.Item>
@@ -240,7 +308,7 @@ function UserList() {
                 </Form>
                 <Table
                     style={{ margin: '20px auto' }}
-                    rowKey={(data) => data.u_id}
+                    rowKey={(data) => data.uid}
                     columns={columns}
                     dataSource={data}
                     pagination={tableParams.pagination}
@@ -257,11 +325,11 @@ function UserList() {
             >
                 <Form
                     form={addForm}
-                    onFinish={(n) => {
+                    onFinish={(values) => {
                         request({
                             method: 'post',
                             url: '/user/addUser',
-                            data: n
+                            data: values
                         }).then((res) => {
                             if (res.status == 200) {
                                 if (res.data.code == 200) {
@@ -280,32 +348,28 @@ function UserList() {
                         })
                     }}
                 >
-                    <Form.Item
-                        label="姓名"
-                        name="name"
-                        rules={[
-                            {
-                                required: true,
-                                message: '姓名不能为空',
-                            },
-                        ]}
-                    >
+                    <Form.Item label="姓名" name="name" rules={[ { required: true, message: '姓名不能为空' } ]}>
                         <Input placeholder="请输入新用户姓名" />
                     </Form.Item>
-                    <Form.Item
-                        label="职位"
-                        name="up_id"
-                        rules={[
-                            {
-                                required: true,
-                                message: '职位不能为空！',
-                            },
-                        ]}
-                    >
+                    <Form.Item label="公司" name="uc_id" rules={[ { required: true, message: '公司不能为空' } ]}>
                         <Select
-                            loading={loadingSelect}
-                            options={positionData}
-                            onFocus={getPositionData}
+                            loading={loadingCompany}
+                            options={companyData}
+                            onFocus={getCompanyData}
+                        />
+                    </Form.Item>
+                    <Form.Item label="部门" name="ud_id" rules={[ { required: true, message: '部门不能为空' } ]}>
+                        <Select
+                            loading={loadingDepartment}
+                            options={departmentData}
+                            onFocus={getDepartmentData}
+                        />
+                    </Form.Item>
+                    <Form.Item label="职位" name="ut_id" rules={[ { required: true, message: '职位不能为空' } ]}>
+                        <Select
+                            loading={loadingType}
+                            options={typeData}
+                            onFocus={getTypeData}
                         />
                     </Form.Item>
                 </Form>
@@ -319,11 +383,12 @@ function UserList() {
             >
                 <Form
                     form={editForm}
-                    onFinish={(n) => {
+                    onFinish={(values) => {
+                        console.log('editUser: ', values);
                         request({
                             method: 'post',
                             url: '/user/editUser',
-                            data: n
+                            data: values
                         }).then((res) => {
                             if (res.status == 200) {
                                 if (res.data.code == 200) {
@@ -342,39 +407,31 @@ function UserList() {
                         })
                     }}
                 >
-                    <Form.Item
-                        label="编号"
-                        name="u_id"
-                        rules={[{ required: true }]}
-                    >
+                    <Form.Item label="编号" name="uid" rules={[{ required: true }]}>
                         <Input disabled={true} />
                     </Form.Item>
-                    <Form.Item
-                        label="姓名"
-                        name="name"
-                        rules={[
-                            {
-                                required: true,
-                                message: '姓名不能为空',
-                            },
-                        ]}
-                    >
-                        <Input placeholder="请输入新用户姓名" />
+                    <Form.Item label="姓名" name="name" rules={[ { required: true, message: '姓名不能为空' } ]}>
+                        <Input />
                     </Form.Item>
-                    <Form.Item
-                        label="职位"
-                        name="position"
-                        rules={[
-                            {
-                                required: true,
-                                message: '职位不能为空！',
-                            },
-                        ]}
-                    >
+                    <Form.Item label="公司" name="company" rules={[ { required: true, message: '公司不能为空' } ]}>
                         <Select
-                            loading={loadingSelect}
-                            options={positionData}
-                            onFocus={getPositionData}
+                            loading={loadingCompany}
+                            options={companyData}
+                            onFocus={getCompanyData}
+                        />
+                    </Form.Item>
+                    <Form.Item label="部门" name="department" rules={[ { required: true, message: '部门不能为空' } ]}>
+                        <Select
+                            loading={loadingDepartment}
+                            options={departmentData}
+                            onFocus={getDepartmentData}
+                        />
+                    </Form.Item>
+                    <Form.Item label="职位" name="type" rules={[ { required: true, message: '职位不能为空' } ]}>
+                        <Select
+                            loading={loadingType}
+                            options={typeData}
+                            onFocus={getTypeData}
                         />
                     </Form.Item>
                 </Form>
