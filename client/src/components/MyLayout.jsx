@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import { Layout, Menu, Button, theme, Dropdown, Breadcrumb, Form, Modal, Input, message } from 'antd';
 import logo from '../assets/logo_white.jpg'
+import people from '../assets/people.jpg'
 import { useLocation, useNavigate } from 'react-router-dom'
 import request from '../service/request'
 
@@ -40,7 +41,11 @@ const menuItemsTotal = [
         label: '达人管理',
         children: [
             {
-                label: '达人列表',
+                label: '商机推进',
+                key: '/admin/talent/talent_preparation'
+            },
+            {
+                label: '合作达人',
                 key: '/admin/talent/talent_list'
             }
         ]
@@ -85,33 +90,21 @@ const menuItemsTotal = [
     {
         key: '/admin/user',
         icon: <UserOutlined />,
-        label: '用户管理',
-        children: [
-            {
-                label: '用户列表',
-                key: '/admin/user/user_list'
-            }
-            /*
-            {
-                label: '职位类型',
-                key: '/admin/user/user_type'
-            }
-            */
-        ]
+        label: '用户列表'
     }
 ]
 
 // 查找对应的menu
-const getMenuItems = (key) => {
+const getMenuItems = (ud_id, ut_id) => {
     let arrObj = []
     for (let i = 0; i < menuItemsTotal.length; i++) {
         let menu = menuItemsTotal[i];
-        if (key >= '3') {
-            if (menu.label != '用户管理') {
-                arrObj.push(menu)
-            }
+        if (ut_id == 'UT003' && menu.label == '用户列表') {
+            continue
+        } else if (ud_id == 'UD003' && menu.label == '达人管理') {
+            continue
         } else {
-            arrObj = menuItemsTotal
+            arrObj.push(menu)
         }
     }
     return arrObj
@@ -187,7 +180,7 @@ const MyLayout = ({ children }) => {
     // 面包屑
     let [bread, setBread] = useState([])
     // 权限菜单配置
-    let menuItems = getMenuItems(localStorage.getItem('ut_id'))
+    let menuItems = getMenuItems(localStorage.getItem('ud_id'), localStorage.getItem('ut_id'))
 
     // 修改用户信息
     const [isShowEdit, setIsShowEdit] = useState(false)
@@ -234,7 +227,7 @@ const MyLayout = ({ children }) => {
                     <Dropdown
                         menu={{ items, onClick }}
                     >
-                        <img src={logo} style={{ width: '30px', borderRadius: '100%', float: 'right', margin: '20px 20px 0 0' }} />
+                        <img src={people} style={{ width: '30px', borderRadius: '100%', float: 'right', margin: '20px 20px 0 0' }} />
                     </Dropdown>
                     <Modal
                         title='修改密码'

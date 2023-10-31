@@ -164,7 +164,7 @@ function UserList() {
         setLoadingCompany(true)
         request({
             method: 'post',
-            url: '/user/getAllCompany',
+            url: '/comment/getUserCompany',
             data: {
                 uc_id: localStorage.getItem('uc_id'),
                 ut_id: localStorage.getItem('ut_id')
@@ -190,7 +190,7 @@ function UserList() {
         setLoadingDepartment(true)
         request({
             method: 'post',
-            url: '/user/getAllDepartment',
+            url: '/comment/getUserDepartment',
             data: {
                 ud_id: localStorage.getItem('ud_id'),
                 ut_id: localStorage.getItem('ut_id')
@@ -216,7 +216,7 @@ function UserList() {
         setLoadingType(true)
         request({
             method: 'post',
-            url: '/user/getAllType',
+            url: '/comment/getUserType',
             data: {
                 uc_id: localStorage.getItem('uc_id'),
                 ut_id: localStorage.getItem('ut_id')
@@ -241,14 +241,6 @@ function UserList() {
         setTableParams({
             ...tableParams,
             filters: values
-        })
-    };
-
-    const onResetSelect = () => {
-        selectForm.resetFields();
-        setTableParams({
-            ...tableParams,
-            filters: {}
         })
     };
 
@@ -301,7 +293,13 @@ function UserList() {
                     <Form.Item>
                         <Space size={'middle'}>
                             <Button type="primary" htmlType="submit">查询</Button>
-                            <Button type="primary" onClick={onResetSelect}>清空筛选</Button>
+                            <Button type="primary" onClick={() => {
+                                selectForm.resetFields();
+                                setTableParams({
+                                    ...tableParams,
+                                    filters: {}
+                                })
+                            }}>清空筛选</Button>
                         </Space>
                     </Form.Item>
                 </Form>

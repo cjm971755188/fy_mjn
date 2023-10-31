@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Card, Button, Table, Tag, Space, Form, Input, Modal, message } from 'antd';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
-import UpLoadImg from '../components/upLoadImg.jsx'
 
 const columns = [
     {

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, Fragment } from 'react';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { message, Upload } from 'antd';
+
 const getBase64 = (img, callback) => {
     const reader = new FileReader();
     reader.addEventListener('load', () => callback(reader.result));
@@ -18,7 +19,7 @@ const beforeUpload = (file) => {
     return isJpgOrPng && isLt2M;
 };
 
-const UpLoadImg = () => {
+function UpLoadImg(props) {
     // 上传状态
     const [loading, setLoading] = useState(false);
     // 上传后的地址
@@ -34,6 +35,7 @@ const UpLoadImg = () => {
                 setLoading(false);
                 setImageUrl(url);
             });
+            props.setPicUrl(info.file.response.url);
         }
     };
     const uploadButton = (
@@ -44,19 +46,19 @@ const UpLoadImg = () => {
                     marginTop: 8,
                 }}
             >
-                Upload
+                {props.title}
             </div>
         </div>
     );
     return (
-        <>
+        <Fragment>
             <Upload
-                name="avatar"
+                name={props.name}
                 listType="picture-card"
                 className="avatar-uploader"
                 showUploadList={false}
                 // 上传的后端地址
-                action=""
+                action="http://localhost:3000/api/uploadimg"
                 beforeUpload={beforeUpload}
                 onChange={handleChange}
             >
@@ -72,7 +74,7 @@ const UpLoadImg = () => {
                     uploadButton
                 )}
             </Upload>
-        </>
+        </Fragment>
     );
 };
 export default UpLoadImg;
