@@ -87,4 +87,38 @@ router.post('/getPlatform', (req, res) => {
     })
 })
 
+// 获取所有联系人类型
+router.post('/getLiaisonType', (req, res) => {
+    let params = req.body
+    let sql = 'SELECT * FROM liaisontype'
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        data = []
+        for (let i = 0; i < results.length; i++) {
+            data.push({
+                label: results[i].type,
+                value: results[i].lt_id
+            })
+        }
+        res.send({ code: 200, data: data, msg: '' })
+    })
+})
+
+// 获取所有达人状态
+router.post('/getTalentStatus', (req, res) => {
+    let params = req.body
+    let sql = 'SELECT * FROM talentstatus'
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        data = []
+        for (let i = 0; i < results.length; i++) {
+            data.push({
+                label: results[i].status,
+                value: results[i].ts_id
+            })
+        }
+        res.send({ code: 200, data: data, msg: '' })
+    })
+})
+
 module.exports = router

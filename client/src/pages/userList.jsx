@@ -237,12 +237,6 @@ function UserList() {
 
     // 查询、清空筛选
     const [selectForm] = Form.useForm()
-    const onFinish = (values) => {
-        setTableParams({
-            ...tableParams,
-            filters: values
-        })
-    };
 
     useEffect(() => {
         fetchData();
@@ -262,10 +256,15 @@ function UserList() {
                 <Form
                     layout="inline"
                     form={selectForm}
-                    onFinish={onFinish}
+                    onFinish={(values) => {
+                        setTableParams({
+                            ...tableParams,
+                            filters: values
+                        })
+                    }}
                 >
-                    <Form.Item label='编号' name='uid' style={{marginBottom: '20px'}}><Input /></Form.Item>
-                    <Form.Item label='姓名' name='name' style={{marginBottom: '20px'}}><Input /></Form.Item>
+                    <Form.Item label='用户编号' name='uid' style={{marginBottom: '20px'}}><Input /></Form.Item>
+                    <Form.Item label='用户姓名' name='name' style={{marginBottom: '20px'}}><Input /></Form.Item>
                     <Form.Item label='公司' name='uc_id' style={{marginBottom: '20px'}}>
                         <Select
                             style={{ width: 160 }}

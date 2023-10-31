@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Space, Form, Input, Modal, Button, Image, Popconfirm, List, Select, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Avatar, message } from 'antd';
+import { PlusOutlined, CheckCircleTwoTone, ClockCircleTwoTone } from '@ant-design/icons';
 import request from '../service/request'
 import people from '../assets/people.jpg'
 import UpLoadImg from '../components/UpLoadImg'
@@ -8,79 +8,67 @@ import UpLoadImg from '../components/UpLoadImg'
 function TalentPreparation() {
     const columns = [
         { title: '编号', dataIndex: 'tid', key: 'tid' },
-        {
-            title: '头像',
-            dataIndex: 'pic',
-            key: 'pic',
-            render: (_, record) => (
-                <Image width={50} src={record.pic} fallback={people} />
-            ),
-        },
-        { title: '达人昵称', dataIndex: 'name', key: 'name' },
+        { title: '达人账号', dataIndex: 'ta_name', key: 'ta_name' },
+        { title: '账号ID', dataIndex: 'taID', key: 'taID' },
         {
             title: '达人寻找证明',
             dataIndex: 'search_pic',
             key: 'search_pic',
             render: (_, record) => (
-                <Image width={30} src={record.search_pic} />
-            ),
+                <Image width={50} src={record.search_pic} />
+            )
         },
-        { title: '联系人', dataIndex: 'liaison_name', key: 'liaison_name' },
-        { title: '群名', dataIndex: 'group_name', key: 'group_name' },
+        { title: '联系人类型', dataIndex: 'type', key: 'type' },
+        { title: '联系人姓名', dataIndex: 'liaison_name', key: 'liaison_name' },
+        { title: '联系人微信', dataIndex: 'liaison_vx', key: 'liaison_vx' },
+        { title: '沟通群名称', dataIndex: 'group_name', key: 'group_name' },
         {
             title: '达人推进证明',
             dataIndex: 'advance_pic',
             key: 'advance_pic',
             render: (_, record) => (
-                <Image width={30} src={record.advance_pic} />
-            ),
+                <Image width={50} src={record.advance_pic} />
+            )
         },
         {
             title: '状态',
             dataIndex: 'status',
-            key: 'status'
+            key: 'status',
+            render: (_, record) => (
+                <Space size="small">
+                    {record.status == '已推进' ? <CheckCircleTwoTone twoToneColor="#4ec990" /> : <ClockCircleTwoTone twoToneColor="#ffc814" />}
+                    <span>{record.status}</span>
+                </Space>
+            )
         },
         {
             title: '操作',
             key: 'action',
             render: (_, record) => (
                 <Space size="middle">
-                    <a onClick={() => {
-                        message.success('推进')
-                    }}>推进</a>
-                    <a onClick={() => {
-                        editForm.setFieldsValue(record),
-                            setIsShowEdit(true)
-                    }}>修改信息</a>
-                    <Popconfirm
-                        title="确认要删除该达人吗"
-                        onConfirm={() => {
-                            request({
-                                method: 'post',
-                                url: '/user/deleteUser',
-                                data: {
-                                    uid: record.uid,
-                                    name: record.name,
+                    {record.status == '已推进' ? null : <a onClick={() => {
+                        advanceForm.setFieldValue('tid', record.tid)
+                        advanceForm.setFieldValue('taID', record.taID)
+                        advanceForm.setFieldValue('ta_name', record.ta_name)
+                        setIsShowAdvance(true);
+                        request({
+                            method: 'post',
+                            url: '/comment/getLiaisonType',
+                            data: {}
+                        }).then((res) => {
+                            if (res.status == 200) {
+                                if (res.data.code == 200) {
+                                    setLiaisonTypeData(res.data.data)
+                                } else {
+                                    message.error(res.data.msg)
                                 }
-                            }).then((res) => {
-                                if (res.status == 200) {
-                                    if (res.data.code == 200) {
-                                        fetchData();
-                                        message.success(res.data.msg)
-                                    } else {
-                                        message.error(res.data.msg)
-                                    }
-                                }
-                            }).catch((err) => {
-                                console.error(err)
-                            })
-                        }}
-                        onCancel={() => { }}
-                        okText="删除"
-                        cancelText="取消"
-                    >
-                        <a onClick={() => { }}>删除</a>
-                    </Popconfirm>
+                            } else {
+                                message.error(res.data.msg)
+                            }
+                        }).catch((err) => {
+                            console.error(err)
+                        })
+                    }}>推进</a>}
                 </Space>
             )
         }
@@ -100,7 +88,7 @@ function TalentPreparation() {
         setLoading(true)
         request({
             method: 'post',
-            url: '/talent/getTalentList',
+            url: '/talent/getTalentPreparationList',
             data: {
                 ids: {
                     uid: localStorage.getItem('uid'),
@@ -145,21 +133,69 @@ function TalentPreparation() {
         }
     }
 
-    // 添加新用户
+    // 添加新达人
     const [isShowAdd, setIsShowAdd] = useState(false)
     const [addForm] = Form.useForm()
     const [isShowAddSearch, setIsShowAddSearch] = useState(false)
     const [addSearchList, setAddSearchList] = useState([])
-
-    // 修改用户信息
-    const [isShowEdit, setIsShowEdit] = useState(false)
-    const [editForm] = Form.useForm()
-
-    // 获取所有平台 + 多选框
     const [platformData, setPlatformData] = useState([])
+
+    // 推进资料填写
+    const [isShowAdvance, setIsShowAdvance] = useState(false)
+    const [advanceForm] = Form.useForm()
+    const [liaisonTypeData, setLiaisonTypeData] = useState([])
 
     // 查询、清空筛选
     const [selectForm] = Form.useForm()
+
+    // 获取联系人类型
+    const [typeData, setTypeData] = useState();
+    const [loadingType, setLoadingType] = useState(false);
+    const getTypeData = () => {
+        setLoadingType(true)
+        request({
+            method: 'post',
+            url: '/comment/getLiaisonType',
+            data: {
+                uc_id: localStorage.getItem('uc_id'),
+                ut_id: localStorage.getItem('ut_id')
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setTypeData(res.data.data)
+                    setLoadingType(false)
+                } else {
+                    message.error(res.data.msg)
+                }
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    };
+
+    // 获取所有达人状态
+    const [statusData, setStatusData] = useState();
+    const [loadingStatus, setLoadingStatus] = useState(false);
+    const getStatusData = () => {
+        setLoadingType(true)
+        request({
+            method: 'post',
+            url: '/comment/getTalentStatus',
+            data: {}
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setStatusData(res.data.data)
+                    setLoadingStatus(false)
+                } else {
+                    message.error(res.data.msg)
+                }
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    };
 
     useEffect(() => {
         fetchData();
@@ -200,15 +236,36 @@ function TalentPreparation() {
                 <Form
                     layout="inline"
                     form={selectForm}
-                    onFinish={() => {
+                    onFinish={(values) => {
+                        console.log('onFinish');
                         setTableParams({
                             ...tableParams,
                             filters: values
                         })
                     }}
                 >
-                    <Form.Item label='编号' name='uid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='姓名' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='达人编号' name='tid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='达人账号' name='ta_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='账号ID' name='taID' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='联系人类型' name='lt_id' style={{ marginBottom: '20px' }}>
+                        <Select
+                            style={{ width: 160 }}
+                            loading={loadingType}
+                            options={typeData}
+                            onFocus={getTypeData}
+                        />
+                    </Form.Item>
+                    <Form.Item label='联系人姓名' name='liaison_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='联系人微信' name='liaison_vx' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='沟通群名称' name='group_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='状态' name='ts_id' style={{ marginBottom: '20px' }}>
+                        <Select
+                            style={{ width: 160 }}
+                            loading={loadingStatus}
+                            options={statusData}
+                            onFocus={getStatusData}
+                        />
+                    </Form.Item>
                     <Form.Item>
                         <Space size={'middle'}>
                             <Button type="primary" htmlType="submit">查询</Button>
@@ -282,20 +339,43 @@ function TalentPreparation() {
                             options={platformData}
                         />
                     </Form.Item>
-                    <Form.Item label="头像" name="pic" rules={[{ required: true, message: '头像不能为空' }]}>
-                        <UpLoadImg title="上传头像" name="addPic" setPicUrl={(value) => { addForm.setFieldValue('pic', value) }} />
+                    <Form.Item label="达人账号" name="ta_name" rules={[{ required: true, message: '达人账号不能为空' }]}>
+                        <Select
+                            mode="tags"
+                            allowClear
+                            style={{
+                                width: '100%',
+                            }}
+                            placeholder="请输入新达人账号"
+                            onChange={(value) => {
+                                addForm.setFieldValue('ta_name', value)
+                            }}
+                            options={[]}
+                        />
                     </Form.Item>
-                    <Form.Item label="达人昵称" name="name" rules={[{ required: true, message: '达人昵称不能为空' }]}>
-                        <Input placeholder="请输入新达人昵称" />
+                    <Form.Item label="账号ID" name="taID" rules={[{ required: true, message: '账号ID不能为空' }]}>
+                        <Select
+                            mode="tags"
+                            allowClear
+                            style={{
+                                width: '100%',
+                            }}
+                            placeholder="请输入新达人的账号ID"
+                            onChange={(value) => {
+                                addForm.setFieldValue('taID', value)
+                            }}
+                            options={[]}
+                        />
                     </Form.Item>
                     <Form.Item label="相似达人" name="pic">
                         <Button onClick={() => {
-                            if (addForm.getFieldValue('name')) {
+                            if ((addForm.getFieldValue('ta_name') && addForm.getFieldValue('ta_name').length > 0) || (addForm.getFieldValue('taID') && addForm.getFieldValue('taID').length > 0)) {
                                 request({
                                     method: 'post',
                                     url: '/talent/searchSameTalent',
                                     data: {
-                                        name: addForm.getFieldValue('name')
+                                        ta_name: addForm.getFieldValue('ta_name'),
+                                        taID: addForm.getFieldValue('taID')
                                     }
                                 }).then((res) => {
                                     if (res.status == 200) {
@@ -317,7 +397,7 @@ function TalentPreparation() {
                             } else {
                                 setIsShowAddSearch(false)
                                 setAddSearchList([])
-                                message.error('未填写昵称，无法查询')
+                                message.error('未填写达人账号名/ID, 无法查询')
                             }
                         }}>查询</Button>
                     </Form.Item>
@@ -328,9 +408,9 @@ function TalentPreparation() {
                             renderItem={(item, index) => (
                                 <List.Item>
                                     <List.Item.Meta
-                                        avatar={<Image width={50} src={item.pic} fallback={people} preview={false} />}
-                                        title={<span>{`${item.name}->${item.u_name}`}</span>}
-                                        description={`销售平台：${item.platform}`}
+                                        avatar={<Image width={50} src={people} />}
+                                        title={<span>{`${item.ta_name}--->${item.name}`}</span>}
+                                        description={`当前销售平台：${item.platform}`}
                                     />
                                 </List.Item>
                             )}
@@ -342,25 +422,25 @@ function TalentPreparation() {
                 </Form>
             </Modal>
             <Modal
-                title='修改用户信息'
-                open={isShowEdit}
+                title='推进资料填写'
+                open={isShowAdvance}
                 maskClosable={false}
-                onOk={() => { editForm.submit() }}
-                onCancel={() => { setIsShowEdit(false) }}
+                onOk={() => { advanceForm.submit() }}
+                onCancel={() => { setIsShowAdvance(false); advanceForm.resetFields() }}
             >
                 <Form
-                    form={editForm}
+                    form={advanceForm}
                     onFinish={(values) => {
                         request({
                             method: 'post',
-                            url: '/user/editUser',
+                            url: '/talent/advanceTalent',
                             data: values
                         }).then((res) => {
                             if (res.status == 200) {
                                 if (res.data.code == 200) {
-                                    setIsShowEdit(false)
-                                    editForm.resetFields();
-                                    fetchData();
+                                    setIsShowAdvance(false)
+                                    fetchData()
+                                    advanceForm.resetFields()
                                     message.success(res.data.msg)
                                 } else {
                                     message.error(res.data.msg)
@@ -373,11 +453,39 @@ function TalentPreparation() {
                         })
                     }}
                 >
-                    <Form.Item label="编号" name="uid" rules={[{ required: true }]}>
-                        <Input disabled={true} />
+                    <Form.Item label="达人编号" name="tid" rules={[{ required: true, message: '达人编号不能为空' }]}>
+                        <Input disabled />
                     </Form.Item>
-                    <Form.Item label="姓名" name="name" rules={[{ required: true, message: '姓名不能为空' }]}>
-                        <Input />
+                    <Form.Item label="达人账号" name="ta_name" rules={[{ required: true, message: '达人账号不能为空' }]}>
+                        <Input disabled />
+                    </Form.Item>
+                    <Form.Item label="账号ID" name="taID" rules={[{ required: true, message: '账号ID不能为空' }]}>
+                        <Input disabled />
+                    </Form.Item>
+                    <Form.Item label="联系人类型" name="lt_id" rules={[{ required: true, message: '联系人类型不能为空' }]}>
+                        <Select
+                            allowClear
+                            style={{
+                                width: '100%',
+                            }}
+                            placeholder="请选择联系人类型"
+                            onChange={(value) => {
+                                advanceForm.setFieldValue('pids', value)
+                            }}
+                            options={liaisonTypeData}
+                        />
+                    </Form.Item>
+                    <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '联系人姓名不能为空' }]}>
+                        <Input placeholder="请输入联系人姓名" />
+                    </Form.Item>
+                    <Form.Item label="联系人微信" name="liaison_vx" rules={[{ required: true, message: '联系人微信不能为空' }]}>
+                        <Input placeholder="请输入联系人微信" />
+                    </Form.Item>
+                    <Form.Item label="沟通群名称" name="group_name" rules={[{ required: true, message: '沟通群名不能为空' }]}>
+                        <Input placeholder="请输入沟通群名" />
+                    </Form.Item>
+                    <Form.Item label="发货盘证明" name="advance_pic" rules={[{ required: true, message: '发货盘证明不能为空' }]} >
+                        <UpLoadImg title="发货盘证明" name="advance_pic" setPicUrl={(value) => { advanceForm.setFieldValue('advance_pic', value) }} />
                     </Form.Item>
                 </Form>
             </Modal>

@@ -126,17 +126,6 @@ function TalentList() {
                     >
                         <Input placeholder="请输入达人昵称（内部统称）" />
                     </Form.Item>
-                    <Form.Item
-                        label="照片"
-                        name="pid"
-                        rules={[
-                            {
-                                required: true
-                            },
-                        ]}
-                    >
-                        <UpLoadImg />
-                    </Form.Item>
                 </Form>
             </Modal>
         </div>
