@@ -5,13 +5,13 @@ import request from '../service/request'
 import people from '../assets/people.jpg'
 import UpLoadImg from '../components/UpLoadImg'
 
-function TalentPreparation() {
+function ChanceList() {
     const columns = [
-        { title: '编号', dataIndex: 'tid', key: 'tid' },
+        { title: '商机编号', dataIndex: 'tid', key: 'tid' },
         { title: '达人账号', dataIndex: 'ta_name', key: 'ta_name' },
-        { title: '账号ID', dataIndex: 'taID', key: 'taID' },
+        { title: '达人账号ID', dataIndex: 'taID', key: 'taID' },
         {
-            title: '达人寻找证明',
+            title: '寻找证明',
             dataIndex: 'search_pic',
             key: 'search_pic',
             render: (_, record) => (
@@ -21,9 +21,9 @@ function TalentPreparation() {
         { title: '联系人类型', dataIndex: 'type', key: 'type' },
         { title: '联系人姓名', dataIndex: 'liaison_name', key: 'liaison_name' },
         { title: '联系人微信', dataIndex: 'liaison_vx', key: 'liaison_vx' },
-        { title: '沟通群名称', dataIndex: 'group_name', key: 'group_name' },
+        { title: '沟通群', dataIndex: 'group_name', key: 'group_name' },
         {
-            title: '达人推进证明',
+            title: '推进证明',
             dataIndex: 'advance_pic',
             key: 'advance_pic',
             render: (_, record) => (
@@ -36,7 +36,7 @@ function TalentPreparation() {
             key: 'status',
             render: (_, record) => (
                 <Space size="small">
-                    {record.status == '已推进' ? <CheckCircleTwoTone twoToneColor="#4ec990" /> : <ClockCircleTwoTone twoToneColor="#ffc814" />}
+                    {record.status === '已推进' ? <CheckCircleTwoTone twoToneColor="#4ec990" /> : <ClockCircleTwoTone twoToneColor="#ffc814" />}
                     <span>{record.status}</span>
                 </Space>
             )
@@ -46,28 +46,23 @@ function TalentPreparation() {
             key: 'action',
             render: (_, record) => (
                 <Space size="middle">
-                    {record.status == '已推进' ? null : <a onClick={() => {
-                        advanceForm.setFieldValue('tid', record.tid)
-                        advanceForm.setFieldValue('taID', record.taID)
-                        advanceForm.setFieldValue('ta_name', record.ta_name)
-                        setIsShowAdvance(true);
-                        request({
-                            method: 'post',
-                            url: '/comment/getLiaisonType',
-                            data: {}
-                        }).then((res) => {
-                            if (res.status == 200) {
-                                if (res.data.code == 200) {
-                                    setLiaisonTypeData(res.data.data)
-                                } else {
-                                    message.error(res.data.msg)
-                                }
-                            } else {
-                                message.error(res.data.msg)
-                            }
-                        }).catch((err) => {
-                            console.error(err)
+                    <a onClick={() => {
+                        let pids = record.pids.split(',')
+                        let ta_name = record.ta_name.split(',')
+                        let taID = record.taID.split(',')
+                        editForm.setFieldsValue({
+                            ...record,
+                            pids,
+                            ta_name,
+                            taID
                         })
+                        setIsShowEdit(true)
+                    }}>修改信息</a>
+                    {record.status === '已推进' ? <a onClick={() => {
+                        setIsShowReport(true)
+                    }}>报备审批</a> : <a onClick={() => {
+                        advanceForm.setFieldsValue(record)
+                        setIsShowAdvance(true)
                     }}>推进</a>}
                 </Space>
             )
@@ -88,7 +83,7 @@ function TalentPreparation() {
         setLoading(true)
         request({
             method: 'post',
-            url: '/talent/getTalentPreparationList',
+            url: '/chance/getChanceList',
             data: {
                 ids: {
                     uid: localStorage.getItem('uid'),
@@ -133,17 +128,25 @@ function TalentPreparation() {
         }
     }
 
-    // 添加新达人
+    // 添加
     const [isShowAdd, setIsShowAdd] = useState(false)
     const [addForm] = Form.useForm()
     const [isShowAddSearch, setIsShowAddSearch] = useState(false)
     const [addSearchList, setAddSearchList] = useState([])
-    const [platformData, setPlatformData] = useState([])
 
-    // 推进资料填写
+    // 修改信息
+    const [isShowEdit, setIsShowEdit] = useState(false)
+    const [editForm] = Form.useForm()
+    const [isShowEditSearch, setIsShowEditSearch] = useState(false)
+    const [editSearchList, setEditSearchList] = useState([])
+
+    // 推进
     const [isShowAdvance, setIsShowAdvance] = useState(false)
     const [advanceForm] = Form.useForm()
-    const [liaisonTypeData, setLiaisonTypeData] = useState([])
+
+    // 报备
+    const [isShowReport, setIsShowReport] = useState(false)
+    const [reportForm] = Form.useForm()
 
     // 查询、清空筛选
     const [selectForm] = Form.useForm()
@@ -174,11 +177,11 @@ function TalentPreparation() {
         })
     };
 
-    // 获取所有达人状态
+    // 获取所有商机状态
     const [statusData, setStatusData] = useState();
     const [loadingStatus, setLoadingStatus] = useState(false);
     const getStatusData = () => {
-        setLoadingType(true)
+        setLoadingStatus(true)
         request({
             method: 'post',
             url: '/comment/getTalentStatus',
@@ -197,42 +200,37 @@ function TalentPreparation() {
         })
     };
 
+    // 获取所有商机状态
+    const [platformData, setPlatformData] = useState();
+    const [loadingPlatform, setLoadingPlatform] = useState(false);
+    const getPlatformData = () => {
+        setLoadingPlatform(true)
+        request({
+            method: 'post',
+            url: '/comment/getPlatform',
+            data: {}
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setPlatformData(res.data.data)
+                    setLoadingPlatform(false)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    };
+
     useEffect(() => {
         fetchData();
     }, [JSON.stringify(tableParams)])
     return (
         <div>
-            <Card
-                title="商机推进列表"
-                extra={
-                    <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={() => {
-                            setIsShowAdd(true);
-                            request({
-                                method: 'post',
-                                url: '/comment/getPlatform',
-                                data: {}
-                            }).then((res) => {
-                                if (res.status == 200) {
-                                    if (res.data.code == 200) {
-                                        setPlatformData(res.data.data)
-                                    } else {
-                                        message.error(res.data.msg)
-                                    }
-                                } else {
-                                    message.error(res.data.msg)
-                                }
-                            }).catch((err) => {
-                                console.error(err)
-                            })
-                        }}
-                    >
-                        添加新达人
-                    </Button>
-                }
-            >
+            <Card title="商机推进列表" extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShowAdd(true) }}>添加新商机</Button>}>
                 <Form
                     layout="inline"
                     form={selectForm}
@@ -244,7 +242,7 @@ function TalentPreparation() {
                         })
                     }}
                 >
-                    <Form.Item label='达人编号' name='tid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='商机编号' name='tid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='达人账号' name='ta_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='账号ID' name='taID' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='联系人类型' name='lt_id' style={{ marginBottom: '20px' }}>
@@ -257,7 +255,7 @@ function TalentPreparation() {
                     </Form.Item>
                     <Form.Item label='联系人姓名' name='liaison_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='联系人微信' name='liaison_vx' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='沟通群名称' name='group_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='沟通群' name='group_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='状态' name='ts_id' style={{ marginBottom: '20px' }}>
                         <Select
                             style={{ width: 160 }}
@@ -290,7 +288,7 @@ function TalentPreparation() {
                 />
             </Card>
             <Modal
-                title='添加新达人'
+                title='添加新商机'
                 open={isShowAdd}
                 maskClosable={false}
                 onOk={() => { addForm.submit() }}
@@ -301,7 +299,7 @@ function TalentPreparation() {
                     onFinish={(values) => {
                         request({
                             method: 'post',
-                            url: '/talent/addTalent',
+                            url: '/chance/addChance',
                             data: {
                                 ...values,
                                 uid: localStorage.getItem('uid')
@@ -332,7 +330,9 @@ function TalentPreparation() {
                             style={{
                                 width: '100%',
                             }}
-                            placeholder="请选择新达人合作平台"
+                            placeholder="请选择新商机合作平台"
+                            loading={loadingPlatform}
+                            onFocus={getPlatformData}
                             onChange={(value) => {
                                 addForm.setFieldValue('pids', value)
                             }}
@@ -367,12 +367,12 @@ function TalentPreparation() {
                             options={[]}
                         />
                     </Form.Item>
-                    <Form.Item label="相似达人" name="pic">
+                    <Form.Item label="相同达人" name="pic">
                         <Button onClick={() => {
                             if ((addForm.getFieldValue('ta_name') && addForm.getFieldValue('ta_name').length > 0) || (addForm.getFieldValue('taID') && addForm.getFieldValue('taID').length > 0)) {
                                 request({
                                     method: 'post',
-                                    url: '/talent/searchSameTalent',
+                                    url: '/chance/searchSameChance',
                                     data: {
                                         ta_name: addForm.getFieldValue('ta_name'),
                                         taID: addForm.getFieldValue('taID')
@@ -382,7 +382,7 @@ function TalentPreparation() {
                                         if (res.data.code != 200) {
                                             setIsShowAddSearch(true)
                                             setAddSearchList(res.data.data)
-                                            message.info(res.data.msg)
+                                            message.error(res.data.msg)
                                         } else {
                                             setIsShowAddSearch(false)
                                             setAddSearchList([])
@@ -402,23 +402,218 @@ function TalentPreparation() {
                         }}>查询</Button>
                     </Form.Item>
                     {isShowAddSearch && <Form.Item label="" name="pic">
-                        <List
+                        {addSearchList.Unreported.length > 0 ? <List
                             itemLayout="horizontal"
-                            dataSource={addSearchList}
+                            bordered
+                            style={{margin: '20px 0'}}
+                            header="未合作"
+                            dataSource={addSearchList.Unreported}
                             renderItem={(item, index) => (
                                 <List.Item>
                                     <List.Item.Meta
-                                        avatar={<Image width={50} src={people} />}
-                                        title={<span>{`${item.ta_name}--->${item.name}`}</span>}
-                                        description={`当前销售平台：${item.platform}`}
+                                        avatar={<Image width={50} src={people} preview={false} />}
+                                        title={<Space size={'large'}><div>{`账号名: ${item.ta_name}`}</div><div>{`账号ID: ${item.taID}`}</div></Space>}
+                                        description={<span>{`商务: ${item.name}`}</span>}
                                     />
                                 </List.Item>
                             )}
-                        />
+                        /> : null}
+                        {addSearchList.cooperation.length > 0 ? <List
+                            itemLayout="horizontal"
+                            bordered
+                            style={{margin: '20px 0'}}
+                            header="已合作"
+                            dataSource={addSearchList.cooperation}
+                            renderItem={(item, index) => (
+                                <List.Item>
+                                    <List.Item.Meta
+                                        avatar={<Image width={50} src={people} preview={false} />}
+                                        title={<Space size={'large'}><div>{`账号名: ${item.ta_name}`}</div><div>{`账号ID: ${item.taID}`}</div></Space>}
+                                        description={<Space size={'large'}><div>{`平台: ${item.platform}`}</div><div>{`商务: ${item.name}`}</div></Space>}
+                                    />
+                                </List.Item>
+                            )}
+                        /> : null}
                     </Form.Item>}
-                    <Form.Item label="达人寻找证明" name="searchPic" rules={[{ required: true, message: '达人寻找证明不能为空' }]} >
-                        <UpLoadImg title="上传寻找证明" name="addSearchPic" setPicUrl={(value) => { addForm.setFieldValue('searchPic', value) }} />
+                    <Form.Item label="寻找证明" name="search_pic" rules={[{ required: true, message: '寻找证明不能为空' }]} >
+                        <UpLoadImg title="上传寻找证明" name="addSearchPic" setPicUrl={(value) => { addForm.setFieldValue('search_pic', value) }} />
                     </Form.Item>
+                </Form>
+            </Modal>
+            <Modal
+                title='修改信息'
+                open={isShowEdit}
+                maskClosable={false}
+                onOk={() => { editForm.submit() }}
+                onCancel={() => { setIsShowEdit(false); editForm.resetFields(); setIsShowEditSearch(false); setEditSearchList([]) }}
+            >
+                <Form
+                    form={editForm}
+                    onFinish={(values) => {
+                        request({
+                            method: 'post',
+                            url: '/chance/editChance',
+                            data: {
+                                ...values,
+                                ts_id: editForm.getFieldValue('ts_id')
+                            }
+                        }).then((res) => {
+                            if (res.status == 200) {
+                                if (res.data.code == 200) {
+                                    setIsShowEdit(false)
+                                    fetchData()
+                                    editForm.resetFields()
+                                    message.success(res.data.msg)
+                                } else {
+                                    message.error(res.data.msg)
+                                }
+                            } else {
+                                message.error(res.data.msg)
+                            }
+                        }).catch((err) => {
+                            console.error(err)
+                        })
+                    }}
+                >
+                    <Form.Item label="商机编号" name="tid" rules={[{ required: true, message: '商机编号不能为空' }]}>
+                        <Input disabled />
+                    </Form.Item>
+                    <Form.Item label="平台" name="pids" rules={[{ required: true, message: '平台不能为空' }]}>
+                        <Select
+                            mode="multiple"
+                            allowClear
+                            style={{
+                                width: '100%',
+                            }}
+                            placeholder="请选择新商机合作平台"
+                            loading={loadingPlatform}
+                            onFocus={getPlatformData}
+                            onChange={(value) => {
+                                editForm.setFieldValue('pids', value)
+                            }}
+                            options={platformData}
+                        />
+                    </Form.Item>
+                    <Form.Item label="达人账号" name="ta_name" rules={[{ required: true, message: '达人账号不能为空' }]}>
+                        <Select
+                            mode="tags"
+                            allowClear
+                            style={{
+                                width: '100%',
+                            }}
+                            placeholder="请输入新达人账号"
+                            onChange={(value) => {
+                                editForm.setFieldValue('ta_name', value)
+                            }}
+                            options={[]}
+                        />
+                    </Form.Item>
+                    <Form.Item label="账号ID" name="taID" rules={[{ required: true, message: '账号ID不能为空' }]}>
+                        <Select
+                            mode="tags"
+                            allowClear
+                            style={{
+                                width: '100%',
+                            }}
+                            placeholder="请输入新达人的账号ID"
+                            onChange={(value) => {
+                                editForm.setFieldValue('taID', value)
+                            }}
+                            options={[]}
+                        />
+                    </Form.Item>
+                    <Form.Item label="相同达人" name="pic">
+                        <Button onClick={() => {
+                            if ((editForm.getFieldValue('ta_name') && editForm.getFieldValue('ta_name').length > 0) || (editForm.getFieldValue('taID') && editForm.getFieldValue('taID').length > 0)) {
+                                request({
+                                    method: 'post',
+                                    url: '/chance/searchSameChance',
+                                    data: {
+                                        ta_name: editForm.getFieldValue('ta_name'),
+                                        taID: editForm.getFieldValue('taID'),
+                                        tid: editForm.getFieldValue('tid')
+                                    }
+                                }).then((res) => {
+                                    if (res.status == 200) {
+                                        if (res.data.code != 200) {
+                                            setIsShowEditSearch(true)
+                                            setEditSearchList(res.data.data)
+                                            message.error(res.data.msg)
+                                        } else {
+                                            setIsShowEditSearch(false)
+                                            setEditSearchList([])
+                                            message.success(res.data.msg)
+                                        }
+                                    } else {
+                                        message.error(res.data.msg)
+                                    }
+                                }).catch((err) => {
+                                    console.error(err)
+                                })
+                            } else {
+                                setIsShowEditSearch(false)
+                                setEditSearchList([])
+                                message.error('未填写达人账号名/ID, 无法查询')
+                            }
+                        }}>查询</Button>
+                    </Form.Item>
+                    {isShowEditSearch && <Form.Item label="" name="pic">
+                        {editSearchList.Unreported.length > 0 ? <List
+                            itemLayout="horizontal"
+                            bordered
+                            style={{margin: '20px 0'}}
+                            header="未合作"
+                            dataSource={editSearchList.Unreported}
+                            renderItem={(item, index) => (
+                                <List.Item>
+                                    <List.Item.Meta
+                                        avatar={<Image width={50} src={people} preview={false} />}
+                                        title={<Space size={'large'}><div>{`账号名: ${item.ta_name}`}</div><div>{`账号ID: ${item.taID}`}</div></Space>}
+                                        description={<span>{`商务: ${item.name}`}</span>}
+                                    />
+                                </List.Item>
+                            )}
+                        /> : null}
+                        {editSearchList.cooperation.length > 0 ? <List
+                            itemLayout="horizontal"
+                            bordered
+                            style={{margin: '20px 0'}}
+                            header="已合作"
+                            dataSource={editSearchList.cooperation}
+                            renderItem={(item, index) => (
+                                <List.Item>
+                                    <List.Item.Meta
+                                        avatar={<Image width={50} src={people} preview={false} />}
+                                        title={<Space size={'large'}><div>{`账号名: ${item.ta_name}`}</div><div>{`账号ID: ${item.taID}`}</div></Space>}
+                                        description={<Space size={'large'}><div>{`平台: ${item.platform}`}</div><div>{`商务: ${item.name}`}</div></Space>}
+                                    />
+                                </List.Item>
+                            )}
+                        /> : null}
+                    </Form.Item>}
+                    {editForm.getFieldValue('status') == '已推进' ? <><Form.Item label="联系人类型" name="lt_id" rules={[{ required: true, message: '联系人类型不能为空' }]}>
+                        <Select
+                            allowClear
+                            style={{
+                                width: '100%',
+                            }}
+                            placeholder="请选择联系人类型"
+                            onChange={(value) => {
+                                advanceForm.setFieldValue('pids', value)
+                            }}
+                            onFocus={getTypeData}
+                            options={typeData}
+                        />
+                    </Form.Item>
+                    <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '联系人姓名不能为空' }]}>
+                        <Input placeholder="请输入联系人姓名" />
+                    </Form.Item>
+                    <Form.Item label="联系人微信" name="liaison_vx" rules={[{ required: true, message: '联系人微信不能为空' }]}>
+                        <Input placeholder="请输入联系人微信" />
+                    </Form.Item>
+                    <Form.Item label="沟通群名称" name="group_name" rules={[{ required: true, message: '沟通群名不能为空' }]}>
+                        <Input placeholder="请输入沟通群名" />
+                    </Form.Item></> : null}
                 </Form>
             </Modal>
             <Modal
@@ -433,7 +628,7 @@ function TalentPreparation() {
                     onFinish={(values) => {
                         request({
                             method: 'post',
-                            url: '/talent/advanceTalent',
+                            url: '/chance/advanceChance',
                             data: values
                         }).then((res) => {
                             if (res.status == 200) {
@@ -453,7 +648,7 @@ function TalentPreparation() {
                         })
                     }}
                 >
-                    <Form.Item label="达人编号" name="tid" rules={[{ required: true, message: '达人编号不能为空' }]}>
+                    <Form.Item label="商机编号" name="tid" rules={[{ required: true, message: '达人编号不能为空' }]}>
                         <Input disabled />
                     </Form.Item>
                     <Form.Item label="达人账号" name="ta_name" rules={[{ required: true, message: '达人账号不能为空' }]}>
@@ -472,7 +667,9 @@ function TalentPreparation() {
                             onChange={(value) => {
                                 advanceForm.setFieldValue('pids', value)
                             }}
-                            options={liaisonTypeData}
+                            loading={loadingType}
+                            onFocus={getTypeData}
+                            options={typeData}
                         />
                     </Form.Item>
                     <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '联系人姓名不能为空' }]}>
@@ -489,8 +686,45 @@ function TalentPreparation() {
                     </Form.Item>
                 </Form>
             </Modal>
+            <Modal
+                title='报备审批资料填写'
+                open={isShowReport}
+                maskClosable={false}
+                onOk={() => { reportForm.submit() }}
+                onCancel={() => { setIsShowReport(false); reportForm.resetFields() }}
+            >
+                <Form
+                    form={reportForm}
+                    onFinish={(values) => {
+                        request({
+                            method: 'post',
+                            url: '/chance/reportChance',
+                            data: values
+                        }).then((res) => {
+                            if (res.status == 200) {
+                                if (res.data.code == 200) {
+                                    setIsShowReport(false)
+                                    fetchData()
+                                    reportForm.resetFields()
+                                    message.success(res.data.msg)
+                                } else {
+                                    message.error(res.data.msg)
+                                }
+                            } else {
+                                message.error(res.data.msg)
+                            }
+                        }).catch((err) => {
+                            console.error(err)
+                        })
+                    }}
+                >
+                    <Form.Item label="商机编号" name="tid" rules={[{ required: true, message: '商机编号不能为空' }]}>
+                        <Input disabled />
+                    </Form.Item>
+                </Form>
+            </Modal>
         </div>
     )
 }
 
-export default TalentPreparation
+export default ChanceList

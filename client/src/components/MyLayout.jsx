@@ -41,11 +41,15 @@ const menuItemsTotal = [
         label: '达人管理',
         children: [
             {
-                label: '商机推进',
-                key: '/admin/talent/talent_preparation'
+                label: '商机看板',
+                key: '/admin/talent/chance_analysis'
             },
             {
-                label: '合作达人',
+                label: '商机列表',
+                key: '/admin/talent/chance_list'
+            },
+            {
+                label: '合作达人列表',
                 key: '/admin/talent/talent_list'
             }
         ]
