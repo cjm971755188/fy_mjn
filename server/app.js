@@ -20,21 +20,22 @@ app.use(bodyparser.urlencoded({ extended: false }))
 app.use(bodyparser.json())
 
 // 跨域
-app.all('*', function(req, res, next) {
+app.all('*', function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "X-Requested-With,content-type,cookie");
   res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS,post");
   res.header("X-Powered-By", ' 3.2.1')
-      //这段仅仅为了方便返回json而已
+  //这段仅仅为了方便返回json而已
   res.header("Content-Type", "application/json;charset=utf-8");
-  if(req.method == 'OPTIONS') {
-      //让options请求快速返回
-      res.sendStatus(200); 
-  } else { 
-      next(); 
+  if (req.method == 'OPTIONS') {
+    //让options请求快速返回
+    res.sendStatus(200);
+  } else {
+    next();
   }
 });
 
+// 上传图片
 let objMulter = multer({ dest: "./public/img" });
 //实例化multer，传递的参数对象，dest表示上传文件的存储路径
 app.use(objMulter.any())//any表示任意类型的文件
@@ -51,3 +52,21 @@ const userRouter = require('./router/user')
 app.use('/user', userRouter)
 const chanceRouter = require('./router/chance')
 app.use('/chance', chanceRouter)
+
+// 定时任务
+const schedule = require('node-schedule');
+const getOrders = require('./api/getOrders');
+
+// 定义规则
+let rule = new schedule.RecurrenceRule();
+// rule.date = [1]; // 每月1号 
+// rule.dayOfWeek = [1,3,5]; // 每周一、周三、周五 
+// rule.hour = 0; rule.minute = 0; rule.second = 0; // 每天0点执行
+rule.second = [0, 10, 20, 30, 40, 50]; // 隔十秒
+// rule.minute = [0, 20, 40]; // 每小时的0分钟，20分钟，40分钟执行
+// 启动任务
+let jst = schedule.scheduleJob(rule, () => {
+  getOrders()
+  console.log('调用时间：', new Date());
+  jst.cancel()
+})
