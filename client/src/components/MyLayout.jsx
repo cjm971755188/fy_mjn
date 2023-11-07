@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
+    CalendarOutlined,
     BuildOutlined,
     UserOutlined,
     AreaChartOutlined,
@@ -32,29 +33,34 @@ const items = [
 const menuItemsTotal = [
     {
         key: '/admin/workbench',
-        icon: <AreaChartOutlined />,
+        icon: <CalendarOutlined />,
         label: '工作台',
+    },
+    {
+        key: '/admin/bi',
+        icon: <AreaChartOutlined />,
+        label: '数据看板',
     },
     {
         key: '/admin/talent',
         icon: <TeamOutlined />,
         label: '达人管理',
         children: [
-            {
+            /* {
                 label: '商机看板',
                 key: '/admin/talent/chance_analysis'
-            },
+            }, */
             {
                 label: '商机列表',
                 key: '/admin/talent/chance_list'
             },
-            {
+            /* {
                 label: '合作达人列表',
                 key: '/admin/talent/talent_list'
-            }
+            } */
         ]
     },
-    {
+    /* {
         key: '/admin/live',
         icon: <CarryOutOutlined />,
         label: '排班管理',
@@ -64,8 +70,8 @@ const menuItemsTotal = [
                 key: '/admin/live/live_list'
             }
         ]
-    },
-    {
+    }, */
+    /* {
         key: '/admin/pallet',
         icon: <BuildOutlined />,
         label: '货盘管理',
@@ -79,8 +85,8 @@ const menuItemsTotal = [
                 key: '/admin/pallet/product_list'
             }
         ]
-    },
-    {
+    }, */
+    /* {
         key: '/admin/contract',
         icon: <AuditOutlined />,
         label: '合同管理',
@@ -90,7 +96,7 @@ const menuItemsTotal = [
                 key: '/admin/contract/contract_list'
             }
         ]
-    },
+    }, */
     {
         key: '/admin/user',
         icon: <UserOutlined />,
