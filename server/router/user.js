@@ -102,6 +102,7 @@ router.post('/getUserList', (req, res) => {
 // 添加新用户
 router.post('/addUser', (req, res) => {
   let time = new Date()
+  let currentDate = time.getFullYear() + "-" + (time.getMonth() + 1) + "-" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
   let params = req.body
   if (params.ut_id == 'UT001' && params.ud_id != 'UD001') {
     res.send({ code: 201, data: {}, msg: `总裁 职位仅可添加在 总经办 部门` })
@@ -128,7 +129,7 @@ router.post('/addUser', (req, res) => {
             if (results[0].status != '2') {
               res.send({ code: 201, data: {}, msg: `${params.name} 已存在` })
             } else {
-              let sql = `UPDATE user set status = '1', create_time = '${time.toLocaleString()}' where name = '${params.name}'`
+              let sql = `UPDATE user set status = '1', create_time = '${currentDate}' where name = '${params.name}'`
               db.query(sql, (err, results) => {
                 if (err) throw err;
                 res.send({ code: 200, data: {}, msg: `${params.name} 重启成功` })
@@ -139,7 +140,7 @@ router.post('/addUser', (req, res) => {
             db.query(sql, (err, results) => {
               if (err) throw err;
               let uid = 'MJN' + `${results[0].sum}`.padStart(3, '0')
-              let sql = `INSERT INTO user values('${uid}', '${params.name}', '123456', '${params.uc_id}', '${params.ud_id}', '${params.ut_id}', '1', '${time.toLocaleString()}')`
+              let sql = `INSERT INTO user values('${uid}', '${params.name}', '123456', '${params.uc_id}', '${params.ud_id}', '${params.ut_id}', '1', '${currentDate}')`
               db.query(sql, (err, results) => {
                 if (err) throw err;
                 res.send({ code: 200, data: {}, msg: `${params.name} 添加成功` })

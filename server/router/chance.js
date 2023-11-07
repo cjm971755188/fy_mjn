@@ -83,6 +83,7 @@ router.post('/searchSameChance', (req, res) => {
 // 添加新达人
 router.post('/addChance', (req, res) => {
   let time = new Date()
+  let currentDate = time.getFullYear() + "-" + (time.getMonth() + 1) + "-" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
   let params = req.body
   let sql = `SELECT count(*) as sum FROM talent`
   db.query(sql, (err, results) => {
@@ -104,7 +105,7 @@ router.post('/addChance', (req, res) => {
     }
     ta_name = ta_name.substring(0, ta_name.length - 1)
     let search_pic = params.search_pic.replace('/public', '')
-    let sql = `INSERT INTO talent(tid, pids, ta_name, taID, search_pic, uid, ts_id, create_time) VALUES('${tid}', '${pids}', '${ta_name}', '${taID}', '${search_pic}', '${params.uid}', '1', '${time.toLocaleString()}')`
+    let sql = `INSERT INTO talent(tid, pids, ta_name, taID, search_pic, uid, ts_id, create_time) VALUES('${tid}', '${pids}', '${ta_name}', '${taID}', '${search_pic}', '${params.uid}', '1', '${currentDate}')`
     db.query(sql, (err, results) => {
       if (err) throw err;
       res.send({ code: 200, data: {}, msg: `${params.ta_name} 添加成功` })
@@ -145,9 +146,10 @@ router.post('/editChance', (req, res) => {
 // 推进达人
 router.post('/advanceChance', (req, res) => {
   let time = new Date()
+  let currentDate = time.getFullYear() + "-" + (time.getMonth() + 1) + "-" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
   let params = req.body
   let advance_pic = params.advance_pic.replace('/public', '')
-  let sql = `UPDATE talent set lt_id = '${params.lt_id}', liaison_name = '${params.liaison_name}', liaison_vx = '${params.liaison_vx}', group_name = '${params.group_name}', advance_pic = '${advance_pic}', advance_time = '${time.toLocaleString()}', ts_id = 2 WHERE tid = '${params.tid}'`
+  let sql = `UPDATE talent set lt_id = '${params.lt_id}', liaison_name = '${params.liaison_name}', liaison_vx = '${params.liaison_vx}', group_name = '${params.group_name}', advance_pic = '${advance_pic}', advance_time = '${currentDate}', ts_id = 2 WHERE tid = '${params.tid}'`
   db.query(sql, (err, results) => {
     if (err) throw err;
     res.send({ code: 200, data: {}, msg: `${params.tid} 推进成功` })

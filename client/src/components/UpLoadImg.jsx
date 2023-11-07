@@ -1,6 +1,7 @@
 import React, { useState, Fragment } from 'react';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { message, Upload } from 'antd';
+import { BASE_URL } from '../service/config';
 
 const getBase64 = (img, callback) => {
     const reader = new FileReader();
@@ -58,7 +59,7 @@ function UpLoadImg(props) {
                 className="avatar-uploader"
                 showUploadList={false}
                 // 上传的后端地址
-                action="http://localhost:3000/api/uploadimg"
+                action={`${BASE_URL}/api/uploadimg`}
                 beforeUpload={beforeUpload}
                 onChange={handleChange}
             >
