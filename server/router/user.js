@@ -76,18 +76,18 @@ router.post('/getUserList', (req, res) => {
   }
   let sql = `SELECT	uid, name, uc.uc_id, uc.company, ud.ud_id, ud.department, ut.ut_id, ut.type, status
               FROM	user
-                LEFT JOIN userCompany uc on uc.uc_id = user.uc_id
-                LEFT JOIN userDepartment ud on ud.ud_id = user.ud_id
-                LEFT JOIN userType ut on ut.ut_id = user.ut_id
+                LEFT JOIN usercompany uc on uc.uc_id = user.uc_id
+                LEFT JOIN userdepartment ud on ud.ud_id = user.ud_id
+                LEFT JOIN usertype ut on ut.ut_id = user.ut_id
               ${where}
               order by uid`
   db.query(sql, (err, results) => {
     if (err) throw err;
     let sql = `SELECT	uid, name, uc.uc_id, uc.company, ud.ud_id, ud.department, ut.ut_id, ut.type, status
               FROM	user
-                LEFT JOIN userCompany uc on uc.uc_id = user.uc_id
-                LEFT JOIN userDepartment ud on ud.ud_id = user.ud_id
-                LEFT JOIN userType ut on ut.ut_id = user.ut_id
+                LEFT JOIN usercompany uc on uc.uc_id = user.uc_id
+                LEFT JOIN userdepartment ud on ud.ud_id = user.ud_id
+                LEFT JOIN usertype ut on ut.ut_id = user.ut_id
               ${where}
               order by uid
               limit ${pageSize} 
@@ -162,7 +162,7 @@ router.post('/editUser', (req, res) => {
   } else if (params.type == '3' && params.department == '2' && params.company == '1') {
     res.send({ code: 201, data: {}, msg: `事业部 普通员工 不可添加在 总公司 ，请选择 公司（办公地点）` })
   } else {
-    let sql = `SELECT * FROM user LEFT JOIN userCompany uc on uc.uc_id = user.uc_id LEFT JOIN userDepartment ud on ud.ud_id = user.ud_id LEFT JOIN userType ut on ut.ut_id = user.ut_id
+    let sql = `SELECT * FROM user LEFT JOIN usercompany uc on uc.uc_id = user.uc_id LEFT JOIN userdepartment ud on ud.ud_id = user.ud_id LEFT JOIN usertype ut on ut.ut_id = user.ut_id
                 where (user.uc_id = '${params.company}' or uc.company = '${params.company}') 
                   and (user.ud_id = '${params.department}' or ud.department = '${params.department}') 
                   and (user.ut_id = '${params.type}' or ut.type = '${params.type}') 
@@ -177,7 +177,7 @@ router.post('/editUser', (req, res) => {
           res.send({ code: 201, data: {}, msg: `该部门已存在 ${results.length} 名 主管` })
         }
       } else {
-        let sql = `UPDATE user, userCompany uc, userDepartment ud, userType ut
+        let sql = `UPDATE user, usercompany uc, userdepartment ud, usertype ut
                     set name = '${params.name}', user.uc_id = uc.uc_id, user.ud_id = ud.ud_id, user.ut_id = ut.ut_id
                     where (uc.uc_id = '${params.company}' or uc.company = '${params.company}') 
                       and (ud.ud_id = '${params.department}' or ud.department = '${params.department}') 

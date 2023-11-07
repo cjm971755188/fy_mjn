@@ -11,7 +11,7 @@ router.post('/uploadimg', (req, res) => {
     fs.renameSync('./public/img/' + oldName, './public/img/' + newName);//改图片的名字注意此处一定是一个路径，而不是只有文件名
     res.send({
         err: 0,
-        url: "http://localhost:3000/public/img/" +
+        url: "http://1.15.89.163:3000/public/img/" +
             newName
     });
 })

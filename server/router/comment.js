@@ -7,9 +7,9 @@ router.post('/getUserCompany', (req, res) => {
     let params = req.body
     let sql = ''
     if (params.ut_id == 'UT000') {
-        sql = `SELECT * FROM userCompany ORDER BY uc_id`
+        sql = `SELECT * FROM usercompany ORDER BY uc_id`
     } else {
-        sql = `SELECT * FROM userCompany where uc_id >= '${params.uc_id}' ORDER BY uc_id`
+        sql = `SELECT * FROM usercompany where uc_id >= '${params.uc_id}' ORDER BY uc_id`
     }
     db.query(sql, (err, results) => {
         if (err) throw err;
@@ -29,9 +29,9 @@ router.post('/getUserDepartment', (req, res) => {
     let params = req.body
     let sql = ''
     if (params.ut_id == 'UT000') {
-        sql = `SELECT * FROM userDepartment ORDER BY ud_id`
+        sql = `SELECT * FROM userdepartment ORDER BY ud_id`
     } else {
-        sql = `SELECT * FROM userDepartment where ud_id >= '${params.ud_id}' ORDER BY ud_id`
+        sql = `SELECT * FROM userdepartment where ud_id >= '${params.ud_id}' ORDER BY ud_id`
     }
     db.query(sql, (err, results) => {
         if (err) throw err;
@@ -51,11 +51,11 @@ router.post('/getUserType', (req, res) => {
     let params = req.body
     let sql = ''
     if (params.ut_id == 'UT000') {
-        sql = `SELECT * FROM userType ORDER BY ut_id`
+        sql = `SELECT * FROM usertype ORDER BY ut_id`
     } else if (params.uc_id == 'UC001') {
-        sql = `SELECT * FROM userType where ut_id >= '${params.ut_id}' ORDER BY ut_id`
+        sql = `SELECT * FROM usertype where ut_id >= '${params.ut_id}' ORDER BY ut_id`
     } else {
-        sql = `SELECT * FROM userType where ut_id > '${params.ut_id}' ORDER BY ut_id`
+        sql = `SELECT * FROM usertype where ut_id > '${params.ut_id}' ORDER BY ut_id`
     }
     db.query(sql, (err, results) => {
         if (err) throw err;
