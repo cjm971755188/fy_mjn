@@ -1,7 +1,9 @@
 const express = require('express');
+const cors = require('cors')
 const multer = require("multer");
 const app = express();
 
+app.use(cors())
 // 监听端口
 app.listen('3000', () => {
   console.log('Server started')
@@ -52,21 +54,3 @@ const userRouter = require('./router/user')
 app.use('/user', userRouter)
 const chanceRouter = require('./router/chance')
 app.use('/chance', chanceRouter)
-
-// 定时任务
-const schedule = require('node-schedule');
-const getOrders = require('./api/getOrders');
-
-// 定义规则
-let rule = new schedule.RecurrenceRule();
-// rule.date = [1]; // 每月1号 
-// rule.dayOfWeek = [1,3,5]; // 每周一、周三、周五 
-// rule.hour = 0; rule.minute = 0; rule.second = 0; // 每天0点执行
-rule.second = [0, 10, 20, 30, 40, 50]; // 隔十秒
-// rule.minute = [0, 20, 40]; // 每小时的0分钟，20分钟，40分钟执行
-// 启动任务
-let jst = schedule.scheduleJob(rule, () => {
-  getOrders()
-  console.log('调用时间：', new Date());
-  jst.cancel()
-})
