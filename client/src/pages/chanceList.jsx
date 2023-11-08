@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Avatar, message } from 'antd';
-import { PlusOutlined, CheckCircleTwoTone, ClockCircleTwoTone } from '@ant-design/icons';
+import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Typography, message } from 'antd';
+import { PlusOutlined, CheckCircleTwoTone, ClockCircleTwoTone, MinusCircleOutlined } from '@ant-design/icons';
 import request from '../service/request'
 import people from '../assets/people.jpg'
 import UpLoadImg from '../components/UpLoadImg'
+import { chanceStatus, platform, liaisonType } from '../baseData/talent'
 
 function ChanceList() {
     const columns = [
-        { title: '商机编号', dataIndex: 'tid', key: 'tid' },
-        { title: '达人账号', dataIndex: 'ta_name', key: 'ta_name' },
-        { title: '达人账号ID', dataIndex: 'taID', key: 'taID' },
+        { title: '商机编号', dataIndex: 'cid', key: 'cid' },
+        { title: '达人账号ID', dataIndex: 'account_ids', key: 'account_ids' },
+        { title: '达人账号', dataIndex: 'account_names', key: 'account_names' },
         {
             title: '寻找证明',
             dataIndex: 'search_pic',
@@ -18,9 +19,10 @@ function ChanceList() {
                 <Image width={50} src={record.search_pic} />
             )
         },
-        { title: '联系人类型', dataIndex: 'type', key: 'type' },
+        { title: '联系人类型', dataIndex: 'liaison_type', key: 'liaison_type' },
         { title: '联系人姓名', dataIndex: 'liaison_name', key: 'liaison_name' },
-        { title: '联系人微信', dataIndex: 'liaison_vx', key: 'liaison_vx' },
+        { title: '联系人微信', dataIndex: 'liaison_v', key: 'liaison_v' },
+        { title: '联系人微信', dataIndex: 'liaison_phone', key: 'liaison_phone' },
         { title: '沟通群', dataIndex: 'group_name', key: 'group_name' },
         {
             title: '推进证明',
@@ -47,19 +49,26 @@ function ChanceList() {
             render: (_, record) => (
                 <Space size="middle">
                     <a onClick={() => {
-                        let pids = record.pids.split(',')
-                        let ta_name = record.ta_name.split(',')
-                        let taID = record.taID.split(',')
+                        let platforms = record.platforms.split(',')
+                        let account_names = record.account_names.split(',')
+                        let account_ids = record.account_ids.split(',')
                         editForm.setFieldsValue({
                             ...record,
-                            pids,
-                            ta_name,
-                            taID
+                            platforms,
+                            account_names,
+                            account_ids
                         })
                         setIsShowEdit(true)
                     }}>修改信息</a>
                     {record.status === '已推进' ? <a onClick={() => {
-                        setIsShowReport(true)
+                        /* console.log('record: ', record);
+                        reportForm.setFieldsValue({
+                            ...record,
+                            pid: "",
+                            account_ids: "",
+                            account_names: ""
+                        })
+                        setIsShowReport(true) */
                     }}>报备审批</a> : <a onClick={() => {
                         advanceForm.setFieldsValue(record)
                         setIsShowAdvance(true)
@@ -85,11 +94,11 @@ function ChanceList() {
             method: 'post',
             url: '/chance/getChanceList',
             data: {
-                ids: {
+                userInfo: {
                     uid: localStorage.getItem('uid'),
-                    uc_id: localStorage.getItem('uc_id'),
-                    ud_id: localStorage.getItem('ud_id'),
-                    ut_id: localStorage.getItem('ut_id')
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
                 },
                 filters: tableParams.filters,
                 pagination: {
@@ -147,83 +156,12 @@ function ChanceList() {
     // 报备
     const [isShowReport, setIsShowReport] = useState(false)
     const [reportForm] = Form.useForm()
+    const [platformReportData, setPlatformReportData] = useState();
+    const [accountReportData, setAccountReportData] = useState();
+    const [idReportData, setIdReportData] = useState();
 
     // 查询、清空筛选
     const [selectForm] = Form.useForm()
-
-    // 获取联系人类型
-    const [typeData, setTypeData] = useState();
-    const [loadingType, setLoadingType] = useState(false);
-    const getTypeData = () => {
-        setLoadingType(true)
-        request({
-            method: 'post',
-            url: '/comment/getLiaisonType',
-            data: {
-                uc_id: localStorage.getItem('uc_id'),
-                ut_id: localStorage.getItem('ut_id')
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setTypeData(res.data.data)
-                    setLoadingType(false)
-                } else {
-                    message.error(res.data.msg)
-                }
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    };
-
-    // 获取所有商机状态
-    const [statusData, setStatusData] = useState();
-    const [loadingStatus, setLoadingStatus] = useState(false);
-    const getStatusData = () => {
-        setLoadingStatus(true)
-        request({
-            method: 'post',
-            url: '/comment/getTalentStatus',
-            data: {}
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setStatusData(res.data.data)
-                    setLoadingStatus(false)
-                } else {
-                    message.error(res.data.msg)
-                }
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    };
-
-    // 获取所有商机状态
-    const [platformData, setPlatformData] = useState();
-    const [loadingPlatform, setLoadingPlatform] = useState(false);
-    const getPlatformData = () => {
-        setLoadingPlatform(true)
-        request({
-            method: 'post',
-            url: '/comment/getPlatform',
-            data: {}
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setPlatformData(res.data.data)
-                    setLoadingPlatform(false)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    };
 
     useEffect(() => {
         fetchData();
@@ -242,27 +180,18 @@ function ChanceList() {
                         })
                     }}
                 >
-                    <Form.Item label='商机编号' name='tid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='达人账号' name='ta_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='账号ID' name='taID' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='联系人类型' name='lt_id' style={{ marginBottom: '20px' }}>
-                        <Select
-                            style={{ width: 160 }}
-                            loading={loadingType}
-                            options={typeData}
-                            onFocus={getTypeData}
-                        />
+                    <Form.Item label='商机编号' name='cid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='达人账号' name='account_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='账号ID' name='account_ids' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='联系人类型' name='liaison_type' style={{ marginBottom: '20px' }}>
+                        <Select style={{ width: 160 }} options={liaisonType} />
                     </Form.Item>
                     <Form.Item label='联系人姓名' name='liaison_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='联系人微信' name='liaison_vx' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='联系人微信' name='liaison_v' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='联系人电话' name='liaison_phone' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='沟通群' name='group_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='状态' name='ts_id' style={{ marginBottom: '20px' }}>
-                        <Select
-                            style={{ width: 160 }}
-                            loading={loadingStatus}
-                            options={statusData}
-                            onFocus={getStatusData}
-                        />
+                    <Form.Item label='状态' name='status' style={{ marginBottom: '20px' }}>
+                        <Select style={{ width: 160 }} options={chanceStatus} />
                     </Form.Item>
                     <Form.Item>
                         <Space size={'middle'}>
@@ -279,7 +208,7 @@ function ChanceList() {
                 </Form>
                 <Table
                     style={{ margin: '20px auto' }}
-                    rowKey={(data) => data.tid}
+                    rowKey={(data) => data.cid}
                     columns={columns}
                     dataSource={data}
                     pagination={tableParams.pagination}
@@ -323,7 +252,7 @@ function ChanceList() {
                         })
                     }}
                 >
-                    <Form.Item label="平台" name="pids" rules={[{ required: true, message: '平台不能为空' }]}>
+                    <Form.Item label="平台" name="platforms" rules={[{ required: true, message: '平台不能为空' }]}>
                         <Select
                             mode="multiple"
                             allowClear
@@ -331,29 +260,13 @@ function ChanceList() {
                                 width: '100%',
                             }}
                             placeholder="请选择新商机合作平台"
-                            loading={loadingPlatform}
-                            onFocus={getPlatformData}
                             onChange={(value) => {
-                                addForm.setFieldValue('pids', value)
+                                addForm.setFieldValue('platforms', value)
                             }}
-                            options={platformData}
+                            options={platform}
                         />
                     </Form.Item>
-                    <Form.Item label="达人账号" name="ta_name" rules={[{ required: true, message: '达人账号不能为空' }]}>
-                        <Select
-                            mode="tags"
-                            allowClear
-                            style={{
-                                width: '100%',
-                            }}
-                            placeholder="请输入新达人账号"
-                            onChange={(value) => {
-                                addForm.setFieldValue('ta_name', value)
-                            }}
-                            options={[]}
-                        />
-                    </Form.Item>
-                    <Form.Item label="账号ID" name="taID" rules={[{ required: true, message: '账号ID不能为空' }]}>
+                    <Form.Item label="账号ID" name="account_ids" rules={[{ required: true, message: '账号ID不能为空' }]}>
                         <Select
                             mode="tags"
                             allowClear
@@ -362,20 +275,34 @@ function ChanceList() {
                             }}
                             placeholder="请输入新达人的账号ID"
                             onChange={(value) => {
-                                addForm.setFieldValue('taID', value)
+                                addForm.setFieldValue('account_ids', value)
+                            }}
+                            options={[]}
+                        />
+                    </Form.Item>
+                    <Form.Item label="达人账号" name="account_names" rules={[{ required: true, message: '达人账号不能为空' }]}>
+                        <Select
+                            mode="tags"
+                            allowClear
+                            style={{
+                                width: '100%',
+                            }}
+                            placeholder="请输入新达人账号"
+                            onChange={(value) => {
+                                addForm.setFieldValue('account_names', value)
                             }}
                             options={[]}
                         />
                     </Form.Item>
                     <Form.Item label="相同达人" name="pic">
                         <Button onClick={() => {
-                            if ((addForm.getFieldValue('ta_name') && addForm.getFieldValue('ta_name').length > 0) || (addForm.getFieldValue('taID') && addForm.getFieldValue('taID').length > 0)) {
+                            if ((addForm.getFieldValue('account_names') && addForm.getFieldValue('account_names').length > 0) || (addForm.getFieldValue('account_ids') && addForm.getFieldValue('account_ids').length > 0)) {
                                 request({
                                     method: 'post',
                                     url: '/chance/searchSameChance',
                                     data: {
-                                        ta_name: addForm.getFieldValue('ta_name'),
-                                        taID: addForm.getFieldValue('taID')
+                                        account_names: addForm.getFieldValue('account_names'),
+                                        account_ids: addForm.getFieldValue('account_ids')
                                     }
                                 }).then((res) => {
                                     if (res.status == 200) {
@@ -405,14 +332,14 @@ function ChanceList() {
                         {addSearchList.Unreported.length > 0 ? <List
                             itemLayout="horizontal"
                             bordered
-                            style={{margin: '20px 0'}}
+                            style={{ margin: '20px 0' }}
                             header="未合作"
                             dataSource={addSearchList.Unreported}
                             renderItem={(item, index) => (
                                 <List.Item>
                                     <List.Item.Meta
                                         avatar={<Image width={50} src={people} preview={false} />}
-                                        title={<Space size={'large'}><div>{`账号名: ${item.ta_name}`}</div><div>{`账号ID: ${item.taID}`}</div></Space>}
+                                        title={<Space size={'large'}><div>{`账号名: ${item.account_names}`}</div><div>{`账号ID: ${item.account_ids}`}</div></Space>}
                                         description={<span>{`商务: ${item.name}`}</span>}
                                     />
                                 </List.Item>
@@ -421,14 +348,14 @@ function ChanceList() {
                         {addSearchList.cooperation.length > 0 ? <List
                             itemLayout="horizontal"
                             bordered
-                            style={{margin: '20px 0'}}
+                            style={{ margin: '20px 0' }}
                             header="已合作"
                             dataSource={addSearchList.cooperation}
                             renderItem={(item, index) => (
                                 <List.Item>
                                     <List.Item.Meta
                                         avatar={<Image width={50} src={people} preview={false} />}
-                                        title={<Space size={'large'}><div>{`账号名: ${item.ta_name}`}</div><div>{`账号ID: ${item.taID}`}</div></Space>}
+                                        title={<Space size={'large'}><div>{`账号名: ${item.account_names}`}</div><div>{`账号ID: ${item.account_ids}`}</div></Space>}
                                         description={<Space size={'large'}><div>{`平台: ${item.platform}`}</div><div>{`商务: ${item.name}`}</div></Space>}
                                     />
                                 </List.Item>
@@ -455,7 +382,7 @@ function ChanceList() {
                             url: '/chance/editChance',
                             data: {
                                 ...values,
-                                ts_id: editForm.getFieldValue('ts_id')
+                                status: editForm.getFieldValue('status')
                             }
                         }).then((res) => {
                             if (res.status == 200) {
@@ -475,10 +402,10 @@ function ChanceList() {
                         })
                     }}
                 >
-                    <Form.Item label="商机编号" name="tid" rules={[{ required: true, message: '商机编号不能为空' }]}>
+                    <Form.Item label="商机编号" name="cid" rules={[{ required: true, message: '商机编号不能为空' }]}>
                         <Input disabled />
                     </Form.Item>
-                    <Form.Item label="平台" name="pids" rules={[{ required: true, message: '平台不能为空' }]}>
+                    <Form.Item label="平台" name="platforms" rules={[{ required: true, message: '平台不能为空' }]}>
                         <Select
                             mode="multiple"
                             allowClear
@@ -486,29 +413,13 @@ function ChanceList() {
                                 width: '100%',
                             }}
                             placeholder="请选择新商机合作平台"
-                            loading={loadingPlatform}
-                            onFocus={getPlatformData}
                             onChange={(value) => {
-                                editForm.setFieldValue('pids', value)
+                                editForm.setFieldValue('platforms', value)
                             }}
-                            options={platformData}
+                            options={platform}
                         />
                     </Form.Item>
-                    <Form.Item label="达人账号" name="ta_name" rules={[{ required: true, message: '达人账号不能为空' }]}>
-                        <Select
-                            mode="tags"
-                            allowClear
-                            style={{
-                                width: '100%',
-                            }}
-                            placeholder="请输入新达人账号"
-                            onChange={(value) => {
-                                editForm.setFieldValue('ta_name', value)
-                            }}
-                            options={[]}
-                        />
-                    </Form.Item>
-                    <Form.Item label="账号ID" name="taID" rules={[{ required: true, message: '账号ID不能为空' }]}>
+                    <Form.Item label="账号ID" name="account_ids" rules={[{ required: true, message: '账号ID不能为空' }]}>
                         <Select
                             mode="tags"
                             allowClear
@@ -517,21 +428,35 @@ function ChanceList() {
                             }}
                             placeholder="请输入新达人的账号ID"
                             onChange={(value) => {
-                                editForm.setFieldValue('taID', value)
+                                editForm.setFieldValue('account_ids', value)
+                            }}
+                            options={[]}
+                        />
+                    </Form.Item>
+                    <Form.Item label="达人账号" name="account_names" rules={[{ required: true, message: '达人账号不能为空' }]}>
+                        <Select
+                            mode="tags"
+                            allowClear
+                            style={{
+                                width: '100%',
+                            }}
+                            placeholder="请输入新达人账号"
+                            onChange={(value) => {
+                                editForm.setFieldValue('account_names', value)
                             }}
                             options={[]}
                         />
                     </Form.Item>
                     <Form.Item label="相同达人" name="pic">
                         <Button onClick={() => {
-                            if ((editForm.getFieldValue('ta_name') && editForm.getFieldValue('ta_name').length > 0) || (editForm.getFieldValue('taID') && editForm.getFieldValue('taID').length > 0)) {
+                            if ((editForm.getFieldValue('account_names') && editForm.getFieldValue('account_names').length > 0) || (editForm.getFieldValue('account_ids') && editForm.getFieldValue('account_ids').length > 0)) {
                                 request({
                                     method: 'post',
                                     url: '/chance/searchSameChance',
                                     data: {
-                                        ta_name: editForm.getFieldValue('ta_name'),
-                                        taID: editForm.getFieldValue('taID'),
-                                        tid: editForm.getFieldValue('tid')
+                                        account_names: editForm.getFieldValue('account_names'),
+                                        account_ids: editForm.getFieldValue('account_ids'),
+                                        cid: editForm.getFieldValue('cid')
                                     }
                                 }).then((res) => {
                                     if (res.status == 200) {
@@ -561,14 +486,14 @@ function ChanceList() {
                         {editSearchList.Unreported.length > 0 ? <List
                             itemLayout="horizontal"
                             bordered
-                            style={{margin: '20px 0'}}
+                            style={{ margin: '20px 0' }}
                             header="未合作"
                             dataSource={editSearchList.Unreported}
                             renderItem={(item, index) => (
                                 <List.Item>
                                     <List.Item.Meta
                                         avatar={<Image width={50} src={people} preview={false} />}
-                                        title={<Space size={'large'}><div>{`账号名: ${item.ta_name}`}</div><div>{`账号ID: ${item.taID}`}</div></Space>}
+                                        title={<Space size={'large'}><div>{`账号名: ${item.account_names}`}</div><div>{`账号ID: ${item.account_ids}`}</div></Space>}
                                         description={<span>{`商务: ${item.name}`}</span>}
                                     />
                                 </List.Item>
@@ -577,21 +502,21 @@ function ChanceList() {
                         {editSearchList.cooperation.length > 0 ? <List
                             itemLayout="horizontal"
                             bordered
-                            style={{margin: '20px 0'}}
+                            style={{ margin: '20px 0' }}
                             header="已合作"
                             dataSource={editSearchList.cooperation}
                             renderItem={(item, index) => (
                                 <List.Item>
                                     <List.Item.Meta
                                         avatar={<Image width={50} src={people} preview={false} />}
-                                        title={<Space size={'large'}><div>{`账号名: ${item.ta_name}`}</div><div>{`账号ID: ${item.taID}`}</div></Space>}
+                                        title={<Space size={'large'}><div>{`账号名: ${item.account_names}`}</div><div>{`账号ID: ${item.account_ids}`}</div></Space>}
                                         description={<Space size={'large'}><div>{`平台: ${item.platform}`}</div><div>{`商务: ${item.name}`}</div></Space>}
                                     />
                                 </List.Item>
                             )}
                         /> : null}
                     </Form.Item>}
-                    {editForm.getFieldValue('status') == '已推进' ? <><Form.Item label="联系人类型" name="lt_id" rules={[{ required: true, message: '联系人类型不能为空' }]}>
+                    {editForm.getFieldValue('status') == '已推进' ? <><Form.Item label="联系人类型" name="liaison_type" rules={[{ required: true, message: '联系人类型不能为空' }]}>
                         <Select
                             allowClear
                             style={{
@@ -599,21 +524,23 @@ function ChanceList() {
                             }}
                             placeholder="请选择联系人类型"
                             onChange={(value) => {
-                                advanceForm.setFieldValue('pids', value)
+                                advanceForm.setFieldValue('platforms', value)
                             }}
-                            onFocus={getTypeData}
-                            options={typeData}
+                            options={liaisonType}
                         />
                     </Form.Item>
-                    <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '联系人姓名不能为空' }]}>
-                        <Input placeholder="请输入联系人姓名" />
-                    </Form.Item>
-                    <Form.Item label="联系人微信" name="liaison_vx" rules={[{ required: true, message: '联系人微信不能为空' }]}>
-                        <Input placeholder="请输入联系人微信" />
-                    </Form.Item>
-                    <Form.Item label="沟通群名称" name="group_name" rules={[{ required: true, message: '沟通群名不能为空' }]}>
-                        <Input placeholder="请输入沟通群名" />
-                    </Form.Item></> : null}
+                        <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '联系人姓名不能为空' }]}>
+                            <Input placeholder="请输入联系人姓名" />
+                        </Form.Item>
+                        <Form.Item label="联系人微信" name="liaison_v" rules={[{ required: true, message: '联系人微信不能为空' }]}>
+                            <Input placeholder="请输入联系人微信" />
+                        </Form.Item>
+                        <Form.Item label="联系人电话" name="liaison_phone">
+                            <Input placeholder="请输入联系人电话" />
+                        </Form.Item>
+                        <Form.Item label="沟通群名称" name="group_name" rules={[{ required: true, message: '沟通群名不能为空' }]}>
+                            <Input placeholder="请输入沟通群名" />
+                        </Form.Item></> : null}
                 </Form>
             </Modal>
             <Modal
@@ -648,16 +575,16 @@ function ChanceList() {
                         })
                     }}
                 >
-                    <Form.Item label="商机编号" name="tid" rules={[{ required: true, message: '达人编号不能为空' }]}>
+                    <Form.Item label="商机编号" name="cid" rules={[{ required: true, message: '达人编号不能为空' }]}>
                         <Input disabled />
                     </Form.Item>
-                    <Form.Item label="达人账号" name="ta_name" rules={[{ required: true, message: '达人账号不能为空' }]}>
+                    <Form.Item label="账号ID" name="account_ids" rules={[{ required: true, message: '账号ID不能为空' }]}>
                         <Input disabled />
                     </Form.Item>
-                    <Form.Item label="账号ID" name="taID" rules={[{ required: true, message: '账号ID不能为空' }]}>
+                    <Form.Item label="达人账号" name="account_names" rules={[{ required: true, message: '达人账号不能为空' }]}>
                         <Input disabled />
                     </Form.Item>
-                    <Form.Item label="联系人类型" name="lt_id" rules={[{ required: true, message: '联系人类型不能为空' }]}>
+                    <Form.Item label="联系人类型" name="liaison_type" rules={[{ required: true, message: '联系人类型不能为空' }]}>
                         <Select
                             allowClear
                             style={{
@@ -665,18 +592,19 @@ function ChanceList() {
                             }}
                             placeholder="请选择联系人类型"
                             onChange={(value) => {
-                                advanceForm.setFieldValue('pids', value)
+                                advanceForm.setFieldValue('platforms', value)
                             }}
-                            loading={loadingType}
-                            onFocus={getTypeData}
-                            options={typeData}
+                            options={liaisonType}
                         />
                     </Form.Item>
                     <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '联系人姓名不能为空' }]}>
                         <Input placeholder="请输入联系人姓名" />
                     </Form.Item>
-                    <Form.Item label="联系人微信" name="liaison_vx" rules={[{ required: true, message: '联系人微信不能为空' }]}>
+                    <Form.Item label="联系人微信" name="liaison_v" rules={[{ required: true, message: '联系人微信不能为空' }]}>
                         <Input placeholder="请输入联系人微信" />
+                    </Form.Item>
+                    <Form.Item label="联系人电话（选填）" name="liaison_phone">
+                        <Input placeholder="请输入联系人电话" />
                     </Form.Item>
                     <Form.Item label="沟通群名称" name="group_name" rules={[{ required: true, message: '沟通群名不能为空' }]}>
                         <Input placeholder="请输入沟通群名" />
@@ -687,6 +615,7 @@ function ChanceList() {
                 </Form>
             </Modal>
             <Modal
+                width="60%"
                 title='报备审批资料填写'
                 open={isShowReport}
                 maskClosable={false}
@@ -694,6 +623,7 @@ function ChanceList() {
                 onCancel={() => { setIsShowReport(false); reportForm.resetFields() }}
             >
                 <Form
+                    
                     form={reportForm}
                     onFinish={(values) => {
                         request({
@@ -718,9 +648,59 @@ function ChanceList() {
                         })
                     }}
                 >
-                    <Form.Item label="商机编号" name="tid" rules={[{ required: true, message: '商机编号不能为空' }]}>
-                        <Input disabled />
+                    <Form.Item label="达人昵称" name="talent_nickname" rules={[{ required: true, message: '达人昵称不能为空' }]}>
+                        <Input placeholder="请输入该达人的昵称（唯一、方便的简单叫法）" />
                     </Form.Item>
+                    <Form.List layout="inline" name="talent">
+                        {(fields, { add, remove }) => (
+                            <>
+                                {fields.map(({ key, name, ...restField }) => (
+                                    <Space
+                                        key={key}
+                                        style={{
+                                            display: 'flex',
+                                            marginBottom: 8,
+                                        }}
+                                        align="baseline"
+                                    >
+                                        <Form.Item {...restField} label="平台" name={[name, 'pid']} rules={[{ required: true, message: '平台不能为空' }]}>
+                                            <Select
+                                                placeholder="请选择报备的平台"
+                                                onChange={(value) => {
+                                                    reportForm.setFieldValue('pid', value)
+                                                }}
+                                                options={platformReportData}
+                                            />
+                                        </Form.Item>
+                                        <Form.Item {...restField} label="账号ID" name={[name, 'account_ids']} rules={[{ required: true, message: '账号ID不能为空' }]}>
+                                            <Select
+                                                placeholder="请选择报备的账号ID"
+                                                onChange={(value) => {
+                                                    reportForm.setFieldValue('account_ids', value)
+                                                }}
+                                                options={idReportData}
+                                            />
+                                        </Form.Item>
+                                        <Form.Item {...restField} label="账号名称" name={[name, 'account_names']} rules={[{ required: true, message: '账号名称不能为空' }]}>
+                                            <Select
+                                                placeholder="请选择报备的账号名称"
+                                                onChange={(value) => {
+                                                    reportForm.setFieldValue('account_names', value)
+                                                }}
+                                                options={accountReportData}
+                                            />
+                                        </Form.Item>
+                                        <MinusCircleOutlined onClick={() => remove(name)} />
+                                    </Space>
+                                ))}
+                                <Form.Item>
+                                    <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                                        添加合作模式
+                                    </Button>
+                                </Form.Item>
+                            </>
+                        )}
+                    </Form.List>
                 </Form>
             </Modal>
         </div>

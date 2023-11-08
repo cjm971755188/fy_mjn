@@ -32,9 +32,9 @@ function Login() {
                                     if (res.data.code == 200) {
                                         localStorage.setItem('uid', res.data.data.uid)
                                         localStorage.setItem('name', res.data.data.name)
-                                        localStorage.setItem('uc_id', res.data.data.uc_id)
-                                        localStorage.setItem('ud_id', res.data.data.ud_id)
-                                        localStorage.setItem('ut_id', res.data.data.ut_id)
+                                        localStorage.setItem('company', res.data.data.company)
+                                        localStorage.setItem('department', res.data.data.department)
+                                        localStorage.setItem('position', res.data.data.position)
                                         message.success('登录成功')
                                         navigate('/admin/workbench')
                                     } else {

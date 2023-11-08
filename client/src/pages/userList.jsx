@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Space, Form, Input, Modal, Button, Select, Switch, Popconfirm, message } from 'antd';
+import { Card, Table, Space, Form, Input, Modal, Button, Select, Switch, Popconfirm, Cascader, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import request from '../service/request'
+import { company, department, position, combine } from '../baseData/user'
 
 function UserList() {
     const columns = [
@@ -9,7 +10,7 @@ function UserList() {
         { title: '姓名', dataIndex: 'name', key: 'name' },
         { title: '公司', dataIndex: 'company', key: 'company' },
         { title: '部门', dataIndex: 'department', key: 'department' },
-        { title: '职位', dataIndex: 'type', key: 'type' },
+        { title: '职位', dataIndex: 'position', key: 'position' },
         {
             title: '状态',
             dataIndex: 'status',
@@ -53,7 +54,11 @@ function UserList() {
             render: (_, record) => (
                 <Space size="middle">
                     <a onClick={() => {
-                        editForm.setFieldsValue(record)
+                        let combine = [ record.company, record.department, record.position ]
+                        editForm.setFieldsValue({
+                            ...record,
+                            combine
+                        })
                         setIsShowEdit(true)
                     }}>修改信息</a>
                     <Popconfirm
@@ -106,11 +111,11 @@ function UserList() {
             method: 'post',
             url: '/user/getUserList',
             data: {
-                ids: {
+                userInfo: {
                     uid: localStorage.getItem('uid'),
-                    uc_id: localStorage.getItem('uc_id'),
-                    ud_id: localStorage.getItem('ud_id'),
-                    ut_id: localStorage.getItem('ut_id')
+                    compnay: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
                 },
                 filters: tableParams.filters,
                 pagination: {
@@ -157,84 +162,6 @@ function UserList() {
     const [isShowEdit, setIsShowEdit] = useState(false)
     const [editForm] = Form.useForm()
 
-    // 获取所有公司
-    const [companyData, setCompanyData] = useState();
-    const [loadingCompany, setLoadingCompany] = useState(false);
-    const getCompanyData = () => {
-        setLoadingCompany(true)
-        request({
-            method: 'post',
-            url: '/comment/getUserCompany',
-            data: {
-                uc_id: localStorage.getItem('uc_id'),
-                ut_id: localStorage.getItem('ut_id')
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setCompanyData(res.data.data)
-                    setLoadingCompany(false)
-                } else {
-                    message.error(res.data.msg)
-                }
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    };
-
-    // 获取所有部门
-    const [departmentData, setDepartmentData] = useState();
-    const [loadingDepartment, setLoadingDepartment] = useState(false);
-    const getDepartmentData = () => {
-        setLoadingDepartment(true)
-        request({
-            method: 'post',
-            url: '/comment/getUserDepartment',
-            data: {
-                ud_id: localStorage.getItem('ud_id'),
-                ut_id: localStorage.getItem('ut_id')
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setDepartmentData(res.data.data)
-                    setLoadingDepartment(false)
-                } else {
-                    message.error(res.data.msg)
-                }
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    };
-
-    // 获取所有职位
-    const [typeData, setTypeData] = useState();
-    const [loadingType, setLoadingType] = useState(false);
-    const getTypeData = () => {
-        setLoadingType(true)
-        request({
-            method: 'post',
-            url: '/comment/getUserType',
-            data: {
-                uc_id: localStorage.getItem('uc_id'),
-                ut_id: localStorage.getItem('ut_id')
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setTypeData(res.data.data)
-                    setLoadingType(false)
-                } else {
-                    message.error(res.data.msg)
-                }
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    };
-
     // 查询、清空筛选
     const [selectForm] = Form.useForm()
 
@@ -265,29 +192,14 @@ function UserList() {
                 >
                     <Form.Item label='用户编号' name='uid' style={{marginBottom: '20px'}}><Input /></Form.Item>
                     <Form.Item label='用户姓名' name='name' style={{marginBottom: '20px'}}><Input /></Form.Item>
-                    <Form.Item label='公司' name='uc_id' style={{marginBottom: '20px'}}>
-                        <Select
-                            style={{ width: 160 }}
-                            loading={loadingCompany}
-                            options={companyData}
-                            onFocus={getCompanyData}
-                        />
+                    <Form.Item label='公司' name='compnay' style={{marginBottom: '20px'}}>
+                        <Select style={{ width: 160 }} options={company} />
                     </Form.Item>
-                    <Form.Item label='部门' name='ud_id' style={{marginBottom: '20px'}}>
-                        <Select
-                            style={{ width: 160 }}
-                            loading={loadingDepartment}
-                            options={departmentData}
-                            onFocus={getDepartmentData}
-                        />
+                    <Form.Item label='部门' name='department' style={{marginBottom: '20px'}}>
+                        <Select style={{ width: 160 }} options={department} />
                     </Form.Item>
-                    <Form.Item label='职位' name='ut_id' style={{marginBottom: '20px'}}>
-                        <Select
-                            style={{ width: 160 }}
-                            loading={loadingType}
-                            options={typeData}
-                            onFocus={getTypeData}
-                        />
+                    <Form.Item label='职位' name='position' style={{marginBottom: '20px'}}>
+                        <Select style={{ width: 160 }} options={position} />
                     </Form.Item>
                     <Form.Item>
                         <Space size={'middle'}>
@@ -347,26 +259,8 @@ function UserList() {
                     <Form.Item label="姓名" name="name" rules={[ { required: true, message: '姓名不能为空' } ]}>
                         <Input placeholder="请输入新用户姓名" />
                     </Form.Item>
-                    <Form.Item label="公司" name="uc_id" rules={[ { required: true, message: '公司不能为空' } ]}>
-                        <Select
-                            loading={loadingCompany}
-                            options={companyData}
-                            onFocus={getCompanyData}
-                        />
-                    </Form.Item>
-                    <Form.Item label="部门" name="ud_id" rules={[ { required: true, message: '部门不能为空' } ]}>
-                        <Select
-                            loading={loadingDepartment}
-                            options={departmentData}
-                            onFocus={getDepartmentData}
-                        />
-                    </Form.Item>
-                    <Form.Item label="职位" name="ut_id" rules={[ { required: true, message: '职位不能为空' } ]}>
-                        <Select
-                            loading={loadingType}
-                            options={typeData}
-                            onFocus={getTypeData}
-                        />
+                    <Form.Item label="岗位" name="combine" rules={[ { required: true, message: '岗位不能为空' } ]}>
+                        <Cascader options={combine} placeholder="请选择该用户岗位" />
                     </Form.Item>
                 </Form>
             </Modal>
@@ -408,26 +302,8 @@ function UserList() {
                     <Form.Item label="姓名" name="name" rules={[ { required: true, message: '姓名不能为空' } ]}>
                         <Input />
                     </Form.Item>
-                    <Form.Item label="公司" name="company" rules={[ { required: true, message: '公司不能为空' } ]}>
-                        <Select
-                            loading={loadingCompany}
-                            options={companyData}
-                            onFocus={getCompanyData}
-                        />
-                    </Form.Item>
-                    <Form.Item label="部门" name="department" rules={[ { required: true, message: '部门不能为空' } ]}>
-                        <Select
-                            loading={loadingDepartment}
-                            options={departmentData}
-                            onFocus={getDepartmentData}
-                        />
-                    </Form.Item>
-                    <Form.Item label="职位" name="type" rules={[ { required: true, message: '职位不能为空' } ]}>
-                        <Select
-                            loading={loadingType}
-                            options={typeData}
-                            onFocus={getTypeData}
-                        />
+                    <Form.Item label="岗位" name="combine" rules={[ { required: true, message: '岗位不能为空' } ]}>
+                        <Cascader options={combine} placeholder="请选择该用户岗位" />
                     </Form.Item>
                 </Form>
             </Modal>

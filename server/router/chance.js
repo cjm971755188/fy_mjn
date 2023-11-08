@@ -2,23 +2,26 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db')
 
-// 获取达人列表
+// 获取商机列表
 router.post('/getChanceList', (req, res) => {
   let params = req.body
-  // 条件筛选
-  let where = `where t.ts_id < 5 and t.ts_id != 0`
-  for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
-    if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
-      where += ` and t.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
-    } else {
-      where += ` and t.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
+  let where = `where c.status in ('未推进', '已推进', '报备待审批', '报备失败')`
+  // 权限筛选
+  if (params.userInfo.position != '管理员') {
+    if (params.userInfo.company != '总公司') {
+      where += ` and c.company = '${params.userInfo.company}'`
+    }
+    if (params.userInfo.department != '总裁办') {
+      where += ` and c.department = '${params.userInfo.department}'`
     }
   }
-  // 权限筛选
-  if (params.ids.ut_id == 'UT003') {
-    where += ` and uid = '${params.ids.uid}'`
-  } else if (params.ids.uc_id != 'UC001') {
-    where += ` and u.uc_id = '${params.ids.uc_id}'`
+  // 条件筛选
+  for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
+    if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
+      where += ` and c.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
+    } else {
+      where += ` and c.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
+    }
   }
   // 分页
   let current = 0
@@ -29,14 +32,10 @@ router.post('/getChanceList', (req, res) => {
   if (params.pagination.pageSize) {
     pageSize = params.pagination.pageSize
   }
-  let sql = `SELECT tid, t.pids, t.ta_name, t.taID, lt.lt_id, lt.type, liaison_name, liaison_vx, search_pic, advance_pic, group_name, t.ts_id, ts.status, t.create_time, t.advance_time FROM talent t LEFT JOIN user u on u.uid = t.uid LEFT JOIN talentstatus ts on t.ts_id = ts.ts_id LEFT JOIN liaisontype lt on t.lt_id = lt.lt_id ${where} order by tid`
+  let sql = `SELECT * FROM chance c ${where} order by c.cid`
   db.query(sql, (err, results) => {
     if (err) throw err;
-    let sql = `SELECT tid, t.pids, t.ta_name, t.taID, lt.lt_id, lt.type, liaison_name, liaison_vx, search_pic, advance_pic, group_name, t.ts_id, if(ts.status = '未报备', '已推进', ts.status) as status, t.create_time, t.advance_time FROM talent t LEFT JOIN user u on u.uid = t.uid LEFT JOIN talentstatus ts on t.ts_id = ts.ts_id LEFT JOIN liaisontype lt on t.lt_id = lt.lt_id 
-              ${where} 
-              order by tid desc 
-              limit ${pageSize} 
-              offset ${current * pageSize}`
+    let sql = `SELECT c.cid, c.platforms, c.account_ids, c.account_names, c.search_pic, c.liaison_type, c.liaison_name, c.liaison_v, c.liaison_phone, c.group_name, c.advance_pic, u.name, c.status, c.create_time, c.advance_time FROM chance c LEFT JOIN user u on u.uid = c.uid ${where} order by cid desc limit ${pageSize} offset ${current * pageSize}`
     db.query(sql, (err, r) => {
       if (err) throw err;
       res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: '' })
@@ -44,31 +43,23 @@ router.post('/getChanceList', (req, res) => {
   })
 })
 
-// 查询重复达人
+// 查询重复商机
 router.post('/searchSameChance', (req, res) => {
   let params = req.body
-  let taID = ''
-  if (params.taID && params.taID.length > 0) {
-    for (let i = 0; i < params.taID.length; i++) {
-      taID += `'${params.taID[i]}',`
-    }
-    taID = taID.substring(0, taID.length - 1)
-  } else {
-    taID = `''`
+  let account_ids = ''
+  for (let i = 0; i < params.account_ids.length; i++) {
+    account_ids += `'${params.account_ids[i]}',`
   }
-  let ta_name = ''
-  if (params.ta_name && params.ta_name.length > 0) {
-    for (let i = 0; i < params.ta_name.length; i++) {
-      ta_name += `'${params.ta_name[i]}',`
-    }
-    ta_name = ta_name.substring(0, ta_name.length - 1)
-  } else {
-    ta_name = `''`
+  account_ids = account_ids.substring(0, account_ids.length - 1)
+  let account_names = ''
+  for (let i = 0; i < params.account_names.length; i++) {
+    account_names += `'${params.account_names[i]}',`
   }
-  let sql = `SELECT td.taID, td.ta_name, u.name, p.platform FROM talentline tl LEFT JOIN talentdetail td on td.tdid = tl.tdid LEFT JOIN talent t on t.tid = td.tid LEFT JOIN user u on u.uid = tl.uid LEFT JOIN platform p on p.pid = td.pid WHERE tl.end_date IS NULL and (td.ta_name in (${ta_name}) or td.taID in (${taID})) and t.tid != '${params.tid}'`
+  account_names = account_names.substring(0, account_names.length - 1)
+  let sql = `SELECT t.talent_name, u1.name, u2.name, t.platform FROM talentline tl LEFT JOIN talent t ON t.tid = tl.tid LEFT JOIN user u1 ON u1.uid = tl.uid_1 LEFT JOIN user u2 ON u2.uid = tl.uid_2 WHERE tl.end_date IS NULL and (t.account_id in (${account_ids}) or t.account_name in (${account_names}))`
   db.query(sql, (err, results) => {
     if (err) throw err;
-    let sql = `SELECT DISTINCT tid, substring_index(substring_index( ta_name, ',', topic.help_topic_id + 1 ), ',',- 1 ) as ta_name, substring_index(substring_index( taID, ',', topic2.help_topic_id + 1 ), ',',- 1 ) as taID, u.name FROM talent JOIN mysql.help_topic topic ON topic.help_topic_id < ( length( ta_name ) - length( REPLACE ( ta_name, ',', '' ) ) + 1 ) JOIN mysql.help_topic topic2 ON topic2.help_topic_id < ( length( taID ) - length( REPLACE ( taID, ',', '' ) ) + 1 ) JOIN user u ON u.uid = talent.uid HAVING (ta_name in (${ta_name}) or taID in (${taID})) and tid != '${params.tid}'`
+    let sql = `SELECT DISTINCT cid, u.name, substring_index(substring_index( account_names, ',', topic.help_topic_id + 1 ), ',',- 1 ) as account_names, substring_index(substring_index( account_ids, ',', topic2.help_topic_id + 1 ), ',',- 1 ) as account_ids FROM chance LEFT JOIN mysql.help_topic topic ON topic.help_topic_id < ( length( account_names ) - length( REPLACE ( account_names, ',', '' ) ) + 1 ) LEFT JOIN mysql.help_topic topic2 ON topic2.help_topic_id < ( length( account_ids ) - length( REPLACE ( account_ids, ',', '' ) ) + 1 ) LEFT JOIN user u ON u.uid = chance.uid HAVING (account_names in (${account_names}) or account_ids in (${account_ids})) and cid != '${params.cid}'`
     db.query(sql, (err, r) => {
       if (err) throw err;
       if (results.length != 0 || r.length != 0) {
@@ -80,35 +71,23 @@ router.post('/searchSameChance', (req, res) => {
   })
 })
 
-// 添加新达人
+// 添加新商机
 router.post('/addChance', (req, res) => {
   let time = new Date()
   let currentDate = time.getFullYear() + "-" + (time.getMonth() + 1) + "-" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
   let params = req.body
-  let sql = `SELECT count(*) as sum FROM talent`
+  let sql = `SELECT count(*) as sum FROM chance`
   db.query(sql, (err, results) => {
     if (err) throw err;
-    let tid = 'T' + `${results[0].sum + 1}`.padStart(6, '0')
-    let pids = ''
-    for (let i = 0; i < params.pids.length; i++) {
-      pids += params.pids[i] + ','
-    }
-    pids = pids.substring(0, pids.length - 1)
-    let taID = ''
-    for (let i = 0; i < params.taID.length; i++) {
-      taID += params.taID[i] + ','
-    }
-    taID = taID.substring(0, taID.length - 1)
-    let ta_name = ''
-    for (let i = 0; i < params.ta_name.length; i++) {
-      ta_name += params.ta_name[i] + ','
-    }
-    ta_name = ta_name.substring(0, ta_name.length - 1)
+    let cid = 'C' + `${results[0].sum + 1}`.padStart(6, '0')
+    let platforms = params.platforms.join()
+    let account_ids = params.account_ids.join()
+    let account_names = params.account_names.join()
     let search_pic = params.search_pic.replace('/public', '')
-    let sql = `INSERT INTO talent(tid, pids, ta_name, taID, search_pic, uid, ts_id, create_time) VALUES('${tid}', '${pids}', '${ta_name}', '${taID}', '${search_pic}', '${params.uid}', '1', '${currentDate}')`
+    let sql = `INSERT INTO chance(cid, platforms, account_names, account_ids, search_pic, uid, status, create_time) VALUES('${cid}', '${platforms}', '${account_names}', '${account_ids}', '${search_pic}', '${params.uid}', '未推进', '${currentDate}')`
     db.query(sql, (err, results) => {
       if (err) throw err;
-      res.send({ code: 200, data: {}, msg: `${params.ta_name} 添加成功` })
+      res.send({ code: 200, data: {}, msg: `添加成功` })
     })
   })
 })
@@ -116,26 +95,14 @@ router.post('/addChance', (req, res) => {
 // 修改
 router.post('/editChance', (req, res) => {
   let params = req.body
-  let pids = ''
-  for (let i = 0; i < params.pids.length; i++) {
-    pids += params.pids[i] + ','
-  }
-  pids = pids.substring(0, pids.length - 1)
-  let taID = ''
-  for (let i = 0; i < params.taID.length; i++) {
-    taID += params.taID[i] + ','
-  }
-  taID = taID.substring(0, taID.length - 1)
-  let ta_name = ''
-  for (let i = 0; i < params.ta_name.length; i++) {
-    ta_name += params.ta_name[i] + ','
-  }
-  ta_name = ta_name.substring(0, ta_name.length - 1)
+  let platforms = params.platforms.join()
+  let account_ids = params.account_ids.join()
+  let account_names = params.account_names.join()
   let sql = ''
-  if (params.ts_id == 1) {
-    sql = `UPDATE talent set pids = '${pids}', ta_name = '${ta_name}', taID = '${taID}' WHERE tid = '${params.tid}'`
+  if (params.status === '未推进') {
+    sql = `UPDATE chance set platforms = '${platforms}', account_names = '${account_names}', account_ids = '${account_ids}' WHERE cid = '${params.cid}'`
   } else {
-    sql = `UPDATE talent set pids = '${pids}', ta_name = '${ta_name}', taID = '${taID}', lt_id = '${params.lt_id}', liaison_name = '${params.liaison_name}', liaison_vx = '${params.liaison_vx}', group_name = '${params.group_name}' WHERE tid = '${params.tid}'`
+    sql = `UPDATE chance set platforms = '${platforms}', account_names = '${account_names}', account_ids = '${account_ids}', liaison_type = '${params.liaison_type}', liaison_name = '${params.liaison_name}', liaison_v = '${params.liaison_v}', liaison_phone = '${params.liaison_phone}', group_name = '${params.group_name}' WHERE cid = '${params.cid}'`
   }
   db.query(sql, (err, results) => {
     if (err) throw err;
@@ -143,13 +110,13 @@ router.post('/editChance', (req, res) => {
   })
 })
 
-// 推进达人
+// 推进商机
 router.post('/advanceChance', (req, res) => {
   let time = new Date()
   let currentDate = time.getFullYear() + "-" + (time.getMonth() + 1) + "-" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
   let params = req.body
   let advance_pic = params.advance_pic.replace('/public', '')
-  let sql = `UPDATE talent set lt_id = '${params.lt_id}', liaison_name = '${params.liaison_name}', liaison_vx = '${params.liaison_vx}', group_name = '${params.group_name}', advance_pic = '${advance_pic}', advance_time = '${currentDate}', ts_id = 2 WHERE tid = '${params.tid}'`
+  let sql = `UPDATE chance set liaison_type = '${params.liaison_type}', liaison_name = '${params.liaison_name}', liaison_v = '${params.liaison_v}', liaison_phone = '${params.liaison_phone}', group_name = '${params.group_name}', advance_pic = '${advance_pic}', advance_time = '${currentDate}', status = '已推进' WHERE cid = '${params.cid}'`
   db.query(sql, (err, results) => {
     if (err) throw err;
     res.send({ code: 200, data: {}, msg: `${params.tid} 推进成功` })
