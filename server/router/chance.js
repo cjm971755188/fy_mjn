@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db')
+const getTime = require('../myFun/getAnalysisTime')
 
 // 获取商机列表
 router.post('/getChanceList', (req, res) => {
@@ -123,8 +124,8 @@ router.post('/advanceChance', (req, res) => {
   })
 })
 
-// 商机统计分析
-router.post('/getChanceAnalysis', (req, res) => {
+// 商机统计分析top
+router.post('/getChanceAnalysisTop', (req, res) => {
   let params = req.body
   let where = `where u.status != '2'`
   // 权限筛选
@@ -136,42 +137,85 @@ router.post('/getChanceAnalysis', (req, res) => {
       where += ` and c.department = '${params.userInfo.department}'`
     }
   }
-  let time = new Date()
-  let yestoday = time.getFullYear() + "-" + `${time.getMonth() + 1}`.padStart(2, '0') + "-" + `${time.getDate() - 1}`.padStart(2, '0') + " 00:00:00"
-  let today = time.getFullYear() + "-" + `${time.getMonth() + 1}`.padStart(2, '0') + "-" + `${time.getDate()}`.padStart(2, '0') + " 00:00:00"
-  let month = time.getFullYear() + "-" + `${time.getMonth() + 1}`.padStart(2, '0') + "-01 00:00:00"
-  let lastmonth = time.getFullYear() + "-" + `${time.getMonth() + 1}`.padStart(2, '0') + "-01 00:00:00"
-  let year = time.getFullYear() + "-01-01 00:00:00"
-  let lastyear = time.getFullYear() + "-01-01 00:00:00"
-  let searchLastDate = `1`
-  let searchNowDate = `1`
-  let advanceLastDate = `1`
-  let advanceNowDate = `1`
-  if (params.type === '今日') {
-    searchNowDate = `c.create_time >= '${today}'`
-    searchLastDate = `c.create_time >= '${yestoday}' and c.create_time < '${today}'`
-    advanceNowDate = `c.advance_time >= '${today}'`
-    advanceLastDate = `c.advance_time >= '${yestoday}' and c.advance_time < '${today}'`
-  } else if (params.type === '本月') {
-    searchNowDate = `c.create_time >= '${month}'`
-    searchLastDate = `c.create_time >= '${lastmonth}' and c.create_time < '${month}'`
-    advanceNowDate = `c.advance_time >= '${month}'`
-    advanceLastDate = `c.advance_time >= '${lastmonth}' and c.advance_time < '${month}'`
-  } else if (params.type === '今年') {
-    searchNowDate = `c.create_time >= '${year}'`
-    searchLastDate = `c.create_time >= '${lastyear}' and c.create_time < '${year}'`
-    advanceNowDate = `c.advance_time >= '${year}'`
-    advanceLastDate = `c.advance_time >= '${lastyear}' and c.advance_time < '${year}'`
-  } else if (params.type === '全部') {
-    where = ``
-  } else {
-    res.send({ code: 200, data: {}, msg: `时间选择错误` })
-  }
-  let sql = `SELECT	a.searchNow, ((a.searchNow - a.searchLast) / a.searchLast * 100) as searchYOY, a.advanceNow, ((a.advanceNow - a.advanceLast) / a.advanceLast * 100) as advanceYOY, (a.advanceNow / a.searchNow) * 100 as probabilityNow, (a.advanceNow / a.searchNow) * 100 - (a.advanceLast / a.searchLast) * 100 as probabilityYOY FROM	(SELECT SUM(IF(${searchLastDate}, 1, 0)) as searchLast, SUM(IF(${searchNowDate}, 1, 0)) as searchNow, SUM(IF(${advanceLastDate}, 1, 0)) as advanceLast, SUM(IF(${advanceNowDate}, 1, 0)) as advanceNow FROM chance c LEFT JOIN user u on u.uid = c.uid ${where} )	a`
+  let sql = `SELECT	a.searchNow, ((a.searchNow - a.searchLast) / a.searchLast * 100) as searchYOY, (searchNow / 50 * 100) as searchReachNow, (searchNow / 50 * 100 - searchLast / 50 * 100) as searchReachYOY, a.advanceNow, ((a.advanceNow - a.advanceLast) / a.advanceLast * 100) as advanceYOY, (a.advanceNow / a.searchNow) * 100 as probabilityNow, (a.advanceNow / a.searchNow) * 100 - (a.advanceLast / a.searchLast) * 100 as probabilityYOY FROM	(SELECT SUM(IF(${getTime(params.type).searchLastDate}, 1, 0)) as searchLast, SUM(IF(${getTime(params.type).searchNowDate}, 1, 0)) as searchNow, SUM(IF(${getTime(params.type).advanceLastDate}, 1, 0)) as advanceLast, SUM(IF(${getTime(params.type).advanceNowDate}, 1, 0)) as advanceNow FROM chance c LEFT JOIN user u on u.uid = c.uid ${where} )	a`
   db.query(sql, (err, results) => {
     if (err) throw err;
-    res.send({ code: 200, data: { sum: {...results[0]} }, msg: `` })
+    res.send({ code: 200, data: results[0], msg: `` })
+    
   })
+})
+
+// 商机统计分析 商务
+router.post('/getChanceAnalysisSaleman', (req, res) => {
+  let params = req.body
+  let where = `where u.status != '2'`
+  // 权限筛选
+  if (params.userInfo.position != '管理员') {
+    if (params.userInfo.company != '总公司') {
+      where += ` and c.company = '${params.userInfo.company}'`
+    }
+    if (params.userInfo.department != '总裁办') {
+      where += ` and c.department = '${params.userInfo.department}'`
+    }
+  }
+  let sql = `SELECT u.name, SUM(IF(${getTime(params.type).searchNowDate}, 1, 0)) as search, SUM(IF(${getTime(params.type).advanceNowDate}, 1, 0)) as advance, SUM(IF(${getTime(params.type).advanceNowDate}, 1, 0)) / SUM(IF(${getTime(params.type).searchNowDate}, 1, 0)) * 100 as probability FROM chance c LEFT JOIN user u ON u.uid = c.uid ${where} GROUP BY u.name ORDER BY u.name`
+    db.query(sql, (err, results) => {
+      if (err) throw err;
+      let name = []
+      let search = []
+      let advance = []
+      let probability = []
+      for (let i = 0; i < results.length; i++) {
+        const element = results[i];
+        name.push(element.name === null ? '未知' : element.name)
+        search.push(element.search === null ? 0 : element.search)
+        advance.push(element.advance === null ? 0 : element.advance)
+        probability.push(element.probability === null ? 0 : element.probability)
+      }
+      res.send({ code: 200, data: { name, search, advance, probability }, msg: `` })
+    })
+})
+
+// 商机统计分析 平台
+router.post('/getChanceAnalysisPlatform', (req, res) => {
+  let params = req.body
+  let where = `where u.status != '2'`
+  // 权限筛选
+  if (params.userInfo.position != '管理员') {
+    if (params.userInfo.company != '总公司') {
+      where += ` and c.company = '${params.userInfo.company}'`
+    }
+    if (params.userInfo.department != '总裁办') {
+      where += ` and c.department = '${params.userInfo.department}'`
+    }
+  }
+  let sql = `SELECT c.platforms, SUM(IF(${getTime(params.type).searchNowDate}, 1, 0)) as search, SUM(IF(${getTime(params.type).advanceNowDate}, 1, 0)) as advance, SUM(IF(${getTime(params.type).advanceNowDate}, 1, 0)) / SUM(IF(${getTime(params.type).searchNowDate}, 1, 0)) * 100 as probability FROM chance c LEFT JOIN user u ON u.uid = c.uid ${where} GROUP BY c.platforms ORDER BY c.platforms`
+    db.query(sql, (err, results) => {
+      if (err) throw err;
+      let platform = []
+      let search = []
+      let advance = []
+      let probability = []
+      for (let i = 0; i < results.length; i++) {
+        const element = results[i];
+        const ps = results[i].platforms.split(',')
+        if (ps.length > 1) {
+          for (let j = 0; j < ps.length; j++) {
+            const p = ps[j];
+            platform.push(p === null ? 0 : p)
+            search.push(element.search === null ? 0 : element.search / ps.length)
+            advance.push(element.advance === null ? 0 : element.advance / ps.length)
+            probability.push(element.probability === null ? 0 : element.probability)
+          }
+        } else {
+          platform.push(element.platforms[0] === null ? 0 : element.platforms[0])
+          search.push(element.search === null ? 0 : element.search)
+          advance.push(element.advance === null ? 0 : element.advance)
+          probability.push(element.probability === null ? 0 : element.probability)
+        }
+      }
+      res.send({ code: 200, data: { platform, search, advance, probability }, msg: `` })
+    })
 })
 
 module.exports = router

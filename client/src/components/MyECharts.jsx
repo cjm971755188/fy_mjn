@@ -1,9 +1,8 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
-import { Card } from 'antd';
 import * as echarts from 'echarts';
 
 function MyECharts(props) {
-    const { option, chartsClassName, row, col, height } = props;
+    const { option, height } = props;
 
     const chartRef = useRef(null);
 
@@ -28,9 +27,7 @@ function MyECharts(props) {
     }, [])
 
     return (
-        <Card title={chartsClassName}>
-            <div className={chartsClassName} ref={chartRef} style={{ width: '100%', height: height }} />
-        </Card>
+        <div ref={chartRef} style={{ width: '100%', height: height }} />
     )
 }
 export default MyECharts;
