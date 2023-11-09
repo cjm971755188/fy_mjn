@@ -5,6 +5,7 @@ import Workbench from './pages/workbench.jsx'
 import BI from './pages/bi.jsx'
 import UserList from './pages/userList.jsx'
 import ChanceList from './pages/chanceList.jsx'
+import ChanceAnalysis from './pages/chanceAnalysis.jsx'
 import TalentList from './pages/talentList.jsx'
 import LiveList from './pages/liveList.jsx'
 import PalletList from './pages/palletList.jsx'
@@ -19,11 +20,12 @@ function App() {
                 <Route path='/bi' element={<BI />} />
                 <Route path='/user' element={<UserList />} />
                 <Route path='/talent/chance_list' element={<ChanceList />} />
+                <Route path='/talent/chance_analysis' element={<ChanceAnalysis />} />
                 <Route path='/talent/talent_list' element={<TalentList />} />
-                <Route path='/live/live_list' element={<LiveList />} />
+                {/* <Route path='/live/live_list' element={<LiveList />} />
                 <Route path='/pallet/pallet_list' element={<PalletList />} />
                 <Route path='/pallet/product_list' element={<ProductList />} />
-                <Route path='/contract/contract_list' element={<ContractList />} />
+                <Route path='/contract/contract_list' element={<ContractList />} /> */}
             </Routes>
         </MyLayout>
     )

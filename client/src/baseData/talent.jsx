@@ -17,15 +17,15 @@ export const talentStatus = [
 ]
 
 export const platform = [
-    { label: "闯货", value: "未推进" },
-    { label: "抖音", value: "未报备" },
-    { label: "快手", value: "报备待审批" },
-    { label: "拼多多", value: "报备失败" },
-    { label: "视频号", value: "报备失败" },
-    { label: "视频号服务商", value: "合作中" },
-    { label: "淘宝", value: "修改待审批" },
-    { label: "微店", value: "修改失败" },
-    { label: "有赞", value: "移交待审批" }
+    { label: "闯货", value: "闯货" },
+    { label: "抖音", value: "抖音" },
+    { label: "快手", value: "快手" },
+    { label: "拼多多", value: "拼多多" },
+    { label: "视频号", value: "视频号" },
+    { label: "视频号服务商", value: "视频号服务商" },
+    { label: "淘宝", value: "淘宝" },
+    { label: "微店", value: "微店" },
+    { label: "有赞", value: "有赞" }
 ]
 
 export const liaisonType = [

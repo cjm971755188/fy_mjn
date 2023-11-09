@@ -9,6 +9,7 @@ import { chanceStatus, platform, liaisonType } from '../baseData/talent'
 function ChanceList() {
     const columns = [
         { title: '商机编号', dataIndex: 'cid', key: 'cid' },
+        { title: '平台', dataIndex: 'platforms', key: 'platforms' },
         { title: '达人账号ID', dataIndex: 'account_ids', key: 'account_ids' },
         { title: '达人账号', dataIndex: 'account_names', key: 'account_names' },
         {
@@ -22,7 +23,7 @@ function ChanceList() {
         { title: '联系人类型', dataIndex: 'liaison_type', key: 'liaison_type' },
         { title: '联系人姓名', dataIndex: 'liaison_name', key: 'liaison_name' },
         { title: '联系人微信', dataIndex: 'liaison_v', key: 'liaison_v' },
-        { title: '联系人微信', dataIndex: 'liaison_phone', key: 'liaison_phone' },
+        { title: '联系人电话', dataIndex: 'liaison_phone', key: 'liaison_phone' },
         { title: '沟通群', dataIndex: 'group_name', key: 'group_name' },
         {
             title: '推进证明',
@@ -302,7 +303,8 @@ function ChanceList() {
                                     url: '/chance/searchSameChance',
                                     data: {
                                         account_names: addForm.getFieldValue('account_names'),
-                                        account_ids: addForm.getFieldValue('account_ids')
+                                        account_ids: addForm.getFieldValue('account_ids'),
+                                        cid: ''
                                     }
                                 }).then((res) => {
                                     if (res.status == 200) {

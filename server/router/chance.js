@@ -5,7 +5,7 @@ const db = require('../config/db')
 // 获取商机列表
 router.post('/getChanceList', (req, res) => {
   let params = req.body
-  let where = `where c.status in ('未推进', '已推进', '报备待审批', '报备失败')`
+  let where = `where c.status in ('未推进', '已推进', '报备待审批', '报备失败') and c.uid = '${params.userInfo.uid}'`
   // 权限筛选
   if (params.userInfo.position != '管理员') {
     if (params.userInfo.company != '总公司') {
@@ -56,10 +56,10 @@ router.post('/searchSameChance', (req, res) => {
     account_names += `'${params.account_names[i]}',`
   }
   account_names = account_names.substring(0, account_names.length - 1)
-  let sql = `SELECT t.talent_name, u1.name, u2.name, t.platform FROM talentline tl LEFT JOIN talent t ON t.tid = tl.tid LEFT JOIN user u1 ON u1.uid = tl.uid_1 LEFT JOIN user u2 ON u2.uid = tl.uid_2 WHERE tl.end_date IS NULL and (t.account_id in (${account_ids}) or t.account_name in (${account_names}))`
+  let sql = `SELECT DISTINCT t.talent_name, u1.name, u2.name, t.platform FROM talentline tl LEFT JOIN talent t ON t.tid = tl.tid LEFT JOIN user u1 ON u1.uid = tl.uid_1 LEFT JOIN user u2 ON u2.uid = tl.uid_2 WHERE tl.end_date IS NULL and (t.account_id in (${account_ids}) or t.account_name in (${account_names}))`
   db.query(sql, (err, results) => {
     if (err) throw err;
-    let sql = `SELECT DISTINCT cid, u.name, substring_index(substring_index( account_names, ',', topic.help_topic_id + 1 ), ',',- 1 ) as account_names, substring_index(substring_index( account_ids, ',', topic2.help_topic_id + 1 ), ',',- 1 ) as account_ids FROM chance LEFT JOIN mysql.help_topic topic ON topic.help_topic_id < ( length( account_names ) - length( REPLACE ( account_names, ',', '' ) ) + 1 ) LEFT JOIN mysql.help_topic topic2 ON topic2.help_topic_id < ( length( account_ids ) - length( REPLACE ( account_ids, ',', '' ) ) + 1 ) LEFT JOIN user u ON u.uid = chance.uid HAVING (account_names in (${account_names}) or account_ids in (${account_ids})) and cid != '${params.cid}'`
+    let sql = `SELECT	a.cid, a.name, GROUP_CONCAT(DISTINCT account_names) as account_names, GROUP_CONCAT(DISTINCT account_ids) as account_ids FROM	(SELECT DISTINCT cid, u.name, substring_index(substring_index( account_names, ',', topic.help_topic_id + 1 ), ',',- 1 ) as account_names, substring_index(substring_index( account_ids, ',', topic2.help_topic_id + 1 ), ',',- 1 ) as account_ids FROM chance LEFT JOIN mysql.help_topic topic ON topic.help_topic_id < ( length( account_names ) - length( REPLACE ( account_names, ',', '' ) ) + 1 ) LEFT JOIN mysql.help_topic topic2 ON topic2.help_topic_id < ( length( account_ids ) - length( REPLACE ( account_ids, ',', '' ) ) + 1 ) LEFT JOIN user u ON u.uid = chance.uid HAVING (account_names in (${account_names}) or account_ids in (${account_ids})) and cid != '${params.cid}' )	a GROUP BY	a.cid, a.name`
     db.query(sql, (err, r) => {
       if (err) throw err;
       if (results.length != 0 || r.length != 0) {
@@ -120,6 +120,57 @@ router.post('/advanceChance', (req, res) => {
   db.query(sql, (err, results) => {
     if (err) throw err;
     res.send({ code: 200, data: {}, msg: `${params.tid} 推进成功` })
+  })
+})
+
+// 商机统计分析
+router.post('/getChanceAnalysis', (req, res) => {
+  let params = req.body
+  let where = `where u.status != '2'`
+  // 权限筛选
+  if (params.userInfo.position != '管理员') {
+    if (params.userInfo.company != '总公司') {
+      where += ` and c.company = '${params.userInfo.company}'`
+    }
+    if (params.userInfo.department != '总裁办') {
+      where += ` and c.department = '${params.userInfo.department}'`
+    }
+  }
+  let time = new Date()
+  let yestoday = time.getFullYear() + "-" + `${time.getMonth() + 1}`.padStart(2, '0') + "-" + `${time.getDate() - 1}`.padStart(2, '0') + " 00:00:00"
+  let today = time.getFullYear() + "-" + `${time.getMonth() + 1}`.padStart(2, '0') + "-" + `${time.getDate()}`.padStart(2, '0') + " 00:00:00"
+  let month = time.getFullYear() + "-" + `${time.getMonth() + 1}`.padStart(2, '0') + "-01 00:00:00"
+  let lastmonth = time.getFullYear() + "-" + `${time.getMonth() + 1}`.padStart(2, '0') + "-01 00:00:00"
+  let year = time.getFullYear() + "-01-01 00:00:00"
+  let lastyear = time.getFullYear() + "-01-01 00:00:00"
+  let searchLastDate = `1`
+  let searchNowDate = `1`
+  let advanceLastDate = `1`
+  let advanceNowDate = `1`
+  if (params.type === '今日') {
+    searchNowDate = `c.create_time >= '${today}'`
+    searchLastDate = `c.create_time >= '${yestoday}' and c.create_time < '${today}'`
+    advanceNowDate = `c.advance_time >= '${today}'`
+    advanceLastDate = `c.advance_time >= '${yestoday}' and c.advance_time < '${today}'`
+  } else if (params.type === '本月') {
+    searchNowDate = `c.create_time >= '${month}'`
+    searchLastDate = `c.create_time >= '${lastmonth}' and c.create_time < '${month}'`
+    advanceNowDate = `c.advance_time >= '${month}'`
+    advanceLastDate = `c.advance_time >= '${lastmonth}' and c.advance_time < '${month}'`
+  } else if (params.type === '今年') {
+    searchNowDate = `c.create_time >= '${year}'`
+    searchLastDate = `c.create_time >= '${lastyear}' and c.create_time < '${year}'`
+    advanceNowDate = `c.advance_time >= '${year}'`
+    advanceLastDate = `c.advance_time >= '${lastyear}' and c.advance_time < '${year}'`
+  } else if (params.type === '全部') {
+    where = ``
+  } else {
+    res.send({ code: 200, data: {}, msg: `时间选择错误` })
+  }
+  let sql = `SELECT	a.searchNow, ((a.searchNow - a.searchLast) / a.searchLast * 100) as searchYOY, a.advanceNow, ((a.advanceNow - a.advanceLast) / a.advanceLast * 100) as advanceYOY, (a.advanceNow / a.searchNow) * 100 as probabilityNow, (a.advanceNow / a.searchNow) * 100 - (a.advanceLast / a.searchLast) * 100 as probabilityYOY FROM	(SELECT SUM(IF(${searchLastDate}, 1, 0)) as searchLast, SUM(IF(${searchNowDate}, 1, 0)) as searchNow, SUM(IF(${advanceLastDate}, 1, 0)) as advanceLast, SUM(IF(${advanceNowDate}, 1, 0)) as advanceNow FROM chance c LEFT JOIN user u on u.uid = c.uid ${where} )	a`
+  db.query(sql, (err, results) => {
+    if (err) throw err;
+    res.send({ code: 200, data: { sum: {...results[0]} }, msg: `` })
   })
 })
 

@@ -46,18 +46,18 @@ const menuItemsTotal = [
         icon: <TeamOutlined />,
         label: '达人管理',
         children: [
-            /* {
+            {
                 label: '商机看板',
                 key: '/admin/talent/chance_analysis'
-            }, */
+            },
             {
                 label: '商机列表',
                 key: '/admin/talent/chance_list'
             },
-            /* {
-                label: '合作达人列表',
+            {
+                label: '达人列表',
                 key: '/admin/talent/talent_list'
-            } */
+            }
         ]
     },
     /* {
