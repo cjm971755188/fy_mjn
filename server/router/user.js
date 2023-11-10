@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db')
+const sendRobot = require('../myFun/ddrobot')
 
 // 登录
 router.post('/login', (req, res) => {
@@ -15,6 +16,7 @@ router.post('/login', (req, res) => {
     } else if (results[0].status == '0') {
       res.send({ code: 201, data: {}, msg: '该用户已被禁用' })
     } else {
+      /* sendRobot(`${results[0].name} 登录成功`) */
       res.send({ code: 200, data: results[0], msg: '登录成功' })
     }
   })

@@ -48,8 +48,6 @@ const uploadimg = require('./router/uploadimg')
 app.use('/api', uploadimg)
 
 // 引入路由
-const commentRouter = require('./router/comment')
-app.use('/comment', commentRouter)
 const userRouter = require('./router/user')
 app.use('/user', userRouter)
 const chanceRouter = require('./router/chance')

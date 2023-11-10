@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@alicloud/dingtalk": "^2.0.60",
     "axios": "^1.6.0",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
@@ -20,6 +21,7 @@
     "mysql": "^2.18.1",
     "node-fetch": "^3.3.2",
     "node-schedule": "^2.1.1",
+    "request": "^2.88.2",
     "save": "^2.9.0"
   }
 }
