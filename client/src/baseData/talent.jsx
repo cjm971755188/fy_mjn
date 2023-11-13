@@ -2,7 +2,8 @@ export const chanceStatus = [
     { label: "未推进", value: "未推进" },
     { label: "已推进", value: "已推进" },
     { label: "报备待审批", value: "报备待审批" },
-    { label: "报备失败", value: "报备失败" }
+    { label: "报备失败", value: "报备失败" },
+    { label: "报备成功", value: "报备成功" }
 ]
 
 export const talentStatus = [

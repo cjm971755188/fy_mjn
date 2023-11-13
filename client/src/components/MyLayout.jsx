@@ -36,23 +36,23 @@ const menuItemsTotal = [
         icon: <CalendarOutlined />,
         label: '工作台',
     },
-    {
+    /* {
         key: '/admin/bi',
         icon: <AreaChartOutlined />,
         label: '数据看板',
-    },
+    }, */
     {
         key: '/admin/talent',
         icon: <TeamOutlined />,
         label: '达人管理',
         children: [
             {
-                label: '商机看板',
-                key: '/admin/talent/chance_analysis'
+                label: '中间人列表',
+                key: '/admin/talent/middleman_list'
             },
             {
                 label: '商机列表',
-                key: '/admin/talent/chance_list'
+                key: '/admin/talent/chance_list',
             },
             {
                 label: '达人列表',
@@ -105,13 +105,13 @@ const menuItemsTotal = [
 ]
 
 // 查找对应的menu
-const getMenuItems = (ud_id, ut_id) => {
+const getMenuItems = (department, position) => {
     let arrObj = []
     for (let i = 0; i < menuItemsTotal.length; i++) {
         let menu = menuItemsTotal[i];
-        if (ut_id == 'UT003' && menu.label == '用户列表') {
+        if (position === '商务' || position === '助理' || position === '主播' && menu.label == '用户列表') {
             continue
-        } else if (ud_id == 'UD003' && menu.label == '达人管理') {
+        } else if (department === '总裁办' || department === '事业部' && menu.label == '达人管理') {
             continue
         } else {
             arrObj.push(menu)
@@ -190,7 +190,7 @@ const MyLayout = ({ children }) => {
     // 面包屑
     let [bread, setBread] = useState([])
     // 权限菜单配置
-    let menuItems = getMenuItems(localStorage.getItem('ud_id'), localStorage.getItem('ut_id'))
+    let menuItems = getMenuItems(localStorage.getItem('department'), localStorage.getItem('position'))
 
     // 修改用户信息
     const [isShowEdit, setIsShowEdit] = useState(false)

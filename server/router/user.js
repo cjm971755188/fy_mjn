@@ -195,4 +195,33 @@ router.post('/deleteUser', (req, res) => {
   })
 })
 
+// 获取所有商务
+router.post('/getSalemans', (req, res) => {
+  let params = req.body
+  // 去除 自己 + 管理员 + 已删除
+  let where = `where status != 2`
+  // 权限筛选
+  if (params.userInfo.position != '管理员') {
+    if (params.userInfo.company != '总公司') {
+      where += ` and company = '${params.userInfo.company}'`
+    }
+    if (params.userInfo.department != '总裁办') {
+      where += ` and department = '${params.userInfo.department}'`
+    }
+  }
+  let sql = `SELECT * FROM user ${where}`
+  db.query(sql, (err, results) => {
+    if (err) throw err;
+    let salemans = []
+    for (let i = 0; i < results.length; i++) {
+      const element = results[i];
+      salemans.push({
+        label: element.name,
+        value: element.uid
+      })
+    }
+    res.send({ code: 200, data: salemans, msg: `` })
+  })
+})
+
 module.exports = router

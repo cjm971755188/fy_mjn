@@ -17,6 +17,9 @@ router.post('/getChanceList', (req, res) => {
     }
   }
   // 条件筛选
+  if (params.filtersDate && params.filtersDate.length === 2) {
+    where += ` and c.create_time >= '${params.filtersDate[0]} 00:00:00' and c.create_time < '${params.filtersDate[1]} 00:00:00'`
+  }
   for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
     if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
       where += ` and c.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
@@ -138,7 +141,7 @@ router.post('/reportChanceOn', (req, res) => {
   let sql = `SELECT * FROM talenton`
   db.query(sql, (err, results) => {
     if (err) throw err;
-    let tid = 'TC' + `${results.length + 1}`.padStart(8, '0')
+    let tid = 'T' + `${results.length + 1}`.padStart(9, '0')
     let account_models = `'${params.account_models.join()}'`
     let keyword = params.keyword ? `'${params.keyword}'` : `'${params.account_name}'`
     let age_cuts = `'${params.age_cuts.join()}'`
@@ -159,6 +162,64 @@ router.post('/reportChanceOn', (req, res) => {
     })
   })
 })
+
+// 报备导单达人
+router.post('/reportChanceGroup', (req, res) => {
+  let time = new Date()
+  let currentDate = time.getFullYear() + "-" + (time.getMonth() + 1) + "-" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
+  let params = req.body
+  let sql = `SELECT * FROM talentgroup`
+  db.query(sql, (err, results) => {
+    if (err) throw err;
+    let tid = 'T' + `${results.length + 1}`.padStart(9, '0')
+    let uid_2 = params.group_uid_2 ? `'${params.group_uid_2}'` : null
+    let u_point_2 = params.group_u_point_2 ? `'${params.group_u_point_2}'` : null
+    let mid_1 = params.mid_1 ? `'${params.mid_1}'` : null
+    let m_point_1 = params.m_point_1 ? `'${params.m_point_1}'` : null
+    let mid_2 = params.mid_2 ? `'${params.mid_2}'` : null
+    let m_point_2 = params.m_point_2 ? `'${params.m_point_2}'` : null
+    let sql = `INSERT INTO talentgroup values('${tid}', '${params.cid}', '${params.talent_name}', '${params.group_name}', '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', '${params.userInfo.uid}', '${params.group_u_point_1}', ${uid_2}, ${u_point_2}, ${mid_1}, ${m_point_1}, ${mid_2}, ${m_point_2}, '${currentDate}')`
+    db.query(sql, (err, results) => {
+      if (err) throw err;
+      let sql = `UPDATE chance SET status = '报备待审批', report_time = '${currentDate}' WHERE cid = '${params.cid}'`
+      db.query(sql, (err, results) => {
+        if (err) throw err;
+        res.send({ code: 200, data: {}, msg: `` })
+      })
+    })
+  })
+})
+
+// 报备供货达人
+router.post('/reportChanceProvide', (req, res) => {
+  let time = new Date()
+  let currentDate = time.getFullYear() + "-" + (time.getMonth() + 1) + "-" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
+  let params = req.body
+  let sql = `SELECT * FROM talentprovide`
+  db.query(sql, (err, results) => {
+    if (err) throw err;
+    let tid = 'T' + `${results.length + 1}`.padStart(9, '0')
+    let uid_2 = params.provide_uid_2 ? `'${params.provide_uid_2}'` : null
+    let u_point_2 = params.provide_u_point_2 ? `'${params.provide_u_point_2}'` : null
+    let mid_1 = params.mid_1 ? `'${params.mid_1}'` : null
+    let m_point_1 = params.m_point_1 ? `'${params.m_point_1}'` : null
+    let mid_2 = params.mid_2 ? `'${params.mid_2}'` : null
+    let m_point_2 = params.m_point_2 ? `'${params.m_point_2}'` : null
+    let sql = `INSERT INTO talentprovide values('${tid}', '${params.cid}', '${params.talent_name}', '${params.provide_name}', '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${uid_2}, ${u_point_2}, ${mid_1}, ${m_point_1}, ${mid_2}, ${m_point_2}, '${currentDate}')`
+    db.query(sql, (err, results) => {
+      if (err) throw err;
+      let sql = `UPDATE chance SET status = '报备待审批', report_time = '${currentDate}' WHERE cid = '${params.cid}'`
+      db.query(sql, (err, results) => {
+        if (err) throw err;
+        res.send({ code: 200, data: {}, msg: `` })
+      })
+    })
+  })
+})
+
+
+
+
 
 // 商机统计分析top
 router.post('/getChanceAnalysisTop', (req, res) => {
