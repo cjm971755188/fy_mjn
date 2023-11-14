@@ -8,6 +8,7 @@ function UserList() {
     const columns = [
         { title: '编号', dataIndex: 'uid', key: 'uid' },
         { title: '姓名', dataIndex: 'name', key: 'name' },
+        { title: '手机号', dataIndex: 'phone', key: 'phone' },
         { title: '公司', dataIndex: 'company', key: 'company' },
         { title: '部门', dataIndex: 'department', key: 'department' },
         { title: '职位', dataIndex: 'position', key: 'position' },
@@ -113,7 +114,7 @@ function UserList() {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
-                    compnay: localStorage.getItem('company'),
+                    company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
                     position: localStorage.getItem('position')
                 },
@@ -190,9 +191,10 @@ function UserList() {
                         })
                     }}
                 >
-                    <Form.Item label='用户编号' name='uid' style={{marginBottom: '20px'}}><Input /></Form.Item>
-                    <Form.Item label='用户姓名' name='name' style={{marginBottom: '20px'}}><Input /></Form.Item>
-                    <Form.Item label='公司' name='compnay' style={{marginBottom: '20px'}}>
+                    <Form.Item label='编号' name='uid' style={{marginBottom: '20px'}}><Input /></Form.Item>
+                    <Form.Item label='姓名' name='name' style={{marginBottom: '20px'}}><Input /></Form.Item>
+                    <Form.Item label='手机号' name='phone' style={{marginBottom: '20px'}}><Input /></Form.Item>
+                    <Form.Item label='公司' name='company' style={{marginBottom: '20px'}}>
                         <Select style={{ width: 160 }} options={company} />
                     </Form.Item>
                     <Form.Item label='部门' name='department' style={{marginBottom: '20px'}}>
@@ -256,10 +258,13 @@ function UserList() {
                         })
                     }}
                 >
-                    <Form.Item label="姓名" name="name" rules={[ { required: true, message: '姓名不能为空' } ]}>
+                    <Form.Item label="姓名" name="name" rules={[ { required: true, message: '不能为空' } ]}>
                         <Input placeholder="请输入新用户姓名" />
                     </Form.Item>
-                    <Form.Item label="岗位" name="combine" rules={[ { required: true, message: '岗位不能为空' } ]}>
+                    <Form.Item label="手机号（钉钉）" name="phone" rules={[ { required: true, message: '不能为空' } ]}>
+                        <Input placeholder="请输入新用户手机号" />
+                    </Form.Item>
+                    <Form.Item label="岗位" name="combine" rules={[ { required: true, message: '不能为空' } ]}>
                         <Cascader options={combine} placeholder="请选择该用户岗位" />
                     </Form.Item>
                 </Form>
@@ -300,6 +305,9 @@ function UserList() {
                         <Input disabled={true} />
                     </Form.Item>
                     <Form.Item label="姓名" name="name" rules={[ { required: true, message: '姓名不能为空' } ]}>
+                        <Input />
+                    </Form.Item>
+                    <Form.Item label="手机号" name="phone" rules={[{ required: true }]}>
                         <Input />
                     </Form.Item>
                     <Form.Item label="岗位" name="combine" rules={[ { required: true, message: '岗位不能为空' } ]}>

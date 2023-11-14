@@ -8,6 +8,7 @@ import {
     AreaChartOutlined,
     CarryOutOutlined,
     AuditOutlined,
+    BranchesOutlined,
     TeamOutlined
 } from '@ant-design/icons';
 import { Layout, Menu, Button, theme, Dropdown, Breadcrumb, Form, Modal, Input, message } from 'antd';
@@ -46,10 +47,6 @@ const menuItemsTotal = [
         icon: <TeamOutlined />,
         label: '达人管理',
         children: [
-            {
-                label: '中间人列表',
-                key: '/admin/talent/middleman_list'
-            },
             {
                 label: '商机列表',
                 key: '/admin/talent/chance_list',
@@ -98,6 +95,11 @@ const menuItemsTotal = [
         ]
     }, */
     {
+        label: '中间人列表',
+        icon: <BranchesOutlined />,
+        key: '/admin/talent/middleman_list'
+    },
+    {
         key: '/admin/user',
         icon: <UserOutlined />,
         label: '用户列表'
@@ -109,13 +111,14 @@ const getMenuItems = (department, position) => {
     let arrObj = []
     for (let i = 0; i < menuItemsTotal.length; i++) {
         let menu = menuItemsTotal[i];
-        if (position === '商务' || position === '助理' || position === '主播' && menu.label == '用户列表') {
+        /* if (position === '商务' || position === '助理' || position === '主播' && menu.label == '用户列表') {
             continue
-        } else if (department === '总裁办' || department === '事业部' && menu.label == '达人管理') {
+        } else if (department !== '总裁办' && department !== '事业部' && menu.label == '达人管理') {
             continue
         } else {
             arrObj.push(menu)
-        }
+        } */
+        arrObj.push(menu)
     }
     return arrObj
 }
@@ -173,7 +176,8 @@ const MyLayout = ({ children }) => {
             setIsShowEdit(true)
             editForm.setFieldsValue({
                 uid: localStorage.getItem('uid'),
-                name: localStorage.getItem('name')
+                name: localStorage.getItem('name'),
+                phone: localStorage.getItem('phone')
             })
         } else if (key == 'logOut') {
             localStorage.clear()
@@ -270,19 +274,22 @@ const MyLayout = ({ children }) => {
                                 })
                             }}
                         >
-                            <Form.Item label="编号" name="uid" rules={[{ required: true, message: '编号不能为空' }]}>
+                            <Form.Item label="编号" name="uid" rules={[{ required: true, message: '不能为空' }]}>
                                 <Input disabled={true} />
                             </Form.Item>
-                            <Form.Item label="姓名" name="name" rules={[{ required: true, message: '姓名不能为空' }]}>
+                            <Form.Item label="姓名" name="name" rules={[{ required: true, message: '不能为空' }]}>
                                 <Input disabled={true} />
                             </Form.Item>
-                            <Form.Item label="原密码" name="password" rules={[{ required: true, message: '原密码不能为空' }]}>
+                            <Form.Item label="手机号" name="phone" rules={[{ required: true, message: '不能为空' }]}>
+                                <Input disabled={true} />
+                            </Form.Item>
+                            <Form.Item label="原密码" name="password" rules={[{ required: true, message: '不能为空' }]}>
                                 <Input type='password' />
                             </Form.Item>
-                            <Form.Item label="新密码" name="password2" rules={[{ required: true, message: '新密码不能为空' }]}>
+                            <Form.Item label="新密码" name="password2" rules={[{ required: true, message: '不能为空' }]}>
                                 <Input type='password' />
                             </Form.Item>
-                            <Form.Item label="确认新密码" name="password3" rules={[{ required: true, message: '确认新密码不能为空' }]}>
+                            <Form.Item label="确认新密码" name="password3" rules={[{ required: true, message: '不能为空' }]}>
                                 <Input type='password' />
                             </Form.Item>
                         </Form>

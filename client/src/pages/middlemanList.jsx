@@ -62,6 +62,7 @@ function MiddlemanList() {
                 </Tooltip>
             )
         },
+        { title: '创建人', dataIndex: 'u_name', key: 'u_name' },
         {
             title: '操作',
             key: 'action',
@@ -222,7 +223,7 @@ function MiddlemanList() {
                                     ...values,
                                     userInfo: {
                                         uid: localStorage.getItem('uid'),
-                                        compnay: localStorage.getItem('company'),
+                                        company: localStorage.getItem('company'),
                                         department: localStorage.getItem('department'),
                                         position: localStorage.getItem('position')
                                     }
@@ -252,7 +253,7 @@ function MiddlemanList() {
                                     ...values,
                                     userInfo: {
                                         uid: localStorage.getItem('uid'),
-                                        compnay: localStorage.getItem('company'),
+                                        company: localStorage.getItem('company'),
                                         department: localStorage.getItem('department'),
                                         position: localStorage.getItem('position')
                                     }

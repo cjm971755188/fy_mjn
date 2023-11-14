@@ -7,11 +7,8 @@ import people from '../assets/people.jpg'
 import UpLoadImg from '../components/UpLoadImg'
 import { chanceStatus, model, platform, liaisonType, accountType, accountModelType, ageCut, priceCut, middleType } from '../baseData/talent'
 import MyDateSelect from '../components/MyDateSelect'
-import { useNavigate } from 'react-router-dom'
 
 function ChanceList() {
-    const navigate = useNavigate()
-
     let columns = [
         { title: '商机编号', dataIndex: 'cid', key: 'cid' },
         { title: '模式', dataIndex: 'models', key: 'models' },
@@ -28,13 +25,14 @@ function ChanceList() {
             )
         },
         {
-            title: '联系人类型',
-            dataIndex: 'liaison_type',
-            key: 'liaison_type',
+            title: '联系人',
+            dataIndex: 'liaison_name',
+            key: 'liaison_name',
             render: (_, record) => (
                 <Tooltip title={() => {
                     return (
                         <div>
+                            <div>类型：{record.liaison_type}</div>
                             <div>姓名：{record.liaison_name}</div>
                             <div>微信：{record.liaison_v}</div>
                             <div>电话：{record.liaison_phone}</div>
@@ -42,7 +40,7 @@ function ChanceList() {
                         </div>
                     )
                 }}>
-                    <span>{record.liaison_type}</span>
+                    <span>{record.liaison_name}</span>
                 </Tooltip>
             )
         },
@@ -61,7 +59,7 @@ function ChanceList() {
             key: 'status',
             render: (_, record) => (
                 <Space size="small">
-                    {record.status === '未推进' ? <ClockCircleTwoTone twoToneColor="#f81d22" /> : record.status === '已推进' ? <CheckCircleTwoTone twoToneColor="#4ec990" /> : <PlayCircleTwoTone twoToneColor="#1677ff" />}
+                    {record.status === '未推进' || record.status === '报备驳回' ? <PlayCircleTwoTone twoToneColor="#f81d22" /> : (record.status === '已推进' || record.status === '报备通过') ? <CheckCircleTwoTone twoToneColor="#4ec990" /> : <ClockCircleTwoTone twoToneColor="#ee9900" />}
                     <span>{record.status}</span>
                 </Space>
             )
@@ -71,85 +69,133 @@ function ChanceList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
-                    {localStorage.getItem('position') !== '商务' ? <>{record.status === '未推进' || record.status === '已推进' ? <a onClick={() => {
-                        setFormType('edit');
-                        setIsShowPlatform(false)
-                        setIsShowGroup(false)
-                        setIsShowProvide(false)
-                        let models = record.models.split(',')
-                        for (let i = 0; i < models.length; i++) {
-                            const element = models[i];
-                            if (element === '线上平台') {
-                                setIsShowPlatform(true)
-                            }
-                            if (element === '社群团购') {
-                                setIsShowGroup(true)
-                            }
-                            if (element === '供货') {
-                                setIsShowProvide(true)
-                            }
-                        }
-                        let platforms = record.platforms.split(',')
-                        let account_names = record.account_names.split(',')
-                        let account_ids = record.account_ids.split(',')
-                        form.setFieldsValue({
-                            ...record,
-                            models,
-                            platforms,
-                            account_names,
-                            account_ids
-                        })
-                        setIsShow(true)
-                    }}>修改信息</a> : null}
-                        {record.status === '未推进' ? <a onClick={() => {
-                            setFormType('advance');
-                            form.setFieldsValue(record)
-                            setIsShow(true)
-                        }}>推进</a> : record.status === '已推进' ? <a onClick={() => {
-                            setFormType('report');
-                            setIsShowPlatform(false)
-                            setIsShowGroup(false)
-                            setIsShowProvide(false)
-                            let models = record.models.split(',')
-                            for (let i = 0; i < models.length; i++) {
-                                const element = models[i];
-                                if (element === '线上平台') {
-                                    setIsShowPlatform(true)
+                    {localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ?
+                        <>{record.status === '报备待审批' ?
+                            <a onClick={() => { getDetail(record); setDetailType('check'); setIsShowDetail(true); }}>审批</a> : null}
+                        </> :
+                        <>{record.status === '未推进' || record.status === '已推进' ?
+                            <a onClick={() => {
+                                setFormType('edit');
+                                setIsShowPlatform(false)
+                                setIsShowGroup(false)
+                                setIsShowProvide(false)
+                                let models = record.models.split(',')
+                                for (let i = 0; i < models.length; i++) {
+                                    const element = models[i];
+                                    if (element === '线上平台') {
+                                        setIsShowPlatform(true)
+                                    }
+                                    if (element === '社群团购') {
+                                        setIsShowGroup(true)
+                                    }
+                                    if (element === '供货') {
+                                        setIsShowProvide(true)
+                                    }
                                 }
-                                if (element === '社群团购') {
-                                    setIsShowGroup(true)
+                                let platforms = record.platforms
+                                let account_names = record.account_names
+                                let account_ids = record.account_ids
+                                if (record.models.match('线上平台')) {
+                                    platforms = record.platforms.split(',')
+                                    account_names = record.account_names.split(',')
+                                    account_ids = record.account_ids.split(',')
                                 }
-                                if (element === '供货') {
-                                    setIsShowProvide(true)
-                                }
-                            }
-                            let platformList = []
-                            for (let i = 0; i < record.platforms.split(',').length; i++) {
-                                const element = record.platforms.split(',')[i];
-                                platformList.push({ label: element, value: element })
-                            }
-                            let accountIdList = []
-                            for (let i = 0; i < record.account_ids.split(',').length; i++) {
-                                const element = record.account_ids.split(',')[i];
-                                accountIdList.push({ label: element, value: element })
-                            }
-                            let accountNameList = []
-                            for (let i = 0; i < record.account_names.split(',').length; i++) {
-                                const element = record.account_names.split(',')[i];
-                                accountNameList.push({ label: element, value: element })
-                            }
-                            form.setFieldsValue({
-                                ...record,
-                                platformList,
-                                accountIdList,
-                                accountNameList
-                            })
-                            setIsShow(true)
-                        }}>报备审批</a> : null}</>
-                        : <>{record.status === '报备待审批' ? <a onClick={() => {
-                            setDetailType('check')
-                            setIsShowDetail(true)
-                        }}>审批</a> : null}</>}
+                                form.setFieldsValue({
+                                    ...record,
+                                    models,
+                                    platforms,
+                                    account_names,
+                                    account_ids
+                                })
+                                setIsShow(true)
+                            }}>修改信息</a> : null}
+                            {record.status === '未推进' ?
+                                <a onClick={() => {
+                                    setFormType('advance');
+                                    form.setFieldsValue(record)
+                                    setIsShow(true)
+                                }}>推进</a> : record.status === '已推进' || record.status === '报备驳回' ?
+                                    <>
+                                        <a onClick={() => {
+                                            setFormType('report');
+                                            setIsShowPlatform(false)
+                                            setIsShowGroup(false)
+                                            setIsShowProvide(false)
+                                            let models = record.models.split(',')
+                                            for (let i = 0; i < models.length; i++) {
+                                                const element = models[i];
+                                                if (element === '线上平台') {
+                                                    setIsShowPlatform(true)
+                                                }
+                                                if (element === '社群团购') {
+                                                    setIsShowGroup(true)
+                                                }
+                                                if (element === '供货') {
+                                                    setIsShowProvide(true)
+                                                }
+                                            }
+                                            let platformList = []
+                                            let accountIdList = []
+                                            let accountNameList = []
+                                            if (record.models.match('线上平台')) {
+                                                for (let i = 0; i < record.platforms.split(',').length; i++) {
+                                                    const element = record.platforms.split(',')[i];
+                                                    platformList.push({ label: element, value: element })
+                                                }
+                                                for (let i = 0; i < record.account_ids.split(',').length; i++) {
+                                                    const element = record.account_ids.split(',')[i];
+                                                    accountIdList.push({ label: element, value: element })
+                                                }
+                                                for (let i = 0; i < record.account_names.split(',').length; i++) {
+                                                    const element = record.account_names.split(',')[i];
+                                                    accountNameList.push({ label: element, value: element })
+                                                }
+                                            }
+                                            form.setFieldsValue({
+                                                ...record,
+                                                platformList,
+                                                accountIdList,
+                                                accountNameList
+                                            })
+                                            setIsShow(true)
+                                        }}>报备</a>
+                                        {record.status === '报备驳回' ? <a onClick={() => {
+                                            request({
+                                                method: 'post',
+                                                url: '/chance/getCheckNote',
+                                                data: {
+                                                    cid: record.cid,
+                                                    userInfo: {
+                                                        uid: localStorage.getItem('uid'),
+                                                        company: localStorage.getItem('company'),
+                                                        department: localStorage.getItem('department'),
+                                                        position: localStorage.getItem('position')
+                                                    }
+                                                }
+                                            }).then((res) => {
+                                                if (res.status == 200) {
+                                                    if (res.data.code == 200) {
+                                                        setCheckNoReason(res.data.data)
+                                                        setCheckNoType('look')
+                                                        setIsShowCheckNo(true);
+                                                    } else {
+                                                        message.error(res.data.msg)
+                                                    }
+                                                } else {
+                                                    message.error(res.data.msg)
+                                                }
+                                            }).catch((err) => {
+                                                console.error(err)
+                                            })
+                                        }}>查看驳回理由</a> : null}
+                                    </> :
+                                    <a onClick={() => {
+                                        getDetail(record)
+                                        setDetailType('look')
+                                        setIsShowDetail(true)
+                                    }}>查看报备详情</a>}
+                        </>
+                    }
                 </Space>
             )
         }
@@ -252,7 +298,10 @@ function ChanceList() {
             data: {
                 value: value,
                 userInfo: {
-
+                    uid: localStorage.getItem('uid'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
                 }
             }
         }).then((res) => {
@@ -274,7 +323,13 @@ function ChanceList() {
             method: 'post',
             url: '/middleman/searchMiddlemans',
             data: {
-                value: value
+                value: value,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
             }
         }).then((res) => {
             if (res.status == 200) {
@@ -298,7 +353,102 @@ function ChanceList() {
     // 查看详情
     const [isShowDetail, setIsShowDetail] = useState(false)
     const [detailType, setDetailType] = useState()
-    const [detailData, setDetailData] = useState()
+    const [detailData, setDetailData] = useState({
+        comment: [],
+        online: [],
+        group: [],
+        provide: []
+    })
+    const [isShowCheckNo, setIsShowCheckNo] = useState()
+    const [checkNoReason, setCheckNoReason] = useState('')
+    const [checkNoType, setCheckNoType] = useState('')
+    const getDetail = (record) => {
+        request({
+            method: 'post',
+            url: '/talent/getDetail',
+            data: {
+                cid: record.cid,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    for (let i = 0; i < res.data.data.comment.length; i++) {
+                        if (res.data.data.comment[i].label === '达人昵称') {
+                            res.data.data.comment[i].span = 4
+                        }
+                    }
+                    for (let i = 0; i < res.data.data.online.length; i++) {
+                        for (let j = 0; j < res.data.data.online[i].length; j++) {
+                            const element = res.data.data.online[i][j];
+                            if (element.label === '常规品线上佣金比例') {
+                                element.span = 2
+                            }
+                        }
+                    }
+                    for (let i = 0; i < res.data.data.group.length; i++) {
+                        if (res.data.data.group[i].label === '其他备注') {
+                            res.data.data.group[i].span = 4
+                        }
+                    }
+                    for (let i = 0; i < res.data.data.provide.length; i++) {
+                        if (res.data.data.provide[i].label === '买断折扣') {
+                            res.data.data.provide[i].span = 1.5
+                        }
+                        if (res.data.data.provide[i].label === '含退货折扣') {
+                            res.data.data.provide[i].span = 1.5
+                        }
+                        if (res.data.data.provide[i].label === '其他备注') {
+                            res.data.data.provide[i].span = 4
+                        }
+                    }
+                    setDetailData(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const checkChance = (type) => {
+        request({
+            method: 'post',
+            url: '/chance/checkChance',
+            data: {
+                tid: detailData.comment[0].children,
+                type: type,
+                check_note: checkNoReason,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    fetchData();
+                    setIsShowDetail(false);
+                    setIsShowCheckNo(false);
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     // 查询、清空筛选
     const [selectForm] = Form.useForm()
@@ -330,10 +480,10 @@ function ChanceList() {
                     <Form.Item label='平台' name='platforms' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={platform} />
                     </Form.Item>
-                    <Form.Item label='达人账号' name='account_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='联系人类型' name='liaison_type'>
-                        <Select style={{ width: 160 }} options={liaisonType} />
-                    </Form.Item>
+                    <Form.Item label='线上达人名' name='account_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='团购达人名' name='group_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='供货达人名' name='provide_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='联系人' name='liaison_name'><Input /></Form.Item>
                     <Form.Item label='商务' name='uid' style={{ marginBottom: '20px' }}>
                         <Select
                             style={{ width: 160 }}
@@ -345,7 +495,7 @@ function ChanceList() {
                                     data: {
                                         userInfo: {
                                             uid: localStorage.getItem('uid'),
-                                            compnay: localStorage.getItem('company'),
+                                            company: localStorage.getItem('company'),
                                             department: localStorage.getItem('department'),
                                             position: localStorage.getItem('position')
                                         }
@@ -398,37 +548,39 @@ function ChanceList() {
                 open={isShow}
                 width='40%'
                 maskClosable={false}
-                onOk={() => { form.submit() }}
+                onOk={() => { form.submit(); }}
                 onCancel={() => { setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList([]); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false); }}
             >
                 <Form
                     form={form}
                     onFinish={(values) => {
                         if (formType == 'add') {
-                            request({
-                                method: 'post',
-                                url: '/chance/addChance',
-                                data: {
-                                    ...values,
-                                    uid: localStorage.getItem('uid')
-                                }
-                            }).then((res) => {
-                                if (res.status == 200) {
-                                    if (res.data.code == 200) {
-                                        setIsShow(false)
-                                        fetchData()
-                                        form.resetFields()
-                                        setSearchList([])
-                                        message.success(res.data.msg)
+                            if (isShowPlatform && values.account_ids.length !== values.account_names.length) {
+                                message.error('线上达人的账号和ID数量不一致')
+                            } else {
+                                request({
+                                    method: 'post',
+                                    url: '/chance/addChance',
+                                    data: {
+                                        ...values,
+                                        uid: localStorage.getItem('uid')
+                                    }
+                                }).then((res) => {
+                                    if (res.status == 200) {
+                                        if (res.data.code == 200) {
+                                            setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList([]); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
+                                            fetchData()
+                                            message.success(res.data.msg)
+                                        } else {
+                                            message.error(res.data.msg)
+                                        }
                                     } else {
                                         message.error(res.data.msg)
                                     }
-                                } else {
-                                    message.error(res.data.msg)
-                                }
-                            }).catch((err) => {
-                                console.error(err)
-                            })
+                                }).catch((err) => {
+                                    console.error(err)
+                                })
+                            }
                         } else if (formType == 'edit') {
                             request({
                                 method: 'post',
@@ -440,10 +592,8 @@ function ChanceList() {
                             }).then((res) => {
                                 if (res.status == 200) {
                                     if (res.data.code == 200) {
-                                        setIsShow(false)
+                                        setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList([]); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
                                         fetchData()
-                                        form.resetFields()
-                                        setSearchList([])
                                         message.success(res.data.msg)
                                     } else {
                                         message.error(res.data.msg)
@@ -462,9 +612,8 @@ function ChanceList() {
                             }).then((res) => {
                                 if (res.status == 200) {
                                     if (res.data.code == 200) {
-                                        setIsShow(false)
+                                        setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList([]); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
                                         fetchData()
-                                        form.resetFields()
                                         message.success(res.data.msg)
                                     } else {
                                         message.error(res.data.msg)
@@ -485,10 +634,11 @@ function ChanceList() {
                                         data: {
                                             cid: values.cid,
                                             talent_name: values.talent_name,
+                                            key: i + 1,
                                             ...element,
                                             userInfo: {
                                                 uid: localStorage.getItem('uid'),
-                                                compnay: localStorage.getItem('company'),
+                                                company: localStorage.getItem('company'),
                                                 department: localStorage.getItem('department'),
                                                 position: localStorage.getItem('position')
                                             }
@@ -496,7 +646,7 @@ function ChanceList() {
                                     }).then((res) => {
                                         if (res.status == 200) {
                                             if (res.data.code == 200) {
-                                                setIsShow(false)
+                                                setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList([]); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
                                                 fetchData()
                                                 form.resetFields()
                                             } else {
@@ -520,7 +670,7 @@ function ChanceList() {
                                         ...values,
                                         userInfo: {
                                             uid: localStorage.getItem('uid'),
-                                            compnay: localStorage.getItem('company'),
+                                            company: localStorage.getItem('company'),
                                             department: localStorage.getItem('department'),
                                             position: localStorage.getItem('position')
                                         }
@@ -528,7 +678,7 @@ function ChanceList() {
                                 }).then((res) => {
                                     if (res.status == 200) {
                                         if (res.data.code == 200) {
-                                            setIsShow(false)
+                                            setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList([]); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
                                             fetchData()
                                             form.resetFields()
                                         } else {
@@ -551,7 +701,7 @@ function ChanceList() {
                                         ...values,
                                         userInfo: {
                                             uid: localStorage.getItem('uid'),
-                                            compnay: localStorage.getItem('company'),
+                                            company: localStorage.getItem('company'),
                                             department: localStorage.getItem('department'),
                                             position: localStorage.getItem('position')
                                         }
@@ -559,7 +709,7 @@ function ChanceList() {
                                 }).then((res) => {
                                     if (res.status == 200) {
                                         if (res.data.code == 200) {
-                                            setIsShow(false)
+                                            setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList([]); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
                                             fetchData()
                                             form.resetFields()
                                         } else {
@@ -575,10 +725,10 @@ function ChanceList() {
                         }
                     }}
                 >
-                    {formType == 'add' ? null : <Form.Item label="商机编号" name="cid" rules={[{ required: true, message: '模式不能为空' }]}>
+                    {formType == 'add' ? null : <Form.Item label="商机编号" name="cid" rules={[{ required: true, message: '不能为空' }]}>
                         <Input disabled={true} />
                     </Form.Item>}
-                    {formType == 'report' ? <Form.Item label="达人昵称" name="talent_name" rules={[{ required: true, message: '达人昵称不能为空' }]}>
+                    {formType == 'report' ? <Form.Item label="达人昵称" name="talent_name" rules={[{ required: true, message: '不能为空' }]}>
                         <Input placeholder="请输入达人昵称（公司内部、唯一、比较简单好记）" />
                     </Form.Item> : null}
                     {formType == 'report' ? <><Form.Item label="若中间人信息未入库">
@@ -595,22 +745,22 @@ function ChanceList() {
                             </Radio.Group>
                         </Form.Item>
                         {hasFirstMiddle ? <Space size='large'>
-                            <Form.Item label="一级中间人" name="mid_1" >
+                            <Form.Item label="一级中间人" name="mid_1" rules={[{ required: true, message: '不能为空' }]}>
                                 <Select showSearch placeholder="请输入中间人名称" options={middlemans1} filterOption={filterOption} onChange={(value) => { searchMiddleman1(value) }} onSearch={(value) => { searchMiddleman1(value) }} />
                             </Form.Item>
-                            <Form.Item label="一级中间人提成点（%）" name="m_point_1" >
+                            <Form.Item label="一级中间人提成点（%）" name="m_point_1" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber />
                             </Form.Item>
                         </Space> : null}
                         {hasSecondMiddle ? <Space size='large'>
-                            <Form.Item label="二级中间人" name="mid_2" >
+                            <Form.Item label="二级中间人" name="mid_2" rules={[{ required: true, message: '不能为空' }]}>
                                 <Select showSearch placeholder="请输入中间人名称" options={middlemans2} filterOption={filterOption} onChange={(value) => { searchMiddleman2(value) }} onSearch={(value) => { searchMiddleman2(value) }} />
                             </Form.Item>
-                            <Form.Item label="二级中间人提成点（%）" name="m_point_2" >
+                            <Form.Item label="二级中间人提成点（%）" name="m_point_2" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber />
                             </Form.Item>
                         </Space> : null}</> : null}
-                    {formType == 'add' || formType == 'edit' ? <Form.Item label="模式" name="models" rules={[{ required: true, message: '模式不能为空' }]}>
+                    {formType == 'add' || formType == 'edit' ? <Form.Item label="模式" name="models" rules={[{ required: true, message: '不能为空' }]}>
                         <Select
                             mode="multiple"
                             allowClear
@@ -641,7 +791,7 @@ function ChanceList() {
                     </Form.Item> : null}
                     {isShowPlatform ? <Card title="线上平台" style={{ marginBottom: "20px" }}>
                         {formType !== 'report' ? <>
-                            <Form.Item label="平台" name="platforms" rules={[{ required: true, message: '平台不能为空' }]}>
+                            <Form.Item label="平台" name="platforms" rules={[{ required: true, message: '不能为空' }]}>
                                 <Select
                                     mode="multiple"
                                     allowClear
@@ -655,7 +805,7 @@ function ChanceList() {
                                     options={platform}
                                 />
                             </Form.Item>
-                            <Form.Item label="账号ID" name="account_ids" rules={[{ required: true, message: '账号ID不能为空' }]}>
+                            <Form.Item label="账号ID" name="account_ids" rules={[{ required: true, message: '不能为空' }]}>
                                 <Select
                                     mode="tags"
                                     allowClear
@@ -666,7 +816,7 @@ function ChanceList() {
                                     options={[]}
                                 />
                             </Form.Item>
-                            <Form.Item label="达人账号" name="account_names" rules={[{ required: true, message: '达人账号不能为空' }]}>
+                            <Form.Item label="达人账号" name="account_names" rules={[{ required: true, message: '不能为空' }]}>
                                 <Select
                                     mode="tags"
                                     allowClear
@@ -751,7 +901,7 @@ function ChanceList() {
                                 <>
                                     {fields.map(({ key, name, ...restField }) => (
                                         <Card key={key} title={`第 ${name + 1} 个账号`} extra={<MinusCircleOutlined onClick={() => remove(name)} />} style={{ marginBottom: '20px' }}>
-                                            <Form.Item label="平台" {...restField} name={[name, "platform"]} rules={[{ required: true, message: '平台不能为空' }]}>
+                                            <Form.Item label="平台" {...restField} name={[name, "platform"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select
                                                     placeholder="请选择报备的平台"
                                                     onChange={(value) => {
@@ -763,7 +913,7 @@ function ChanceList() {
                                                     options={form.getFieldValue('platformList')}
                                                 />
                                             </Form.Item>
-                                            <Form.Item label="账号ID" {...restField} name={[name, "account_id"]} rules={[{ required: true, message: '账号ID不能为空' }]}>
+                                            <Form.Item label="账号ID" {...restField} name={[name, "account_id"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select
                                                     placeholder="请选择报备的账号ID"
                                                     onChange={(value) => {
@@ -772,7 +922,7 @@ function ChanceList() {
                                                     options={form.getFieldValue('accountIdList')}
                                                 />
                                             </Form.Item>
-                                            <Form.Item label="账号名称" {...restField} name={[name, "account_name"]} rules={[{ required: true, message: '账号名称不能为空' }]}>
+                                            <Form.Item label="账号名称" {...restField} name={[name, "account_name"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select
                                                     placeholder="请选择报备的账号名称"
                                                     onChange={(value) => {
@@ -781,7 +931,7 @@ function ChanceList() {
                                                     options={form.getFieldValue('accountNameList')}
                                                 />
                                             </Form.Item>
-                                            <Form.Item label="账号类型" {...restField} name={[name, "account_type"]} rules={[{ required: true, message: '账号类型不能为空' }]}>
+                                            <Form.Item label="账号类型" {...restField} name={[name, "account_type"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select
                                                     placeholder="请选择报备的账号类型"
                                                     onChange={(value) => {
@@ -790,7 +940,7 @@ function ChanceList() {
                                                     options={accountType}
                                                 />
                                             </Form.Item>
-                                            <Form.Item label="合作方式" {...restField} name={[name, "account_models"]} rules={[{ required: true, message: '合作方式不能为空' }]}>
+                                            <Form.Item label="合作方式" {...restField} name={[name, "account_models"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select
                                                     mode="multiple"
                                                     allowClear
@@ -801,27 +951,27 @@ function ChanceList() {
                                                     options={accountModelType}
                                                 />
                                             </Form.Item>
-                                            {isShowKeyword ? <Form.Item label="关键字（前后缀）" {...restField} name={[name, "keyword"]} rules={[{ required: true, message: '关键字（前后缀）不能为空' }]}>
+                                            {isShowKeyword ? <Form.Item label="关键字（前后缀）" {...restField} name={[name, "keyword"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Input placeholder="请输入报备的关键字（前后缀）" />
                                             </Form.Item> : null}
                                             <Space size='large'>
                                                 <Form.Item label="平时带货在线（人）" {...restField} name={[name, "people_count"]} rules={[{ required: true, message: '不能为空' }]}>
                                                     <InputNumber />
                                                 </Form.Item>
-                                                <Form.Item label="女粉比例（%）" {...restField} name={[name, "fe_proportion"]} rules={[{ required: true, message: '女粉比例（%）不能为空' }]}>
+                                                <Form.Item label="女粉比例（%）" {...restField} name={[name, "fe_proportion"]} rules={[{ required: true, message: '不能为空' }]}>
                                                     <InputNumber />
                                                 </Form.Item>
-                                                <Form.Item label="粉丝地域分布（省份）" {...restField} name={[name, "main_province"]} rules={[{ required: true, message: '粉丝地域分布（省份）不能为空' }]}>
+                                                <Form.Item label="粉丝地域分布（省份）" {...restField} name={[name, "main_province"]} rules={[{ required: true, message: '不能为空' }]}>
                                                     <Input />
                                                 </Form.Item>
                                             </Space>
-                                            <Form.Item label="粉丝购买主力年龄段（岁）" {...restField} name={[name, "age_cuts"]} rules={[{ required: true, message: '粉丝购买主力年龄段（岁）不能为空' }]}>
+                                            <Form.Item label="粉丝购买主力年龄段（岁）" {...restField} name={[name, "age_cuts"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select mode="multiple" allowClear options={ageCut} />
                                             </Form.Item>
-                                            <Form.Item label="平均客单价（元）" {...restField} name={[name, "price_cut"]} rules={[{ required: true, message: '平均客单价（元）不能为空' }]}>
+                                            <Form.Item label="平均客单价（元）" {...restField} name={[name, "price_cut"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select options={priceCut} />
                                             </Form.Item>
-                                            <Form.Item label="常规品线上佣金比例（%）" {...restField} name={[name, "commission"]} rules={[{ required: true, message: '常规品线上佣金比例（%）不能为空' }]}>
+                                            <Form.Item label="常规品线上佣金比例（%）" {...restField} name={[name, "commission"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <InputNumber />
                                             </Form.Item>
                                             <Space size='large'>
@@ -839,10 +989,39 @@ function ChanceList() {
                                                 </Radio.Group>
                                             </Form.Item>
                                             {hasFuSaleman ? <Space size='large'>
-                                                <Form.Item label="副商务" {...restField} name={[name, "uid_2"]} >
-                                                    <Input />
+                                                <Form.Item label="副商务" {...restField} name={[name, "uid_2"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                    <Select
+                                                        style={{ width: 160 }}
+                                                        options={salemans}
+                                                        onFocus={() => {
+                                                            request({
+                                                                method: 'post',
+                                                                url: '/user/getSalemans',
+                                                                data: {
+                                                                    userInfo: {
+                                                                        uid: localStorage.getItem('uid'),
+                                                                        company: localStorage.getItem('company'),
+                                                                        department: localStorage.getItem('department'),
+                                                                        position: localStorage.getItem('position')
+                                                                    }
+                                                                }
+                                                            }).then((res) => {
+                                                                if (res.status == 200) {
+                                                                    if (res.data.code == 200) {
+                                                                        setSalemans(res.data.data)
+                                                                    } else {
+                                                                        message.error(res.data.msg)
+                                                                    }
+                                                                } else {
+                                                                    message.error(res.data.msg)
+                                                                }
+                                                            }).catch((err) => {
+                                                                console.error(err)
+                                                            })
+                                                        }}
+                                                    />
                                                 </Form.Item>
-                                                <Form.Item label="副商务提成点（%）" {...restField} name={[name, "u_point_2"]} >
+                                                <Form.Item label="副商务提成点（%）" {...restField} name={[name, "u_point_2"]} rules={[{ required: true, message: '不能为空' }]}>
                                                     <InputNumber />
                                                 </Form.Item>
                                             </Space> : null}
@@ -861,7 +1040,7 @@ function ChanceList() {
                         <Form.Item label="达人名称" name="group_name" rules={[{ required: true, message: '不能为空' }]}>
                             <Input placeholder="请输入新商机的社群团购达人名称" disabled={formType === 'report' ? true : false} />
                         </Form.Item>
-                        <Space size='large'>
+                        {formType === 'report' ? <><Space size='large'>
                             <Form.Item label="常规品折扣（折）" name="discount_normal" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber placeholder="请输入" />
                             </Form.Item>
@@ -872,17 +1051,17 @@ function ChanceList() {
                                 <InputNumber placeholder="请输入" />
                             </Form.Item>
                         </Space>
-                        <Form.Item label="折扣其他备注" name="discount_note" rules={[{ required: true, message: '不能为空' }]}>
-                            <TextArea placeholder="请输入" />
-                        </Form.Item>
-                        {formType === 'report' ? <><Space size='large'>
-                            <Form.Item label="主商务" name="group_uid_1" >
-                                <Input defaultValue={localStorage.getItem('name')} disabled={true} />
+                            <Form.Item label="折扣其他备注" name="discount_note" rules={[{ required: true, message: '不能为空' }]}>
+                                <TextArea placeholder="请输入" />
                             </Form.Item>
-                            <Form.Item label="主商务提成点（%）" name="group_u_point_1" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber />
-                            </Form.Item>
-                        </Space>
+                            <Space size='large'>
+                                <Form.Item label="主商务" name="group_uid_1" >
+                                    <Input defaultValue={localStorage.getItem('name')} disabled={true} />
+                                </Form.Item>
+                                <Form.Item label="主商务提成点（%）" name="group_u_point_1" rules={[{ required: true, message: '不能为空' }]}>
+                                    <InputNumber />
+                                </Form.Item>
+                            </Space>
                             <Form.Item label="是否有副商务">
                                 <Radio.Group onChange={(e) => { setGroupHasFuSaleman(e.target.value); }} value={hasGroupFuSaleman} style={{ marginLeft: '20px' }}>
                                     <Radio value={false}>无副商务</Radio>
@@ -902,7 +1081,7 @@ function ChanceList() {
                         <Form.Item label="达人名称" name="provide_name" rules={[{ required: true, message: '不能为空' }]}>
                             <Input placeholder="请输入" disabled={formType === 'report' ? true : false} />
                         </Form.Item>
-                        <Space size='large'>
+                        {formType === 'report' ? <><Space size='large'>
                             <Form.Item label="买断折扣（折）" name="discount_buyout" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber placeholder="请输入" />
                             </Form.Item>
@@ -910,17 +1089,17 @@ function ChanceList() {
                                 <InputNumber placeholder="请输入" />
                             </Form.Item>
                         </Space>
-                        <Form.Item label="折扣其他备注" name="discount_label" rules={[{ required: true, message: '不能为空' }]}>
-                            <TextArea placeholder="请输入" />
-                        </Form.Item>
-                        {formType === 'report' ? <><Space size='large'>
-                            <Form.Item label="主商务" name="provide_uid_1" >
-                                <Input defaultValue={localStorage.getItem('name')} disabled={true} />
+                            <Form.Item label="折扣其他备注" name="discount_label" rules={[{ required: true, message: '不能为空' }]}>
+                                <TextArea placeholder="请输入" />
                             </Form.Item>
-                            <Form.Item label="主商务提成点（%）" name="provide_u_point_1" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber />
-                            </Form.Item>
-                        </Space>
+                            <Space size='large'>
+                                <Form.Item label="主商务" name="provide_uid_1" >
+                                    <Input defaultValue={localStorage.getItem('name')} disabled={true} />
+                                </Form.Item>
+                                <Form.Item label="主商务提成点（%）" name="provide_u_point_1" rules={[{ required: true, message: '不能为空' }]}>
+                                    <InputNumber />
+                                </Form.Item>
+                            </Space>
                             <Form.Item label="是否有副商务">
                                 <Radio.Group onChange={(e) => { setProvideHasFuSaleman(e.target.value); }} value={hasProvideFuSaleman} style={{ marginLeft: '20px' }}>
                                     <Radio value={false}>无副商务</Radio>
@@ -986,7 +1165,7 @@ function ChanceList() {
                                 ...values,
                                 userInfo: {
                                     uid: localStorage.getItem('uid'),
-                                    compnay: localStorage.getItem('company'),
+                                    company: localStorage.getItem('company'),
                                     department: localStorage.getItem('department'),
                                     position: localStorage.getItem('position')
                                 }
@@ -1053,33 +1232,52 @@ function ChanceList() {
             <Modal
                 title={detailType == 'look' ? '达人详情' : '达人审批'}
                 open={isShowDetail}
-                width='40%'
+                width='60%'
                 maskClosable={false}
-                onOk={() => { message.success('通过') }}
                 onCancel={() => { setIsShowDetail(false); }}
-                footer={[
-                    <Button key="submit" type="primary" danger onClick={() => { message.success('通过') }}>
+                footer={detailType == 'look' ? [] : [
+                    <Button key="submit" type="primary" danger onClick={() => { setIsShowCheckNo(true); setCheckNoType('write') }}>
                         不通过
                     </Button>,
-                    <Button key="back" type="primary" onClick={() => { setIsShowDetail(false); }}>
+                    <Button key="back" type="primary" onClick={() => { checkChance(true) }}>
                         通过
                     </Button>
                 ]}
             >
-                <Descriptions
-                    bordered
-                    column={{
-                        xs: 1,
-                        sm: 2,
-                        md: 3,
-                        lg: 3,
-                        xl: 4,
-                        xxl: 4,
-                    }}
-                    items={detailData}
-                />
+                <Card title="通用信息" style={{ marginBottom: '20px' }}>
+                    <Descriptions bordered column={{ xs: 1, sm: 2, md: 3, lg: 3, xl: 4, xxl: 4, }} items={detailData.comment} />
+                </Card>
+                {detailData.online.length !== 0 ? detailData.online.map((item, key) => {
+                    return (
+                        <Card title={`合作模式：线上平台 【${item[0].children}】`} key={key} style={{ marginBottom: '20px' }}>
+                            <Descriptions bordered column={{ xs: 1, sm: 2, md: 3, lg: 3, xl: 4, xxl: 4, }} items={item.slice(1)} />
+                        </Card>
+                    )
+                }) : null}
+                {detailData.group.length !== 0 ? <Card title={`合作模式：社群团购`} style={{ marginBottom: '20px' }}>
+                    <Descriptions bordered column={{ xs: 1, sm: 2, md: 3, lg: 3, xl: 4, xxl: 4, }} items={detailData.group} />
+                </Card> : null}
+                {detailData.provide.length !== 0 ? <Card title={`合作模式：供货`} style={{ marginBottom: '20px' }}>
+                    <Descriptions bordered column={{ xs: 1, sm: 2, md: 3, lg: 3, xl: 4, xxl: 4, }} items={detailData.provide} />
+                </Card> : null}
             </Modal>
-        </div>
+            <Modal
+                title={checkNoType === 'write' ? '达人审批不通过理由填写' : '查看达人报备驳回理由'}
+                open={isShowCheckNo}
+                maskClosable={false}
+                onCancel={() => { setIsShowCheckNo(false); setCheckNoReason(''); }}
+                footer={checkNoType == 'look' ? [] : [
+                    <Button key="submit" onClick={() => { setIsShowCheckNo(false); setCheckNoReason(''); }}>
+                        取消
+                    </Button>,
+                    <Button key="back" type="primary" onClick={() => { checkChance(false) }}>
+                        确认
+                    </Button>
+                ]}
+            >
+                <TextArea placeholder="请输入达人审批不通过的理由" value={checkNoReason} onChange={(e) => { setCheckNoReason(e.target.value) }} disabled={checkNoType == 'look' ? true : false}></TextArea>
+            </Modal>
+        </div >
     )
 }
 

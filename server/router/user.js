@@ -6,7 +6,7 @@ const sendRobot = require('../myFun/ddrobot')
 // 登录
 router.post('/login', (req, res) => {
   let params = req.body
-  let sql = `SELECT * FROM user where uid = '${params.uid}'`
+  let sql = `SELECT * FROM user where phone = '${params.phone}'`
   db.query(sql, (err, results) => {
     if (err) throw err;
     if (results.length == 0) {
@@ -31,7 +31,7 @@ router.post('/editPassword', (req, res) => {
     if (results.length == 0) {
       res.send({ code: 201, data: {}, msg: '用户名错误' })
     } else if (params.password != results[0].password) {
-      res.send({ code: 201, data: {}, msg: '密码错误' })
+      res.send({ code: 201, data: {}, msg: '原密码错误' })
     } else if (params.password2 != params.password3) {
       res.send({ code: 201, data: {}, msg: '两次密码输入不一致' })
     } else if (params.password == params.password2) {
@@ -50,7 +50,7 @@ router.post('/editPassword', (req, res) => {
 router.post('/getUserList', (req, res) => {
   let params = req.body
   // 去除 自己 + 管理员 + 已删除
-  let where = `where uid != '${params.userInfo.uid}' and uid != 'MJN000' and status != 2`
+  let where = `where status != '2' and uid != '${params.userInfo.uid}' and uid != 'MJN0000000'`
   // 权限筛选
   if (params.userInfo.position != '管理员') {
     if (params.userInfo.company != '总公司') {
@@ -77,10 +77,10 @@ router.post('/getUserList', (req, res) => {
   if (params.pagination.pageSize) {
     pageSize = params.pagination.pageSize
   }
-  let sql = `SELECT	* FROM	user ${where} order by uid`
+  let sql = `SELECT * FROM user ${where} order by uid`
   db.query(sql, (err, results) => {
     if (err) throw err;
-    let sql = `SELECT	uid, name, company, department, position, status FROM	user ${where} order by uid limit ${pageSize} offSET ${current * pageSize}`
+    let sql = `SELECT	uid, name, phone, company, department, position, status FROM	user ${where} order by uid limit ${pageSize} offSET ${current * pageSize}`
     db.query(sql, (err, r) => {
       if (err) throw err;
       res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: '' })
@@ -93,7 +93,7 @@ router.post('/addUser', (req, res) => {
   let time = new Date()
   let currentDate = time.getFullYear() + "-" + (time.getMonth() + 1) + "-" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
   let params = req.body
-  let sql = `SELECT * FROM user where company = '${params.combine[0]}' and department = '${params.combine[1]}' and position = '${params.combine[2]}' and position in ('总裁', '副总', '主管')`
+  let sql = `SELECT * FROM user where status != 2 and company = '${params.combine[0]}' and department = '${params.combine[1]}' and position = '${params.combine[2]}' and position in ('总裁', '副总', '主管')`
   db.query(sql, (err, results) => {
     if (err) throw err;
     if (results.length != 0) {
@@ -124,8 +124,8 @@ router.post('/addUser', (req, res) => {
           let sql = `SELECT count(*) as sum FROM user `
           db.query(sql, (err, results) => {
             if (err) throw err;
-            let uid = 'MJN' + `${results[0].sum}`.padStart(3, '0')
-            let sql = `INSERT INTO user values('${uid}', '${params.name}', '123456', '${params.combine[0]}', '${params.combine[1]}', '${params.combine[2]}', '1', '${currentDate}')`
+            let uid = 'MJN' + `${results[0].sum}`.padStart(5, '0')
+            let sql = `INSERT INTO user values('${uid}', '${params.name}', '${params.phone}', '123456', '${params.combine[0]}', '${params.combine[1]}', '${params.combine[2]}', '1', '${currentDate}')`
             db.query(sql, (err, results) => {
               if (err) throw err;
               res.send({ code: 200, data: {}, msg: `${params.name} 添加成功` })
@@ -180,7 +180,7 @@ router.post('/editUserStatus', (req, res) => {
 // 删除用户信息
 router.post('/deleteUser', (req, res) => {
   let params = req.body
-  let sql = `SELECT * FROM talent where uid_1 = '${params.uid}' or uid_2 = '${params.uid}'`
+  let sql = `SELECT * FROM talentline where uid_1 = '${params.uid}' or uid_2 = '${params.uid}'`
   db.query(sql, (err, results) => {
     if (err) throw err;
     if (results.length != 0) {
@@ -199,7 +199,7 @@ router.post('/deleteUser', (req, res) => {
 router.post('/getSalemans', (req, res) => {
   let params = req.body
   // 去除 自己 + 管理员 + 已删除
-  let where = `where status != 2`
+  let where = `where status != '2' and (position = '商务' or position = '管理员')`
   // 权限筛选
   if (params.userInfo.position != '管理员') {
     if (params.userInfo.company != '总公司') {

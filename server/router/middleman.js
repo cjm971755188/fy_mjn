@@ -9,10 +9,13 @@ router.post('/getMiddlemans', (req, res) => {
     // 权限筛选
     if (params.userInfo.position != '管理员') {
         if (params.userInfo.company != '总公司') {
-            where += ` and m.company = '${params.userInfo.company}'`
+            where += ` and u.company = '${params.userInfo.company}'`
         }
         if (params.userInfo.department != '总裁办') {
-            where += ` and m.department = '${params.userInfo.department}'`
+            where += ` and u.department = '${params.userInfo.department}'`
+        }
+        if (params.userInfo.position != '主管') {
+            where += ` and u.uid = '${params.userInfo.uid}'`
         }
     }
     // 条件筛选
@@ -58,7 +61,7 @@ router.post('/addMiddleman', (req, res) => {
             let sql = `SELECT * FROM middleman`
             db.query(sql, (err, results) => {
                 if (err) throw err;
-                let mid = 'M' + `${results.length + 1}`.padStart(9, '0')
+                let mid = 'M' + `${results.length + 1}`.padStart(5, '0')
                 let can_piao = params.can_piao ? `'${params.can_piao}'` : null
                 let shui_point = params.shui_point ? `'${params.shui_point}'` : null
                 let sql = `INSERT INTO middleman values('${mid}', '${params.type}', '${params.name}', '${params.liaison_name}', '${params.liaison_v}', '${params.liaison_phone}', '${params.pay_way}', ${can_piao}, ${shui_point}, '${params.pay_name}', '${params.pay_bank}', '${params.pay_account}', '${params.userInfo.uid}', '${currentDate}')`
@@ -96,7 +99,7 @@ router.post('/editMiddleman', (req, res) => {
 // 搜索所有中间人
 router.post('/searchMiddlemans', (req, res) => {
     let params = req.body
-    let sql = `SELECT * FROM middleman WHERE name like '%${params.value}%'`
+    let sql = `SELECT * FROM middleman WHERE name like '%${params.value}%' and uid = '${params.userInfo.uid}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let middlemans = []

@@ -6,7 +6,6 @@ import UserList from './pages/userList.jsx'
 import MiddlemanList from './pages/middlemanList.jsx'
 import ChanceList from './pages/chanceList.jsx'
 import TalentList from './pages/talentList.jsx'
-import TalentDetail from './pages/talentDetail.jsx'
 
 function App() {
     return (

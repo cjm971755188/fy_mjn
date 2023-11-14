@@ -6,14 +6,17 @@ const getTime = require('../myFun/getAnalysisTime')
 // 获取商机列表
 router.post('/getChanceList', (req, res) => {
   let params = req.body
-  let where = `where c.status in ('未推进', '已推进', '报备待审批', '报备失败') and c.uid = '${params.userInfo.uid}'`
+  let where = `where c.status in ('未推进', '已推进', '报备待审批', '报备驳回', '报备通过')`
   // 权限筛选
   if (params.userInfo.position != '管理员') {
     if (params.userInfo.company != '总公司') {
-      where += ` and c.company = '${params.userInfo.company}'`
+      where += ` and u.company = '${params.userInfo.company}'`
     }
     if (params.userInfo.department != '总裁办') {
-      where += ` and c.department = '${params.userInfo.department}'`
+      where += ` and u.department = '${params.userInfo.department}'`
+    }
+    if (params.userInfo.position != '主管') {
+      where += ` and u.uid = '${params.userInfo.uid}'`
     }
   }
   // 条件筛选
@@ -36,7 +39,7 @@ router.post('/getChanceList', (req, res) => {
   if (params.pagination.pageSize) {
     pageSize = params.pagination.pageSize
   }
-  let sql = `SELECT * FROM chance c ${where} order by c.cid`
+  let sql = `SELECT * FROM chance c LEFT JOIN user u ON u.uid = c.uid ${where} order by c.cid`
   db.query(sql, (err, results) => {
     if (err) throw err;
     let sql = `SELECT c.cid, c.models, c.group_name, c.provide_name, c.platforms, c.account_ids, c.account_names, c.search_pic, c.liaison_type, c.liaison_name, c.liaison_v, c.liaison_phone, c.crowd_name, c.advance_pic, u.name, c.status, c.create_time, c.advance_time FROM chance c LEFT JOIN user u on u.uid = c.uid ${where} order by cid desc limit ${pageSize} offset ${current * pageSize}`
@@ -60,10 +63,10 @@ router.post('/searchSameChance', (req, res) => {
     account_names += `'${params.account_names[i]}',`
   }
   account_names = account_names.substring(0, account_names.length - 1)
-  let sql = `SELECT DISTINCT t.talent_name, u1.name, u2.name, t.platform FROM talentline tl LEFT JOIN talent t ON t.tid = tl.tid LEFT JOIN user u1 ON u1.uid = tl.uid_1 LEFT JOIN user u2 ON u2.uid = tl.uid_2 WHERE tl.end_date IS NULL and (t.account_id in (${account_ids}) or t.account_name in (${account_names})) and cid != '${params.cid}'`
+  let sql = `SELECT DISTINCT t.talent_name, u1.name, u2.name, t.platform FROM talentline tl LEFT JOIN talenton t ON t.tid = tl.tid LEFT JOIN user u1 ON u1.uid = tl.uid_1 LEFT JOIN user u2 ON u2.uid = tl.uid_2 WHERE tl.end_date IS NULL and (t.account_id in (${account_ids}) or t.account_name in (${account_names})) and cid != '${params.cid}'`
   db.query(sql, (err, results) => {
     if (err) throw err;
-    let sql = `SELECT	a.cid, a.name, GROUP_CONCAT(DISTINCT account_names) as account_names, GROUP_CONCAT(DISTINCT account_ids) as account_ids FROM	(SELECT DISTINCT cid, u.name, substring_index(substring_index( account_names, ',', topic.help_topic_id + 1 ), ',',- 1 ) as account_names, substring_index(substring_index( account_ids, ',', topic2.help_topic_id + 1 ), ',',- 1 ) as account_ids FROM chance LEFT JOIN mysql.help_topic topic ON topic.help_topic_id < ( length( account_names ) - length( REPLACE ( account_names, ',', '' ) ) + 1 ) LEFT JOIN mysql.help_topic topic2 ON topic2.help_topic_id < ( length( account_ids ) - length( REPLACE ( account_ids, ',', '' ) ) + 1 ) LEFT JOIN user u ON u.uid = chance.uid HAVING (account_names in (${account_names}) or account_ids in (${account_ids})) and cid != '${params.cid}' )	a GROUP BY	a.cid, a.name`
+    let sql = `SELECT  a.cid, a.name, a.account_names, a.account_ids FROM ( SELECT DISTINCT cid, u.name, account_names, account_ids, substring_index(substring_index( account_names, ',', topic.help_topic_id + 1 ), ',',- 1 ) as names, substring_index(substring_index( account_ids, ',', topic2.help_topic_id + 1 ), ',',- 1 ) as ids FROM chance LEFT JOIN mysql.help_topic topic ON topic.help_topic_id < ( length( account_names ) - length( REPLACE ( account_names, ',', '' ) ) + 1 ) LEFT JOIN mysql.help_topic topic2 ON topic2.help_topic_id < ( length( account_ids ) - length( REPLACE ( account_ids, ',', '' ) ) + 1 ) LEFT JOIN user u ON u.uid = chance.uid HAVING (names in (${account_names}) or ids in (${account_ids})) and cid != '${params.cid}' ) a GROUP BY a.cid, a.name`
     db.query(sql, (err, r) => {
       if (err) throw err;
       if (results.length != 0 || r.length != 0) {
@@ -83,13 +86,13 @@ router.post('/addChance', (req, res) => {
   let sql = `SELECT count(*) as sum FROM chance`
   db.query(sql, (err, results) => {
     if (err) throw err;
-    let cid = 'C' + `${results[0].sum + 1}`.padStart(6, '0')
+    let cid = 'C' + `${results[0].sum + 1}`.padStart(5, '0')
     let models = `'${params.models.join()}'`
     let group_name = params.group_name ? `'${params.group_name}'` : null
     let provide_name = params.provide_name ? `'${params.provide_name}'` : null
-    let platforms = `'${params.platforms.join()}'`
-    let account_ids = `'${params.account_ids.join()}'`
-    let account_names = `'${params.account_names.join()}'`
+    let platforms = params.platforms ? `'${params.platforms.join()}'` : null
+    let account_ids = params.account_ids ? `'${params.account_ids.join()}'` : null
+    let account_names = params.account_names ? `'${params.account_names.join()}'` : null
     let search_pic = params.search_pic.replace('/public', '')
     let sql = `INSERT INTO chance(cid, models, group_name, provide_name, platforms, account_names, account_ids, search_pic, uid, status, create_time) VALUES('${cid}', ${models}, ${group_name}, ${provide_name}, ${platforms}, ${account_names}, ${account_ids}, '${search_pic}', '${params.uid}', '未推进', '${currentDate}')`
     db.query(sql, (err, results) => {
@@ -105,9 +108,9 @@ router.post('/editChance', (req, res) => {
   let models = `'${params.models.join()}'`
   let group_name = params.group_name ? `'${params.group_name}'` : null
   let provide_name = params.provide_name ? `'${params.provide_name}'` : null
-  let platforms = `'${params.platforms.join()}'`
-  let account_ids = `'${params.account_ids.join()}'`
-  let account_names = `'${params.account_names.join()}'`
+  let platforms = params.platforms ? `'${params.platforms.join()}'` : null
+  let account_ids = params.account_ids ? `'${params.account_ids.join()}'` : null
+  let account_names = params.account_names ? `'${params.account_names.join()}'` : null
   let sql = ''
   if (params.status === '未推进') {
     sql = `UPDATE chance set models = ${models}, group_name = ${group_name}, provide_name = ${provide_name}, platforms = ${platforms}, account_names = ${account_names}, account_ids = ${account_ids} WHERE cid = '${params.cid}'`
@@ -141,7 +144,7 @@ router.post('/reportChanceOn', (req, res) => {
   let sql = `SELECT * FROM talenton`
   db.query(sql, (err, results) => {
     if (err) throw err;
-    let tid = 'T' + `${results.length + 1}`.padStart(9, '0')
+    let tid = 'T' + `${results.length + params.key}`.padStart(5, '0')
     let account_models = `'${params.account_models.join()}'`
     let keyword = params.keyword ? `'${params.keyword}'` : `'${params.account_name}'`
     let age_cuts = `'${params.age_cuts.join()}'`
@@ -151,7 +154,7 @@ router.post('/reportChanceOn', (req, res) => {
     let m_point_1 = params.m_point_1 ? `'${params.m_point_1}'` : null
     let mid_2 = params.mid_2 ? `'${params.mid_2}'` : null
     let m_point_2 = params.m_point_2 ? `'${params.m_point_2}'` : null
-    let sql = `INSERT INTO talenton values('${tid}', '${params.cid}', '${params.talent_name}', '${params.platform}', '${params.account_id}', '${params.account_name}', '${params.account_type}', ${account_models}, ${keyword}, '${params.people_count}', '${params.fe_proportion}', ${age_cuts}, '${params.main_province}', '${params.price_cut}', '${params.commission}', '${params.userInfo.uid}', '${params.u_point_1}', ${uid_2}, ${u_point_2}, ${mid_1}, ${m_point_1}, ${mid_2}, ${m_point_2}, '${currentDate}')`
+    let sql = `INSERT INTO talenton values('${tid}', '${params.cid}', '${params.talent_name}', '${params.platform}', '${params.account_id}', '${params.account_name}', '${params.account_type}', ${account_models}, ${keyword}, '${params.people_count}', '${params.fe_proportion}', ${age_cuts}, '${params.main_province}', '${params.price_cut}', '${params.commission}', '${params.userInfo.uid}', '${params.u_point_1}', ${uid_2}, ${u_point_2}, ${mid_1}, ${m_point_1}, ${mid_2}, ${m_point_2}, '报备待审批', null, '${currentDate}')`
     db.query(sql, (err, results) => {
       if (err) throw err;
       let sql = `UPDATE chance SET status = '报备待审批', report_time = '${currentDate}' WHERE cid = '${params.cid}'`
@@ -171,14 +174,14 @@ router.post('/reportChanceGroup', (req, res) => {
   let sql = `SELECT * FROM talentgroup`
   db.query(sql, (err, results) => {
     if (err) throw err;
-    let tid = 'T' + `${results.length + 1}`.padStart(9, '0')
+    let tid = 'T' + `${results.length + 1}`.padStart(5, '0')
     let uid_2 = params.group_uid_2 ? `'${params.group_uid_2}'` : null
     let u_point_2 = params.group_u_point_2 ? `'${params.group_u_point_2}'` : null
     let mid_1 = params.mid_1 ? `'${params.mid_1}'` : null
     let m_point_1 = params.m_point_1 ? `'${params.m_point_1}'` : null
     let mid_2 = params.mid_2 ? `'${params.mid_2}'` : null
     let m_point_2 = params.m_point_2 ? `'${params.m_point_2}'` : null
-    let sql = `INSERT INTO talentgroup values('${tid}', '${params.cid}', '${params.talent_name}', '${params.group_name}', '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', '${params.userInfo.uid}', '${params.group_u_point_1}', ${uid_2}, ${u_point_2}, ${mid_1}, ${m_point_1}, ${mid_2}, ${m_point_2}, '${currentDate}')`
+    let sql = `INSERT INTO talentgroup values('${tid}', '${params.cid}', '${params.talent_name}', '${params.group_name}', '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', '${params.userInfo.uid}', '${params.group_u_point_1}', ${uid_2}, ${u_point_2}, ${mid_1}, ${m_point_1}, ${mid_2}, ${m_point_2}, '报备待审批', null, '${currentDate}')`
     db.query(sql, (err, results) => {
       if (err) throw err;
       let sql = `UPDATE chance SET status = '报备待审批', report_time = '${currentDate}' WHERE cid = '${params.cid}'`
@@ -198,14 +201,14 @@ router.post('/reportChanceProvide', (req, res) => {
   let sql = `SELECT * FROM talentprovide`
   db.query(sql, (err, results) => {
     if (err) throw err;
-    let tid = 'T' + `${results.length + 1}`.padStart(9, '0')
+    let tid = 'T' + `${results.length + 1}`.padStart(5, '0')
     let uid_2 = params.provide_uid_2 ? `'${params.provide_uid_2}'` : null
     let u_point_2 = params.provide_u_point_2 ? `'${params.provide_u_point_2}'` : null
     let mid_1 = params.mid_1 ? `'${params.mid_1}'` : null
     let m_point_1 = params.m_point_1 ? `'${params.m_point_1}'` : null
     let mid_2 = params.mid_2 ? `'${params.mid_2}'` : null
     let m_point_2 = params.m_point_2 ? `'${params.m_point_2}'` : null
-    let sql = `INSERT INTO talentprovide values('${tid}', '${params.cid}', '${params.talent_name}', '${params.provide_name}', '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${uid_2}, ${u_point_2}, ${mid_1}, ${m_point_1}, ${mid_2}, ${m_point_2}, '${currentDate}')`
+    let sql = `INSERT INTO talentprovide values('${tid}', '${params.cid}', '${params.talent_name}', '${params.provide_name}', '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${uid_2}, ${u_point_2}, ${mid_1}, ${m_point_1}, ${mid_2}, ${m_point_2}, '报备待审批', null, '${currentDate}')`
     db.query(sql, (err, results) => {
       if (err) throw err;
       let sql = `UPDATE chance SET status = '报备待审批', report_time = '${currentDate}' WHERE cid = '${params.cid}'`
@@ -217,6 +220,56 @@ router.post('/reportChanceProvide', (req, res) => {
   })
 })
 
+// 审批商机
+router.post('/checkChance', (req, res) => {
+  let time = new Date()
+  let currentDate = time.getFullYear() + "-" + (time.getMonth() + 1) + "-" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
+  let params = req.body
+  let sql = `UPDATE chance SET status = '${params.type ? '报备通过' : '报备驳回'}', check_time = '${currentDate}' WHERE cid = '${params.cid}'`
+  db.query(sql, (err, results) => {
+    if (err) throw err;
+    let sql = `UPDATE talenton SET status = '${params.type ? '合作中' : '报备驳回'}', check_note = '${params.check_note}' WHERE cid = '${params.cid}'`
+    db.query(sql, (err, results) => {
+      if (err) throw err;
+      let sql = `UPDATE talentgroup SET status = '${params.type ? '合作中' : '报备驳回'}', check_note = '${params.check_note}' WHERE cid = '${params.cid}'`
+      db.query(sql, (err, results) => {
+        if (err) throw err;
+        let sql = `UPDATE talentprovide SET status = '${params.type ? '合作中' : '报备驳回'}', check_note = '${params.check_note}' WHERE cid = '${params.cid}'`
+        db.query(sql, (err, results) => {
+          if (err) throw err;
+          res.send({ code: 200, data: {}, msg: `` })
+        })
+      })
+    })
+  })
+})
+
+// 获取审批驳回理由
+router.post('/getCheckNote', (req, res) => {
+  let params = req.body
+  let sql = `SELECT check_note FROM talenton WHERE cid = '${params.cid}' and status = '报备驳回' ORDER BY create_time DESC limit 1`
+  console.log(sql);
+  db.query(sql, (err, r1) => {
+    if (err) throw err;
+    let sql = `SELECT check_note FROM talentgroup WHERE cid = '${params.cid}' and status = '报备驳回' ORDER BY create_time DESC limit 1`
+    db.query(sql, (err, r2) => {
+      if (err) throw err;
+      let sql = `SELECT check_note FROM talentprovide WHERE cid = '${params.cid}' and status = '报备驳回' ORDER BY create_time DESC limit 1`
+      db.query(sql, (err, r3) => {
+        if (err) throw err;
+        let note = ''
+        if (r1.length !== 0) {
+          note = r1[0].check_note
+        } else if (r2.length !== 0) {
+          note = r2[0].check_note
+        } else {
+          note = r3[0].check_note
+        }
+        res.send({ code: 200, data: note, msg: `` })
+      })
+    })
+  })
+})
 
 
 
