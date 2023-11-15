@@ -43,7 +43,7 @@ router.post('/getChanceList', (req, res) => {
   let sql = `SELECT * FROM chance c LEFT JOIN user u ON u.uid = c.uid ${where} order by c.cid`
   db.query(sql, (err, results) => {
     if (err) throw err;
-    let sql = `SELECT c.cid, c.models, c.group_name, c.provide_name, c.platforms, c.account_ids, c.account_names, c.search_pic, c.liaison_type, c.liaison_name, c.liaison_v, c.liaison_phone, c.crowd_name, c.advance_pic, u.name, c.status, c.create_time, c.advance_time FROM chance c LEFT JOIN user u on u.uid = c.uid ${where} order by cid desc limit ${pageSize} offset ${current * pageSize}`
+    let sql = `SELECT c.cid, t.tid, c.models, c.group_name, c.provide_name, c.platforms, c.account_ids, c.account_names, c.search_pic, c.liaison_type, c.liaison_name, c.liaison_v, c.liaison_phone, c.crowd_name, c.advance_pic, u.name, c.status, c.create_time, c.advance_time FROM chance c LEFT JOIN user u on u.uid = c.uid LEFT JOIN talent t on t.cid = c.cid ${where} order by cid desc limit ${pageSize} offset ${current * pageSize}`
     db.query(sql, (err, r) => {
       if (err) throw err;
       res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: '' })

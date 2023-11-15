@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../config/db')
 
 // 达人详情
-router.post('/getDetail', (req, res) => {
+/* router.post('/getDetail', (req, res) => {
     let params = req.body
     let ids = []
     let c = []
@@ -125,16 +125,6 @@ router.post('/getDetail', (req, res) => {
             })
         })
     })
-})
-
-// 获取达人列表
-router.post('/login', (req, res) => {
-    let params = req.body
-    /* let sql = `SELECT * FROM user where phone = '${params.phone}'`
-    db.query(sql, (err, results) => {
-        if (err) throw err;
-        res.send({ code: 200, data: results[0], msg: '登录成功' })
-    }) */
-})
+}) */
 
 module.exports = router

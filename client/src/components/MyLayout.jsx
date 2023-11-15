@@ -48,56 +48,19 @@ const menuItemsTotal = [
         label: '达人管理',
         children: [
             {
-                label: '商机列表',
                 key: '/admin/talent/chance_list',
+                label: '商机列表'
             },
             {
-                label: '达人列表',
-                key: '/admin/talent/talent_list'
+                key: '/admin/talent/talent_list',
+                label: '达人列表'
             }
         ]
     },
-    /* {
-        key: '/admin/live',
-        icon: <CarryOutOutlined />,
-        label: '排班管理',
-        children: [
-            {
-                label: '排班列表',
-                key: '/admin/live/live_list'
-            }
-        ]
-    }, */
-    /* {
-        key: '/admin/pallet',
-        icon: <BuildOutlined />,
-        label: '货盘管理',
-        children: [
-            {
-                label: '货盘列表',
-                key: '/admin/pallet/pallet_list'
-            },
-            {
-                label: '商品库存',
-                key: '/admin/pallet/product_list'
-            }
-        ]
-    }, */
-    /* {
-        key: '/admin/contract',
-        icon: <AuditOutlined />,
-        label: '合同管理',
-        children: [
-            {
-                label: '合同列表',
-                key: '/admin/contract/contract_list'
-            }
-        ]
-    }, */
     {
+        key: '/admin/middleman',
         label: '中间人列表',
-        icon: <BranchesOutlined />,
-        key: '/admin/talent/middleman_list'
+        icon: <BranchesOutlined />
     },
     {
         key: '/admin/user',
@@ -106,18 +69,19 @@ const menuItemsTotal = [
     }
 ]
 
-// 查找对应的menu
+// menu权限配置
 const getMenuItems = (department, position) => {
     let arrObj = []
     for (let i = 0; i < menuItemsTotal.length; i++) {
         let menu = menuItemsTotal[i];
-        /* if (position === '商务' || position === '助理' || position === '主播' && menu.label == '用户列表') {
-            continue
-        } else if (department !== '总裁办' && department !== '事业部' && menu.label == '达人管理') {
-            continue
-        } else {
-            arrObj.push(menu)
-        } */
+        if (menu.children) {
+            for (let j = 0; j < menu.children.length; j++) {
+                const element = menu.children[j];
+                if (element.children) {
+                    delete element.children
+                }
+            }
+        }
         arrObj.push(menu)
     }
     return arrObj
