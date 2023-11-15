@@ -157,6 +157,7 @@ function ChanceList() {
                                                 accountIdList,
                                                 accountNameList
                                             })
+                                            setReportOnCount(accountIdList.length)
                                             setIsShow(true)
                                         }}>报备</a>
                                         {record.status === '报备驳回' ? <a onClick={() => {
@@ -167,6 +168,7 @@ function ChanceList() {
                                                     cid: record.cid,
                                                     userInfo: {
                                                         uid: localStorage.getItem('uid'),
+                                                        name: localStorage.getItem('name'),
                                                         company: localStorage.getItem('company'),
                                                         department: localStorage.getItem('department'),
                                                         position: localStorage.getItem('position')
@@ -223,6 +225,7 @@ function ChanceList() {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
                     position: localStorage.getItem('position')
@@ -274,12 +277,42 @@ function ChanceList() {
     const [formType, setFormType] = useState('add')
     const [form] = Form.useForm()
     const [isShowSearch, setIsShowSearch] = useState(false)
-    const [searchList, setSearchList] = useState([])
+    const [searchList, setSearchList] = useState({})
     const [isShowPlatform, setIsShowPlatform] = useState(false)
     const [isShowGroup, setIsShowGroup] = useState(false)
     const [isShowProvide, setIsShowProvide] = useState(false)
+
+    const searchSame = () => {
+        request({
+            method: 'post',
+            url: '/chance/searchSameChance',
+            data: {
+                account_names: form.getFieldValue('account_names'),
+                account_ids: form.getFieldValue('account_ids'),
+                cid: formType == 'add' ? '' : form.getFieldValue('cid')
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code != 200) {
+                    setIsShowSearch(true)
+                    setSearchList(res.data.data)
+                    message.error(res.data.msg)
+                } else {
+                    setIsShowSearch(false)
+                    setSearchList({})
+                    message.success(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+
     // 报备
     const [isShowKeyword, setIsShowKeyword] = useState(false)
+    const [reportOnCount, setReportOnCount] = useState(false)
     const [hasFuSaleman, setHasFuSaleman] = useState(false)
     const [hasFirstMiddle, setHasFirstMiddle] = useState(false)
     const [hasSecondMiddle, setHasSecondMiddle] = useState(false)
@@ -299,6 +332,7 @@ function ChanceList() {
                 value: value,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
                     position: localStorage.getItem('position')
@@ -326,6 +360,7 @@ function ChanceList() {
                 value: value,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
                     position: localStorage.getItem('position')
@@ -370,6 +405,7 @@ function ChanceList() {
                 cid: record.cid,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
                     position: localStorage.getItem('position')
@@ -423,11 +459,15 @@ function ChanceList() {
             method: 'post',
             url: '/chance/checkChance',
             data: {
-                tid: detailData.comment[0].children,
+                cid: detailData.comment[3].children,
+                toid: detailData.comment[0].children,
+                tgid: detailData.comment[1].children,
+                tpid: detailData.comment[2].children,
                 type: type,
                 check_note: checkNoReason,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
                     position: localStorage.getItem('position')
@@ -495,6 +535,7 @@ function ChanceList() {
                                     data: {
                                         userInfo: {
                                             uid: localStorage.getItem('uid'),
+                                            name: localStorage.getItem('name'),
                                             company: localStorage.getItem('company'),
                                             department: localStorage.getItem('department'),
                                             position: localStorage.getItem('position')
@@ -549,7 +590,7 @@ function ChanceList() {
                 width='40%'
                 maskClosable={false}
                 onOk={() => { form.submit(); }}
-                onCancel={() => { setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList([]); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false); }}
+                onCancel={() => { setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false); }}
             >
                 <Form
                     form={form}
@@ -568,7 +609,7 @@ function ChanceList() {
                                 }).then((res) => {
                                     if (res.status == 200) {
                                         if (res.data.code == 200) {
-                                            setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList([]); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
+                                            setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
                                             fetchData()
                                             message.success(res.data.msg)
                                         } else {
@@ -592,7 +633,7 @@ function ChanceList() {
                             }).then((res) => {
                                 if (res.status == 200) {
                                     if (res.data.code == 200) {
-                                        setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList([]); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
+                                        setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
                                         fetchData()
                                         message.success(res.data.msg)
                                     } else {
@@ -612,7 +653,7 @@ function ChanceList() {
                             }).then((res) => {
                                 if (res.status == 200) {
                                     if (res.data.code == 200) {
-                                        setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList([]); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
+                                        setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
                                         fetchData()
                                         message.success(res.data.msg)
                                     } else {
@@ -625,51 +666,17 @@ function ChanceList() {
                                 console.error(err)
                             })
                         } else if (formType == 'report') {
-                            if (isShowPlatform) {
-                                for (let i = 0; i < values.accounts.length; i++) {
-                                    const element = values.accounts[i];
-                                    request({
-                                        method: 'post',
-                                        url: '/chance/reportChanceOn',
-                                        data: {
-                                            cid: values.cid,
-                                            talent_name: values.talent_name,
-                                            key: i + 1,
-                                            ...element,
-                                            userInfo: {
-                                                uid: localStorage.getItem('uid'),
-                                                company: localStorage.getItem('company'),
-                                                department: localStorage.getItem('department'),
-                                                position: localStorage.getItem('position')
-                                            }
-                                        }
-                                    }).then((res) => {
-                                        if (res.status == 200) {
-                                            if (res.data.code == 200) {
-                                                setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList([]); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
-                                                fetchData()
-                                                form.resetFields()
-                                            } else {
-                                                message.error(res.data.msg)
-                                            }
-                                        } else {
-                                            message.error(res.data.msg)
-                                        }
-                                    }).catch((err) => {
-                                        console.error(err)
-                                    })
-                                }
-                            }
-                            if (isShowGroup) {
+                            if (values.accounts != null && reportOnCount !== values.accounts.length) {
+                                message.error('请报备所有达人账号')
+                            } else {
                                 request({
                                     method: 'post',
-                                    url: '/chance/reportChanceGroup',
+                                    url: '/chance/reportChance',
                                     data: {
-                                        cid: values.cid,
-                                        talent_name: values.talent_name,
                                         ...values,
                                         userInfo: {
                                             uid: localStorage.getItem('uid'),
+                                            name: localStorage.getItem('name'),
                                             company: localStorage.getItem('company'),
                                             department: localStorage.getItem('department'),
                                             position: localStorage.getItem('position')
@@ -678,38 +685,7 @@ function ChanceList() {
                                 }).then((res) => {
                                     if (res.status == 200) {
                                         if (res.data.code == 200) {
-                                            setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList([]); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
-                                            fetchData()
-                                            form.resetFields()
-                                        } else {
-                                            message.error(res.data.msg)
-                                        }
-                                    } else {
-                                        message.error(res.data.msg)
-                                    }
-                                }).catch((err) => {
-                                    console.error(err)
-                                })
-                            }
-                            if (isShowProvide) {
-                                request({
-                                    method: 'post',
-                                    url: '/chance/reportChanceProvide',
-                                    data: {
-                                        cid: values.cid,
-                                        talent_name: values.talent_name,
-                                        ...values,
-                                        userInfo: {
-                                            uid: localStorage.getItem('uid'),
-                                            company: localStorage.getItem('company'),
-                                            department: localStorage.getItem('department'),
-                                            position: localStorage.getItem('position')
-                                        }
-                                    }
-                                }).then((res) => {
-                                    if (res.status == 200) {
-                                        if (res.data.code == 200) {
-                                            setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList([]); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
+                                            setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
                                             fetchData()
                                             form.resetFields()
                                         } else {
@@ -830,67 +806,25 @@ function ChanceList() {
                             <Form.Item label="相同线上达人" name="pic">
                                 <Button onClick={() => {
                                     if ((form.getFieldValue('account_names') && form.getFieldValue('account_names').length > 0) || (form.getFieldValue('account_ids') && form.getFieldValue('account_ids').length > 0)) {
-                                        request({
-                                            method: 'post',
-                                            url: '/chance/searchSameChance',
-                                            data: {
-                                                account_names: form.getFieldValue('account_names'),
-                                                account_ids: form.getFieldValue('account_ids'),
-                                                cid: formType == 'add' ? '' : form.getFieldValue('cid')
-                                            }
-                                        }).then((res) => {
-                                            if (res.status == 200) {
-                                                if (res.data.code != 200) {
-                                                    setIsShowSearch(true)
-                                                    setSearchList(res.data.data)
-                                                    message.error(res.data.msg)
-                                                } else {
-                                                    setIsShowSearch(false)
-                                                    setSearchList([])
-                                                    message.success(res.data.msg)
-                                                }
-                                            } else {
-                                                message.error(res.data.msg)
-                                            }
-                                        }).catch((err) => {
-                                            console.error(err)
-                                        })
+                                        searchSame()
                                     } else {
                                         setIsShowSearch(false)
-                                        setSearchList([])
+                                        setSearchList({})
                                         message.error('未填写达人账号名/ID, 无法查询')
                                     }
                                 }}>查询</Button>
                             </Form.Item>
                             {isShowSearch && <Form.Item label="" name="pic">
-                                {searchList.Unreported.length > 0 ? <List
+                                {searchList.length > 0 ? <List
                                     itemLayout="horizontal"
                                     bordered
-                                    style={{ margin: '20px 0' }}
-                                    header="未合作"
-                                    dataSource={searchList.Unreported}
+                                    dataSource={searchList}
                                     renderItem={(item, index) => (
                                         <List.Item>
                                             <List.Item.Meta
                                                 avatar={<Image width={50} src={people} preview={false} />}
-                                                title={<Space size={'large'}><div>{`账号名: ${item.account_names}`}</div><div>{`账号ID: ${item.account_ids}`}</div></Space>}
-                                                description={<span>{`商务: ${item.name}`}</span>}
-                                            />
-                                        </List.Item>
-                                    )}
-                                /> : null}
-                                {searchList.cooperation.length > 0 ? <List
-                                    itemLayout="horizontal"
-                                    bordered
-                                    style={{ margin: '20px 0' }}
-                                    header="已合作"
-                                    dataSource={searchList.cooperation}
-                                    renderItem={(item, index) => (
-                                        <List.Item>
-                                            <List.Item.Meta
-                                                avatar={<Image width={50} src={people} preview={false} />}
-                                                title={<Space size={'large'}><div>{`账号名: ${item.account_names}`}</div><div>{`账号ID: ${item.account_ids}`}</div></Space>}
-                                                description={<Space size={'large'}><div>{`平台: ${item.platform}`}</div><div>{`商务: ${item.name}`}</div></Space>}
+                                                title={<Space size={'large'}><span>{`商机编号: ${item.cid}`}</span><span>{`状态: ${item.status}`}</span></Space>}
+                                                description={<Space size={'large'}><span>{`账号ID: ${item.account_ids}`}</span><span>{`账号名称: ${item.account_names}`}</span><span>{`商务: ${item.name}`}</span></Space>}
                                             />
                                         </List.Item>
                                     )}
@@ -1000,6 +934,7 @@ function ChanceList() {
                                                                 data: {
                                                                     userInfo: {
                                                                         uid: localStorage.getItem('uid'),
+                                                                        name: localStorage.getItem('name'),
                                                                         company: localStorage.getItem('company'),
                                                                         department: localStorage.getItem('department'),
                                                                         position: localStorage.getItem('position')
@@ -1165,6 +1100,7 @@ function ChanceList() {
                                 ...values,
                                 userInfo: {
                                     uid: localStorage.getItem('uid'),
+                                    name: localStorage.getItem('name'),
                                     company: localStorage.getItem('company'),
                                     department: localStorage.getItem('department'),
                                     position: localStorage.getItem('position')

@@ -121,10 +121,20 @@ router.post('/getDetail', (req, res) => {
                     });
                     count++
                 }
-                res.send({ code: 200, data: { comment: title, online: d1, group: d2, provide: d3}, msg: '' })
+                res.send({ code: 200, data: { comment: title, online: d1, group: d2, provide: d3 }, msg: '' })
             })
         })
     })
+})
+
+// 获取达人列表
+router.post('/login', (req, res) => {
+    let params = req.body
+    /* let sql = `SELECT * FROM user where phone = '${params.phone}'`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        res.send({ code: 200, data: results[0], msg: '登录成功' })
+    }) */
 })
 
 module.exports = router

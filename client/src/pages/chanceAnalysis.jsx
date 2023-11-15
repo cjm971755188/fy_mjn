@@ -18,6 +18,7 @@ function ChanceAnalysis() {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
                     position: localStorage.getItem('position')
@@ -50,6 +51,7 @@ function ChanceAnalysis() {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
                     position: localStorage.getItem('position')
@@ -81,6 +83,7 @@ function ChanceAnalysis() {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
                     position: localStorage.getItem('position')

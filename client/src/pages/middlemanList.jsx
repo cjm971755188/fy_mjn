@@ -107,6 +107,7 @@ function MiddlemanList() {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
                     position: localStorage.getItem('position')
@@ -223,6 +224,7 @@ function MiddlemanList() {
                                     ...values,
                                     userInfo: {
                                         uid: localStorage.getItem('uid'),
+                                        name: localStorage.getItem('name'),
                                         company: localStorage.getItem('company'),
                                         department: localStorage.getItem('department'),
                                         position: localStorage.getItem('position')
@@ -253,6 +255,7 @@ function MiddlemanList() {
                                     ...values,
                                     userInfo: {
                                         uid: localStorage.getItem('uid'),
+                                        name: localStorage.getItem('name'),
                                         company: localStorage.getItem('company'),
                                         department: localStorage.getItem('department'),
                                         position: localStorage.getItem('position')

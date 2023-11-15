@@ -1,7 +1,7 @@
 const request = require('request');//加载此模块失败请使用在本目录下使用nmp i request控制台命令
 const crypto = require('crypto');
 
-const sendRobot = (msg) => {
+const sendRobot = (msg, at) => {
     let sendData = `慕江南蜉蝣提醒您：${msg}`;//你自己定义的关键字
 
     let secret = ""//签名，如果有的话
@@ -12,9 +12,7 @@ const sendRobot = (msg) => {
             "content": sendData//聊天内容，若群机器人设置了自定义关键字，则必须加上关键字
         },
         "at": {
-            "atMobiles": [//要@的人的电话号码，可以有多个
-                "17764585713"//可以为空
-            ],
+            "atMobiles": at,//要@的人的电话号码，可以有多个
             "isAtAll": false//是否@全体成员
         }
     }
