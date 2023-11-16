@@ -146,7 +146,7 @@ router.post('/reportChance', (req, res) => {
   db.query(sql, (err, results) => {
     if (err) throw err;
     let tid = 'T' + `${results.length + 1}`.padStart(5, '0')
-    let sql = `REPLACE INTO talent values('${tid}', '${params.cid}', '${params.talent_name}', null, null, null, null, null, null, ${mid_1}, ${m_point_1}, ${mid_2}, ${m_point_2}, '报备待审批', '${currentDate}')`
+    let sql = `REPLACE INTO talent values('${tid}', '${params.cid}', '${params.talent_name}', '${params.year_deal}', null, null, null, null, null, ${mid_1}, ${m_point_1}, ${mid_2}, ${m_point_2}, '报备待审批')`
     console.log(sql);
     db.query(sql, (err, results) => {
       if (err) throw err;
@@ -161,7 +161,7 @@ router.post('/reportChance', (req, res) => {
             let keyword = params.accounts[i].keyword ? `'${params.accounts[i].keyword}'` : null
             let uid_2 = params.accounts[i].uid_2 ? `'${params.accounts[i].uid_2}'` : null
             let u_point_2 = params.accounts[i].u_point_2 ? `'${params.accounts[i].u_point_2}'` : null
-            sql += `('${tdid}', '${tid}', '${params.accounts[i].platform}', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', '${keyword}', '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', '${params.accounts[i].commission}', null, null, null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${uid_2}, ${u_point_2}, '报备待审批', '${currentDate}'),`
+            sql += `('${tdid}', '${tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', '${params.accounts[i].commission}', null, null, null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${uid_2}, ${u_point_2}, '报备待审批'),`
           }
           count += params.accounts.length
         }
@@ -169,14 +169,14 @@ router.post('/reportChance', (req, res) => {
           let tdid = 'TD' + `${count + 1}`.padStart(5, '0')
           let uid_2 = params.group_uid_2 ? `'${params.group_uid_2}'` : null
           let u_point_2 = params.group_u_point_2 ? `'${params.group_u_point_2}'` : null
-          sql += `('${tdid}', '${tid}', null, null, null, null, null, null, null, null, null, null, null, null, '${params.group_name}', '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${uid_2}, ${u_point_2}, '报备待审批', '${currentDate}'),`
+          sql += `('${tdid}', '${tid}', '社群团购', '${params.group_shop}', null, null, null, null, null, null, null, null, null, null, null, '${params.group_name}', '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${uid_2}, ${u_point_2}, '报备待审批'),`
           count += 1
         }
         if (params.provide_name) {
           let tdid = 'TD' + `${count + 1}`.padStart(5, '0')
           let uid_2 = params.provide_uid_2 ? `'${params.provide_uid_2}'` : null
           let u_point_2 = params.provide_u_point_2 ? `'${params.provide_u_point_2}'` : null
-          sql += `('${tdid}', '${tid}', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '${params.provide_name}', '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${uid_2}, ${u_point_2}, '报备待审批', '${currentDate}'),`
+          sql += `('${tdid}', '${tid}', '供货', '${params.provide_shop}', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '${params.provide_name}', '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${uid_2}, ${u_point_2}, '报备待审批'),`
           count += 1
         }
         sql = sql.substring(0, sql.length - 1)

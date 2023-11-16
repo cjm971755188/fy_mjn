@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, Tooltip, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
 import request from '../service/request'
+import { Card, Table, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, Tooltip, message } from 'antd';
+import { FacebookFilled, PlusOutlined } from '@ant-design/icons';
 import { middleType } from '../baseData/talent'
 
 function MiddlemanList() {
@@ -27,22 +27,9 @@ function MiddlemanList() {
                 </Tooltip>
             )
         },
-        {
-            title: '付款类型',
-            dataIndex: 'pay_way',
-            key: 'pay_way',
-            render: (_, record) => (
-                <span>{record.pay_way ? '对公' : '对私'}</span>
-            )
-        },
-        {
-            title: '能否开票',
-            dataIndex: 'can_piao',
-            key: 'can_piao',
-            render: (_, record) => (
-                <span>{record.can_piao ? '能' : '不能'}</span>
-            )
-        },
+        { title: '付款类型', dataIndex: 'pay_way', key: 'pay_way' },
+        { title: '能否开票', dataIndex: 'can_piao', key: 'can_piao' },
+        { title: '票型', dataIndex: 'piao_type', key: 'piao_type' },
         { title: '税点', dataIndex: 'shui_point', key: 'shui_point' },
         {
             title: '付款信息',
@@ -68,18 +55,13 @@ function MiddlemanList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
-                    <a onClick={() => { 
-                        let pay_way = record.pay_way ? true : false
-                        setToGongOrSi(pay_way)
-                        let can_piao = record.can_piao ? true : false
-                        setCanPiao(can_piao)
-                        setFormType('edit'); 
-                        setIsShow(true); 
-                        form.setFieldsValue({
-                            ...record,
-                            pay_way,
-                            can_piao
-                        }) 
+                    <a onClick={() => {
+                        setToGongOrSi(record.pay_way)
+                        setCanPiao(record.can_piao)
+                        setPiaoType(record.piao_type)
+                        setFormType('edit');
+                        setIsShow(true);
+                        form.setFieldsValue(record)
                     }}>修改信息</a>
                 </Space>
             )
@@ -155,6 +137,7 @@ function MiddlemanList() {
     const [form] = Form.useForm()
     const [toGongOrSi, setToGongOrSi] = useState(false)
     const [canPiao, setCanPiao] = useState(false)
+    const [piaoType, setPiaoType] = useState(false)
 
     // 查询、清空筛选
     const [selectForm] = Form.useForm()
@@ -211,7 +194,7 @@ function MiddlemanList() {
                 open={isShow}
                 maskClosable={false}
                 onOk={() => { form.submit(); }}
-                onCancel={() => { setIsShow(false); form.resetFields(); setToGongOrSi(false); setCanPiao(false) }}
+                onCancel={() => { setIsShow(false); form.resetFields(); setToGongOrSi(false); setCanPiao(false); setPiaoType(false) }}
             >
                 <Form
                     form={form}
@@ -236,6 +219,7 @@ function MiddlemanList() {
                                         setIsShow(false)
                                         setToGongOrSi(false)
                                         setCanPiao(false)
+                                        setPiaoType(false)
                                         fetchData()
                                         form.resetFields()
                                     } else {
@@ -267,6 +251,7 @@ function MiddlemanList() {
                                         setIsShow(false)
                                         setToGongOrSi(false)
                                         setCanPiao(false)
+                                        setPiaoType(false)
                                         fetchData()
                                         form.resetFields()
                                     } else {
@@ -301,19 +286,25 @@ function MiddlemanList() {
                     </Form.Item>
                     <Form.Item label="付款方式" name="pay_way" rules={[{ required: true, message: '不能为空' }]}>
                         <Radio.Group onChange={(e) => { setToGongOrSi(e.target.value); }} value={toGongOrSi}>
-                            <Radio value={true}>对公</Radio>
-                            <Radio value={false}>对私</Radio>
+                            <Radio value={'对公'}>对公</Radio>
+                            <Radio value={'对私'}>对私</Radio>
                         </Radio.Group>
                     </Form.Item>
-                    {toGongOrSi ? <><Form.Item label="能否开票" name="can_piao" rules={[{ required: true, message: '不能为空' }]}>
+                    {toGongOrSi === '对公' ? <><Form.Item label="能否开票" name="can_piao" rules={[{ required: true, message: '不能为空' }]}>
                         <Radio.Group onChange={(e) => { setCanPiao(e.target.value); }} value={canPiao}>
-                            <Radio value={true}>能</Radio>
-                            <Radio value={false}>不能</Radio>
+                            <Radio value={'能'}>能</Radio>
+                            <Radio value={'不能'}>不能</Radio>
                         </Radio.Group>
                     </Form.Item>
-                        {canPiao ? <Form.Item label="税点（%）" name="shui_point" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber placeholder="请输入" />
-                        </Form.Item> : null}</> : null}
+                        {canPiao === '能' ? <><Form.Item label="票型" name="piao_type" rules={[{ required: true, message: '不能为空' }]}>
+                            <Radio.Group onChange={(e) => { setPiaoType(e.target.value); }} value={piaoType}>
+                                <Radio value={'专票'}>专票</Radio>
+                                <Radio value={'普票'}>普票</Radio>
+                            </Radio.Group>
+                        </Form.Item>
+                            <Form.Item label="税点（%）" name="shui_point" rules={[{ required: true, message: '不能为空' }]}>
+                                <InputNumber placeholder="请输入" />
+                            </Form.Item></> : null}</> : null}
                     <Form.Item label="收款姓名" name="pay_name" rules={[{ required: true, message: '不能为空' }]}>
                         <Input placeholder="请输入" />
                     </Form.Item>

@@ -2,8 +2,8 @@ export const chanceStatus = [
     { label: "未推进", value: "未推进" },
     { label: "已推进", value: "已推进" },
     { label: "报备待审批", value: "报备待审批" },
-    { label: "报备失败", value: "报备失败" },
-    { label: "报备成功", value: "报备成功" }
+    { label: "报备驳回", value: "报备驳回" },
+    { label: "报备通过", value: "报备通过" }
 ]
 
 export const talentStatus = [
@@ -91,4 +91,10 @@ export const priceCut = [
 export const middleType = [
     { label: "机构", value: "机构" },
     { label: "个人", value: "个人" }
+]
+
+export const yearDealType = [
+    { label: "150w-299w", value: "150w-299w" },
+    { label: "300w-399w", value: "300w-399w" },
+    { label: "400w以上", value: "400w以上" }
 ]

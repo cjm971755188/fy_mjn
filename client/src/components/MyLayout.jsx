@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom'
+import request from '../service/request'
 import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
@@ -11,13 +13,11 @@ import {
     BranchesOutlined,
     TeamOutlined
 } from '@ant-design/icons';
-import { Layout, Menu, Button, theme, Dropdown, Breadcrumb, Form, Modal, Input, message } from 'antd';
+import { Layout, Menu, Button, theme, Dropdown, Breadcrumb, Form, Modal, Input, message, Space } from 'antd';
 import logo from '../assets/logo_white.jpg'
 import people from '../assets/people.jpg'
-import { useLocation, useNavigate } from 'react-router-dom'
-import request from '../service/request'
 
-const { Header, Sider, Content } = Layout;
+const { Header, Sider, Content, Footer } = Layout;
 // 下拉菜单 items
 const items = [
     {
@@ -168,8 +168,14 @@ const MyLayout = ({ children }) => {
         setBread(createBreadcrumb(pathname))
     }, [pathname])
     return (
-        <Layout style={{ width: '100vw', height: '100vh' }}>
-            <Sider trigger={null} collapsible collapsed={collapsed}>
+        <Layout style={{ minHeight: document.documentElement.clientHeight }}>
+            <Sider
+                breakpoint="lg"
+                collapsedWidth="0"
+                trigger={null}
+                collapsible
+                collapsed={collapsed}
+            >
                 <div className="logo">
                     <img src={logo} />
                 </div>
@@ -265,7 +271,7 @@ const MyLayout = ({ children }) => {
                         margin: '24px 16px',
                         padding: 24,
                         minHeight: 280,
-                        background: colorBgContainer,
+                        background: colorBgContainer
                     }}
                 >
                     <Breadcrumb
@@ -278,6 +284,13 @@ const MyLayout = ({ children }) => {
                     />
                     {children}
                 </Content>
+                <Footer
+                    style={{
+                        textAlign: 'center',
+                    }}
+                >
+                    Ephemeroptera1.0 Created by 陈佳敏
+                </Footer>
             </Layout>
         </Layout>
     );

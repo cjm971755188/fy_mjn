@@ -14,7 +14,7 @@ function App() {
             <Routes>
                 <Route path='/workbench' element={<Workbench />} />
                 <Route path='/user' element={<UserList />} />
-                <Route path='/talent/middleman_list' element={<MiddlemanList />} />
+                <Route path='/middleman' element={<MiddlemanList />} />
                 <Route path='/talent/chance_list' element={<ChanceList />} />
                 <Route path='/talent/talent_detail' element={<TalentDetail />} />
                 <Route path='/talent/talent_list' element={<TalentList />} />

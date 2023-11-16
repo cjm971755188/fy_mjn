@@ -10,7 +10,7 @@ router.post('/login', (req, res) => {
   db.query(sql, (err, results) => {
     if (err) throw err;
     if (results.length == 0) {
-      res.send({ code: 201, data: {}, msg: '用户名错误' })
+      res.send({ code: 201, data: {}, msg: '无该用户' })
     } else if (params.password != results[0].password) {
       res.send({ code: 201, data: {}, msg: '密码错误' })
     } else if (results[0].status == '0') {
@@ -29,7 +29,7 @@ router.post('/editPassword', (req, res) => {
   db.query(sql, (err, results) => {
     if (err) throw err;
     if (results.length == 0) {
-      res.send({ code: 201, data: {}, msg: '用户名错误' })
+      res.send({ code: 201, data: {}, msg: '无该用户' })
     } else if (params.password != results[0].password) {
       res.send({ code: 201, data: {}, msg: '原密码错误' })
     } else if (params.password2 != params.password3) {
@@ -107,12 +107,12 @@ router.post('/addUser', (req, res) => {
         res.send({ code: 201, data: {}, msg: `${params.combine[0]} ${params.combine[1]} 已存在 ${results.length} 名 主管` })
       }
     } else {
-      let sql = `SELECT * FROM user where name = '${params.name}'`
+      let sql = `SELECT * FROM user where phone = '${params.phone}'`
       db.query(sql, (err, results) => {
         if (err) throw err;
         if (results.length != 0) {
           if (results[0].status != '2') {
-            res.send({ code: 201, data: {}, msg: `${params.name} 已存在` })
+            res.send({ code: 201, data: {}, msg: `${params.phone} 手机号已存在` })
           } else {
             let sql = `UPDATE user SET status = '1', create_time = '${currentDate}' where name = '${params.name}'`
             db.query(sql, (err, results) => {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
+import request from '../service/request'
 import { Card, Table, Space, Form, Input, Modal, Button, Select, Switch, Popconfirm, Cascader, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import request from '../service/request'
 import { company, department, position, combine } from '../baseData/user'
 
 function UserList() {

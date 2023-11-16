@@ -63,8 +63,9 @@ router.post('/addMiddleman', (req, res) => {
                 if (err) throw err;
                 let mid = 'M' + `${results.length + 1}`.padStart(5, '0')
                 let can_piao = params.can_piao ? `'${params.can_piao}'` : null
+                let piao_type = params.piao_type ? `'${params.piao_type}'` : null
                 let shui_point = params.shui_point ? `'${params.shui_point}'` : null
-                let sql = `INSERT INTO middleman values('${mid}', '${params.type}', '${params.name}', '${params.liaison_name}', '${params.liaison_v}', '${params.liaison_phone}', '${params.pay_way}', ${can_piao}, ${shui_point}, '${params.pay_name}', '${params.pay_bank}', '${params.pay_account}', '${params.userInfo.uid}', '${currentDate}')`
+                let sql = `INSERT INTO middleman values('${mid}', '${params.type}', '${params.name}', '${params.liaison_name}', '${params.liaison_v}', '${params.liaison_phone}', '${params.pay_way}', ${can_piao}, ${piao_type}, ${shui_point}, '${params.pay_name}', '${params.pay_bank}', '${params.pay_account}', '${params.userInfo.uid}', '${currentDate}')`
                 db.query(sql, (err, results) => {
                     if (err) throw err;
                     res.send({ code: 200, data: {}, msg: `` })
@@ -86,8 +87,10 @@ router.post('/editMiddleman', (req, res) => {
             res.send({ code: 201, data: {}, msg: `${params.name} 已存在` })
         } else {
             let can_piao = params.can_piao ? `'${params.can_piao}'` : null
+            let piao_type = params.piao_type ? `'${params.piao_type}'` : null
             let shui_point = params.shui_point ? `'${params.shui_point}'` : null
-            let sql = `UPDATE middleman SET type = '${params.type}', name = '${params.name}', liaison_name = '${params.liaison_name}', liaison_v = '${params.liaison_v}', liaison_phone = '${params.liaison_phone}', pay_way = '${params.pay_way}', can_piao = ${can_piao}, shui_point = ${shui_point}, pay_name = '${params.pay_name}', pay_bank = '${params.pay_bank}', shui_point = '${params.pay_account}' WHERE mid = '${params.mid}'`
+            console.log(params.piao_type, piao_type);
+            let sql = `UPDATE middleman SET type = '${params.type}', name = '${params.name}', liaison_name = '${params.liaison_name}', liaison_v = '${params.liaison_v}', liaison_phone = '${params.liaison_phone}', pay_way = '${params.pay_way}', can_piao = ${can_piao}, piao_type = ${piao_type}, shui_point = ${shui_point}, pay_name = '${params.pay_name}', pay_bank = '${params.pay_bank}', pay_account = '${params.pay_account}' WHERE mid = '${params.mid}'`
             db.query(sql, (err, results) => {
                 if (err) throw err;
                 res.send({ code: 200, data: {}, msg: `` })

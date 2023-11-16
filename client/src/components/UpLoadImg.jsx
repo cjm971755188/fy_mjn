@@ -1,6 +1,6 @@
 import React, { useState, Fragment } from 'react';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { message, Upload } from 'antd';
+import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { BASE_URL } from '../service/config';
 
 const getBase64 = (img, callback) => {

@@ -1,8 +1,8 @@
 import React from "react";
-import { Col, Row, Card, Button, Form, Input, message } from 'antd';
-import logo from '../assets/logo_white.jpg'
 import { useNavigate } from 'react-router-dom'
 import request from '../service/request'
+import { Col, Row, Card, Button, Form, Input, message } from 'antd';
+import logo from '../assets/logo_white.jpg'
 
 function Login() {
     const navigate = useNavigate()
