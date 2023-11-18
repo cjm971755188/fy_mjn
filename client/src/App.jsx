@@ -16,8 +16,9 @@ function App() {
                 <Route path='/user' element={<UserList />} />
                 <Route path='/middleman' element={<MiddlemanList />} />
                 <Route path='/talent/chance_list' element={<ChanceList />} />
-                <Route path='/talent/talent_detail' element={<TalentDetail />} />
+                <Route path='/talent/chance_list/talent_detail' element={<TalentDetail />} />
                 <Route path='/talent/talent_list' element={<TalentList />} />
+                <Route path='/talent/talent_list/talent_detail' element={<TalentDetail />} />
             </Routes>
         </MyLayout>
     )

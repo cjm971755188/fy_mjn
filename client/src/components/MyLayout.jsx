@@ -5,7 +5,7 @@ import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
     CalendarOutlined,
-    BuildOutlined,
+    RollbackOutlined,
     UserOutlined,
     AreaChartOutlined,
     CarryOutOutlined,
@@ -13,7 +13,7 @@ import {
     BranchesOutlined,
     TeamOutlined
 } from '@ant-design/icons';
-import { Layout, Menu, Button, theme, Dropdown, Breadcrumb, Form, Modal, Input, message, Space } from 'antd';
+import { Layout, Menu, Button, theme, Dropdown, Breadcrumb, Form, Modal, Input, message, Col, Row } from 'antd';
 import logo from '../assets/logo_white.jpg'
 import people from '../assets/people.jpg'
 
@@ -66,6 +66,16 @@ const menuItemsTotal = [
         key: '/admin/user',
         icon: <UserOutlined />,
         label: '用户列表'
+    },
+    {
+        key: '/admin/talent/chance_list/talent_detail',
+        icon: <UserOutlined />,
+        label: '达人详情'
+    },
+    {
+        key: '/admin/talent/talent_list/talent_detail',
+        icon: <UserOutlined />,
+        label: '达人详情'
     }
 ]
 
@@ -74,15 +84,11 @@ const getMenuItems = (department, position) => {
     let arrObj = []
     for (let i = 0; i < menuItemsTotal.length; i++) {
         let menu = menuItemsTotal[i];
-        if (menu.children) {
-            for (let j = 0; j < menu.children.length; j++) {
-                const element = menu.children[j];
-                if (element.children) {
-                    delete element.children
-                }
-            }
+        if (menu.label === '达人详情') {
+            continue
+        } else {
+            arrObj.push(menu)
         }
-        arrObj.push(menu)
     }
     return arrObj
 }
@@ -274,14 +280,24 @@ const MyLayout = ({ children }) => {
                         background: colorBgContainer
                     }}
                 >
-                    <Breadcrumb
-                        style={{ marginBottom: '20px' }}
-                        items={
-                            bread.map(n => {
-                                return { title: <a href={n.key}>{n.label}</a> }
-                            })
-                        }
-                    />
+                    <Row gutter={24}>
+                        <Col span={12}>
+                            <Breadcrumb
+                                style={{ marginBottom: '20px' }}
+                                items={
+                                    bread.map(n => {
+                                        return { title: <a href={n.key}>{n.label}</a> }
+                                    })
+                                }
+                            />
+                        </Col>
+                        {pathname.match('detail') ? <Col span={12}>
+                            <Button icon={<RollbackOutlined />} style={{float: 'right'}} onClick={() => { 
+                                navigate(-1) // 返回上一个路由
+                             }}>返回</Button>
+                        </Col> : null}
+                    </Row>
+
                     {children}
                 </Content>
                 <Footer

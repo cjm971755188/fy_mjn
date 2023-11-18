@@ -85,7 +85,7 @@ function MiddlemanList() {
         setLoading(true)
         request({
             method: 'post',
-            url: '/middleman/getMiddlemans',
+            url: '/middleman/getMiddlemanList',
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),

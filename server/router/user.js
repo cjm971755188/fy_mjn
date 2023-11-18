@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db')
+const dayjs = require('dayjs');
 const sendRobot = require('../myFun/ddrobot')
 
 // 登录
@@ -90,8 +91,6 @@ router.post('/getUserList', (req, res) => {
 
 // 添加新用户
 router.post('/addUser', (req, res) => {
-  let time = new Date()
-  let currentDate = time.getFullYear() + "-" + (time.getMonth() + 1) + "-" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
   let params = req.body
   let sql = `SELECT * FROM user where status != 2 and company = '${params.combine[0]}' and department = '${params.combine[1]}' and position = '${params.combine[2]}' and position in ('总裁', '副总', '主管')`
   db.query(sql, (err, results) => {
@@ -114,7 +113,7 @@ router.post('/addUser', (req, res) => {
           if (results[0].status != '2') {
             res.send({ code: 201, data: {}, msg: `${params.phone} 手机号已存在` })
           } else {
-            let sql = `UPDATE user SET status = '1', create_time = '${currentDate}' where name = '${params.name}'`
+            let sql = `UPDATE user SET status = '1', create_time = '${dayjs().valueOf()}' where name = '${params.name}'`
             db.query(sql, (err, results) => {
               if (err) throw err;
               res.send({ code: 200, data: {}, msg: `${params.name} 重启成功` })
@@ -125,7 +124,7 @@ router.post('/addUser', (req, res) => {
           db.query(sql, (err, results) => {
             if (err) throw err;
             let uid = 'MJN' + `${results[0].sum}`.padStart(5, '0')
-            let sql = `INSERT INTO user values('${uid}', '${params.name}', '${params.phone}', '123456', '${params.combine[0]}', '${params.combine[1]}', '${params.combine[2]}', '1', '${currentDate}')`
+            let sql = `INSERT INTO user values('${uid}', '${params.name}', '${params.phone}', '123456', '${params.combine[0]}', '${params.combine[1]}', '${params.combine[2]}', '1', '${dayjs().valueOf()}')`
             db.query(sql, (err, results) => {
               if (err) throw err;
               res.send({ code: 200, data: {}, msg: `${params.name} 添加成功` })

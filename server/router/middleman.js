@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const dayjs = require('dayjs');
 const db = require('../config/db')
 
 // 获取中间人列表
-router.post('/getMiddlemans', (req, res) => {
+router.post('/getMiddlemanList', (req, res) => {
     let params = req.body
     let where = `where u.status != '2'`
     // 权限筛选
@@ -49,8 +50,6 @@ router.post('/getMiddlemans', (req, res) => {
 
 // 添加中间人
 router.post('/addMiddleman', (req, res) => {
-    let time = new Date()
-    let currentDate = time.getFullYear() + "-" + (time.getMonth() + 1) + "-" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
     let params = req.body
     let sql = `SELECT * FROM middleman WHERE uid = '${params.userInfo.uid}' and name = '${params.name}'`
     db.query(sql, (err, results) => {
@@ -65,7 +64,7 @@ router.post('/addMiddleman', (req, res) => {
                 let can_piao = params.can_piao ? `'${params.can_piao}'` : null
                 let piao_type = params.piao_type ? `'${params.piao_type}'` : null
                 let shui_point = params.shui_point ? `'${params.shui_point}'` : null
-                let sql = `INSERT INTO middleman values('${mid}', '${params.type}', '${params.name}', '${params.liaison_name}', '${params.liaison_v}', '${params.liaison_phone}', '${params.pay_way}', ${can_piao}, ${piao_type}, ${shui_point}, '${params.pay_name}', '${params.pay_bank}', '${params.pay_account}', '${params.userInfo.uid}', '${currentDate}')`
+                let sql = `INSERT INTO middleman values('${mid}', '${params.type}', '${params.name}', '${params.liaison_name}', '${params.liaison_v}', '${params.liaison_phone}', '${params.pay_way}', ${can_piao}, ${piao_type}, ${shui_point}, '${params.pay_name}', '${params.pay_bank}', '${params.pay_account}', '${params.userInfo.uid}', '${dayjs().valueOf()}')`
                 db.query(sql, (err, results) => {
                     if (err) throw err;
                     res.send({ code: 200, data: {}, msg: `` })
@@ -77,8 +76,6 @@ router.post('/addMiddleman', (req, res) => {
 
 // 修改中间人信息
 router.post('/editMiddleman', (req, res) => {
-    let time = new Date()
-    let currentDate = time.getFullYear() + "-" + (time.getMonth() + 1) + "-" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
     let params = req.body
     let sql = `SELECT * FROM middleman WHERE uid = '${params.userInfo.uid}' and name = '${params.name}' and mid != '${params.mid}'`
     db.query(sql, (err, results) => {

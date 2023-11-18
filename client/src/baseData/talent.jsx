@@ -98,3 +98,11 @@ export const yearDealType = [
     { label: "300w-399w", value: "300w-399w" },
     { label: "400w以上", value: "400w以上" }
 ]
+
+export const yearCycleType = [
+    { label: "一年一付", value: "一年一付" },
+    { label: "半年一付", value: "半年一付" },
+    { label: "一季一付", value: "一季一付" },
+    { label: "一月一付", value: "一月一付" },
+    { label: "一专场一付", value: "一专场一付" }
+]

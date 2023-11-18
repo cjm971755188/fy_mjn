@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NavLink } from 'react-router-dom'
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Tooltip, Radio, InputNumber, message } from 'antd';
-import { PlusOutlined, CheckCircleTwoTone, ClockCircleTwoTone, MinusCircleOutlined, PlayCircleTwoTone } from '@ant-design/icons';
+import { PlusOutlined, CheckCircleTwoTone, ClockCircleTwoTone, MinusCircleOutlined, PlayCircleTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
 import people from '../assets/people.jpg'
 import UpLoadImg from '../components/UpLoadImg'
 import { chanceStatus, model, platform, liaisonType, accountType, accountModelType, ageCut, priceCut, middleType, yearDealType } from '../baseData/talent'
@@ -61,7 +61,10 @@ function ChanceList() {
             key: 'status',
             render: (_, record) => (
                 <Space size="small">
-                    {record.status === '未推进' || record.status === '报备驳回' ? <PlayCircleTwoTone twoToneColor="#f81d22" /> : (record.status === '已推进' || record.status === '报备通过') ? <CheckCircleTwoTone twoToneColor="#4ec990" /> : <ClockCircleTwoTone twoToneColor="#ee9900" />}
+                    {record.status === '未推进' ? <PlayCircleTwoTone twoToneColor="#f81d22" /> :
+                        record.status === '报备驳回' ? <CloseCircleTwoTone twoToneColor="#f81d22" /> :
+                            (record.status === '已推进' || record.status === '报备通过') ? <CheckCircleTwoTone twoToneColor="#4ec990" /> :
+                                <ClockCircleTwoTone twoToneColor="#ee9900" />}
                     <span>{record.status}</span>
                 </Space>
             )
@@ -73,7 +76,7 @@ function ChanceList() {
                 <Space size="large">
                     {localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ?
                         <>{record.status === '报备待审批' ?
-                            <NavLink to='/admin/talent/talent_detail' state={{ tid: record.tid, type: 'check' }}>审批</NavLink> : null}
+                            <NavLink to='/admin/talent/chance_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'check' }}>审批</NavLink> : null}
                         </> :
                         <>{record.status === '未推进' || record.status === '已推进' ?
                             <a onClick={() => {
@@ -180,7 +183,6 @@ function ChanceList() {
                                                 if (res.status == 200) {
                                                     if (res.data.code == 200) {
                                                         setCheckNoReason(res.data.data)
-                                                        setCheckNoType('look')
                                                         setIsShowCheckNo(true);
                                                     } else {
                                                         message.error(res.data.msg)
@@ -191,9 +193,9 @@ function ChanceList() {
                                             }).catch((err) => {
                                                 console.error(err)
                                             })
-                                        }}>查看驳回理由</a> : null}
-                                    </> :
-                                    <NavLink to='/admin/talent/talent_detail' state={{ tid: record.tid, type: 'look' }}>查看详情</NavLink>}
+                                        }}>查看驳回备注</a> : null}
+                                    </> : null}
+                                    {/* <NavLink to='/admin/talent/chance_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'look' }}>查看详情</NavLink> */}
                         </>
                     }
                 </Space>
@@ -318,6 +320,8 @@ function ChanceList() {
     const [hasSecondMiddle, setHasSecondMiddle] = useState(false)
     const [hasGroupFuSaleman, setGroupHasFuSaleman] = useState(false)
     const [hasProvideFuSaleman, setProvideHasFuSaleman] = useState(false)
+    const [checkNoReason, setCheckNoReason] = useState('')
+    const [isShowCheckNo, setIsShowCheckNo] = useState(false)
 
     // 添加新中间人
     const [isShowMid, setIsShowMid] = useState(false)
@@ -616,22 +620,28 @@ function ChanceList() {
                                 <Radio value={true}>有二级中间人</Radio>
                             </Radio.Group>
                         </Form.Item>
-                        {hasFirstMiddle ? <Space size='large'>
+                        {hasFirstMiddle ? <><Space size='large'>
                             <Form.Item label="一级中间人" name="mid_1" rules={[{ required: true, message: '不能为空' }]}>
-                                <Select showSearch placeholder="请输入中间人名称" options={middlemans1} filterOption={filterOption} onChange={(value) => { searchMiddleman1(value) }} onSearch={(value) => { searchMiddleman1(value) }} />
+                                <Select showSearch placeholder="请输入" options={middlemans1} filterOption={filterOption} onChange={(value) => { searchMiddleman1(value) }} onSearch={(value) => { searchMiddleman1(value) }} />
                             </Form.Item>
                             <Form.Item label="一级中间人提成点（%）" name="m_point_1" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber />
                             </Form.Item>
-                        </Space> : null}
-                        {hasSecondMiddle ? <Space size='large'>
+                        </Space>
+                            <Form.Item label="一级中间人提成备注" name="m_note_1">
+                                <TextArea />
+                            </Form.Item></> : null}
+                        {hasSecondMiddle ? <><Space size='large'>
                             <Form.Item label="二级中间人" name="mid_2" rules={[{ required: true, message: '不能为空' }]}>
-                                <Select showSearch placeholder="请输入中间人名称" options={middlemans2} filterOption={filterOption} onChange={(value) => { searchMiddleman2(value) }} onSearch={(value) => { searchMiddleman2(value) }} />
+                                <Select showSearch placeholder="请输入" options={middlemans2} filterOption={filterOption} onChange={(value) => { searchMiddleman2(value) }} onSearch={(value) => { searchMiddleman2(value) }} />
                             </Form.Item>
                             <Form.Item label="二级中间人提成点（%）" name="m_point_2" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber />
                             </Form.Item>
-                        </Space> : null}</> : null}
+                        </Space>
+                            <Form.Item label="二级中间人提成备注" name="m_note_2">
+                                <TextArea />
+                            </Form.Item></> : null}</> : null}
                     {formType == 'add' || formType == 'edit' ? <Form.Item label="模式" name="models" rules={[{ required: true, message: '不能为空' }]}>
                         <Select
                             mode="multiple"
@@ -670,7 +680,7 @@ function ChanceList() {
                                     style={{
                                         width: '100%',
                                     }}
-                                    placeholder="请选择新商机合作平台"
+                                    placeholder="请选择"
                                     onChange={(value) => {
                                         form.setFieldValue('platforms', value)
                                     }}
@@ -681,7 +691,7 @@ function ChanceList() {
                                 <Select
                                     mode="tags"
                                     allowClear
-                                    placeholder="请输入新达人的账号ID"
+                                    placeholder="请输入"
                                     onChange={(value) => {
                                         form.setFieldValue('account_ids', value)
                                     }}
@@ -692,7 +702,7 @@ function ChanceList() {
                                 <Select
                                     mode="tags"
                                     allowClear
-                                    placeholder="请输入新达人账号"
+                                    placeholder="请输入"
                                     onChange={(value) => {
                                         form.setFieldValue('account_names', value)
                                     }}
@@ -733,7 +743,7 @@ function ChanceList() {
                                         <Card key={key} title={`第 ${name + 1} 个账号`} extra={<MinusCircleOutlined onClick={() => remove(name)} />} style={{ marginBottom: '20px' }}>
                                             <Form.Item label="平台" {...restField} name={[name, "platform"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select
-                                                    placeholder="请选择报备的平台"
+                                                    placeholder="请选择"
                                                     onChange={(value) => {
                                                         form.setFieldValue('platform', value)
                                                         if (value !== '闯货' && value !== '抖音' && value !== '快手' && value !== '视频号' && value !== '视频号服务商') {
@@ -745,7 +755,7 @@ function ChanceList() {
                                             </Form.Item>
                                             <Form.Item label="账号ID" {...restField} name={[name, "account_id"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select
-                                                    placeholder="请选择报备的账号ID"
+                                                    placeholder="请选择"
                                                     onChange={(value) => {
                                                         form.setFieldValue('account_id', value)
                                                     }}
@@ -754,7 +764,7 @@ function ChanceList() {
                                             </Form.Item>
                                             <Form.Item label="账号名称" {...restField} name={[name, "account_name"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select
-                                                    placeholder="请选择报备的账号名称"
+                                                    placeholder="请选择"
                                                     onChange={(value) => {
                                                         form.setFieldValue('account_name', value)
                                                     }}
@@ -763,7 +773,7 @@ function ChanceList() {
                                             </Form.Item>
                                             <Form.Item label="账号类型" {...restField} name={[name, "account_type"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select
-                                                    placeholder="请选择报备的账号类型"
+                                                    placeholder="请选择"
                                                     onChange={(value) => {
                                                         form.setFieldValue('account_type', value)
                                                     }}
@@ -774,7 +784,7 @@ function ChanceList() {
                                                 <Select
                                                     mode="multiple"
                                                     allowClear
-                                                    placeholder="请选择报备的合作方式"
+                                                    placeholder="请选择"
                                                     onChange={(value) => {
                                                         form.setFieldValue('account_models', value)
                                                     }}
@@ -782,7 +792,7 @@ function ChanceList() {
                                                 />
                                             </Form.Item>
                                             {isShowKeyword ? <Form.Item label="关键字（前后缀）" {...restField} name={[name, "keyword"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Input placeholder="请输入报备的关键字（前后缀）" />
+                                                <Input placeholder="请输入" />
                                             </Form.Item> : null}
                                             <Space size='large'>
                                                 <Form.Item label="平时带货在线（人）" {...restField} name={[name, "people_count"]} rules={[{ required: true, message: '不能为空' }]}>
@@ -801,8 +811,19 @@ function ChanceList() {
                                             <Form.Item label="平均客单价（元）" {...restField} name={[name, "price_cut"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select options={priceCut} />
                                             </Form.Item>
-                                            <Form.Item label="常规品线上佣金比例（%）" {...restField} name={[name, "commission"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <InputNumber />
+                                            <Space size='large'>
+                                                <Form.Item label="常规品线上佣金比例（%）" {...restField} name={[name, "commission_normal"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                    <InputNumber />
+                                                </Form.Item>
+                                                <Form.Item label="福利品线上佣金比例（%）" {...restField} name={[name, "commission_welfare"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                    <InputNumber />
+                                                </Form.Item>
+                                                <Form.Item label="爆品线上佣金比例（%）" {...restField} name={[name, "commission_bao"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                    <InputNumber />
+                                                </Form.Item>
+                                            </Space>
+                                            <Form.Item label="佣金备注" {...restField} name={[name, "commission_note"]}>
+                                                <TextArea />
                                             </Form.Item>
                                             <Space size='large'>
                                                 <Form.Item label="主商务" {...restField} name={[name, "uid_1"]} >
@@ -856,6 +877,9 @@ function ChanceList() {
                                                     <InputNumber />
                                                 </Form.Item>
                                             </Space> : null}
+                                            <Form.Item label="商务提成备注" {...restField} name={[name, "u_note"]}>
+                                                <TextArea />
+                                            </Form.Item>
                                         </Card>
                                     ))}
                                     <Form.Item>
@@ -871,21 +895,21 @@ function ChanceList() {
                         <Form.Item label="达人名称" name="group_name" rules={[{ required: true, message: '不能为空' }]}>
                             <Input placeholder="请输入" disabled={formType === 'report' ? true : false} />
                         </Form.Item>
-                        <Form.Item label="聚水潭店铺名" name="group_shop" rules={[{ required: true, message: '不能为空' }]}>
+                        {formType === 'report' ? <><Form.Item label="聚水潭店铺名" name="group_shop">
                             <Input placeholder="请输入" />
                         </Form.Item>
-                        {formType === 'report' ? <><Space size='large'>
-                            <Form.Item label="常规品折扣（折）" name="discount_normal" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber placeholder="请输入" />
-                            </Form.Item>
-                            <Form.Item label="福利品折扣（折）" name="discount_welfare" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber placeholder="请输入" />
-                            </Form.Item>
-                            <Form.Item label="爆品折扣（折）" name="discount_bao" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber placeholder="请输入" />
-                            </Form.Item>
-                        </Space>
-                            <Form.Item label="折扣其他备注" name="discount_note" rules={[{ required: true, message: '不能为空' }]}>
+                            <Space size='large'>
+                                <Form.Item label="常规品折扣（折）" name="discount_normal" rules={[{ required: true, message: '不能为空' }]}>
+                                    <InputNumber placeholder="请输入" />
+                                </Form.Item>
+                                <Form.Item label="福利品折扣（折）" name="discount_welfare" rules={[{ required: true, message: '不能为空' }]}>
+                                    <InputNumber placeholder="请输入" />
+                                </Form.Item>
+                                <Form.Item label="爆品折扣（折）" name="discount_bao" rules={[{ required: true, message: '不能为空' }]}>
+                                    <InputNumber placeholder="请输入" />
+                                </Form.Item>
+                            </Space>
+                            <Form.Item label="折扣备注" name="discount_note">
                                 <TextArea placeholder="请输入" />
                             </Form.Item>
                             <Space size='large'>
@@ -939,24 +963,26 @@ function ChanceList() {
                                 <Form.Item label="副商务提成点（%）" name={"group_u_point_2"} >
                                     <InputNumber />
                                 </Form.Item>
-                            </Space> : null}</> : null}
+                            </Space> : null}<Form.Item label="商务提成备注" name="group_u_note">
+                                <TextArea />
+                            </Form.Item></> : null}
                     </Card> : null}
                     {isShowProvide ? <Card title="供货" style={{ marginBottom: "20px" }}>
                         <Form.Item label="达人名称" name="provide_name" rules={[{ required: true, message: '不能为空' }]}>
                             <Input placeholder="请输入" disabled={formType === 'report' ? true : false} />
                         </Form.Item>
-                        <Form.Item label="聚水潭店铺名" name="provide_shop" rules={[{ required: true, message: '不能为空' }]}>
+                        {formType === 'report' ? <><Form.Item label="聚水潭店铺名" name="provide_shop">
                             <Input placeholder="请输入" />
                         </Form.Item>
-                        {formType === 'report' ? <><Space size='large'>
-                            <Form.Item label="买断折扣（折）" name="discount_buyout" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber placeholder="请输入" />
-                            </Form.Item>
-                            <Form.Item label="含退货率折扣（折）" name="discount_back" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber placeholder="请输入" />
-                            </Form.Item>
-                        </Space>
-                            <Form.Item label="折扣其他备注" name="discount_label" rules={[{ required: true, message: '不能为空' }]}>
+                            <Space size='large'>
+                                <Form.Item label="买断折扣（折）" name="discount_buyout" rules={[{ required: true, message: '不能为空' }]}>
+                                    <InputNumber placeholder="请输入" />
+                                </Form.Item>
+                                <Form.Item label="含退货率折扣（折）" name="discount_back" rules={[{ required: true, message: '不能为空' }]}>
+                                    <InputNumber placeholder="请输入" />
+                                </Form.Item>
+                            </Space>
+                            <Form.Item label="折扣备注" name="discount_label">
                                 <TextArea placeholder="请输入" />
                             </Form.Item>
                             <Space size='large'>
@@ -1010,7 +1036,9 @@ function ChanceList() {
                                 <Form.Item label="副商务提成点（%）" name={"provide_u_point_2"} >
                                     <InputNumber />
                                 </Form.Item>
-                            </Space> : null}</> : null}
+                            </Space> : null}<Form.Item label="商务提成备注" name="provide_u_note">
+                                <TextArea />
+                            </Form.Item></> : null}
                     </Card> : null}
                     {formType == 'add' ? <Form.Item label="寻找证明" name="search_pic" rules={[{ required: true, message: '不能为空' }]} >
                         <UpLoadImg title="上传寻找证明" name="addSearchPic" setPicUrl={(value) => { form.setFieldValue('search_pic', value) }} />
@@ -1133,6 +1161,9 @@ function ChanceList() {
                         <Input placeholder="请输入" />
                     </Form.Item>
                 </Form>
+            </Modal>
+            <Modal title="报备驳回备注" open={isShowCheckNo} onOk={() => { setIsShowCheckNo(false); }} onCancel={() => { setIsShowCheckNo(false); }}>
+                <TextArea placeholder="请输入" value={checkNoReason} disabled={true} />
             </Modal>
         </div >
     )
