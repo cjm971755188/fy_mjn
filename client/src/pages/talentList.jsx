@@ -32,6 +32,8 @@ function TalentList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
+                    {(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') && record.talent_status.match('待审批') ? 
+                    <NavLink to='/admin/talent/talent_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'point_check' }}>审批</NavLink> : null}
                     <NavLink to='/admin/talent/talent_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'look' }}>查看详情</NavLink>
                 </Space>
             )

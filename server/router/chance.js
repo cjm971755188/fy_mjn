@@ -170,7 +170,7 @@ router.post('/reportChance', (req, res) => {
               let u_point_2 = params.accounts[i].u_point_2 ? `'${params.accounts[i].u_point_2}'` : null
               let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
               sql_d += `('${tdid}', '${tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', null, null),`
-              sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', '${params.accounts[i].commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${u_note}, ${mid_1}, ${m_point_1}, ${m_note_1}, ${mid_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null),`
+              sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', '${params.accounts[i].commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${u_note}, ${mid_1}, ${m_point_1}, ${m_note_1}, ${mid_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null, null),`
             }
             count_d += params.accounts.length
             count_l += params.accounts.length
@@ -182,7 +182,7 @@ router.post('/reportChance', (req, res) => {
             let u_point_2 = params.group_u_point_2 ? `'${params.group_u_point_2}'` : null
             let group_u_note = params.group_u_note ? `'${params.group_u_note}'` : null
             sql_d += `('${tdid}', '${tid}', '社群团购', '${params.group_shop}', null, null, null, null, null, null, null, null, null, null, '${params.group_name}', null),`
-            sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${group_u_note}, ${mid_1}, ${m_point_1}, ${m_note_1}, ${mid_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null),`
+            sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${group_u_note}, ${mid_1}, ${m_point_1}, ${m_note_1}, ${mid_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null, null),`
             count_d += 1
             count_l += 1
           }
@@ -193,7 +193,7 @@ router.post('/reportChance', (req, res) => {
             let u_point_2 = params.provide_u_point_2 ? `'${params.provide_u_point_2}'` : null
             let provide_u_note = params.provide_u_note ? `'${params.provide_u_note}'` : null
             sql_d += `('${tdid}', '${tid}', '供货', '${params.provide_shop}', null, null, null, null, null, null, null, null, null, null, null, '${params.provide_name}'),`
-            sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${provide_u_note}, ${mid_1}, ${m_point_1}, ${m_note_1}, ${mid_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null),`
+            sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${provide_u_note}, ${mid_1}, ${m_point_1}, ${m_note_1}, ${mid_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null, null),`
             count_d += 1
             count_l += 1
           }
@@ -215,65 +215,6 @@ router.post('/reportChance', (req, res) => {
     })
   })
 })
-
-// 报备审批
-router.post('/checkChance', (req, res) => {
-  let time = dayjs().valueOf()
-  let params = req.body
-  let sql = `UPDATE chance SET status = '${params.type ? '报备通过' : '报备驳回'}' WHERE cid = '${params.cid}'`
-  db.query(sql, (err, results) => {
-    if (err) throw err;
-    let sql = `UPDATE talent SET talent_status = '${params.type ? '合作中' : '已失效'}' WHERE tid = '${params.tid}'`
-    db.query(sql, (err, results) => {
-      if (err) throw err;
-      let sql = `SELECT DISTINCT tl.* 
-                  FROM talentline tl 
-                      INNER JOIN (SELECT MAX(date_line) as date FROM talentline WHERE type LIKE '%报备' GROUP BY tdid) tl2 on tl2.date = tl.date_line 
-                      LEFT JOIN talentdetail td on td.tdid = tl.tdid 
-                  LEFT JOIN talent t ON t.tid = td.tid
-                  WHERE t.tid = '${params.tid}'`
-      db.query(sql, (err, results_l) => {
-        if (err) throw err;
-        let sql = `SELECT * FROM talentline`
-        db.query(sql, (err, results) => {
-          if (err) throw err;
-          let count = results.length
-          let sql = 'INSERT INTO talentline values'
-          for (let i = 0; i < results_l.length; i++) {
-            const element = results_l[i];
-            element.tlid = 'TL' + `${count + i + 1}`.padStart(5, '0')
-            element.uid = params.userInfo.uid
-            element.type = params.type ? '报备审批通过' : '报备审批驳回'
-            element.note = params.note === '' ? null : params.note
-            element.date_line = time
-            let s = '('
-            for (let j = 0; j < Object.getOwnPropertyNames(element).length; j++) {
-              s += Object.values(element)[j] !== null ? `'${Object.values(element)[j]}',` : `null,`
-            }
-            s = s.substring(0, s.length - 1)
-            sql += s + '),'
-          }
-          sql = sql.substring(0, sql.length - 1)
-          db.query(sql, (err, results) => {
-            if (err) throw err;
-            res.send({ code: 200, data: {}, msg: `` })
-          })
-        })
-      })
-    })
-  })
-})
-
-// 获取审批驳回理由
-router.post('/getCheckNote', (req, res) => {
-  let params = req.body
-  let sql = `SELECT tl.note FROM talentline tl LEFT JOIN talentdetail td ON td.tdid = tl.tdid LEFT JOIN talent t ON t.tid = td.tid WHERE t.cid = '${params.cid}' and tl.type = '报备审批驳回' ORDER BY date_line DESC limit 1`
-  db.query(sql, (err, results) => {
-    if (err) throw err;
-    res.send({ code: 200, data: results[0].note, msg: `` })
-  })
-})
-
 
 
 

@@ -76,7 +76,7 @@ function ChanceList() {
                 <Space size="large">
                     {localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ?
                         <>{record.status === '报备待审批' ?
-                            <NavLink to='/admin/talent/chance_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'check' }}>审批</NavLink> : null}
+                            <NavLink to='/admin/talent/chance_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'report_check' }}>审批</NavLink> : null}
                         </> :
                         <>{record.status === '未推进' || record.status === '已推进' ?
                             <a onClick={() => {
@@ -168,7 +168,7 @@ function ChanceList() {
                                         {record.status === '报备驳回' ? <a onClick={() => {
                                             request({
                                                 method: 'post',
-                                                url: '/chance/getCheckNote',
+                                                url: '/talent/getCheckNote',
                                                 data: {
                                                     cid: record.cid,
                                                     userInfo: {

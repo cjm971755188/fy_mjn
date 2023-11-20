@@ -85,7 +85,6 @@ function UserList() {
                                 console.error(err)
                             })
                         }}
-                        onCancel={() => { }}
                         okText="删除"
                         cancelText="取消"
                     >
