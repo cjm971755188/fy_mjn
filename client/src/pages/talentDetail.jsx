@@ -2,10 +2,11 @@ import React, { Fragment, useEffect, useState } from "react";
 import { useLocation, useNavigate } from 'react-router-dom'
 import request from '../service/request'
 import dayjs from 'dayjs';
-import { Card, Input, Timeline, Button, Tag, List, Modal, Form, Descriptions, Tooltip, Row, Col, message, Space, DatePicker, Select, InputNumber, Image, Popconfirm } from 'antd';
+import { Card, Input, Timeline, Button, Tag, List, Modal, Form, Descriptions, Tooltip, Row, Col, message, Space, DatePicker, Select, InputNumber, Image, Popconfirm, Radio } from 'antd';
 import { AuditOutlined, MessageOutlined, GlobalOutlined, CrownOutlined, SettingOutlined, EditOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
-import { yearCycleType, liaisonType } from '../baseData/talent'
+import { yearCycleType, liaisonType, platform, accountType, accountModelType, ageCut, priceCut } from '../baseData/talent'
 import UpLoadImg from '../components/UpLoadImg'
+import people from '../assets/people.jpg'
 
 const { TextArea } = Input;
 
@@ -57,7 +58,7 @@ function TalentDetail() {
                     children: <div>
                         <Space>
                             <span>{`【${dayjs(Number(element.date)).format('YYYY-MM-DD')}】 ${element.name}---${element.type}${element.note === null ? '' : `---备注：${element.note}`}`}</span>
-                            {element.type.match('审批通过') || element.type.match('修改') || element.type.match('删除') ? itemKey !== i ? <a onClick={() => {
+                            {!element.type.match('审批') && !(element.type.match('新') && element.type.match('已通过')) ? itemKey !== i ? <a onClick={() => {
                                 if (element.type.match('报备')) {
                                     request({
                                         method: 'post',
@@ -114,7 +115,7 @@ function TalentDetail() {
                                     }).catch((err) => {
                                         console.error(err)
                                     })
-                                } else if (element.type.match('修改') || element.type.match('删除')) {
+                                } else {
                                     request({
                                         method: 'post',
                                         url: '/talent/getOriInfo',
@@ -142,8 +143,6 @@ function TalentDetail() {
                                     }).catch((err) => {
                                         console.error(err)
                                     })
-                                } else {
-
                                 }
                             }}>查看</a> : <a onClick={() => {
                                 setPointTags([])
@@ -223,15 +222,16 @@ function TalentDetail() {
     }
 
     // 报备审批
-    const checkChance = (type, note) => {
+    const checkTalent = (_type, _note) => {
         request({
             method: 'post',
-            url: '/talent/checkChance',
+            url: '/talent/checkTalent',
             data: {
                 cid: cid,
                 tid: tid,
-                type: type,
-                note: type ? null : note,
+                type: _type,
+                checkType: type,
+                note: type ? null : _note,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     name: localStorage.getItem('name'),
@@ -255,7 +255,7 @@ function TalentDetail() {
         })
     }
 
-    // 添加年框
+    // 新增年框
     const [isShowYear, setIsShowYear] = useState(false)
     const [yearType, setYearType] = useState('add')
     const [formYear] = Form.useForm()
@@ -292,44 +292,12 @@ function TalentDetail() {
             console.error(err)
         })
     }
-    // 年框审批
-    const checkYear = (type, note) => {
-        request({
-            method: 'post',
-            url: '/talent/checkYear',
-            data: {
-                cid: cid,
-                tid: tid,
-                type: type,
-                note: type ? null : note,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    getTalentDetail()
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
 
     // 修改信息
     const [isShowEdit, setIsShowEdit] = useState(false)
     const [formEdit] = Form.useForm()
     const [editType, setEditType] = useState('')
-    const [editOri, setEditOri] = useState({})
+    const [editOri, setEditOri] = useState()
     const editDetail = () => {
         let length = Object.keys(formEdit.getFieldsValue()).length, x = 0, ori = {}, neww = {}
         for (let i = 0; i < Object.getOwnPropertyNames(editOri).length; i++) {
@@ -352,9 +320,9 @@ function TalentDetail() {
                 url: '/talent/editDetail',
                 data: {
                     cid: cid,
-                    tid, tid,
+                    tid: tid,
                     editType: editType,
-                    ori: editType === '修改联系人' ? JSON.stringify(ori) : JSON.stringify(editOri),
+                    ori: editType === '修改联系人' ? JSON.stringify(ori) : Object.keys(editOri).length === 0 ? null : JSON.stringify(editOri),
                     new: editType.match('删除') ? null : Object.keys(neww).length === 0 ? formEdit.getFieldsValue() : neww,
                     userInfo: {
                         uid: localStorage.getItem('uid'),
@@ -439,16 +407,52 @@ function TalentDetail() {
     }
     const filterOption = (input, option) =>
         (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
-    // 修改提点审批
-    const checkPoint = (type, note) => {
+
+    // 驳回理由
+    const [isShowRefund, setIsShowRefund] = useState(false)
+    const [formRefund] = Form.useForm()
+
+    // 添加、修改合作模式
+    const [isShowModel, setIsShowModel] = useState(false)
+    const [form] = Form.useForm()
+    const [isShowSearch, setIsShowSearch] = useState(false)
+    const [searchList, setSearchList] = useState({})
+    const searchSame = () => {
         request({
             method: 'post',
-            url: '/talent/checkPoint',
+            url: '/chance/searchSameChance',
             data: {
-                cid: cid,
+                type: 'single',
+                account_name: form.getFieldValue('account_name'),
+                account_id: form.getFieldValue('account_id')
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code != 200) {
+                    setIsShowSearch(true)
+                    setSearchList(res.data.data)
+                    message.error(res.data.msg)
+                } else {
+                    setIsShowSearch(false)
+                    setSearchList({})
+                    message.success(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const [isShowKeyword, setIsShowKeyword] = useState(false)
+    const [hasFuSaleman, setHasFuSaleman] = useState(false)
+    const addTalent = () => {
+        request({
+            method: 'post',
+            url: '/talent/addTalent',
+            data: {
                 tid: tid,
-                type: type,
-                note: type ? null : note,
+                accounts: [{ ...form.getFieldsValue() }],
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     name: localStorage.getItem('name'),
@@ -460,9 +464,9 @@ function TalentDetail() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    navigate(-1)
-                } else {
-                    message.error(res.data.msg)
+                    setIsShowModel(false);
+                    getTalentDetail();
+                    form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setHasFuSaleman(false);
                 }
             } else {
                 message.error(res.data.msg)
@@ -472,123 +476,79 @@ function TalentDetail() {
         })
     }
 
-    // 驳回理由
-    const [isShowRefund, setIsShowRefund] = useState(false)
-    const [form] = Form.useForm()
-    const [refundType, setRefundType] = useState(false)
-
     useEffect(() => {
         getTalentDetail();
     }, [tid])
     return (
         <Fragment>
             <Row gutter={24}>
-                <Col span={18}>
-                    <Card
-                        title={
-                            <Space>
-                                <CrownOutlined /><span>基础信息</span>
-                                {detailData.base && <Tag color={detailData.base[3].children.match('待审批') ? "gold" : detailData.base[3].children === '合作中' ? "green" : ""}>{detailData.base[3].children}</Tag>}
-                            </Space>}
+                <Col span={16}>
+                    <Card title={<Space><CrownOutlined /><span>基础信息</span>
+                        {detailData.base && <Tag color={detailData.base[3].children.match('待审批') ? "gold" : detailData.base[3].children === '合作中' ? "green" : ""}>{detailData.base[3].children}</Tag>}
+                    </Space>}
                         style={{ marginBottom: '20px' }}
-                        extra={type.match('check') ?
+                        extra={type !== 'look' ?
                             <Space>
-                                <Button
-                                    type="primary"
-                                    onClick={() => {
-                                        if (type === 'report_check') {
-                                            checkChance(true, '');
-                                        } else if (type === 'point_check') {
-                                            checkPoint(true, '');
-                                        }
-                                    }}
-                                >通过</Button>
-                                <Button
-                                    type="primary"
-                                    danger
-                                    onClick={() => {
-                                        if (type === 'report_check') {
-                                            setRefundType('talent');
-                                            setIsShowRefund(true);
-                                        } else if (type === 'point_check') {
-                                            setRefundType('point');
-                                            setIsShowRefund(true);
-                                        }
-                                    }}
-                                >驳回</Button>
+                                <Button type="primary" onClick={() => { checkTalent(true, null); }}>通过</Button>
+                                <Button type="primary" danger onClick={() => { setIsShowRefund(true); }}>驳回</Button>
                             </Space> : null}>
                         <Descriptions column={5} items={detailData.base && getBaseItem()} />
                     </Card>
-                    <Card
-                        title={<Space>
-                            <AuditOutlined /><span>年框信息</span>
-                            <Tag color={yearStatus === '待审批' ? "gold" : yearStatus === '生效中' ? "green" : yearStatus === '已失效' ? "red" : ""}>{yearStatus}</Tag>
-                        </Space>}
+                    <Card title={<Space><AuditOutlined /><span>年框信息</span>
+                        <Tag color={yearStatus === '待审批' ? "gold" : yearStatus === '生效中' ? "green" : yearStatus === '已失效' ? "red" : ""}>{yearStatus}</Tag>
+                    </Space>}
                         style={{ marginBottom: '20px' }}
                         extra={
                             detailData.year && (
-                                localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? (
-                                    detailData.year[4].children === '待审批' ? <Space>
-                                        <Button type="primary" onClick={() => { checkYear(true, ''); }}>通过</Button>
-                                        <Button type="primary" danger onClick={() => { setRefundType('year'); setIsShowRefund(true); }}>驳回</Button>
-                                    </Space> : null
-                                ) : (
-                                    detailData.year[4].children === '暂无' ? <Button type="primary" onClick={() => { setIsShowYear(true); setYearType('add'); }}>新增</Button> :
-                                        detailData.year[4].children === '已失效' ? <Button type="primary" onClick={() => { setIsShowYear(true); setYearType('continue'); }}>续约</Button> : null
-                                ))
+                                detailData.year[4].children === '暂无' ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowYear(true); setYearType('add'); }}>新增</Button> :
+                                    detailData.year[4].children === '已失效' ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowYear(true); setYearType('continue'); }}>续约</Button> : null
+                            )
                         }>
                         <Descriptions column={5} items={detailData.year && getYearItem()} />
                     </Card>
-                    <Card
-                        title={<Space><MessageOutlined /><span>联络信息</span></Space>}
-                        style={{ marginBottom: '20px' }}
-                    >
-                        <Descriptions title={<Space>
-                            <span>联系人</span>
-                            {(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null : <Button
-                                type="text"
-                                icon={<EditOutlined />}
-                                onClick={() => {
-                                    let ori_values = {
-                                        '类型': detailData.liaison[0].children,
-                                        '姓名': detailData.liaison[1].children,
-                                        '微信': detailData.liaison[2].children,
-                                        '手机号': detailData.liaison[3].children,
-                                        '沟通群': detailData.liaison[4].children
-                                    }
-                                    let values = {
-                                        liaison_type: detailData.liaison[0].children,
-                                        liaison_name: detailData.liaison[1].children,
-                                        liaison_v: detailData.liaison[2].children,
-                                        liaison_phone: detailData.liaison[3].children,
-                                        crowd_name: detailData.liaison[4].children
-                                    }
-                                    setEditType('修改联系人')
-                                    setIsShowEdit(true);
-                                    setEditOri(ori_values)
-                                    formEdit.setFieldsValue(values)
-                                }}
-                            >修改</Button>}
-                        </Space>} column={5} items={detailData.liaison} />
+                    <Card title={<Space><MessageOutlined /><span>联络信息</span></Space>} style={{ marginBottom: '20px' }}>
+                        <Descriptions title="联系人" column={5} items={detailData.liaison}
+                            extra={(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null :
+                                <Button
+                                    type="text"
+                                    icon={<EditOutlined />}
+                                    onClick={() => {
+                                        let ori_values = {
+                                            '类型': detailData.liaison[0].children,
+                                            '姓名': detailData.liaison[1].children,
+                                            '微信': detailData.liaison[2].children,
+                                            '手机号': detailData.liaison[3].children,
+                                            '沟通群': detailData.liaison[4].children
+                                        }
+                                        let values = {
+                                            liaison_type: detailData.liaison[0].children,
+                                            liaison_name: detailData.liaison[1].children,
+                                            liaison_v: detailData.liaison[2].children,
+                                            liaison_phone: detailData.liaison[3].children,
+                                            crowd_name: detailData.liaison[4].children
+                                        }
+                                        setEditType('修改联系人')
+                                        setIsShowEdit(true);
+                                        setEditOri(ori_values)
+                                        formEdit.setFieldsValue(values)
+                                    }}
+                                >修改</Button>} />
                         {detailData.middle1 && detailData.middle1[0].children === null ?
-                            <Descriptions
-                                title={<Space>
-                                    <span>无一级中间人</span>
-                                    {(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null : <Button
+                            <Descriptions title="无一级中间人"
+                                extra={(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null :
+                                    <Button
                                         type="text"
                                         icon={<PlusOutlined />}
                                         onClick={() => {
-                                            setEditType('添加一级中间人');
+                                            setEditType('新增一级中间人');
                                             setIsShowEdit(true);
                                             setEditOri({})
                                             formEdit.resetFields()
                                         }}
-                                    >添加</Button>}
-                                </Space>}
-                            /> : <Descriptions
-                                title={<Space>
-                                    <span>一级中间人</span>
-                                    {(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null : <Button
+                                    >新增</Button>}
+                            /> : <Descriptions title="一级中间人" column={5} items={detailData.middle1}
+                                extra={<>{(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null :
+                                    <Button
                                         type="text"
                                         icon={<EditOutlined />}
                                         onClick={() => {
@@ -637,30 +597,24 @@ function TalentDetail() {
                                                     formEdit.resetFields();
                                                 }}
                                             >删除</Button>
-                                        </Popconfirm>}
-                                </Space>}
-                                column={5}
-                                items={detailData.middle1}
+                                        </Popconfirm>}</>}
                             />}
                         {detailData.middle2 && detailData.middle2[0].children === null ?
-                            <Descriptions
-                                title={<Space>
-                                    <span>无二级中间人</span>
-                                    {(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null : <Button
+                            <Descriptions title="无二级中间人"
+                                extra={(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null :
+                                    <Button
                                         type="text"
                                         icon={<PlusOutlined />}
                                         onClick={() => {
-                                            setEditType('添加二级中间人');
+                                            setEditType('新增二级中间人');
                                             setIsShowEdit(true);
                                             setEditOri({})
                                             formEdit.resetFields()
                                         }}
-                                    >添加</Button>}
-                                </Space>}
-                            /> : <Descriptions
-                                title={<Space>
-                                    <span>二级中间人</span>
-                                    {(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null : <Button
+                                    >新增</Button>}
+                            /> : <Descriptions title="二级中间人" column={5} items={detailData.middle2}
+                                extra={<>{(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null :
+                                    <Button
                                         type="text"
                                         icon={<EditOutlined />}
                                         onClick={() => {
@@ -709,23 +663,21 @@ function TalentDetail() {
                                                     formEdit.resetFields();
                                                 }}
                                             >删除</Button>
-                                        </Popconfirm>}
-                                </Space>}
-                                column={5}
-                                items={detailData.middle2}
+                                        </Popconfirm>}</>}
                             />}
                     </Card>
-                    <Card
-                        title={<Space>
-                            <GlobalOutlined /><span>合作模式 ----- {detailData.models && detailData.models.length} 个</span>
-                        </Space>}
+                    <Card title={<Space><GlobalOutlined /><span>合作模式 ----- {detailData.models && detailData.models.length} 个</span></Space>}
+                        extra={localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? null : <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowModel(true); }}>新增线上平台</Button>}
                     >
                         {detailData.models && detailData.models.map((model, index) => {
                             return (
                                 <Card
                                     key={index}
-                                    title={`${model[1].children} - ${model[2].children}`}
+                                    title={<span>{model[1].children} - {model[2].children}</span>}
                                     style={{ marginBottom: '20px' }}
+                                    extra={localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? null : <>
+                                        {/* <Button type="text" icon={<EditOutlined />} onClick={() => { setIsShowModel(true); }}>修改</Button>
+                                        <Button type="text" danger icon={<MinusOutlined />} onClick={() => { setIsShowModel(true); }}>删除</Button> */}</>}
                                 >
                                     <Descriptions column={5} items={model[1].children === '线上平台' ? model.slice(3, 22) : model[1].children === '社群团购' ? model.slice(3, 12) : model[1].children === '供货' ? model.slice(3, 11) : model} />
                                 </Card>
@@ -733,26 +685,14 @@ function TalentDetail() {
                         })}
                     </Card>
                 </Col>
-                <Col span={6}>
-                    <Card
-                        title={<Space>
-                            <SettingOutlined /><span>历史时间线</span>
-                        </Space>}
-                    >
+                <Col span={8}>
+                    <Card title={<Space><SettingOutlined /><span>历史时间线</span></Space>}>
                         <Timeline items={getTimeItems()} />
                     </Card>
                 </Col>
             </Row>
-            <Modal title="驳回理由填写" open={isShowRefund} onOk={() => {
-                if (refundType === 'talent') {
-                    checkChance(false, form.getFieldValue('note'));
-                } else if (refundType === 'year') {
-                    checkYear(false, form.getFieldValue('note'));
-                } else if (refundType === 'point') {
-                    checkPoint(false, form.getFieldValue('note'));
-                }
-            }} onCancel={() => { setIsShowRefund(false); }}>
-                <Form form={form}>
+            <Modal title="驳回理由填写" open={isShowRefund} onOk={() => { checkTalent(false, formRefund.getFieldValue('note')); setIsShowRefund(false); }} onCancel={() => { setIsShowRefund(false); }}>
+                <Form form={formRefund}>
                     <Form.Item label="驳回理由" name="note" rules={[{ required: true, message: '不能为空' }]}>
                         <TextArea placeholder="请输入" />
                     </Form.Item>
@@ -774,19 +714,7 @@ function TalentDetail() {
                     </Form.Item>
                 </Form>
             </Modal>
-            <Modal
-                title="修改信息"
-                open={isShowEdit}
-                onOk={() => {
-                    editDetail();
-                    formEdit.resetFields();
-                    setIsShowEdit(false);
-                }}
-                onCancel={() => {
-                    formEdit.resetFields();
-                    setIsShowEdit(false);
-                }}
-            >
+            <Modal title="修改联系人" open={isShowEdit} onOk={() => { editDetail(); formEdit.resetFields(); setIsShowEdit(false); }} onCancel={() => { formEdit.resetFields(); setIsShowEdit(false); }}>
                 <Form form={formEdit}>
                     {editType.match('联系人') ? <><Form.Item label="联系人类型" name="liaison_type" rules={[{ required: true, message: '不能为空' }]}>
                         <Select
@@ -835,6 +763,121 @@ function TalentDetail() {
                         <Form.Item label="二级中间人提成备注" name="m_note_2">
                             <TextArea />
                         </Form.Item></> : null}
+                </Form>
+            </Modal>
+            <Modal title="新增账号" open={isShowModel} onOk={() => { form.submit(); }} onCancel={() => { setIsShowModel(false); }}>
+                <Form
+                    form={form}
+                    onFinish={(values) => {
+                        addTalent(values)
+                    }}
+                >
+                    <Form.Item label="平台" name="platform" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select
+                            placeholder="请选择"
+                            onChange={(value) => {
+                                form.setFieldValue('platform', value)
+                                if (value !== '闯货' && value !== '抖音' && value !== '快手' && value !== '视频号' && value !== '视频号服务商') {
+                                    setIsShowKeyword(true)
+                                }
+                            }}
+                            options={platform}
+                        />
+                    </Form.Item>
+                    <Form.Item label="账号ID" name="account_id" rules={[{ required: true, message: '不能为空' }]}>
+                        <Input placeholder="请输入" />
+                    </Form.Item>
+                    <Form.Item label="账号名称" name="account_name" rules={[{ required: true, message: '不能为空' }]}>
+                        <Input placeholder="请输入" />
+                    </Form.Item>
+                    <Form.Item label="相同线上达人" name="pic">
+                        <Button onClick={() => {
+                            if ((form.getFieldValue('account_name') && form.getFieldValue('account_name').length > 0) || (form.getFieldValue('account_id') && form.getFieldValue('account_id').length > 0)) {
+                                searchSame()
+                            } else {
+                                setIsShowSearch(false)
+                                setSearchList({})
+                                message.error('未填写达人账号名/ID, 无法查询')
+                            }
+                        }}>查询</Button>
+                    </Form.Item>
+                    {isShowSearch && <Form.Item label="" name="pic">
+                        {searchList.length > 0 ? <List
+                            itemLayout="horizontal"
+                            bordered
+                            dataSource={searchList}
+                            renderItem={(item, index) => (
+                                <List.Item>
+                                    <List.Item.Meta
+                                        avatar={<Image width={50} src={people} preview={false} />}
+                                        title={<Space size={'large'}><span>{`编号: ${item.tdid}`}</span><span>{`商务: ${item.name}`}</span></Space>}
+                                        description={<Space size={'large'}><span>{`平台: ${item.platform_shop}`}</span><span>{`账号ID: ${item.account_id}`}</span><span>{`账号名称: ${item.account_name}`}</span></Space>}
+                                    />
+                                </List.Item>
+                            )}
+                        /> : null}
+                    </Form.Item>}
+                    <Form.Item label="账号类型" name="account_type" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('account_type', value) }} options={accountType} />
+                    </Form.Item>
+                    <Form.Item label="合作方式" name="account_models" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select mode="multiple" allowClear placeholder="请选择" onChange={(value) => { form.setFieldValue('account_models', value) }} options={accountModelType} />
+                    </Form.Item>
+                    {isShowKeyword ? <Form.Item label="关键字（前后缀）" name="keyword" rules={[{ required: true, message: '不能为空' }]}>
+                        <Input placeholder="请输入" />
+                    </Form.Item> : null}
+                    <Form.Item label="平时带货在线（人）" name="people_count" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber />
+                    </Form.Item>
+                    <Form.Item label="女粉比例（%）" name="fe_proportion" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber />
+                    </Form.Item>
+                    <Form.Item label="粉丝地域分布（省份）" name="main_province" rules={[{ required: true, message: '不能为空' }]}>
+                        <Input />
+                    </Form.Item>
+                    <Form.Item label="粉丝购买主力年龄段（岁）" name="age_cuts" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select mode="multiple" allowClear options={ageCut} />
+                    </Form.Item>
+                    <Form.Item label="平均客单价（元）" name="price_cut" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select options={priceCut} />
+                    </Form.Item>
+                    <Form.Item label="常规品线上佣金比例（%）" name="commission_normal" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber />
+                    </Form.Item>
+                    <Form.Item label="福利品线上佣金比例（%）" name="commission_welfare" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber />
+                    </Form.Item>
+                    <Form.Item label="爆品线上佣金比例（%）" name="commission_bao" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber />
+                    </Form.Item>
+                    <Form.Item label="佣金备注" name="commission_note">
+                        <TextArea />
+                    </Form.Item>
+                    <Space size='large'>
+                        <Form.Item label="主商务" name="uid_1" >
+                            <Input defaultValue={localStorage.getItem('name')} disabled={true} />
+                        </Form.Item>
+                        <Form.Item label="主商务提成点（%）" name="u_point_1" rules={[{ required: true, message: '不能为空' }]}>
+                            <InputNumber />
+                        </Form.Item>
+                    </Space>
+                    <Form.Item label="是否有副商务">
+                        <Radio.Group onChange={(e) => { setHasFuSaleman(e.target.value); }} value={hasFuSaleman} style={{ marginLeft: '20px' }}>
+                            <Radio value={false}>无副商务</Radio>
+                            <Radio value={true}>有副商务</Radio>
+                        </Radio.Group>
+                    </Form.Item>
+                    {hasFuSaleman ? <Space size='large'>
+                        <Form.Item label="副商务" name="uid_2" rules={[{ required: true, message: '不能为空' }]}>
+                            <Select style={{ width: 160 }} options={salemans} onFocus={() => { getSalemans(); }} />
+                        </Form.Item>
+                        <Form.Item label="副商务提成点（%）" name="u_point_2" rules={[{ required: true, message: '不能为空' }]}>
+                            <InputNumber />
+                        </Form.Item>
+                    </Space> : null}
+                    <Form.Item label="商务提成备注" name="u_note">
+                        <TextArea />
+                    </Form.Item>
                 </Form>
             </Modal>
         </Fragment>

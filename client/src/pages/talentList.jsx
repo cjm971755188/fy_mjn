@@ -10,7 +10,6 @@ function TalentList() {
         { title: '编号', dataIndex: 'tid', key: 'tid' },
         { title: '达人名称', dataIndex: 'talent_name', key: 'talent_name' },
         { title: '年成交额', dataIndex: 'year_deal', key: 'year_deal' },
-        { title: '类别', dataIndex: 'talent_lavel', key: 'talent_lavel' },
         { title: '年框', dataIndex: 'yearpay_status', key: 'yearpay_status' },
         { title: '合作模式', dataIndex: 'models', key: 'models' },
         { title: '商务', dataIndex: 'u_names', key: 'u_names' },
@@ -21,7 +20,7 @@ function TalentList() {
             key: 'talent_status',
             render: (_, record) => (
                 <Space size="small">
-                    {record.talent_status === '报备待审批' ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
+                    {record.talent_status.match('待审批') ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
                         record.talent_status === '合作中' ? <PauseCircleTwoTone twoToneColor="#4ec990" /> : <ClockCircleTwoTone twoToneColor="#ee9900" />}
                     <span>{record.talent_status}</span>
                 </Space>
@@ -32,9 +31,12 @@ function TalentList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
-                    {(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') && record.talent_status.match('待审批') ? 
-                    <NavLink to='/admin/talent/talent_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'point_check' }}>审批</NavLink> : null}
-                    <NavLink to='/admin/talent/talent_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'look' }}>查看详情</NavLink>
+                    {localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? (record.talent_status === '提点待审批' ? 
+                    <NavLink to='/admin/talent/talent_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'point' }}>审批</NavLink> : record.talent_status === '年框待审批' ? 
+                    <NavLink to='/admin/talent/talent_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'year' }}>审批</NavLink> : record.talent_status === '新模式待审批' ? 
+                    <NavLink to='/admin/talent/talent_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'new' }}>审批</NavLink> : 
+                    <NavLink to='/admin/talent/talent_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'look' }}>查看详情</NavLink>) : 
+                    <NavLink to='/admin/talent/talent_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'look' }}>查看详情</NavLink>}
                 </Space>
             )
         }

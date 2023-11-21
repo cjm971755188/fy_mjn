@@ -6,7 +6,7 @@ const dayjs = require('dayjs');
 // 获取达人列表
 router.post('/getTalentList', (req, res) => {
     let params = req.body
-    let where = `where u1.status != '2' and t.talent_status != '已失效'`
+    let where = `where u1.status != '2' and t.talent_status != '已失效' and t.talent_status != '报备待审批' and td.detail_status != '已失效'`
     // 权限筛选
     if (params.userInfo.position != '管理员') {
         if (params.userInfo.company != '总公司') {
@@ -85,8 +85,8 @@ router.post('/getDetail', (req, res) => {
                         LEFT JOIN chance c ON t.cid = c.cid 
                         LEFT JOIN talentdetail td ON t.tid = td.tid 
                         LEFT JOIN talentline tl ON td.tdid = tl.tdid 
-                        INNER JOIN (SELECT DISTINCT MAX(date_line) as date FROM talentline GROUP BY tdid) tl2 ON tl2.date = tl.date_line
-                    WHERE t.tid = '${params.tid}' and t.talent_status != '2'
+                        INNER JOIN (SELECT DISTINCT MAX(date_line) as date FROM talentline WHERE type NOT LIKE '%驳回%' GROUP BY tdid) tl2 ON tl2.date = tl.date_line
+                    WHERE t.tid = '${params.tid}' and t.talent_status != '已失效' and td.detail_status != '已失效'
                     LIMIT 1
                 ) a
                     LEFT JOIN middleman m1 ON a.mid_1 = m1.mid 
@@ -143,7 +143,7 @@ router.post('/getDetail', (req, res) => {
                         INNER JOIN (SELECT DISTINCT MAX(date_line) as date FROM talentline GROUP BY tdid) tl2 ON tl2.date = tl.date_line
                         LEFT JOIN user u1 ON u1.uid = tl.uid_1 
                         LEFT JOIN user u2 ON u2.uid = tl.uid_2 
-                    WHERE td.tid = '${params.tid}'`
+                    WHERE td.tid = '${params.tid}' and td.detail_status != '已失效'`
         db.query(sql, (err, results) => {
             if (err) throw err;
             let models = []
@@ -188,7 +188,7 @@ router.post('/getDetail', (req, res) => {
                             LEFT JOIN talentdetail td ON tl.tdid = td.tdid
                             LEFT JOIN talent t ON t.tid = td.tid
                             LEFT JOIN user u ON tl.uid = u.uid
-                        WHERE	t.cid = '${params.cid}'
+                        WHERE t.cid = '${params.cid}'
                         GROUP BY u.name, tl.type, tl.note, t.talent_name, tl.date_line
                         ORDER BY tl.date_line`
             db.query(sql, (err, results) => {
@@ -276,7 +276,7 @@ router.post('/getOriInfo', (req, res) => {
                 WHERE tlid in (${tlids})`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        let ori = JSON.parse(results[0].edit_ori)
+        let ori = JSON.parse(results[0].edit_ori) === null ? {} : JSON.parse(results[0].edit_ori)
         for (let i = 0; i < results.length; i++) {
             const element = results[i]
             let tags = []
@@ -335,7 +335,11 @@ router.post('/addTalentYear', (req, res) => {
             sql = sql.substring(0, sql.length - 1)
             db.query(sql, (err, results) => {
                 if (err) throw err;
-                res.send({ code: 200, data: {}, msg: `` })
+                let sql = `UPDATE talent set talent_status = '年框待审批' WHERE tid = '${params.tid}'`
+                db.query(sql, (err, results) => {
+                    if (err) throw err;
+                    res.send({ code: 200, data: {}, msg: `` })
+                })
             })
         })
     })
@@ -366,12 +370,12 @@ router.post('/editDetail', (req, res) => {
                 element.note = null
                 element.date_line = time
                 element.edit_ori = params.ori
-                element.mid_1 = params.editType === '删除一级中间人' ? null : params.editType.match('一级中间人') ? params.new.mid_1 : element.mid_1
-                element.m_point_1 = params.editType === '删除一级中间人' ? null : params.editType.match('一级中间人') ? params.new.m_point_1 : element.m_point_1
-                element.m_note_1 = params.editType === '删除一级中间人' ? null : params.editType.match('一级中间人') ? params.new.m_note_1 : element.m_note_1
-                element.mid_2 = params.editType === '删除二级中间人' ? null : params.editType.match('二级中间人') ? params.new.mid_2 : element.mid_2
-                element.m_point_2 = params.editType === '删除二级中间人' ? null : params.editType.match('二级中间人') ? params.new.m_point_2 : element.m_point_2
-                element.m_note_2 = params.editType === '删除二级中间人' ? null : params.editType.match('二级中间人') ? params.new.m_note_2 : element.m_note_2
+                element.mid_1 = params.editType === '删除一级中间人' ? null : params.editType.match('一级中间人') && params.new.mid_1 ? params.new.mid_1 : element.mid_1
+                element.m_point_1 = params.editType === '删除一级中间人' ? null : params.editType.match('一级中间人') && params.new.m_point_1 ? params.new.m_point_1 : element.m_point_1
+                element.m_note_1 = params.editType === '删除一级中间人' ? null : params.editType.match('一级中间人') && params.new.m_note_1 ? params.new.m_note_1 : element.m_note_1
+                element.mid_2 = params.editType === '删除二级中间人' ? null : params.editType.match('二级中间人') && params.new.mid_2 ? params.new.mid_2 : element.mid_2
+                element.m_point_2 = params.editType === '删除二级中间人' ? null : params.editType.match('二级中间人') && params.new.m_point_2 ? params.new.m_point_2 : element.m_point_2
+                element.m_note_2 = params.editType === '删除二级中间人' ? null : params.editType.match('二级中间人') && params.new.m_note_2 ? params.new.m_note_2 : element.m_note_2
                 let s = '('
                 for (let j = 0; j < Object.getOwnPropertyNames(element).length; j++) {
                     s += Object.values(element)[j] !== null ? `'${Object.values(element)[j]}',` : `null,`
@@ -394,77 +398,115 @@ router.post('/editDetail', (req, res) => {
                         res.send({ code: 200, data: {}, msg: `` })
                     })
                 } else if (params.editType.match('一级中间人') || params.editType.match('二级中间人')) {
-                    let sql = `UPDATE talent set talent_status = '修改待审批' WHERE tid = '${params.tid}'`
+                    let sql = `UPDATE talent set talent_status = '提点待审批' WHERE tid = '${params.tid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
                         res.send({ code: 200, data: {}, msg: `` })
                     })
                 }
+            })
+        })
+    })
+})
+
+// 新增达人合作模式
+router.post('/addTalent', (req, res) => {
+    let time = dayjs().valueOf()
+    let params = req.body
+    let sql = `SELECT * FROM talentdetail`
+    db.query(sql, (err, results_d) => {
+        if (err) throw err;
+        let sql = `SELECT * FROM talentline`
+        db.query(sql, (err, results_l) => {
+            if (err) throw err;
+            let sql = `SELECT DISTINCT tl.* 
+                        FROM talentline tl 
+                            INNER JOIN (SELECT MAX(date_line) as date FROM talentline GROUP BY tdid) tl2 on tl2.date = tl.date_line 
+                            LEFT JOIN talentdetail td on td.tdid = tl.tdid 
+                        LEFT JOIN talent t ON t.tid = td.tid
+                        WHERE t.tid = '${params.tid}'`
+            db.query(sql, (err, results_o) => {
+                if (err) throw err;
+                let s = ''
+                for (let i = 24; i < Object.getOwnPropertyNames(results_o[0]).length; i++) {
+                    s += Object.values(results_o[0])[i] !== null ? `'${Object.values(results_o[0])[i]}',` : `null,`
+                }
+                s = s.substring(0, s.length - 1)
+                let sql_d = `INSERT INTO talentdetail values`
+                let sql_l = `INSERT INTO talentline values`
+                let count_d = results_d.length
+                let count_l = results_l.length
+                if (params.accounts) {
+                    for (let i = 0; i < params.accounts.length; i++) {
+                        let tdid = 'TD' + `${count_d + i + 1}`.padStart(5, '0')
+                        let tlid = 'TL' + `${count_l + i + 1}`.padStart(5, '0')
+                        let keyword = params.accounts[i].keyword ? `'${params.accounts[i].keyword}'` : null
+                        let uid_2 = params.accounts[i].uid_2 ? `'${params.accounts[i].uid_2}'` : null
+                        let u_point_2 = params.accounts[i].u_point_2 ? `'${params.accounts[i].u_point_2}'` : null
+                        let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
+                        sql_d += `('${tdid}', '${params.tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', null, null, '待审批'),`
+                        sql_l += `('${tlid}', '${params.userInfo.uid}', '报备新模式', null, '${tdid}', ${time}, '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', '${params.accounts[i].commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${u_note}, ${s}),`
+                    }
+                    count_d += params.accounts.length
+                    count_l += params.accounts.length
+                }
+                if (params.group_name) {
+                    let tdid = 'TD' + `${count_d + 1}`.padStart(5, '0')
+                    let tlid = 'TL' + `${count_l + 1}`.padStart(5, '0')
+                    let uid_2 = params.group_uid_2 ? `'${params.group_uid_2}'` : null
+                    let u_point_2 = params.group_u_point_2 ? `'${params.group_u_point_2}'` : null
+                    let group_u_note = params.group_u_note ? `'${params.group_u_note}'` : null
+                    sql_d += `('${tdid}', '${params.tid}', '社群团购', '${params.group_shop}', null, null, null, null, null, null, null, null, null, null, '${params.group_name}', null, '待审批'),`
+                    sql_l += `('${tlid}', '${params.userInfo.uid}', '报备新模式', null, '${tdid}', ${time}, null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${group_u_note}, ${s}),`
+                    count_d += 1
+                    count_l += 1
+                }
+                if (params.provide_name) {
+                    let tdid = 'TD' + `${count_d + 1}`.padStart(5, '0')
+                    let tlid = 'TL' + `${count_l + 1}`.padStart(5, '0')
+                    let uid_2 = params.provide_uid_2 ? `'${params.provide_uid_2}'` : null
+                    let u_point_2 = params.provide_u_point_2 ? `'${params.provide_u_point_2}'` : null
+                    let provide_u_note = params.provide_u_note ? `'${params.provide_u_note}'` : null
+                    sql_d += `('${tdid}', '${params.tid}', '供货', '${params.provide_shop}', null, null, null, null, null, null, null, null, null, null, null, '${params.provide_name}', '待审批'),`
+                    sql_l += `('${tlid}', '${params.userInfo.uid}', '报备新模式', null, '${tdid}', ${time}, null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${provide_u_note}, ${s}),`
+                    count_d += 1
+                    count_l += 1
+                }
+                sql_d = sql_d.substring(0, sql_d.length - 1)
+                sql_l = sql_l.substring(0, sql_l.length - 1)
+                db.query(sql_d, (err, results) => {
+                    if (err) throw err;
+                    db.query(sql_l, (err, results) => {
+                        if (err) throw err;
+                        let sql = `UPDATE talent SET talent_status = '新模式待审批' WHERE tid = '${params.tid}'`
+                        db.query(sql, (err, results) => {
+                            if (err) throw err;
+                            res.send({ code: 200, data: {}, msg: `` })
+                        })
+                    })
+                })
             })
         })
     })
 })
 
 // 报备审批
-router.post('/checkChance', (req, res) => {
-    let time = dayjs().valueOf()
-    let params = req.body
-    let sql = `UPDATE chance SET status = '${params.type ? '报备通过' : '报备驳回'}' WHERE cid = '${params.cid}'`
-    db.query(sql, (err, results) => {
-        if (err) throw err;
-        let sql = `UPDATE talent SET talent_status = '${params.type ? '合作中' : '已失效'}' WHERE tid = '${params.tid}'`
-        db.query(sql, (err, results) => {
-            if (err) throw err;
-            let sql = `SELECT DISTINCT tl.* 
-                    FROM talentline tl 
-                        INNER JOIN (SELECT MAX(date_line) as date FROM talentline WHERE type NOT LIKE '%驳回' GROUP BY tdid) tl2 on tl2.date = tl.date_line 
-                        LEFT JOIN talentdetail td on td.tdid = tl.tdid 
-                    LEFT JOIN talent t ON t.tid = td.tid
-                    WHERE t.tid = '${params.tid}'`
-            db.query(sql, (err, results_l) => {
-                if (err) throw err;
-                let sql = `SELECT * FROM talentline`
-                db.query(sql, (err, results) => {
-                    if (err) throw err;
-                    let count = results.length
-                    let sql = 'INSERT INTO talentline values'
-                    for (let i = 0; i < results_l.length; i++) {
-                        const element = results_l[i];
-                        element.tlid = 'TL' + `${count + i + 1}`.padStart(5, '0')
-                        element.uid = params.userInfo.uid
-                        element.type = params.type ? '审批通过_报备' : '审批驳回_报备'
-                        element.note = params.note === '' ? null : params.note
-                        element.date_line = time
-                        let s = '('
-                        for (let j = 0; j < Object.getOwnPropertyNames(element).length; j++) {
-                            s += Object.values(element)[j] !== null ? `'${Object.values(element)[j]}',` : `null,`
-                        }
-                        s = s.substring(0, s.length - 1)
-                        sql += s + '),'
-                    }
-                    sql = sql.substring(0, sql.length - 1)
-                    db.query(sql, (err, results) => {
-                        if (err) throw err;
-                        res.send({ code: 200, data: {}, msg: `` })
-                    })
-                })
-            })
-        })
-    })
-})
-
-// 年框审批
-router.post('/checkYear', (req, res) => {
+router.post('/checkTalent', (req, res) => {
     let time = dayjs().valueOf()
     let params = req.body
     let sql = `SELECT DISTINCT tl.* 
-                FROM talentline tl 
-                    INNER JOIN (SELECT MAX(date_line) as date FROM talentline WHERE type NOT LIKE '%驳回' GROUP BY tdid) tl2 on tl2.date = tl.date_line 
-                    LEFT JOIN talentdetail td on td.tdid = tl.tdid 
-                LEFT JOIN talent t ON t.tid = td.tid
-                WHERE t.tid = '${params.tid}' `
+                    FROM talentline tl 
+                        INNER JOIN (SELECT MAX(date_line) as date FROM talentline WHERE type NOT LIKE '%驳回%' GROUP BY tdid) tl2 on tl2.date = tl.date_line 
+                        LEFT JOIN talentdetail td on td.tdid = tl.tdid 
+                    LEFT JOIN talent t ON t.tid = td.tid
+                    WHERE t.tid = '${params.tid}' and td.detail_status = '待审批'`
     db.query(sql, (err, results_l) => {
         if (err) throw err;
+        let tlids = ''
+        for (let i = 0; i < results_l.length; i++) {
+            tlids += `'${results_l[i].tlid}',`
+        }
+        tlids = tlids.substring(0, tlids.length - 1)
         let sql = `SELECT * FROM talentline`
         db.query(sql, (err, results) => {
             if (err) throw err;
@@ -474,68 +516,22 @@ router.post('/checkYear', (req, res) => {
                 const element = results_l[i];
                 element.tlid = 'TL' + `${count + i + 1}`.padStart(5, '0')
                 element.uid = params.userInfo.uid
-                element.type = params.type ? '审批通过_年框' : '审批驳回_年框'
-                element.note = params.note
+                element.type = params.type ? `审批通过_${params.checkType === 'year' ? '年框' : params.checkType === 'point' ? '提点' : 'error'}` : `审批驳回_${params.checkType === 'year' ? '年框' : params.checkType === 'point' ? '提点' : params.checkType === 'new' ? '模式' : 'error'}`
+                element.note = params.note === '' ? null : params.note
                 element.date_line = time
                 let s = '('
                 for (let j = 0; j < Object.getOwnPropertyNames(element).length; j++) {
-                    if (Object.keys(element)[j] === 'yearpay_status') {
-                        s += `'${params.type ? '生效中' : '暂无'}',`
-                    } else if (Object.keys(element)[j] === 'yearpay_start') {
-                        s += `'${params.type ? Object.values(element)[j] : 'null'}',`
-                    } else if (Object.keys(element)[j] === 'yearpay_cycle') {
-                        s += `'${params.type ? Object.values(element)[j] : 'null'}',`
-                    } else if (Object.keys(element)[j] === 'yearpay_point') {
-                        s += `'${params.type ? Object.values(element)[j] : 'null'}',`
-                    } else if (Object.keys(element)[j] === 'yearpay_file') {
-                        s += `'${params.type ? Object.values(element)[j] : 'null'}',`
+                    if (params.checkType === 'year') {
+                        if (Object.keys(element)[j] === 'yearpay_status') {
+                            s += `'${params.type ? '生效中' : '暂无'}',`
+                        } else if (Object.keys(element)[j].match('yearpay')) {
+                            s += params.type ? `'${Object.values(element)[j]}',` : 'null,'
+                        } else {
+                            s += Object.values(element)[j] !== null ? `'${Object.values(element)[j]}',` : `null,`
+                        }
                     } else {
                         s += Object.values(element)[j] !== null ? `'${Object.values(element)[j]}',` : `null,`
                     }
-                }
-                s = s.substring(0, s.length - 1)
-                sql += (s + '),')
-            }
-            sql = sql.substring(0, sql.length - 1)
-            db.query(sql, (err, results) => {
-                if (err) throw err;
-                let sql = `UPDATE talent set talent_status = '合作中' WHERE tid = '${params.tid}'`
-                db.query(sql, (err, results) => {
-                    if (err) throw err;
-                    res.send({ code: 200, data: {}, msg: `` })
-                })
-            })
-        })
-    })
-})
-
-// 修改提点审批
-router.post('/checkPoint', (req, res) => {
-    let time = dayjs().valueOf()
-    let params = req.body
-    let sql = `SELECT DISTINCT tl.* 
-                FROM talentline tl 
-                    INNER JOIN (SELECT MAX(date_line) as date FROM talentline WHERE type NOT LIKE '%驳回' GROUP BY tdid) tl2 on tl2.date = tl.date_line 
-                    LEFT JOIN talentdetail td on td.tdid = tl.tdid 
-                LEFT JOIN talent t ON t.tid = td.tid
-                WHERE t.tid = '${params.tid}' `
-    db.query(sql, (err, results_l) => {
-        if (err) throw err;
-        let sql = `SELECT * FROM talentline`
-        db.query(sql, (err, results) => {
-            if (err) throw err;
-            let count = results.length
-            let sql = 'INSERT INTO talentline values'
-            for (let i = 0; i < results_l.length; i++) {
-                const element = results_l[i];
-                element.tlid = 'TL' + `${count + i + 1}`.padStart(5, '0')
-                element.uid = params.userInfo.uid
-                element.type = params.type ? '审批通过_修改' : '审批驳回_修改'
-                element.note = params.note
-                element.date_line = time
-                let s = '('
-                for (let j = 0; j < Object.getOwnPropertyNames(element).length; j++) {
-                    s += Object.values(element)[j] !== null ? `'${Object.values(element)[j]}',` : `null,`
                 }
                 s = s.substring(0, s.length - 1)
                 sql += s + '),'
@@ -543,7 +539,45 @@ router.post('/checkPoint', (req, res) => {
             sql = sql.substring(0, sql.length - 1)
             db.query(sql, (err, results) => {
                 if (err) throw err;
-                res.send({ code: 200, data: {}, msg: `` })
+                if (params.checkType === 'report') {
+                    let sql = `UPDATE chance SET status = '${params.type ? '报备通过' : '报备驳回'}' WHERE cid = '${params.cid}'`
+                    db.query(sql, (err, results) => {
+                        if (err) throw err;
+                        let sql = `UPDATE talent SET talent_status = '${params.type ? '合作中' : '已失效'}' WHERE tid = '${params.tid}'`
+                        db.query(sql, (err, results) => {
+                            if (err) throw err;
+                            let sql = `UPDATE talentline SET type = CONCAT(type, '${params.type ? '(已通过)' : '(已驳回)'}') WHERE tlid in (${tlids})`
+                            db.query(sql, (err, results) => {
+                                if (err) throw err;
+                                res.send({ code: 200, data: {}, msg: `` })
+                            })
+                        })
+                    })
+                } else if (params.checkType === 'new') {
+                    let sql = `UPDATE talent set talent_status = '合作中' WHERE tid = '${params.tid}'`
+                    db.query(sql, (err, results) => {
+                        if (err) throw err;
+                        let sql = `UPDATE talentdetail td, talentline tl SET td.detail_status = '${params.type ? '合作中' : '已失效'}' WHERE tl.tdid = td.tdid and tl.tlid in (${tlids})`
+                        db.query(sql, (err, results) => {
+                            if (err) throw err;
+                            let sql = `UPDATE talentline SET type = CONCAT(type, '${params.type ? '(已通过)' : '(已驳回)'}') WHERE tlid in (${tlids})`
+                            db.query(sql, (err, results) => {
+                                if (err) throw err;
+                                res.send({ code: 200, data: {}, msg: `` })
+                            })
+                        })
+                    })
+                } else {
+                    let sql = `UPDATE talent set talent_status = '合作中' WHERE tid = '${params.tid}'`
+                    db.query(sql, (err, results) => {
+                        if (err) throw err;
+                        let sql = `UPDATE talentline SET type = CONCAT(type, '${params.type ? '(已通过)' : '(已驳回)'}') WHERE tlid in (${tlids})`
+                        db.query(sql, (err, results) => {
+                            if (err) throw err;
+                            res.send({ code: 200, data: {}, msg: `` })
+                        })
+                    })
+                }
             })
         })
     })
@@ -552,7 +586,13 @@ router.post('/checkPoint', (req, res) => {
 // 获取审批驳回理由
 router.post('/getCheckNote', (req, res) => {
     let params = req.body
-    let sql = `SELECT tl.note FROM talentline tl LEFT JOIN talentdetail td ON td.tdid = tl.tdid LEFT JOIN talent t ON t.tid = td.tid WHERE t.cid = '${params.cid}' and tl.type = '报备审批驳回' ORDER BY date_line DESC limit 1`
+    let sql = `SELECT tl.note 
+                FROM talentline tl 
+                    INNER JOIN (SELECT MAX(date_line) as date FROM talentline WHERE type LIKE '%驳回%' GROUP BY tdid) tl2 on tl2.date = tl.date_line 
+                    LEFT JOIN talentdetail td ON td.tdid = tl.tdid 
+                    LEFT JOIN talent t ON t.tid = td.tid 
+                WHERE t.cid = '${params.cid}' and tl.type LIKE '审批驳回%' 
+                ORDER BY date_line DESC limit 1`
     db.query(sql, (err, results) => {
         if (err) throw err;
         res.send({ code: 200, data: results[0].note, msg: `` })

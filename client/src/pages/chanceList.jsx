@@ -76,7 +76,7 @@ function ChanceList() {
                 <Space size="large">
                     {localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ?
                         <>{record.status === '报备待审批' ?
-                            <NavLink to='/admin/talent/chance_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'report_check' }}>审批</NavLink> : null}
+                            <NavLink to='/admin/talent/chance_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'report' }}>审批</NavLink> : null}
                         </> :
                         <>{record.status === '未推进' || record.status === '已推进' ?
                             <a onClick={() => {
@@ -195,7 +195,6 @@ function ChanceList() {
                                             })
                                         }}>查看驳回备注</a> : null}
                                     </> : null}
-                                    {/* <NavLink to='/admin/talent/chance_list/talent_detail' state={{ cid: record.cid, tid: record.tid, type: 'look' }}>查看详情</NavLink> */}
                         </>
                     }
                 </Space>
@@ -274,6 +273,33 @@ function ChanceList() {
 
     // 查询、清空筛选
     const [selectForm] = Form.useForm()
+    const getSalemans = () => {
+        request({
+            method: 'post',
+            url: '/user/getSalemans',
+            data: {
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setSalemans(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     // 添加、修改、推进
     const [isShow, setIsShow] = useState(false)
@@ -281,17 +307,15 @@ function ChanceList() {
     const [form] = Form.useForm()
     const [isShowSearch, setIsShowSearch] = useState(false)
     const [searchList, setSearchList] = useState({})
-    const [isShowPlatform, setIsShowPlatform] = useState(false)
-    const [isShowGroup, setIsShowGroup] = useState(false)
-    const [isShowProvide, setIsShowProvide] = useState(false)
     const searchSame = () => {
         request({
             method: 'post',
             url: '/chance/searchSameChance',
             data: {
+                type: 'arr',
+                cid: formType == 'add' ? '' : form.getFieldValue('cid'),
                 account_names: form.getFieldValue('account_names'),
-                account_ids: form.getFieldValue('account_ids'),
-                cid: formType == 'add' ? '' : form.getFieldValue('cid')
+                account_ids: form.getFieldValue('account_ids')
             }
         }).then((res) => {
             if (res.status == 200) {
@@ -311,6 +335,78 @@ function ChanceList() {
             console.error(err)
         })
     }
+    const [isShowPlatform, setIsShowPlatform] = useState(false)
+    const [isShowGroup, setIsShowGroup] = useState(false)
+    const [isShowProvide, setIsShowProvide] = useState(false)
+    const addChance = (values) => {
+        request({
+            method: 'post',
+            url: '/chance/addChance',
+            data: {
+                ...values,
+                uid: localStorage.getItem('uid')
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
+                    getChanceList()
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const editChance = (values) => {
+        request({
+            method: 'post',
+            url: '/chance/editChance',
+            data: {
+                ...values,
+                status: form.getFieldValue('status')
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
+                    getChanceList()
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const advanceChance = (values) => {
+        request({
+            method: 'post',
+            url: '/chance/advanceChance',
+            data: values
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
+                    getChanceList()
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     // 报备
     const [isShowKeyword, setIsShowKeyword] = useState(false)
@@ -322,6 +418,36 @@ function ChanceList() {
     const [hasProvideFuSaleman, setProvideHasFuSaleman] = useState(false)
     const [checkNoReason, setCheckNoReason] = useState('')
     const [isShowCheckNo, setIsShowCheckNo] = useState(false)
+    const reportChance = (values) => {
+        request({
+            method: 'post',
+            url: '/chance/reportChance',
+            data: {
+                ...values,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
+                    getChanceList()
+                    form.resetFields()
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     // 添加新中间人
     const [isShowMid, setIsShowMid] = useState(false)
@@ -389,6 +515,38 @@ function ChanceList() {
     const [toGongOrSi, setToGongOrSi] = useState(false)
     const [canPiao, setCanPiao] = useState(false)
     const [piaoType, setPiaoType] = useState(false)
+    const addMiddleman = (values) => {
+        request({
+            method: 'post',
+            url: '/middleman/addMiddleman',
+            data: {
+                ...values,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShowMid(false)
+                    setToGongOrSi(false)
+                    setCanPiao(false)
+                    setPiaoType(false)
+                    formMid.resetFields()
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     useEffect(() => {
         getChanceList();
@@ -422,37 +580,7 @@ function ChanceList() {
                     <Form.Item label='供货达人名' name='provide_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='联系人' name='liaison_name'><Input /></Form.Item>
                     {localStorage.getItem('position') === '商务' ? null : <Form.Item label='商务' name='uid' style={{ marginBottom: '20px' }}>
-                        <Select
-                            style={{ width: 160 }}
-                            options={salemans}
-                            onFocus={() => {
-                                request({
-                                    method: 'post',
-                                    url: '/user/getSalemans',
-                                    data: {
-                                        userInfo: {
-                                            uid: localStorage.getItem('uid'),
-                                            name: localStorage.getItem('name'),
-                                            company: localStorage.getItem('company'),
-                                            department: localStorage.getItem('department'),
-                                            position: localStorage.getItem('position')
-                                        }
-                                    }
-                                }).then((res) => {
-                                    if (res.status == 200) {
-                                        if (res.data.code == 200) {
-                                            setSalemans(res.data.data)
-                                        } else {
-                                            message.error(res.data.msg)
-                                        }
-                                    } else {
-                                        message.error(res.data.msg)
-                                    }
-                                }).catch((err) => {
-                                    console.error(err)
-                                })
-                            }}
-                        />
+                        <Select style={{ width: 160 }} options={salemans} onFocus={() => { getSalemans(); }} />
                     </Form.Item>}
                     <Form.Item label='状态' name='status' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={chanceStatus} />
@@ -496,104 +624,17 @@ function ChanceList() {
                             if (isShowPlatform && values.account_ids.length !== values.account_names.length) {
                                 message.error('线上达人的账号和ID数量不一致')
                             } else {
-                                request({
-                                    method: 'post',
-                                    url: '/chance/addChance',
-                                    data: {
-                                        ...values,
-                                        uid: localStorage.getItem('uid')
-                                    }
-                                }).then((res) => {
-                                    if (res.status == 200) {
-                                        if (res.data.code == 200) {
-                                            setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
-                                            getChanceList()
-                                            message.success(res.data.msg)
-                                        } else {
-                                            message.error(res.data.msg)
-                                        }
-                                    } else {
-                                        message.error(res.data.msg)
-                                    }
-                                }).catch((err) => {
-                                    console.error(err)
-                                })
+                                addChance(values)
                             }
                         } else if (formType == 'edit') {
-                            request({
-                                method: 'post',
-                                url: '/chance/editChance',
-                                data: {
-                                    ...values,
-                                    status: form.getFieldValue('status')
-                                }
-                            }).then((res) => {
-                                if (res.status == 200) {
-                                    if (res.data.code == 200) {
-                                        setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
-                                        getChanceList()
-                                        message.success(res.data.msg)
-                                    } else {
-                                        message.error(res.data.msg)
-                                    }
-                                } else {
-                                    message.error(res.data.msg)
-                                }
-                            }).catch((err) => {
-                                console.error(err)
-                            })
+                            editChance(values)
                         } else if (formType == 'advance') {
-                            request({
-                                method: 'post',
-                                url: '/chance/advanceChance',
-                                data: values
-                            }).then((res) => {
-                                if (res.status == 200) {
-                                    if (res.data.code == 200) {
-                                        setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
-                                        getChanceList()
-                                        message.success(res.data.msg)
-                                    } else {
-                                        message.error(res.data.msg)
-                                    }
-                                } else {
-                                    message.error(res.data.msg)
-                                }
-                            }).catch((err) => {
-                                console.error(err)
-                            })
+                            advanceChance(values)
                         } else if (formType == 'report') {
                             if (values.accounts != null && reportOnCount !== values.accounts.length) {
                                 message.error('请报备所有达人账号')
                             } else {
-                                request({
-                                    method: 'post',
-                                    url: '/chance/reportChance',
-                                    data: {
-                                        ...values,
-                                        userInfo: {
-                                            uid: localStorage.getItem('uid'),
-                                            name: localStorage.getItem('name'),
-                                            company: localStorage.getItem('company'),
-                                            department: localStorage.getItem('department'),
-                                            position: localStorage.getItem('position')
-                                        }
-                                    }
-                                }).then((res) => {
-                                    if (res.status == 200) {
-                                        if (res.data.code == 200) {
-                                            setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
-                                            getChanceList()
-                                            form.resetFields()
-                                        } else {
-                                            message.error(res.data.msg)
-                                        }
-                                    } else {
-                                        message.error(res.data.msg)
-                                    }
-                                }).catch((err) => {
-                                    console.error(err)
-                                })
+                                reportChance(values)
                             }
                         }
                     }}
@@ -674,40 +715,13 @@ function ChanceList() {
                     {isShowPlatform ? <Card title="线上平台" style={{ marginBottom: "20px" }}>
                         {formType !== 'report' ? <>
                             <Form.Item label="平台" name="platforms" rules={[{ required: true, message: '不能为空' }]}>
-                                <Select
-                                    mode="multiple"
-                                    allowClear
-                                    style={{
-                                        width: '100%',
-                                    }}
-                                    placeholder="请选择"
-                                    onChange={(value) => {
-                                        form.setFieldValue('platforms', value)
-                                    }}
-                                    options={platform}
-                                />
+                                <Select mode="multiple" allowClear style={{ width: '100%' }} placeholder="请选择" onChange={(value) => { form.setFieldValue('platforms', value) }} options={platform} />
                             </Form.Item>
                             <Form.Item label="账号ID" name="account_ids" rules={[{ required: true, message: '不能为空' }]}>
-                                <Select
-                                    mode="tags"
-                                    allowClear
-                                    placeholder="请输入"
-                                    onChange={(value) => {
-                                        form.setFieldValue('account_ids', value)
-                                    }}
-                                    options={[]}
-                                />
+                                <Select mode="tags" allowClear placeholder="请输入" onChange={(value) => { form.setFieldValue('account_ids', value) }} options={[]} />
                             </Form.Item>
                             <Form.Item label="达人账号" name="account_names" rules={[{ required: true, message: '不能为空' }]}>
-                                <Select
-                                    mode="tags"
-                                    allowClear
-                                    placeholder="请输入"
-                                    onChange={(value) => {
-                                        form.setFieldValue('account_names', value)
-                                    }}
-                                    options={[]}
-                                />
+                                <Select mode="tags" allowClear placeholder="请输入" onChange={(value) => { form.setFieldValue('account_names', value) }} options={[]} />
                             </Form.Item>
                             <Form.Item label="相同线上达人" name="pic">
                                 <Button onClick={() => {
@@ -729,8 +743,8 @@ function ChanceList() {
                                         <List.Item>
                                             <List.Item.Meta
                                                 avatar={<Image width={50} src={people} preview={false} />}
-                                                title={<Space size={'large'}><span>{`商机编号: ${item.cid}`}</span><span>{`状态: ${item.status}`}</span></Space>}
-                                                description={<Space size={'large'}><span>{`账号ID: ${item.account_ids}`}</span><span>{`账号名称: ${item.account_names}`}</span><span>{`商务: ${item.name}`}</span></Space>}
+                                                title={<Space size={'large'}><span>{`商机编号: ${item.cid}`}</span><span>{`状态: ${item.status}`}</span><span>{`商务: ${item.name}`}</span></Space>}
+                                                description={<Space size={'large'}><span>{`平台: ${item.platforms}`}</span><span>{`账号ID: ${item.account_ids}`}</span><span>{`账号名称: ${item.account_names}`}</span></Space>}
                                             />
                                         </List.Item>
                                     )}
@@ -754,74 +768,44 @@ function ChanceList() {
                                                 />
                                             </Form.Item>
                                             <Form.Item label="账号ID" {...restField} name={[name, "account_id"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Select
-                                                    placeholder="请选择"
-                                                    onChange={(value) => {
-                                                        form.setFieldValue('account_id', value)
-                                                    }}
-                                                    options={form.getFieldValue('accountIdList')}
-                                                />
+                                                <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('account_id', value) }} options={form.getFieldValue('accountIdList')} />
                                             </Form.Item>
                                             <Form.Item label="账号名称" {...restField} name={[name, "account_name"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Select
-                                                    placeholder="请选择"
-                                                    onChange={(value) => {
-                                                        form.setFieldValue('account_name', value)
-                                                    }}
-                                                    options={form.getFieldValue('accountNameList')}
-                                                />
+                                                <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('account_name', value) }} options={form.getFieldValue('accountNameList')} />
                                             </Form.Item>
                                             <Form.Item label="账号类型" {...restField} name={[name, "account_type"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Select
-                                                    placeholder="请选择"
-                                                    onChange={(value) => {
-                                                        form.setFieldValue('account_type', value)
-                                                    }}
-                                                    options={accountType}
-                                                />
+                                                <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('account_type', value) }} options={accountType} />
                                             </Form.Item>
                                             <Form.Item label="合作方式" {...restField} name={[name, "account_models"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Select
-                                                    mode="multiple"
-                                                    allowClear
-                                                    placeholder="请选择"
-                                                    onChange={(value) => {
-                                                        form.setFieldValue('account_models', value)
-                                                    }}
-                                                    options={accountModelType}
-                                                />
+                                                <Select mode="multiple" allowClear placeholder="请选择" onChange={(value) => { form.setFieldValue('account_models', value) }} options={accountModelType} />
                                             </Form.Item>
                                             {isShowKeyword ? <Form.Item label="关键字（前后缀）" {...restField} name={[name, "keyword"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Input placeholder="请输入" />
                                             </Form.Item> : null}
-                                            <Space size='large'>
-                                                <Form.Item label="平时带货在线（人）" {...restField} name={[name, "people_count"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <InputNumber />
-                                                </Form.Item>
-                                                <Form.Item label="女粉比例（%）" {...restField} name={[name, "fe_proportion"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <InputNumber />
-                                                </Form.Item>
-                                                <Form.Item label="粉丝地域分布（省份）" {...restField} name={[name, "main_province"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <Input />
-                                                </Form.Item>
-                                            </Space>
+                                            <Form.Item label="平时带货在线（人）" {...restField} name={[name, "people_count"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                <InputNumber />
+                                            </Form.Item>
+                                            <Form.Item label="女粉比例（%）" {...restField} name={[name, "fe_proportion"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                <InputNumber />
+                                            </Form.Item>
+                                            <Form.Item label="粉丝地域分布（省份）" {...restField} name={[name, "main_province"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                <Input />
+                                            </Form.Item>
                                             <Form.Item label="粉丝购买主力年龄段（岁）" {...restField} name={[name, "age_cuts"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select mode="multiple" allowClear options={ageCut} />
                                             </Form.Item>
                                             <Form.Item label="平均客单价（元）" {...restField} name={[name, "price_cut"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select options={priceCut} />
                                             </Form.Item>
-                                            <Space size='large'>
-                                                <Form.Item label="常规品线上佣金比例（%）" {...restField} name={[name, "commission_normal"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <InputNumber />
-                                                </Form.Item>
-                                                <Form.Item label="福利品线上佣金比例（%）" {...restField} name={[name, "commission_welfare"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <InputNumber />
-                                                </Form.Item>
-                                                <Form.Item label="爆品线上佣金比例（%）" {...restField} name={[name, "commission_bao"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <InputNumber />
-                                                </Form.Item>
-                                            </Space>
+                                            <Form.Item label="常规品线上佣金比例（%）" {...restField} name={[name, "commission_normal"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                <InputNumber />
+                                            </Form.Item>
+                                            <Form.Item label="福利品线上佣金比例（%）" {...restField} name={[name, "commission_welfare"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                <InputNumber />
+                                            </Form.Item>
+                                            <Form.Item label="爆品线上佣金比例（%）" {...restField} name={[name, "commission_bao"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                <InputNumber />
+                                            </Form.Item>
                                             <Form.Item label="佣金备注" {...restField} name={[name, "commission_note"]}>
                                                 <TextArea />
                                             </Form.Item>
@@ -841,37 +825,7 @@ function ChanceList() {
                                             </Form.Item>
                                             {hasFuSaleman ? <Space size='large'>
                                                 <Form.Item label="副商务" {...restField} name={[name, "uid_2"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <Select
-                                                        style={{ width: 160 }}
-                                                        options={salemans}
-                                                        onFocus={() => {
-                                                            request({
-                                                                method: 'post',
-                                                                url: '/user/getSalemans',
-                                                                data: {
-                                                                    userInfo: {
-                                                                        uid: localStorage.getItem('uid'),
-                                                                        name: localStorage.getItem('name'),
-                                                                        company: localStorage.getItem('company'),
-                                                                        department: localStorage.getItem('department'),
-                                                                        position: localStorage.getItem('position')
-                                                                    }
-                                                                }
-                                                            }).then((res) => {
-                                                                if (res.status == 200) {
-                                                                    if (res.data.code == 200) {
-                                                                        setSalemans(res.data.data)
-                                                                    } else {
-                                                                        message.error(res.data.msg)
-                                                                    }
-                                                                } else {
-                                                                    message.error(res.data.msg)
-                                                                }
-                                                            }).catch((err) => {
-                                                                console.error(err)
-                                                            })
-                                                        }}
-                                                    />
+                                                    <Select style={{ width: 160 }} options={salemans} onFocus={() => { getSalemans(); }} />
                                                 </Form.Item>
                                                 <Form.Item label="副商务提成点（%）" {...restField} name={[name, "u_point_2"]} rules={[{ required: true, message: '不能为空' }]}>
                                                     <InputNumber />
@@ -928,37 +882,7 @@ function ChanceList() {
                             </Form.Item>
                             {hasGroupFuSaleman ? <Space size='large'>
                                 <Form.Item label="副商务" name={"group_uid_2"} >
-                                    <Select
-                                        style={{ width: 160 }}
-                                        options={salemans}
-                                        onFocus={() => {
-                                            request({
-                                                method: 'post',
-                                                url: '/user/getSalemans',
-                                                data: {
-                                                    userInfo: {
-                                                        uid: localStorage.getItem('uid'),
-                                                        name: localStorage.getItem('name'),
-                                                        company: localStorage.getItem('company'),
-                                                        department: localStorage.getItem('department'),
-                                                        position: localStorage.getItem('position')
-                                                    }
-                                                }
-                                            }).then((res) => {
-                                                if (res.status == 200) {
-                                                    if (res.data.code == 200) {
-                                                        setSalemans(res.data.data)
-                                                    } else {
-                                                        message.error(res.data.msg)
-                                                    }
-                                                } else {
-                                                    message.error(res.data.msg)
-                                                }
-                                            }).catch((err) => {
-                                                console.error(err)
-                                            })
-                                        }}
-                                    />
+                                    <Select style={{ width: 160 }} options={salemans} onFocus={() => { getSalemans(); }} />
                                 </Form.Item>
                                 <Form.Item label="副商务提成点（%）" name={"group_u_point_2"} >
                                     <InputNumber />
@@ -1004,33 +928,7 @@ function ChanceList() {
                                     <Select
                                         style={{ width: 160 }}
                                         options={salemans}
-                                        onFocus={() => {
-                                            request({
-                                                method: 'post',
-                                                url: '/user/getSalemans',
-                                                data: {
-                                                    userInfo: {
-                                                        uid: localStorage.getItem('uid'),
-                                                        name: localStorage.getItem('name'),
-                                                        company: localStorage.getItem('company'),
-                                                        department: localStorage.getItem('department'),
-                                                        position: localStorage.getItem('position')
-                                                    }
-                                                }
-                                            }).then((res) => {
-                                                if (res.status == 200) {
-                                                    if (res.data.code == 200) {
-                                                        setSalemans(res.data.data)
-                                                    } else {
-                                                        message.error(res.data.msg)
-                                                    }
-                                                } else {
-                                                    message.error(res.data.msg)
-                                                }
-                                            }).catch((err) => {
-                                                console.error(err)
-                                            })
-                                        }}
+                                        onFocus={() => { getSalemans(); }}
                                     />
                                 </Form.Item>
                                 <Form.Item label="副商务提成点（%）" name={"provide_u_point_2"} >
@@ -1046,13 +944,9 @@ function ChanceList() {
                     {formType == 'advance' || (formType == 'edit' && form.getFieldValue('status') == '已推进') ? <><Form.Item label="联系人类型" name="liaison_type" rules={[{ required: true, message: '不能为空' }]}>
                         <Select
                             allowClear
-                            style={{
-                                width: '100%',
-                            }}
+                            style={{ width: '100%' }}
                             placeholder="请选择"
-                            onChange={(value) => {
-                                form.setFieldValue('liaison_type', value)
-                            }}
+                            onChange={(value) => { form.setFieldValue('liaison_type', value) }}
                             options={liaisonType}
                         />
                     </Form.Item>
@@ -1080,41 +974,7 @@ function ChanceList() {
                 onOk={() => { formMid.submit(); }}
                 onCancel={() => { setIsShowMid(false); formMid.resetFields(); setToGongOrSi(false); setCanPiao(false); setPiaoType(false) }}
             >
-                <Form
-                    form={formMid}
-                    onFinish={(values) => {
-                        request({
-                            method: 'post',
-                            url: '/middleman/addMiddleman',
-                            data: {
-                                ...values,
-                                userInfo: {
-                                    uid: localStorage.getItem('uid'),
-                                    name: localStorage.getItem('name'),
-                                    company: localStorage.getItem('company'),
-                                    department: localStorage.getItem('department'),
-                                    position: localStorage.getItem('position')
-                                }
-                            }
-                        }).then((res) => {
-                            if (res.status == 200) {
-                                if (res.data.code == 200) {
-                                    setIsShowMid(false)
-                                    setToGongOrSi(false)
-                                    setCanPiao(false)
-                                    setPiaoType(false)
-                                    formMid.resetFields()
-                                } else {
-                                    message.error(res.data.msg)
-                                }
-                            } else {
-                                message.error(res.data.msg)
-                            }
-                        }).catch((err) => {
-                            console.error(err)
-                        })
-                    }}
-                >
+                <Form form={formMid} onFinish={(values) => { addMiddleman(values); }}>
                     <Form.Item label="类型" name="type" rules={[{ required: true, message: '不能为空' }]}>
                         <Select placeholder="请选择" options={middleType} />
                     </Form.Item>

@@ -8,7 +8,7 @@ const sendRobot = require('../myFun/ddrobot')
 // 获取商机列表
 router.post('/getChanceList', (req, res) => {
   let params = req.body
-  let where = `where c.status in ('未推进', '已推进', '报备待审批', '报备驳回', '报备通过')`
+  let where = `where c.status in ('未推进', '已推进', '报备待审批', '报备驳回')`
   // 权限筛选
   if (params.userInfo.position != '管理员') {
     if (params.userInfo.company != '总公司') {
@@ -59,17 +59,28 @@ router.post('/getChanceList', (req, res) => {
 // 查询重复商机
 router.post('/searchSameChance', (req, res) => {
   let params = req.body
-  let account_ids = ''
-  for (let i = 0; i < params.account_ids.length; i++) {
-    account_ids += `'${params.account_ids[i]}',`
+  let sql = ''
+  if (params.type === 'arr') {
+    let account_ids = ''
+    for (let i = 0; i < params.account_ids.length; i++) {
+      account_ids += `'${params.account_ids[i]}',`
+    }
+    account_ids = account_ids.substring(0, account_ids.length - 1)
+    let account_names = ''
+    for (let i = 0; i < params.account_names.length; i++) {
+      account_names += `'${params.account_names[i]}',`
+    }
+    account_names = account_names.substring(0, account_names.length - 1)
+    sql = `SELECT a.cid, a.name, a.platforms, a.account_names, a.account_ids, a.status FROM ( SELECT DISTINCT cid, u.name, platforms, account_names, account_ids, chance.status, substring_index(substring_index( account_names, ',', topic.help_topic_id + 1 ), ',',- 1 ) as names, substring_index(substring_index( account_ids, ',', topic2.help_topic_id + 1 ), ',',- 1 ) as ids FROM chance LEFT JOIN mysql.help_topic topic ON topic.help_topic_id < ( length( account_names ) - length( REPLACE ( account_names, ',', '' ) ) + 1 ) LEFT JOIN mysql.help_topic topic2 ON topic2.help_topic_id < ( length( account_ids ) - length( REPLACE ( account_ids, ',', '' ) ) + 1 ) LEFT JOIN user u ON u.uid = chance.uid HAVING (names in (${account_names}) or ids in (${account_ids})) and cid != '${params.cid}' ) a GROUP BY a.cid, a.name`
+  } else {
+    sql = `SELECT DISTINCT td.tdid, u.name, td.platform_shop, td.account_id, td.account_name 
+            FROM talentdetail td 
+              LEFT JOIN talent t ON t.tid = td.tid 
+              LEFT JOIN talentline tl ON tl.tdid = td.tdid 
+              INNER JOIN (SELECT MAX(date_line) as date FROM talentline GROUP BY tdid) tl2 on tl2.date = tl.date_line 
+              LEFT JOIN user u ON u.uid = tl.uid_1
+            WHERE t.talent_status != '已失效' and (td.account_id = ${params.account_id} or td.account_name = ${params.account_name})`
   }
-  account_ids = account_ids.substring(0, account_ids.length - 1)
-  let account_names = ''
-  for (let i = 0; i < params.account_names.length; i++) {
-    account_names += `'${params.account_names[i]}',`
-  }
-  account_names = account_names.substring(0, account_names.length - 1)
-  let sql = `SELECT a.cid, a.name, a.account_names, a.account_ids, a.status FROM ( SELECT DISTINCT cid, u.name, account_names, account_ids, chance.status, substring_index(substring_index( account_names, ',', topic.help_topic_id + 1 ), ',',- 1 ) as names, substring_index(substring_index( account_ids, ',', topic2.help_topic_id + 1 ), ',',- 1 ) as ids FROM chance LEFT JOIN mysql.help_topic topic ON topic.help_topic_id < ( length( account_names ) - length( REPLACE ( account_names, ',', '' ) ) + 1 ) LEFT JOIN mysql.help_topic topic2 ON topic2.help_topic_id < ( length( account_ids ) - length( REPLACE ( account_ids, ',', '' ) ) + 1 ) LEFT JOIN user u ON u.uid = chance.uid WHERE chance.status != '报备通过' HAVING (names in (${account_names}) or ids in (${account_ids})) and cid != '${params.cid}' ) a GROUP BY a.cid, a.name`
   db.query(sql, (err, results) => {
     if (err) throw err;
     if (results.length != 0) {
@@ -83,22 +94,40 @@ router.post('/searchSameChance', (req, res) => {
 // 添加新商机
 router.post('/addChance', (req, res) => {
   let params = req.body
-  let sql = `SELECT count(*) as sum FROM chance`
+  let account_ids = ''
+  for (let i = 0; i < params.account_ids.length; i++) {
+    account_ids += `'${params.account_ids[i]}',`
+  }
+  account_ids = account_ids.substring(0, account_ids.length - 1)
+  let account_names = ''
+  for (let i = 0; i < params.account_names.length; i++) {
+    account_names += `'${params.account_names[i]}',`
+  }
+  account_names = account_names.substring(0, account_names.length - 1)
+  let sql = `SELECT a.cid, a.name, a.platforms, a.account_names, a.account_ids, a.status FROM ( SELECT DISTINCT cid, u.name, platforms, account_names, account_ids, chance.status, substring_index(substring_index( account_names, ',', topic.help_topic_id + 1 ), ',',- 1 ) as names, substring_index(substring_index( account_ids, ',', topic2.help_topic_id + 1 ), ',',- 1 ) as ids FROM chance LEFT JOIN mysql.help_topic topic ON topic.help_topic_id < ( length( account_names ) - length( REPLACE ( account_names, ',', '' ) ) + 1 ) LEFT JOIN mysql.help_topic topic2 ON topic2.help_topic_id < ( length( account_ids ) - length( REPLACE ( account_ids, ',', '' ) ) + 1 ) LEFT JOIN user u ON u.uid = chance.uid WHERE chance.status = '报备通过' HAVING (names in (${account_names}) or ids in (${account_ids})) and cid != '${params.cid}' ) a GROUP BY a.cid, a.name`
   db.query(sql, (err, results) => {
     if (err) throw err;
-    let cid = 'C' + `${results[0].sum + 1}`.padStart(5, '0')
-    let models = `'${params.models.join()}'`
-    let group_name = params.group_name ? `'${params.group_name}'` : null
-    let provide_name = params.provide_name ? `'${params.provide_name}'` : null
-    let platforms = params.platforms ? `'${params.platforms.join()}'` : null
-    let account_ids = params.account_ids ? `'${params.account_ids.join()}'` : null
-    let account_names = params.account_names ? `'${params.account_names.join()}'` : null
-    let search_pic = params.search_pic.replace('/public', '')
-    let sql = `INSERT INTO chance(cid, models, group_name, provide_name, platforms, account_names, account_ids, search_pic, uid, status, create_time) VALUES('${cid}', ${models}, ${group_name}, ${provide_name}, ${platforms}, ${account_names}, ${account_ids}, '${search_pic}', '${params.uid}', '未推进', ${dayjs().valueOf()})`
-    db.query(sql, (err, results) => {
-      if (err) throw err;
-      res.send({ code: 200, data: {}, msg: `添加成功` })
-    })
+    if (results.length != 0) {
+      res.send({ code: 201, data: results, msg: `重复 账号名/ID` })
+    } else {
+      let sql = `SELECT count(*) as sum FROM chance`
+      db.query(sql, (err, results) => {
+        if (err) throw err;
+        let cid = 'C' + `${results[0].sum + 1}`.padStart(5, '0')
+        let models = `'${params.models.join()}'`
+        let group_name = params.group_name ? `'${params.group_name}'` : null
+        let provide_name = params.provide_name ? `'${params.provide_name}'` : null
+        let platforms = params.platforms ? `'${params.platforms.join()}'` : null
+        let account_ids = params.account_ids ? `'${params.account_ids.join()}'` : null
+        let account_names = params.account_names ? `'${params.account_names.join()}'` : null
+        let search_pic = params.search_pic.replace('/public', '')
+        let sql = `INSERT INTO chance(cid, models, group_name, provide_name, platforms, account_names, account_ids, search_pic, uid, status, create_time) VALUES('${cid}', ${models}, ${group_name}, ${provide_name}, ${platforms}, ${account_names}, ${account_ids}, '${search_pic}', '${params.uid}', '未推进', ${dayjs().valueOf()})`
+        db.query(sql, (err, results) => {
+          if (err) throw err;
+          res.send({ code: 200, data: {}, msg: `添加成功` })
+        })
+      })
+    }
   })
 })
 
@@ -169,7 +198,7 @@ router.post('/reportChance', (req, res) => {
               let uid_2 = params.accounts[i].uid_2 ? `'${params.accounts[i].uid_2}'` : null
               let u_point_2 = params.accounts[i].u_point_2 ? `'${params.accounts[i].u_point_2}'` : null
               let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
-              sql_d += `('${tdid}', '${tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', null, null),`
+              sql_d += `('${tdid}', '${tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', null, null, '待审批'),`
               sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', '${params.accounts[i].commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${u_note}, ${mid_1}, ${m_point_1}, ${m_note_1}, ${mid_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null, null),`
             }
             count_d += params.accounts.length
@@ -181,7 +210,7 @@ router.post('/reportChance', (req, res) => {
             let uid_2 = params.group_uid_2 ? `'${params.group_uid_2}'` : null
             let u_point_2 = params.group_u_point_2 ? `'${params.group_u_point_2}'` : null
             let group_u_note = params.group_u_note ? `'${params.group_u_note}'` : null
-            sql_d += `('${tdid}', '${tid}', '社群团购', '${params.group_shop}', null, null, null, null, null, null, null, null, null, null, '${params.group_name}', null),`
+            sql_d += `('${tdid}', '${tid}', '社群团购', '${params.group_shop}', null, null, null, null, null, null, null, null, null, null, '${params.group_name}', null, '待审批'),`
             sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${group_u_note}, ${mid_1}, ${m_point_1}, ${m_note_1}, ${mid_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null, null),`
             count_d += 1
             count_l += 1
@@ -192,7 +221,7 @@ router.post('/reportChance', (req, res) => {
             let uid_2 = params.provide_uid_2 ? `'${params.provide_uid_2}'` : null
             let u_point_2 = params.provide_u_point_2 ? `'${params.provide_u_point_2}'` : null
             let provide_u_note = params.provide_u_note ? `'${params.provide_u_note}'` : null
-            sql_d += `('${tdid}', '${tid}', '供货', '${params.provide_shop}', null, null, null, null, null, null, null, null, null, null, null, '${params.provide_name}'),`
+            sql_d += `('${tdid}', '${tid}', '供货', '${params.provide_shop}', null, null, null, null, null, null, null, null, null, null, null, '${params.provide_name}', '待审批'),`
             sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${provide_u_note}, ${mid_1}, ${m_point_1}, ${m_note_1}, ${mid_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null, null),`
             count_d += 1
             count_l += 1
