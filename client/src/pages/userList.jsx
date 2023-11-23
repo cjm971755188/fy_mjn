@@ -80,7 +80,6 @@ function UserList() {
             pageSize: 10
         }
     });
-    const [filterForm] = Form.useForm()
     const getUserListAPI = () => {
         setLoading(true);
         request({
@@ -130,6 +129,8 @@ function UserList() {
             setData([]);
         }
     }
+    // 查询、清空筛选
+    const [filterForm] = Form.useForm()
 
     // 用户：添加、修改、删除
     const [type, setType] = useState(false)

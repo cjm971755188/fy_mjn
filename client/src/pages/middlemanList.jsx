@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Button, Select, Tooltip, Popover, List, message } from 'antd';
+import { Card, Table, Space, Form, Input, Button, Select, Popover, List, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { middleType } from '../baseData/talent'
 import AEMiddleman from '../components/modals/AEMiddleman'
@@ -71,7 +71,6 @@ function MiddlemanList() {
             pageSize: 10
         }
     });
-    const [filterForm] = Form.useForm()
     const getMiddlemanListAPI = () => {
         setLoading(true)
         request({
@@ -121,6 +120,8 @@ function MiddlemanList() {
             setData([]);
         }
     }
+    // 查询、清空筛选
+    const [filterForm] = Form.useForm()
 
     // 添加新中间人
     const [type, setType] = useState('add')

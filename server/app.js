@@ -6,14 +6,14 @@ const app = express();
 app.use(cors())
 // 监听端口
 app.listen('3000', () => {
-  console.log('Server started')
+    console.log('Server started')
 })
 
 // 创建连接, 连接数据库
 const db = require('./config/db')
 db.connect((err) => {
-  if (err) throw err;
-  console.log('Mysql connected')
+    if (err) throw err;
+    console.log('Mysql connected')
 })
 
 // body-parser解析json
@@ -23,18 +23,18 @@ app.use(bodyparser.json())
 
 // 跨域
 app.all('*', function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "X-Requested-With,content-type,cookie");
-  res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS,post");
-  res.header("X-Powered-By", ' 3.2.1')
-  //这段仅仅为了方便返回json而已
-  res.header("Content-Type", "application/json;charset=utf-8");
-  if (req.method == 'OPTIONS') {
-    //让options请求快速返回
-    res.sendStatus(200);
-  } else {
-    next();
-  }
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With,content-type,cookie");
+    res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS,post");
+    res.header("X-Powered-By", ' 3.2.1')
+    //这段仅仅为了方便返回json而已
+    res.header("Content-Type", "application/json;charset=utf-8");
+    if (req.method == 'OPTIONS') {
+        //让options请求快速返回
+        res.sendStatus(200);
+    } else {
+        next();
+    }
 });
 
 // 上传图片

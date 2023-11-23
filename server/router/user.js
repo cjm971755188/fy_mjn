@@ -5,219 +5,219 @@ const dayjs = require('dayjs');
 
 // 登录
 router.post('/login', (req, res) => {
-  let params = req.body
-  let sql = `SELECT * FROM user where phone = '${params.phone}'`
-  db.query(sql, (err, results) => {
-    if (err) throw err;
-    if (results.length == 0) {
-      res.send({ code: 201, data: {}, msg: '无该用户' })
-    } else if (params.password != results[0].password) {
-      res.send({ code: 201, data: {}, msg: '密码错误' })
-    } else if (results[0].status == '禁用') {
-      res.send({ code: 201, data: {}, msg: '该用户已被禁用' })
-    } else {
-      res.send({ code: 200, data: results[0], msg: '登录成功' })
-    }
-  })
+    let params = req.body
+    let sql = `SELECT * FROM user where phone = '${params.phone}'`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        if (results.length == 0) {
+            res.send({ code: 201, data: {}, msg: '无该用户' })
+        } else if (params.password != results[0].password) {
+            res.send({ code: 201, data: {}, msg: '密码错误' })
+        } else if (results[0].status == '禁用') {
+            res.send({ code: 201, data: {}, msg: '该用户已被禁用' })
+        } else {
+            res.send({ code: 200, data: results[0], msg: '登录成功' })
+        }
+    })
 })
 
 // 修改密码
 router.post('/editPassword', (req, res) => {
-  let params = req.body
-  let sql = `SELECT * FROM user where uid = '${params.uid}'`
-  db.query(sql, (err, results) => {
-    if (err) throw err;
-    if (results.length == 0) {
-      res.send({ code: 201, data: {}, msg: '无该用户' })
-    } else if (results[0].status == '禁用') {
-      res.send({ code: 201, data: {}, msg: '该用户已被禁用' })
-    } else if (params.password != results[0].password) {
-      res.send({ code: 201, data: {}, msg: '原密码错误' })
-    } else if (params.password2 != params.password3) {
-      res.send({ code: 201, data: {}, msg: '两次密码输入不一致' })
-    } else if (params.password == params.password2) {
-      res.send({ code: 201, data: {}, msg: '新密码与原密码不能相同' })
-    } else {
-      let sql = `UPDATE user SET password = ${params.password2} where uid = '${params.uid}'`
-      db.query(sql, (err, results) => {
+    let params = req.body
+    let sql = `SELECT * FROM user where uid = '${params.uid}'`
+    db.query(sql, (err, results) => {
         if (err) throw err;
-        res.send({ code: 200, data: {}, msg: '修改成功' })
-      })
-    }
-  })
+        if (results.length == 0) {
+            res.send({ code: 201, data: {}, msg: '无该用户' })
+        } else if (results[0].status == '禁用') {
+            res.send({ code: 201, data: {}, msg: '该用户已被禁用' })
+        } else if (params.password != results[0].password) {
+            res.send({ code: 201, data: {}, msg: '原密码错误' })
+        } else if (params.password2 != params.password3) {
+            res.send({ code: 201, data: {}, msg: '两次密码输入不一致' })
+        } else if (params.password == params.password2) {
+            res.send({ code: 201, data: {}, msg: '新密码与原密码不能相同' })
+        } else {
+            let sql = `UPDATE user SET password = ${params.password2} where uid = '${params.uid}'`
+            db.query(sql, (err, results) => {
+                if (err) throw err;
+                res.send({ code: 200, data: {}, msg: '修改成功' })
+            })
+        }
+    })
 })
 
 // 获取用户列表
 router.post('/getUserList', (req, res) => {
-  let params = req.body
-  // 去除 已删除 + 自己 + 管理员
-  let where = `where status != '失效' and position != '管理员' and uid != '${params.userInfo.uid}'`
-  // 权限筛选
-  if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
-    if (params.userInfo.position === '副总') {
-      where += ` and department = '${params.userInfo.department}'`
+    let params = req.body
+    // 去除 已删除 + 自己 + 管理员
+    let where = `where status != '失效' and position != '管理员' and uid != '${params.userInfo.uid}'`
+    // 权限筛选
+    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
+        if (params.userInfo.position === '副总') {
+            where += ` and department = '${params.userInfo.department}'`
+        }
+        if (params.userInfo.department != '主管') {
+            where += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+        }
     }
-    if (params.userInfo.department != '主管') {
-      where += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+    // 条件筛选
+    for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
+        if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
+            where += ` and ${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
+        } else {
+            where += ` and ${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
+        }
     }
-  }
-  // 条件筛选
-  for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
-    if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
-      where += ` and ${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
-    } else {
-      where += ` and ${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
+    // 分页
+    let current = 0
+    let pageSize = 10
+    if (params.pagination.current) {
+        current = params.pagination.current
     }
-  }
-  // 分页
-  let current = 0
-  let pageSize = 10
-  if (params.pagination.current) {
-    current = params.pagination.current
-  }
-  if (params.pagination.pageSize) {
-    pageSize = params.pagination.pageSize
-  }
-  let sql = `SELECT * FROM user ${where} order by uid`
-  db.query(sql, (err, results) => {
-    if (err) throw err;
-    let sql = `SELECT	uid, name, phone, company, department, position, status FROM user ${where} order by uid limit ${pageSize} offSET ${current * pageSize}`
-    db.query(sql, (err, r) => {
-      if (err) throw err;
-      res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: '' })
+    if (params.pagination.pageSize) {
+        pageSize = params.pagination.pageSize
+    }
+    let sql = `SELECT * FROM user ${where} order by uid`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        let sql = `SELECT	uid, name, phone, company, department, position, status FROM user ${where} order by uid limit ${pageSize} offSET ${current * pageSize}`
+        db.query(sql, (err, r) => {
+            if (err) throw err;
+            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: '' })
+        })
     })
-  })
 })
 
 // 添加新用户
 router.post('/addUser', (req, res) => {
-  let time = dayjs().valueOf()
-  let params = req.body
-  let sql = `SELECT * FROM user where status != '禁用' and company = '${params.combine[0]}' and department = '${params.combine[1]}' and position = '${params.combine[2]}' and position in ('总裁', '副总', '主管')`
-  db.query(sql, (err, results) => {
-    if (err) throw err;
-    if (results.length != 0) {
-      if (results[0].position == '总裁') {
-        res.send({ code: 201, data: {}, msg: `${params.combine[0]} ${params.combine[1]} 已存在 ${results.length} 名 总裁` })
-      }
-      if (results[0].position == '副总') {
-        res.send({ code: 201, data: {}, msg: `${params.combine[0]} ${params.combine[1]} 已存在 ${results.length} 名 副总` })
-      }
-      if (results[0].position == '主管') {
-        res.send({ code: 201, data: {}, msg: `${params.combine[0]} ${params.combine[1]} 已存在 ${results.length} 名 主管` })
-      }
-    } else {
-      let sql = `SELECT * FROM user where phone = '${params.phone}'`
-      db.query(sql, (err, results) => {
+    let time = dayjs().valueOf()
+    let params = req.body
+    let sql = `SELECT * FROM user where status != '禁用' and company = '${params.combine[0]}' and department = '${params.combine[1]}' and position = '${params.combine[2]}' and position in ('总裁', '副总', '主管')`
+    db.query(sql, (err, results) => {
         if (err) throw err;
         if (results.length != 0) {
-          if (results[0].status != '禁用') {
-            res.send({ code: 201, data: {}, msg: `${params.phone} 手机号已存在，添加失败` })
-          } else {
-            let sql = `UPDATE user SET status = '正常', create_time = '${dayjs().valueOf()}' where phone = '${params.phone}'`
-            db.query(sql, (err, results) => {
-              if (err) throw err;
-              res.send({ code: 200, data: {}, msg: `${params.name} 重启成功` })
-            })
-          }
+            if (results[0].position == '总裁') {
+                res.send({ code: 201, data: {}, msg: `${params.combine[0]} ${params.combine[1]} 已存在 ${results.length} 名 总裁` })
+            }
+            if (results[0].position == '副总') {
+                res.send({ code: 201, data: {}, msg: `${params.combine[0]} ${params.combine[1]} 已存在 ${results.length} 名 副总` })
+            }
+            if (results[0].position == '主管') {
+                res.send({ code: 201, data: {}, msg: `${params.combine[0]} ${params.combine[1]} 已存在 ${results.length} 名 主管` })
+            }
         } else {
-          let sql = `SELECT count(*) as sum FROM user`
-          db.query(sql, (err, results) => {
-            if (err) throw err;
-            let uid = 'MJN' + `${results[0].sum}`.padStart(5, '0')
-            let sql = `INSERT INTO user values('${uid}', '${params.name}', '${params.phone}', '123456', '${params.combine[0]}', '${params.combine[1]}', '${params.combine[2]}', '正常', '${dayjs().valueOf()}')`
+            let sql = `SELECT * FROM user where phone = '${params.phone}'`
             db.query(sql, (err, results) => {
-              if (err) throw err;
-              res.send({ code: 200, data: {}, msg: `${params.name} 添加成功` })
+                if (err) throw err;
+                if (results.length != 0) {
+                    if (results[0].status != '禁用') {
+                        res.send({ code: 201, data: {}, msg: `${params.phone} 手机号已存在，添加失败` })
+                    } else {
+                        let sql = `UPDATE user SET status = '正常', create_time = '${dayjs().valueOf()}' where phone = '${params.phone}'`
+                        db.query(sql, (err, results) => {
+                            if (err) throw err;
+                            res.send({ code: 200, data: {}, msg: `${params.name} 重启成功` })
+                        })
+                    }
+                } else {
+                    let sql = `SELECT count(*) as sum FROM user`
+                    db.query(sql, (err, results) => {
+                        if (err) throw err;
+                        let uid = 'MJN' + `${results[0].sum}`.padStart(5, '0')
+                        let sql = `INSERT INTO user values('${uid}', '${params.name}', '${params.phone}', '123456', '${params.combine[0]}', '${params.combine[1]}', '${params.combine[2]}', '正常', '${dayjs().valueOf()}')`
+                        db.query(sql, (err, results) => {
+                            if (err) throw err;
+                            res.send({ code: 200, data: {}, msg: `${params.name} 添加成功` })
+                        })
+                    })
+                }
             })
-          })
         }
-      })
-    }
-  })
+    })
 })
 
 // 修改用户信息
 router.post('/editUser', (req, res) => {
-  let params = req.body
-  let sql = `SELECT * FROM user where uid != '${params.uid}' and company = '${params.combine[0]}' and department = '${params.combine[1]}' and position = '${params.combine[2]}' and position in ('总裁', '副总', '主管')`
-  db.query(sql, (err, results) => {
-    if (err) throw err;
-    if (results.length != 0) {
-      if (results[0].position == '总裁') {
-        res.send({ code: 201, data: {}, msg: `${params.combine[0]} ${params.combine[1]} 已存在 ${results.length} 名 总裁` })
-      }
-      if (results[0].position == '副总') {
-        res.send({ code: 201, data: {}, msg: `${params.combine[0]} ${params.combine[1]} 已存在 ${results.length} 名 副总` })
-      }
-      if (results[0].position == '主管') {
-        res.send({ code: 201, data: {}, msg: `${params.combine[0]} ${params.combine[1]} 已存在 ${results.length} 名 主管` })
-      }
-    } else {
-      let sql = `UPDATE user SET name = '${params.name}', company = '${params.combine[0]}', department = '${params.combine[1]}', position = '${params.combine[2]}' WHERE uid = '${params.uid}'`
-      db.query(sql, (err, results) => {
+    let params = req.body
+    let sql = `SELECT * FROM user where uid != '${params.uid}' and company = '${params.combine[0]}' and department = '${params.combine[1]}' and position = '${params.combine[2]}' and position in ('总裁', '副总', '主管')`
+    db.query(sql, (err, results) => {
         if (err) throw err;
-        res.send({ code: 200, data: {}, msg: `修改成功` })
-      })
-    }
-  })
+        if (results.length != 0) {
+            if (results[0].position == '总裁') {
+                res.send({ code: 201, data: {}, msg: `${params.combine[0]} ${params.combine[1]} 已存在 ${results.length} 名 总裁` })
+            }
+            if (results[0].position == '副总') {
+                res.send({ code: 201, data: {}, msg: `${params.combine[0]} ${params.combine[1]} 已存在 ${results.length} 名 副总` })
+            }
+            if (results[0].position == '主管') {
+                res.send({ code: 201, data: {}, msg: `${params.combine[0]} ${params.combine[1]} 已存在 ${results.length} 名 主管` })
+            }
+        } else {
+            let sql = `UPDATE user SET name = '${params.name}', company = '${params.combine[0]}', department = '${params.combine[1]}', position = '${params.combine[2]}' WHERE uid = '${params.uid}'`
+            db.query(sql, (err, results) => {
+                if (err) throw err;
+                res.send({ code: 200, data: {}, msg: `修改成功` })
+            })
+        }
+    })
 })
 
 // 修改用户状态
 router.post('/editUserStatus', (req, res) => {
-  let params = req.body
-  let sql = `UPDATE user SET status = '${params.type ? '正常' : '禁用'}' where uid = '${params.uid}'`
-  db.query(sql, (err, results) => {
-    if (err) throw err;
-    res.send({ code: 200, data: {}, msg: `${params.uid} ${params.type ? '恢复正常' : '已禁用'}` })
-  })
+    let params = req.body
+    let sql = `UPDATE user SET status = '${params.type ? '正常' : '禁用'}' where uid = '${params.uid}'`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        res.send({ code: 200, data: {}, msg: `${params.uid} ${params.type ? '恢复正常' : '已禁用'}` })
+    })
 })
 
 // 删除用户
 router.post('/deleteUser', (req, res) => {
-  let params = req.body
-  let sql = `SELECT * FROM talent_model_schedule where status != '已失效' and (u_id_1 = '${params.uid}' or u_id_2 = '${params.uid}')`
-  db.query(sql, (err, results) => {
-    if (err) throw err;
-    if (results.length != 0) {
-      res.send({ code: 201, data: {}, msg: `${params.name} 仍有 ${results.length} 位达人，不可删除` })
-    } else {
-      let sql = `UPDATE user SET status = '失效' where uid = '${params.uid}'`
-      db.query(sql, (err, results) => {
+    let params = req.body
+    let sql = `SELECT * FROM talent_model_schedule where status != '已失效' and (u_id_1 = '${params.uid}' or u_id_2 = '${params.uid}')`
+    db.query(sql, (err, results) => {
         if (err) throw err;
-        res.send({ code: 200, data: {}, msg: `${params.name} 删除成功` })
-      })
-    }
-  })
+        if (results.length != 0) {
+            res.send({ code: 201, data: {}, msg: `${params.name} 仍有 ${results.length} 位达人，不可删除` })
+        } else {
+            let sql = `UPDATE user SET status = '失效' where uid = '${params.uid}'`
+            db.query(sql, (err, results) => {
+                if (err) throw err;
+                res.send({ code: 200, data: {}, msg: `${params.name} 删除成功` })
+            })
+        }
+    })
 })
 
-// 获取所有商务
-router.post('/getSalemans', (req, res) => {
-  let params = req.body
-  // 去除 自己 + 管理员 + 已删除
-  let where = `where status != '失效' and (position = '商务' or position = '管理员')`
-  // 权限筛选
-  if (params.userInfo.position != '管理员') {
-    if (params.userInfo.company != '总公司') {
-      where += ` and company = '${params.userInfo.company}'`
+// 获取商务下拉框
+router.post('/getSalemanItems', (req, res) => {
+    let params = req.body
+    // 去除 已删除 + 自己 + 管理员
+    let where = `where status != '失效' and position = '商务'`
+    // 权限筛选
+    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
+        if (params.userInfo.position === '副总') {
+            where += ` and department = '${params.userInfo.department}'`
+        }
+        if (params.userInfo.department != '主管') {
+            where += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+        }
     }
-    if (params.userInfo.department != '总裁办') {
-      where += ` and department = '${params.userInfo.department}'`
-    }
-  }
-  let sql = `SELECT * FROM user ${where}`
-  db.query(sql, (err, results) => {
-    if (err) throw err;
-    let salemans = []
-    for (let i = 0; i < results.length; i++) {
-      const element = results[i];
-      salemans.push({
-        label: element.name,
-        value: element.uid
-      })
-    }
-    res.send({ code: 200, data: salemans, msg: `` })
-  })
+    let sql = `SELECT * FROM user ${where}`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        let salemans = []
+        for (let i = 0; i < results.length; i++) {
+            const element = results[i];
+            salemans.push({
+                label: element.name,
+                value: element.uid
+            })
+        }
+        res.send({ code: 200, data: salemans, msg: `` })
+    })
 })
 
 module.exports = router

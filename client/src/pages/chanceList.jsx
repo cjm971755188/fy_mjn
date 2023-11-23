@@ -1,59 +1,46 @@
 import React, { useEffect, useState } from "react";
 import { NavLink } from 'react-router-dom'
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Tooltip, Radio, InputNumber, message } from 'antd';
+import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, Radio, InputNumber, message } from 'antd';
 import { PlusOutlined, CheckCircleTwoTone, ClockCircleTwoTone, MinusCircleOutlined, PlayCircleTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
 import people from '../assets/people.jpg'
 import UpLoadImg from '../components/UpLoadImg'
 import { chanceStatus, model, platform, liaisonType, accountType, accountModelType, ageCut, priceCut, middleType, yearDealType } from '../baseData/talent'
 import MyDateSelect from '../components/MyDateSelect'
+import AEMiddleman from '../components/modals/AEMiddleman'
+import AEAChance from '../components/modals/AEAChance'
 
 const { TextArea } = Input;
 
 function ChanceList() {
-    let columns = [
+    // 表格：格式
+    const columns = [
         { title: '商机编号', dataIndex: 'cid', key: 'cid' },
         { title: '模式', dataIndex: 'models', key: 'models' },
         { title: '平台', dataIndex: 'platforms', key: 'platforms' },
         { title: '线上达人名', dataIndex: 'account_names', key: 'account_names' },
         { title: '团购达人名', dataIndex: 'group_name', key: 'group_name' },
         { title: '供货达人名', dataIndex: 'provide_name', key: 'provide_name' },
-        {
-            title: '寻找证明',
-            dataIndex: 'search_pic',
-            key: 'search_pic',
-            render: (_, record) => (
-                <Image width={50} src={record.search_pic} />
-            )
-        },
+        { title: '寻找证明', dataIndex: 'search_pic', key: 'search_pic', render: (_, record) => (<Image width={50} src={record.search_pic} />) },
         {
             title: '联系人',
             dataIndex: 'liaison_name',
             key: 'liaison_name',
             render: (_, record) => (
-                <Tooltip title={() => {
-                    return (
-                        <div>
-                            <div>类型：{record.liaison_type}</div>
-                            <div>姓名：{record.liaison_name}</div>
-                            <div>微信：{record.liaison_v}</div>
-                            <div>电话：{record.liaison_phone}</div>
-                            <div>沟通群：{record.crowd_name}</div>
-                        </div>
-                    )
-                }}>
+                <Popover title="联系人信息" content={
+                    <List>
+                        <List.Item>姓名：{record.liaison_type}</List.Item>
+                        <List.Item>微信：{record.liaison_name}</List.Item>
+                        <List.Item>微信：{record.liaison_v}</List.Item>
+                        <List.Item>电话：{record.liaison_phone}</List.Item>
+                        <List.Item>微信：{record.crowd_name}</List.Item>
+                    </List>}
+                >
                     <span>{record.liaison_name}</span>
-                </Tooltip>
+                </Popover>
             )
         },
-        {
-            title: '推进证明',
-            dataIndex: 'advance_pic',
-            key: 'advance_pic',
-            render: (_, record) => (
-                <Image width={50} src={record.advance_pic} />
-            )
-        },
+        { title: '推进证明', dataIndex: 'advance_pic', key: 'advance_pic', render: (_, record) => (<Image width={50} src={record.advance_pic} />) },
         { title: '商务', dataIndex: 'name', key: 'name' },
         {
             title: '状态',
@@ -201,11 +188,10 @@ function ChanceList() {
             )
         }
     ]
-    if (localStorage.getItem('position') === '商务') {
+    /* if (localStorage.getItem('position') === '商务') {
         columns = columns.filter(item => item.title !== '商务')
-    }
-
-    // 传入数据，分页
+    } */
+    // 表格：获取数据、分页
     const [data, setData] = useState();
     const [loading, setLoading] = useState(false);
     const [tableParams, setTableParams] = useState({
@@ -216,7 +202,7 @@ function ChanceList() {
             pageSize: 10
         }
     });
-    const getChanceList = () => {
+    const getChanceListAPI = () => {
         setLoading(true)
         request({
             method: 'post',
@@ -266,17 +252,14 @@ function ChanceList() {
             setData([]);
         }
     }
-
-    // 日期
-    const [dateSelect, setDateSelect] = useState()
-    const [salemans, setSalemans] = useState()
-
     // 查询、清空筛选
-    const [selectForm] = Form.useForm()
-    const getSalemans = () => {
+    const [filterForm] = Form.useForm()
+    const [dateSelect, setDateSelect] = useState()
+    const [salemansItems, setSalemansItems] = useState()
+    const getSalemanItemsAPI = () => {
         request({
             method: 'post',
-            url: '/user/getSalemans',
+            url: '/user/getSalemanItems',
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
@@ -289,7 +272,7 @@ function ChanceList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setSalemans(res.data.data)
+                    setSalemansItems(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -303,54 +286,28 @@ function ChanceList() {
 
     // 添加、修改、推进
     const [isShow, setIsShow] = useState(false)
-    const [formType, setFormType] = useState('add')
+    const [type, setType] = useState('add')
     const [form] = Form.useForm()
-    const [isShowSearch, setIsShowSearch] = useState(false)
-    const [searchList, setSearchList] = useState({})
-    const searchSame = () => {
-        request({
-            method: 'post',
-            url: '/chance/searchSameChance',
-            data: {
-                type: 'arr',
-                cid: formType == 'add' ? '' : form.getFieldValue('cid'),
-                account_names: form.getFieldValue('account_names'),
-                account_ids: form.getFieldValue('account_ids')
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code != 200) {
-                    setIsShowSearch(true)
-                    setSearchList(res.data.data)
-                    message.error(res.data.msg)
-                } else {
-                    setIsShowSearch(false)
-                    setSearchList({})
-                    message.success(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [isShowPlatform, setIsShowPlatform] = useState(false)
-    const [isShowGroup, setIsShowGroup] = useState(false)
-    const [isShowProvide, setIsShowProvide] = useState(false)
-    const addChance = (values) => {
+    const addChanceAPI = (payload) => {
         request({
             method: 'post',
             url: '/chance/addChance',
             data: {
-                ...values,
-                uid: localStorage.getItem('uid')
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
             }
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
-                    getChanceList()
+                    setIsShow(false); 
+                    getChanceListAPI();
+                    form.resetFields();
                     message.success(res.data.msg)
                 } else {
                     message.error(res.data.msg)
@@ -362,19 +319,26 @@ function ChanceList() {
             console.error(err)
         })
     }
-    const editChance = (values) => {
+    const editChanceAPI = (payload) => {
         request({
             method: 'post',
             url: '/chance/editChance',
             data: {
-                ...values,
-                status: form.getFieldValue('status')
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
             }
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
-                    getChanceList()
+                    setIsShow(false); 
+                    getChanceListAPI();
+                    form.resetFields();
                     message.success(res.data.msg)
                 } else {
                     message.error(res.data.msg)
@@ -386,16 +350,26 @@ function ChanceList() {
             console.error(err)
         })
     }
-    const advanceChance = (values) => {
+    const advanceChanceAPI = (payload) => {
         request({
             method: 'post',
             url: '/chance/advanceChance',
-            data: values
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
-                    getChanceList()
+                    setIsShow(false); 
+                    getChanceListAPI();
+                    form.resetFields();
                     message.success(res.data.msg)
                 } else {
                     message.error(res.data.msg)
@@ -436,7 +410,7 @@ function ChanceList() {
             if (res.status == 200) {
                 if (res.data.code == 200) {
                     setIsShow(false); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false);
-                    getChanceList()
+                    getChanceListAPI()
                     form.resetFields()
                 } else {
                     message.error(res.data.msg)
@@ -448,10 +422,6 @@ function ChanceList() {
             console.error(err)
         })
     }
-
-    // 添加新中间人
-    const [isShowMid, setIsShowMid] = useState(false)
-    const [formMid] = Form.useForm()
     const [middlemans1, setMiddlemans1] = useState(false)
     const [middlemans2, setMiddlemans2] = useState(false)
     const searchMiddleman1 = (value) => {
@@ -510,17 +480,16 @@ function ChanceList() {
             console.error(err)
         })
     }
-    const filterOption = (input, option) =>
-        (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
-    const [toGongOrSi, setToGongOrSi] = useState(false)
-    const [canPiao, setCanPiao] = useState(false)
-    const [piaoType, setPiaoType] = useState(false)
-    const addMiddleman = (values) => {
+    const filterOption = (input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
+    // 添加新中间人
+    const [isShowMid, setIsShowMid] = useState(false)
+    const [formMid] = Form.useForm()
+    const addMiddlemanAPI = (payload) => {
         request({
             method: 'post',
             url: '/middleman/addMiddleman',
             data: {
-                ...values,
+                ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     name: localStorage.getItem('name'),
@@ -532,11 +501,8 @@ function ChanceList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setIsShowMid(false)
-                    setToGongOrSi(false)
-                    setCanPiao(false)
-                    setPiaoType(false)
-                    formMid.resetFields()
+                    setIsShowMid(false);
+                    formMid.resetFields();
                 } else {
                     message.error(res.data.msg)
                 }
@@ -549,14 +515,14 @@ function ChanceList() {
     }
 
     useEffect(() => {
-        getChanceList();
+        getChanceListAPI();
     }, [JSON.stringify(tableParams)])
     return (
         <div>
-            <Card title="商机列表" extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setFormType('add'); }}>添加新商机</Button>}>
+            <Card title="商机列表" extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('add'); }}>添加新商机</Button>}>
                 <Form
                     layout="inline"
-                    form={selectForm}
+                    form={filterForm}
                     onFinish={(values) => {
                         setTableParams({
                             ...tableParams,
@@ -580,7 +546,7 @@ function ChanceList() {
                     <Form.Item label='供货达人名' name='provide_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='联系人' name='liaison_name'><Input /></Form.Item>
                     {localStorage.getItem('position') === '商务' ? null : <Form.Item label='商务' name='uid' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={salemans} onFocus={() => { getSalemans(); }} />
+                        <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemanItemsAPI(); }} />
                     </Form.Item>}
                     <Form.Item label='状态' name='status' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={chanceStatus} />
@@ -589,7 +555,7 @@ function ChanceList() {
                         <Space size={'large'}>
                             <Button type="primary" htmlType="submit">查询</Button>
                             <Button type="primary" onClick={() => {
-                                selectForm.resetFields();
+                                filterForm.resetFields();
                                 setTableParams({
                                     ...tableParams,
                                     filtersDate: [],
@@ -609,7 +575,7 @@ function ChanceList() {
                     onChange={handleTableChange}
                 />
             </Card>
-            <Modal
+            {/* <Modal
                 title={formType == 'add' ? '添加商机' : formType == 'edit' ? '修改商机' : formType == 'advance' ? '推进商机' : formType == 'report' ? '达人合作报备' : ''}
                 open={isShow}
                 width='40%'
@@ -825,7 +791,7 @@ function ChanceList() {
                                             </Form.Item>
                                             {hasFuSaleman ? <Space size='large'>
                                                 <Form.Item label="副商务" {...restField} name={[name, "u_id_2"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <Select style={{ width: 160 }} options={salemans} onFocus={() => { getSalemans(); }} />
+                                                    <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemans(); }} />
                                                 </Form.Item>
                                                 <Form.Item label="副商务提成点（%）" {...restField} name={[name, "u_point_2"]} rules={[{ required: true, message: '不能为空' }]}>
                                                     <InputNumber />
@@ -882,7 +848,7 @@ function ChanceList() {
                             </Form.Item>
                             {hasGroupFuSaleman ? <Space size='large'>
                                 <Form.Item label="副商务" name={"group_u_id_2"} >
-                                    <Select style={{ width: 160 }} options={salemans} onFocus={() => { getSalemans(); }} />
+                                    <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemans(); }} />
                                 </Form.Item>
                                 <Form.Item label="副商务提成点（%）" name={"group_u_point_2"} >
                                     <InputNumber />
@@ -927,7 +893,7 @@ function ChanceList() {
                                 <Form.Item label="副商务" name={"provide_u_id_2"} >
                                     <Select
                                         style={{ width: 160 }}
-                                        options={salemans}
+                                        options={salemansItems}
                                         onFocus={() => { getSalemans(); }}
                                     />
                                 </Form.Item>
@@ -966,62 +932,21 @@ function ChanceList() {
                         <UpLoadImg title="发货盘证明" name="advance_pic" setPicUrl={(value) => { form.setFieldValue('advance_pic', value) }} />
                     </Form.Item> : null}
                 </Form>
-            </Modal>
-            <Modal
-                title='添加新中间人'
-                open={isShowMid}
-                maskClosable={false}
-                onOk={() => { formMid.submit(); }}
-                onCancel={() => { setIsShowMid(false); formMid.resetFields(); setToGongOrSi(false); setCanPiao(false); setPiaoType(false) }}
-            >
-                <Form form={formMid} onFinish={(values) => { addMiddleman(values); }}>
-                    <Form.Item label="类型" name="type" rules={[{ required: true, message: '不能为空' }]}>
-                        <Select placeholder="请选择" options={middleType} />
-                    </Form.Item>
-                    <Form.Item label="中间人名称" name="name" rules={[{ required: true, message: '不能为空' }]}>
-                        <Input placeholder="请输入" />
-                    </Form.Item>
-                    <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '不能为空' }]}>
-                        <Input placeholder="请输入" />
-                    </Form.Item>
-                    <Form.Item label="联系人微信" name="liaison_v" rules={[{ required: true, message: '不能为空' }]}>
-                        <Input placeholder="请输入" />
-                    </Form.Item>
-                    <Form.Item label="联系人电话" name="liaison_phone" rules={[{ required: true, message: '不能为空' }]}>
-                        <Input placeholder="请输入" />
-                    </Form.Item>
-                    <Form.Item label="付款方式" name="pay_way" rules={[{ required: true, message: '不能为空' }]}>
-                        <Radio.Group onChange={(e) => { setToGongOrSi(e.target.value); }} value={toGongOrSi}>
-                            <Radio value={'对公'}>对公</Radio>
-                            <Radio value={'对私'}>对私</Radio>
-                        </Radio.Group>
-                    </Form.Item>
-                    {toGongOrSi === '对公' ? <><Form.Item label="能否开票" name="can_piao" rules={[{ required: true, message: '不能为空' }]}>
-                        <Radio.Group onChange={(e) => { setCanPiao(e.target.value); }} value={canPiao}>
-                            <Radio value={'能'}>能</Radio>
-                            <Radio value={'不能'}>不能</Radio>
-                        </Radio.Group>
-                    </Form.Item>
-                        {canPiao === '能' ? <><Form.Item label="票型" name="piao_type" rules={[{ required: true, message: '不能为空' }]}>
-                            <Radio.Group onChange={(e) => { setPiaoType(e.target.value); }} value={piaoType}>
-                                <Radio value={'专票'}>专票</Radio>
-                                <Radio value={'普票'}>普票</Radio>
-                            </Radio.Group>
-                        </Form.Item>
-                            <Form.Item label="税点（%）" name="shui_point" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber placeholder="请输入" />
-                            </Form.Item></> : null}</> : null}
-                    <Form.Item label="收款姓名" name="pay_name" rules={[{ required: true, message: '不能为空' }]}>
-                        <Input placeholder="请输入" />
-                    </Form.Item>
-                    <Form.Item label="开户行" name="pay_bank" rules={[{ required: true, message: '不能为空' }]}>
-                        <Input placeholder="请输入" />
-                    </Form.Item>
-                    <Form.Item label="收款账号" name="pay_account" rules={[{ required: true, message: '不能为空' }]}>
-                        <Input placeholder="请输入" />
-                    </Form.Item>
-                </Form>
-            </Modal>
+            </Modal> */}
+            <AEAChance
+                isShow={isShow}
+                type={type}
+                form={form}
+                onOK={(values) => { type === 'add' ? addChanceAPI(values) : type === 'edit' ? editChanceAPI(values) : advanceChanceAPI(values) }}
+                onCancel={() => { setIsShow(false); form.resetFields(); }}
+            />
+            <AEMiddleman
+                isShow={isShowMid}
+                type={'add'}
+                form={formMid}
+                onOK={(values) => { addMiddlemanAPI(values) }}
+                onCancel={() => { setIsShowMid(false); formMid.resetFields(); }}
+            />
             <Modal title="报备驳回备注" open={isShowCheckNo} onOk={() => { setIsShowCheckNo(false); }} onCancel={() => { setIsShowCheckNo(false); }}>
                 <TextArea placeholder="请输入" value={checkNoReason} disabled={true} />
             </Modal>
