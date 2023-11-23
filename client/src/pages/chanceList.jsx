@@ -662,7 +662,7 @@ function ChanceList() {
                             </Radio.Group>
                         </Form.Item>
                         {hasFirstMiddle ? <><Space size='large'>
-                            <Form.Item label="一级中间人" name="mid_1" rules={[{ required: true, message: '不能为空' }]}>
+                            <Form.Item label="一级中间人" name="m_id_1" rules={[{ required: true, message: '不能为空' }]}>
                                 <Select showSearch placeholder="请输入" options={middlemans1} filterOption={filterOption} onChange={(value) => { searchMiddleman1(value) }} onSearch={(value) => { searchMiddleman1(value) }} />
                             </Form.Item>
                             <Form.Item label="一级中间人提成点（%）" name="m_point_1" rules={[{ required: true, message: '不能为空' }]}>
@@ -673,7 +673,7 @@ function ChanceList() {
                                 <TextArea />
                             </Form.Item></> : null}
                         {hasSecondMiddle ? <><Space size='large'>
-                            <Form.Item label="二级中间人" name="mid_2" rules={[{ required: true, message: '不能为空' }]}>
+                            <Form.Item label="二级中间人" name="m_id_2" rules={[{ required: true, message: '不能为空' }]}>
                                 <Select showSearch placeholder="请输入" options={middlemans2} filterOption={filterOption} onChange={(value) => { searchMiddleman2(value) }} onSearch={(value) => { searchMiddleman2(value) }} />
                             </Form.Item>
                             <Form.Item label="二级中间人提成点（%）" name="m_point_2" rules={[{ required: true, message: '不能为空' }]}>
@@ -810,7 +810,7 @@ function ChanceList() {
                                                 <TextArea />
                                             </Form.Item>
                                             <Space size='large'>
-                                                <Form.Item label="主商务" {...restField} name={[name, "uid_1"]} >
+                                                <Form.Item label="主商务" {...restField} name={[name, "u_id_1"]} >
                                                     <Input defaultValue={localStorage.getItem('name')} disabled={true} />
                                                 </Form.Item>
                                                 <Form.Item label="主商务提成点（%）" {...restField} name={[name, "u_point_1"]} rules={[{ required: true, message: '不能为空' }]}>
@@ -824,7 +824,7 @@ function ChanceList() {
                                                 </Radio.Group>
                                             </Form.Item>
                                             {hasFuSaleman ? <Space size='large'>
-                                                <Form.Item label="副商务" {...restField} name={[name, "uid_2"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                <Form.Item label="副商务" {...restField} name={[name, "u_id_2"]} rules={[{ required: true, message: '不能为空' }]}>
                                                     <Select style={{ width: 160 }} options={salemans} onFocus={() => { getSalemans(); }} />
                                                 </Form.Item>
                                                 <Form.Item label="副商务提成点（%）" {...restField} name={[name, "u_point_2"]} rules={[{ required: true, message: '不能为空' }]}>
@@ -867,7 +867,7 @@ function ChanceList() {
                                 <TextArea placeholder="请输入" />
                             </Form.Item>
                             <Space size='large'>
-                                <Form.Item label="主商务" name="group_uid_1" >
+                                <Form.Item label="主商务" name="group_u_id_1" >
                                     <Input defaultValue={localStorage.getItem('name')} disabled={true} />
                                 </Form.Item>
                                 <Form.Item label="主商务提成点（%）" name="group_u_point_1" rules={[{ required: true, message: '不能为空' }]}>
@@ -881,7 +881,7 @@ function ChanceList() {
                                 </Radio.Group>
                             </Form.Item>
                             {hasGroupFuSaleman ? <Space size='large'>
-                                <Form.Item label="副商务" name={"group_uid_2"} >
+                                <Form.Item label="副商务" name={"group_u_id_2"} >
                                     <Select style={{ width: 160 }} options={salemans} onFocus={() => { getSalemans(); }} />
                                 </Form.Item>
                                 <Form.Item label="副商务提成点（%）" name={"group_u_point_2"} >
@@ -910,7 +910,7 @@ function ChanceList() {
                                 <TextArea placeholder="请输入" />
                             </Form.Item>
                             <Space size='large'>
-                                <Form.Item label="主商务" name="provide_uid_1" >
+                                <Form.Item label="主商务" name="provide_u_id_1" >
                                     <Input defaultValue={localStorage.getItem('name')} disabled={true} />
                                 </Form.Item>
                                 <Form.Item label="主商务提成点（%）" name="provide_u_point_1" rules={[{ required: true, message: '不能为空' }]}>
@@ -924,7 +924,7 @@ function ChanceList() {
                                 </Radio.Group>
                             </Form.Item>
                             {hasProvideFuSaleman ? <Space size='large'>
-                                <Form.Item label="副商务" name={"provide_uid_2"} >
+                                <Form.Item label="副商务" name={"provide_u_id_2"} >
                                     <Select
                                         style={{ width: 160 }}
                                         options={salemans}

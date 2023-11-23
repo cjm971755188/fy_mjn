@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Modal, Button, Select, Switch, Popconfirm, Cascader, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import { company, department, position, combine } from '../baseData/user'
+import { Card, Table, Space, Form, Input, Button, Select, Popconfirm, message } from 'antd';
+import { PlusOutlined, PauseCircleTwoTone, ExclamationCircleTwoTone } from '@ant-design/icons';
+import { company, department, position } from '../baseData/user'
+import AEUser from '../components/modals/AEUser'
 
 function UserList() {
+    // 表格：格式
     const columns = [
         { title: '编号', dataIndex: 'uid', key: 'uid' },
         { title: '姓名', dataIndex: 'name', key: 'name' },
@@ -17,37 +19,11 @@ function UserList() {
             dataIndex: 'status',
             key: 'status',
             render: (_, record) => (
-                <Switch
-                    defaultChecked={() => {
-                        if (record.status == '1') {
-                            return true
-                        } else {
-                            return false
-                        }
-                    }}
-                    onChange={(checked) => {
-                        request({
-                            method: 'post',
-                            url: '/user/editUserStatus',
-                            data: {
-                                uid: record.uid,
-                                checked: checked
-                            }
-                        }).then((res) => {
-                            if (res.status == 200) {
-                                if (res.data.code == 200) {
-                                    fetchData();
-                                    message.success(res.data.msg)
-                                } else {
-                                    message.error(res.data.msg)
-                                }
-                            }
-                        }).catch((err) => {
-                            console.error(err)
-                        })
-                    }}
-                />
-            ),
+                <Space size={'middle'}>
+                    {record.status === '正常' ? <PauseCircleTwoTone twoToneColor="#4ec9b0" /> : <ExclamationCircleTwoTone twoToneColor="#f81d22" />}
+                    <span>{record.status}</span>
+                </Space>
+            )
         },
         {
             title: '操作',
@@ -55,47 +31,46 @@ function UserList() {
             render: (_, record) => (
                 <Space size="middle">
                     <a onClick={() => {
-                        let combine = [ record.company, record.department, record.position ]
-                        editForm.setFieldsValue({
+                        let combine = [record.company, record.department, record.position]
+                        form.setFieldsValue({
                             ...record,
                             combine
                         })
-                        setIsShowEdit(true)
+                        setType('edit');
+                        setIsShow(true);
                     }}>修改信息</a>
+                    {record.status === '正常' ? <a onClick={() => {
+                        let payload = {
+                            uid: record.uid,
+                            type: false
+                        }
+                        editUserStatusAPI(payload);
+                    }}>禁用</a> : <a onClick={() => {
+                        let payload = {
+                            uid: record.uid,
+                            type: true
+                        }
+                        editUserStatusAPI(payload);
+                    }}>恢复正常</a>}
                     <Popconfirm
                         title="确认要删除该用户吗"
-                        onConfirm={() => {
-                            request({
-                                method: 'post',
-                                url: '/user/deleteUser',
-                                data: {
-                                    uid: record.uid,
-                                    name: record.name,
-                                }
-                            }).then((res) => {
-                                if (res.status == 200) {
-                                    if (res.data.code == 200) {
-                                        fetchData();
-                                        message.success(res.data.msg)
-                                    } else {
-                                        message.error(res.data.msg)
-                                    }
-                                }
-                            }).catch((err) => {
-                                console.error(err)
-                            })
-                        }}
                         okText="删除"
                         cancelText="取消"
+                        onConfirm={() => {
+                            let payload = {
+                                uid: record.uid,
+                                name: record.name
+                            }
+                            deleteUserAPI(payload);
+                        }}
                     >
-                        <a onClick={() => { }}>删除</a>
+                        <a>删除</a>
                     </Popconfirm>
                 </Space>
             ),
         }
     ]
-
-    // 传入数据，分页
+    // 表格：获取数据、分页
     const [data, setData] = useState();
     const [loading, setLoading] = useState(false);
     const [tableParams, setTableParams] = useState({
@@ -105,23 +80,24 @@ function UserList() {
             pageSize: 10
         }
     });
-    const fetchData = () => {
-        setLoading(true)
+    const [filterForm] = Form.useForm()
+    const getUserListAPI = () => {
+        setLoading(true);
         request({
             method: 'post',
             url: '/user/getUserList',
             data: {
+                filters: tableParams.filters,
+                pagination: {
+                    current: tableParams.pagination.current - 1,
+                    pageSize: tableParams.pagination.pageSize,
+                },
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
                     position: localStorage.getItem('position')
-                },
-                filters: tableParams.filters,
-                pagination: {
-                    current: tableParams.pagination.current - 1,
-                    pageSize: tableParams.pagination.pageSize,
                 }
             }
         }).then((res) => {
@@ -135,7 +111,7 @@ function UserList() {
                             ...tableParams.pagination,
                             total: res.data.pagination.total,
                         },
-                })
+                    })
                 } else {
                     message.error(res.data.msg)
                 }
@@ -155,35 +131,99 @@ function UserList() {
         }
     }
 
-    // 添加新用户
-    const [isShowAdd, setIsShowAdd] = useState(false)
-    const [addForm] = Form.useForm()
-
-    // 修改用户信息
-    const [isShowEdit, setIsShowEdit] = useState(false)
-    const [editForm] = Form.useForm()
-
-    // 查询、清空筛选
-    const [selectForm] = Form.useForm()
+    // 用户：添加、修改、删除
+    const [type, setType] = useState(false)
+    const [isShow, setIsShow] = useState(false)
+    const [form] = Form.useForm()
+    const addUserAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/user/addUser',
+            data: payload
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShow(false);
+                    getUserListAPI();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const editUserAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/user/editUser',
+            data: payload
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShow(false)
+                    getUserListAPI();
+                    form.resetFields();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const editUserStatusAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/user/editUserStatus',
+            data: payload
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    getUserListAPI();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const deleteUserAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/user/deleteUser',
+            data: payload
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    getUserListAPI();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     useEffect(() => {
-        fetchData();
+        getUserListAPI();
     }, [JSON.stringify(tableParams)])
     return (
-        <div>
-            <Card
-                title="用户列表"
-                extra={
-                    <div>
-                        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShowAdd(true) }}>
-                            添加新用户
-                        </Button>
-                    </div>
-                }
+        <Fragment>
+            <Card title="用户列表"
+                extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => { setType('add'); setIsShow(true); }}>添加新用户</Button>}
             >
-                <Form
-                    layout="inline"
-                    form={selectForm}
+                <Form layout="inline" form={filterForm}
                     onFinish={(values) => {
                         setTableParams({
                             ...tableParams,
@@ -191,23 +231,23 @@ function UserList() {
                         })
                     }}
                 >
-                    <Form.Item label='编号' name='uid' style={{marginBottom: '20px'}}><Input /></Form.Item>
-                    <Form.Item label='姓名' name='name' style={{marginBottom: '20px'}}><Input /></Form.Item>
-                    <Form.Item label='手机号' name='phone' style={{marginBottom: '20px'}}><Input /></Form.Item>
-                    <Form.Item label='公司' name='company' style={{marginBottom: '20px'}}>
+                    <Form.Item label='编号' name='uid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='姓名' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='手机号' name='phone' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='公司' name='company' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={company} />
                     </Form.Item>
-                    <Form.Item label='部门' name='department' style={{marginBottom: '20px'}}>
+                    <Form.Item label='部门' name='department' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={department} />
                     </Form.Item>
-                    <Form.Item label='职位' name='position' style={{marginBottom: '20px'}}>
+                    <Form.Item label='职位' name='position' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={position} />
                     </Form.Item>
                     <Form.Item>
                         <Space size={'middle'}>
                             <Button type="primary" htmlType="submit">查询</Button>
                             <Button type="primary" onClick={() => {
-                                selectForm.resetFields();
+                                filterForm.resetFields();
                                 setTableParams({
                                     ...tableParams,
                                     filters: {}
@@ -226,96 +266,14 @@ function UserList() {
                     onChange={handleTableChange}
                 />
             </Card>
-            <Modal
-                title='添加新用户'
-                open={isShowAdd}
-                maskClosable={false}
-                onOk={() => { addForm.submit() }}
-                onCancel={() => setIsShowAdd(false)}
-            >
-                <Form
-                    form={addForm}
-                    onFinish={(values) => {
-                        request({
-                            method: 'post',
-                            url: '/user/addUser',
-                            data: values
-                        }).then((res) => {
-                            if (res.status == 200) {
-                                if (res.data.code == 200) {
-                                    setIsShowAdd(false)
-                                    addForm.resetFields();
-                                    fetchData();
-                                    message.success(res.data.msg)
-                                } else {
-                                    message.error(res.data.msg)
-                                }
-                            } else {
-                                message.error(res.data.msg)
-                            }
-                        }).catch((err) => {
-                            console.error(err)
-                        })
-                    }}
-                >
-                    <Form.Item label="姓名" name="name" rules={[ { required: true, message: '不能为空' } ]}>
-                        <Input placeholder="请输入新用户姓名" />
-                    </Form.Item>
-                    <Form.Item label="手机号（钉钉）" name="phone" rules={[ { required: true, message: '不能为空' } ]}>
-                        <Input placeholder="请输入新用户手机号" />
-                    </Form.Item>
-                    <Form.Item label="岗位" name="combine" rules={[ { required: true, message: '不能为空' } ]}>
-                        <Cascader options={combine} placeholder="请选择该用户岗位" />
-                    </Form.Item>
-                </Form>
-            </Modal>
-            <Modal
-                title='修改用户信息'
-                open={isShowEdit}
-                maskClosable={false}
-                onOk={() => { editForm.submit() }}
-                onCancel={() => { setIsShowEdit(false) }}
-            >
-                <Form
-                    form={editForm}
-                    onFinish={(values) => {
-                        request({
-                            method: 'post',
-                            url: '/user/editUser',
-                            data: values
-                        }).then((res) => {
-                            if (res.status == 200) {
-                                if (res.data.code == 200) {
-                                    setIsShowEdit(false)
-                                    editForm.resetFields();
-                                    fetchData();
-                                    message.success(res.data.msg)
-                                } else {
-                                    message.error(res.data.msg)
-                                }
-                            } else {
-                                message.error(res.data.msg)
-                            }
-                        }).catch((err) => {
-                            console.error(err)
-                        })
-                    }}
-                >
-                    <Form.Item label="编号" name="uid" rules={[{ required: true }]}>
-                        <Input disabled={true} />
-                    </Form.Item>
-                    <Form.Item label="姓名" name="name" rules={[ { required: true, message: '姓名不能为空' } ]}>
-                        <Input />
-                    </Form.Item>
-                    <Form.Item label="手机号" name="phone" rules={[{ required: true }]}>
-                        <Input />
-                    </Form.Item>
-                    <Form.Item label="岗位" name="combine" rules={[ { required: true, message: '岗位不能为空' } ]}>
-                        <Cascader options={combine} placeholder="请选择该用户岗位" />
-                    </Form.Item>
-                </Form>
-            </Modal>
-        </div>
+            <AEUser
+                type={type}
+                isShow={isShow}
+                form={form}
+                onOK={(values) => { type === 'add' ? addUserAPI(values) : editUserAPI(values) }}
+                onCancel={() => { setIsShow(false); form.resetFields(); }}
+            />
+        </Fragment>
     )
 }
 

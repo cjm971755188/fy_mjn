@@ -6,17 +6,14 @@ const db = require('../config/db')
 // 获取中间人列表
 router.post('/getMiddlemanList', (req, res) => {
     let params = req.body
-    let where = `where u.status != '2'`
+    let where = `where u.status != '失效'`
     // 权限筛选
-    if (params.userInfo.position != '管理员') {
-        if (params.userInfo.company != '总公司') {
-            where += ` and u.company = '${params.userInfo.company}'`
-        }
-        if (params.userInfo.department != '总裁办') {
+    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
+        if (params.userInfo.position === '副总') {
             where += ` and u.department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.position != '主管') {
-            where += ` and u.uid = '${params.userInfo.uid}'`
+        if (params.userInfo.department != '主管') {
+            where += ` and u.department = '${params.userInfo.department}' and u.company = '${params.userInfo.company}'`
         }
     }
     // 条件筛选
@@ -36,10 +33,10 @@ router.post('/getMiddlemanList', (req, res) => {
     if (params.pagination.pageSize) {
         pageSize = params.pagination.pageSize
     }
-    let sql = `SELECT * FROM middleman m LEFT JOIN user u on u.uid = m.uid ${where} order by m.mid`
+    let sql = `SELECT * FROM middleman m LEFT JOIN user u on u.uid = m.u_id ${where} order by m.mid`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        let sql = `SELECT m.*, u.name as u_name FROM middleman m LEFT JOIN user u on u.uid = m.uid ${where} order by mid desc limit ${pageSize} offset ${current * pageSize}`
+        let sql = `SELECT m.*, u.name as u_name FROM middleman m LEFT JOIN user u on u.uid = m.u_id ${where} order by mid desc limit ${pageSize} offset ${current * pageSize}`
         db.query(sql, (err, r) => {
             if (err) throw err;
             res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: `` })
@@ -51,10 +48,10 @@ router.post('/getMiddlemanList', (req, res) => {
 // 添加中间人
 router.post('/addMiddleman', (req, res) => {
     let params = req.body
-    let sql = `SELECT * FROM middleman WHERE uid = '${params.userInfo.uid}' and name = '${params.name}'`
+    let sql = `SELECT * FROM middleman WHERE u_id = '${params.userInfo.uid}' and name = '${params.name}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        if (results.length > 0) {
+        if (results.length !== 0) {
             res.send({ code: 201, data: {}, msg: `${params.name} 已存在` })
         } else {
             let sql = `SELECT * FROM middleman`
@@ -77,7 +74,7 @@ router.post('/addMiddleman', (req, res) => {
 // 修改中间人信息
 router.post('/editMiddleman', (req, res) => {
     let params = req.body
-    let sql = `SELECT * FROM middleman WHERE uid = '${params.userInfo.uid}' and name = '${params.name}' and mid != '${params.mid}'`
+    let sql = `SELECT * FROM middleman WHERE u_id = '${params.userInfo.uid}' and name = '${params.name}' and mid != '${params.mid}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
         if (results.length > 0) {
@@ -86,7 +83,6 @@ router.post('/editMiddleman', (req, res) => {
             let can_piao = params.can_piao ? `'${params.can_piao}'` : null
             let piao_type = params.piao_type ? `'${params.piao_type}'` : null
             let shui_point = params.shui_point ? `'${params.shui_point}'` : null
-            console.log(params.piao_type, piao_type);
             let sql = `UPDATE middleman SET type = '${params.type}', name = '${params.name}', liaison_name = '${params.liaison_name}', liaison_v = '${params.liaison_v}', liaison_phone = '${params.liaison_phone}', pay_way = '${params.pay_way}', can_piao = ${can_piao}, piao_type = ${piao_type}, shui_point = ${shui_point}, pay_name = '${params.pay_name}', pay_bank = '${params.pay_bank}', pay_account = '${params.pay_account}' WHERE mid = '${params.mid}'`
             db.query(sql, (err, results) => {
                 if (err) throw err;
@@ -96,7 +92,7 @@ router.post('/editMiddleman', (req, res) => {
     })
 })
 
-// 搜索所有中间人
+// 搜索中间人
 router.post('/searchMiddlemans', (req, res) => {
     let params = req.body
     let sql = `SELECT * FROM middleman WHERE name like '%${params.value}%' and uid = '${params.userInfo.uid}'`

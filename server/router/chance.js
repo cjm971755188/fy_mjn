@@ -78,7 +78,7 @@ router.post('/searchSameChance', (req, res) => {
               LEFT JOIN talent t ON t.tid = td.tid 
               LEFT JOIN talentline tl ON tl.tdid = td.tdid 
               INNER JOIN (SELECT MAX(date_line) as date FROM talentline GROUP BY tdid) tl2 on tl2.date = tl.date_line 
-              LEFT JOIN user u ON u.uid = tl.uid_1
+              LEFT JOIN user u ON u.uid = tl.u_id_1
             WHERE t.talent_status != '已失效' and (td.account_id = ${params.account_id} or td.account_name = ${params.account_name})`
   }
   db.query(sql, (err, results) => {
@@ -167,10 +167,10 @@ router.post('/advanceChance', (req, res) => {
 router.post('/reportChance', (req, res) => {
   let time = dayjs().valueOf()
   let params = req.body
-  let mid_1 = params.mid_1 ? `'${params.mid_1}'` : null
+  let m_id_1 = params.m_id_1 ? `'${params.m_id_1}'` : null
   let m_point_1 = params.m_point_1 ? `'${params.m_point_1}'` : null
   let m_note_1 = params.m_note_1 ? `'${params.m_note_1}'` : null
-  let mid_2 = params.mid_2 ? `'${params.mid_2}'` : null
+  let m_id_2 = params.m_id_2 ? `'${params.m_id_2}'` : null
   let m_point_2 = params.m_point_2 ? `'${params.m_point_2}'` : null
   let m_note_2 = params.m_note_2 ? `'${params.m_note_2}'` : null
   let sql = `SELECT * FROM talent`
@@ -195,11 +195,11 @@ router.post('/reportChance', (req, res) => {
               let tdid = 'TD' + `${count_d + i + 1}`.padStart(5, '0')
               let tlid = 'TL' + `${count_l + i + 1}`.padStart(5, '0')
               let keyword = params.accounts[i].keyword ? `'${params.accounts[i].keyword}'` : null
-              let uid_2 = params.accounts[i].uid_2 ? `'${params.accounts[i].uid_2}'` : null
+              let u_id_2 = params.accounts[i].u_id_2 ? `'${params.accounts[i].u_id_2}'` : null
               let u_point_2 = params.accounts[i].u_point_2 ? `'${params.accounts[i].u_point_2}'` : null
               let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
               sql_d += `('${tdid}', '${tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', null, null, '待审批'),`
-              sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', '${params.accounts[i].commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${u_note}, ${mid_1}, ${m_point_1}, ${m_note_1}, ${mid_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null, null),`
+              sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', '${params.accounts[i].commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, null, null, ${u_note}, ${m_id_1}, ${m_point_1}, ${m_note_1}, ${m_id_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null, null),`
             }
             count_d += params.accounts.length
             count_l += params.accounts.length
@@ -207,22 +207,22 @@ router.post('/reportChance', (req, res) => {
           if (params.group_name) {
             let tdid = 'TD' + `${count_d + 1}`.padStart(5, '0')
             let tlid = 'TL' + `${count_l + 1}`.padStart(5, '0')
-            let uid_2 = params.group_uid_2 ? `'${params.group_uid_2}'` : null
+            let u_id_2 = params.group_u_id_2 ? `'${params.group_u_id_2}'` : null
             let u_point_2 = params.group_u_point_2 ? `'${params.group_u_point_2}'` : null
             let group_u_note = params.group_u_note ? `'${params.group_u_note}'` : null
             sql_d += `('${tdid}', '${tid}', '社群团购', '${params.group_shop}', null, null, null, null, null, null, null, null, null, null, '${params.group_name}', null, '待审批'),`
-            sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${group_u_note}, ${mid_1}, ${m_point_1}, ${m_note_1}, ${mid_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null, null),`
+            sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, null, null, ${group_u_note}, ${m_id_1}, ${m_point_1}, ${m_note_1}, ${m_id_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null, null),`
             count_d += 1
             count_l += 1
           }
           if (params.provide_name) {
             let tdid = 'TD' + `${count_d + 1}`.padStart(5, '0')
             let tlid = 'TL' + `${count_l + 1}`.padStart(5, '0')
-            let uid_2 = params.provide_uid_2 ? `'${params.provide_uid_2}'` : null
+            let u_id_2 = params.provide_u_id_2 ? `'${params.provide_u_id_2}'` : null
             let u_point_2 = params.provide_u_point_2 ? `'${params.provide_u_point_2}'` : null
             let provide_u_note = params.provide_u_note ? `'${params.provide_u_note}'` : null
             sql_d += `('${tdid}', '${tid}', '供货', '${params.provide_shop}', null, null, null, null, null, null, null, null, null, null, null, '${params.provide_name}', '待审批'),`
-            sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${uid_2}, ${u_point_2}, null, null, ${provide_u_note}, ${mid_1}, ${m_point_1}, ${m_note_1}, ${mid_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null, null),`
+            sql_l += `('${tlid}', '${params.userInfo.uid}', '报备', null, '${tdid}', ${time}, null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, null, null, ${provide_u_note}, ${m_id_1}, ${m_point_1}, ${m_note_1}, ${m_id_2}, ${m_point_2}, ${m_note_2}, '暂无', null, null, null, null, null),`
             count_d += 1
             count_l += 1
           }
