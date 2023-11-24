@@ -58,136 +58,27 @@ router.post('/getTalentList', (req, res) => {
                 ) z ${whereFilter}`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        res.send({ code: 200, data: results.slice(current*pageSize, (current + 1)*pageSize), pagination: { ...params.pagination, total: results.length }, msg: `` })
+        res.send({ code: 200, data: results.slice(current * pageSize, (current + 1) * pageSize), pagination: { ...params.pagination, total: results.length }, msg: `` })
     })
 })
 
 // 达人详情
-router.post('/getDetail', (req, res) => {
+router.post('/getTalentDetail', (req, res) => {
     let params = req.body
-    let sql = `SELECT	a.tid as '达人编号', a.talent_name as '达人昵称', a.year_deal as '年成交额', a.talent_status as '达人状态', 
-                    a.liaison_type as '联系人类型', a.liaison_name as '联系人姓名', a.liaison_v as '联系人微信', a.liaison_phone as '联系人电话', a.crowd_name as '沟通群', 
-                    a.m_id_1 as '一级中间人编号', m1.type as '一级中间人类型', m1.name as '一级中间人昵称', a.m_point_1 as '一级中间人提成点', a.m_note_1 as '一级中间人提点备注', m1.liaison_name as '一级中间人联系姓名', m1.liaison_v as '一级中间人联系微信', m1.liaison_phone as '一级中间人联系电话', m1.pay_way as '一级中间人付款方式', m1.can_piao as '一级中间人能否开票', m1.piao_type as '一级中间人票型', m1.shui_point as '一级中间人税点', m1.pay_name as '一级中间人付款姓名', m1.pay_bank as '一级中间人付款开户行', m1.pay_account as '一级中间人付款账号', 
-                    a.m_id_2 as '二级中间人编号', m2.type as '二级中间人类型', m2.name as '二级中间人昵称', a.m_point_2 as '二级中间人提成点', a.m_note_2 as '二级中间人提点备注', m2.liaison_name as '二级中间人联系姓名', m2.liaison_v as '二级中间人联系微信', m2.liaison_phone as '二级中间人联系电话', m2.pay_way as '二级中间人付款方式', m2.can_piao as '二级中间人能否开票', m2.piao_type as '二级中间人票型', m2.shui_point as '二级中间人税点', m2.pay_name as '二级中间人付款姓名', m2.pay_bank as '二级中间人付款开户行', m2.pay_account as '二级中间人付款账号', 
-                    a.yearpay_start as '年框生效日期', a.yearpay_cycle as '年框付款周期', a.yearpay_point as '年框返点', a.yearpay_file as '年框合同', a.yearpay_status as '年框状态'
-                FROM (
-                    SELECT DISTINCT t.*, c.liaison_type, c.liaison_name, c.liaison_v, c.liaison_phone, c.crowd_name, tl.m_id_1, tl.m_point_1, tl.m_note_1, tl.m_id_2, tl.m_point_2, tl.m_note_2, tl.yearpay_status, tl.yearpay_start, tl.yearpay_cycle, tl.yearpay_point, tl.yearpay_file
-                    FROM talent t 
-                        LEFT JOIN chance c ON t.cid = c.cid 
-                        LEFT JOIN talentdetail td ON t.tid = td.tid 
-                        LEFT JOIN talentline tl ON td.tdid = tl.tdid 
-                        INNER JOIN (SELECT DISTINCT MAX(date_line) as date FROM talentline WHERE type NOT LIKE '%驳回%' GROUP BY tdid) tl2 ON tl2.date = tl.date_line
-                    WHERE t.tid = '${params.tid}' and t.talent_status != '已失效' and td.detail_status != '已失效'
-                    LIMIT 1
-                ) a
-                    LEFT JOIN middleman m1 ON a.m_id_1 = m1.mid 
-                    LEFT JOIN middleman m2 ON a.m_id_2 = m2.mid`
+    let sql = `SELECT t.*, ts.*
+                FROM talent t
+                    LEFT JOIN (
+                            SELECT ts0.tid, ts0.tsid, ts0.yearbox_start_date, ts0.yearbox_point, ts0.yearbox_cycle, ts0.yearbox_pic, 
+                                ts0.m_id_1, m1.type as m_type_1, m1.name as m_name_1, ts0.m_point_1, ts0.m_id_2, m2.type as m_type_2, m2.name as m_name_2, ts0.m_point_2, ts0.m_note
+                            FROM talent_schedule ts0
+                                    LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' GROUP BY tid) ts1 ON ts1.tsid = ts0.tsid
+                                    LEFT JOIN middleman m1 ON m1.mid = ts0.m_id_1
+                                    LEFT JOIN middleman m2 ON m2.mid = ts0.m_id_2
+                    ) ts ON ts.tid = t.tid
+                WHERE t.tid = '${params.tid}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        let base = [], year = [], liaison = [], middle1 = [], middle2 = [], i = 0
-        for (const key in results[0]) {
-            if (Object.hasOwnProperty.call(results[0], key)) {
-                const element = {
-                    key: i,
-                    label: key.replace('联系人', '').replace('一级中间人', '').replace('二级中间人', '').replace('年框', ''),
-                    children: results[0][key]
-                };
-                if (i >= 4 && i <= 8) {
-                    liaison.push(element)
-                } else if (i >= 9 && i <= 23) {
-                    if (i === 17) {
-                        element.children = element.children ? '对公' : '对私'
-                    }
-                    if (i === 18) {
-                        element.children = element.children ? '能' : '不能'
-                    }
-                    if (i === 19) {
-                        element.children = element.children ? '专票' : element.children === false ? '普票' : null
-                    }
-                    middle1.push(element)
-                } else if (i >= 24 && i <= 38) {
-                    if (i === 32) {
-                        element.children = element.children ? '对公' : '对私'
-                    }
-                    if (i === 33) {
-                        element.children = element.children ? '能' : '不能'
-                    }
-                    if (i === 34) {
-                        element.children = element.children ? '专票' : element.children === false ? '普票' : null
-                    }
-                    middle2.push(element)
-                } else if (i >= 39 && i <= 44) {
-                    year.push(element)
-                } else {
-                    base.push(element)
-                }
-            }
-            i++
-        }
-        let sql = `SELECT DISTINCT td.tdid as '达人合作编号', td.model as '模式', td.platform_shop as '平台店铺', 
-                        td.account_id as '账号ID', td.account_name as '账号名称', td.account_type as '账号类型', td.account_models as '销售模式', td.keyword as '关键字（前后缀）', td.people_count as '平时带货人数', td.fe_proportion as '女粉占比', td.age_cuts as '粉丝主购年龄段', td.main_province as '主要地区', td.price_cut as '客单价', tl.commission_normal as '常规品线上佣金', tl.commission_welfare as '福利品线上佣金', tl.commission_bao as '爆品线上佣金', tl.commission_note as '佣金备注', 
-                        tl.discount_normal as '常规品折扣', tl.discount_welfare as '福利品折扣', tl.discount_bao as '爆品折扣', tl.discount_note as '社群团购折扣备注', 
-                        tl.discount_buyout as '买断折扣', tl.discount_back as '含退货折扣', tl.discount_label as '供货折扣备注',
-                        u1.uid as '主商务编码', u1.name as '主商务', tl.u_point_1 as '主商务提成点', u2.uid as '副商务编码', u2.name as '副商务', tl.u_point_2 as '副商务提成点', tl.u_note as '商务提点备注'
-                    FROM talentdetail td 
-                        LEFT JOIN talentline tl ON td.tdid = tl.tdid 
-                        INNER JOIN (SELECT DISTINCT MAX(date_line) as date FROM talentline GROUP BY tdid) tl2 ON tl2.date = tl.date_line
-                        LEFT JOIN user u1 ON u1.uid = tl.u_id_1 
-                        LEFT JOIN user u2 ON u2.uid = tl.u_id_2 
-                    WHERE td.tid = '${params.tid}' and td.detail_status != '已失效'
-                    ORDER BY td.tdid DESC`
-        db.query(sql, (err, results) => {
-            if (err) throw err;
-            let models = []
-            for (let j = 0; j < results.length; j++) {
-                let model = [], k = 0
-                for (const key in results[j]) {
-                    if (Object.hasOwnProperty.call(results[j], key)) {
-                        const element = {
-                            key: k,
-                            label: key.replace('社群团购', '').replace('供货团购', ''),
-                            children: results[j][key]
-                        };
-                        if (k <= 2 || k >= 24) {
-                            model.push(element)
-                        }
-                        if (k === 16 || k === 20) {
-                            element.span = 2
-                        }
-                        if (k === 23) {
-                            element.span = 3
-                        }
-                        if (results[j]['模式'] === '社群团购') {
-                            if ((k >= 17 && k <= 20)) {
-                                model.push(element)
-                            }
-                        } else if (results[j]['模式'] === '供货') {
-                            if ((k >= 21 && k <= 23)) {
-                                model.push(element)
-                            }
-                        } else {
-                            if (k >= 3 && k <= 16) {
-                                model.push(element)
-                            }
-                        }
-                    }
-                    k++
-                }
-                models.push(model)
-            }
-            let sql = `SELECT	group_concat(tl.tlid) as tlids, u.name, tl.type, tl.note, t.talent_name, tl.date_line as date
-                        FROM	talentline tl 
-                            LEFT JOIN talentdetail td ON tl.tdid = td.tdid
-                            LEFT JOIN talent t ON t.tid = td.tid
-                            LEFT JOIN user u ON tl.uid = u.uid
-                        WHERE t.cid = '${params.cid}'
-                        GROUP BY u.name, tl.type, tl.note, t.talent_name, tl.date_line
-                        ORDER BY tl.date_line`
-            db.query(sql, (err, results) => {
-                if (err) throw err;
-                res.send({ code: 200, data: { base, liaison, middle1, middle2, year, models, line: results }, msg: '' })
-            })
-        })
+        res.send({ code: 200, data: results[0], msg: '' })
     })
 })
 

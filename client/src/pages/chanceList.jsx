@@ -4,7 +4,8 @@ import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Po
 import { PlusOutlined, CheckCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone } from '@ant-design/icons';
 import { chanceStatus, model } from '../baseData/talent'
 import MyDateSelect from '../components/MyDateSelect'
-import AEAChance from '../components/modals/AEAChance'
+import AEChance from '../components/modals/AEChance'
+import AELiaison from '../components/modals/AELiaison'
 import AETalent from '../components/modals/AETalent'
 
 const { TextArea } = Input;
@@ -84,7 +85,7 @@ function ChanceList() {
                         }
                         setType('edit');
                         setIsShow(true)
-                    }}>修改信息</a> : null}
+                    }}>修改模式</a> : null}
                     {advancePower && record.status === '待推进' ? <a onClick={() => {
                         let models = record.models.split(',')
                         setType('advance');
@@ -92,8 +93,13 @@ function ChanceList() {
                             ...record,
                             models
                         })
-                        setIsShow(true)
+                        setIsShowLiaison(true)
                     }}>推进</a> : null}
+                    {editPower && record.status === '待报备' ? <a onClick={() => {
+                        form.setFieldsValue(record)
+                        setType('edit');
+                        setIsShowLiaison(true)
+                    }}>修改联系人</a> : null}
                     {reportPower && record.status === '待报备' ? <a onClick={() => {
                         let models = record.models.split(',')
                         let platformList = []
@@ -304,6 +310,7 @@ function ChanceList() {
             console.error(err)
         })
     }
+    const [isShowLiaison, setIsShowLiaison] = useState(false)
     const advanceChanceAPI = (payload) => {
         request({
             method: 'post',
@@ -322,7 +329,7 @@ function ChanceList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setIsShow(false);
+                    setIsShowLiaison(false);
                     setType('');
                     getChanceListAPI();
                     form.resetFields();
@@ -464,12 +471,19 @@ function ChanceList() {
                     onChange={handleTableChange}
                 />
             </Card>
-            <AEAChance
+            <AEChance
                 isShow={isShow}
                 type={type}
                 form={form}
                 onOK={(values) => { type === 'add' ? addChanceAPI(values) : type === 'edit' ? editChanceAPI(values) : advanceChanceAPI(values) }}
                 onCancel={() => { setIsShow(false); form.resetFields(); setType(''); }}
+            />
+            <AELiaison
+                isShow={isShowLiaison}
+                type={type}
+                form={form}
+                onOK={(values) => { advanceChanceAPI(values); }}
+                onCancel={() => { setIsShowLiaison(false); form.resetFields(); setType(''); }}
             />
             <AETalent
                 isShow={isShowReport}

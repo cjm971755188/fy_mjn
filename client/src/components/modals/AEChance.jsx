@@ -3,9 +3,9 @@ import request from '../../service/request'
 import { Card, Space, Form, Input, Modal, Button, Image, List, Select, message } from 'antd';
 import { model, platform, liaisonType } from '../../baseData/talent'
 import people from '../../assets/people.jpg'
-import UpLoadImg from '../../components/UpLoadImg'
+import UpLoadImg from '../UpLoadImg'
 
-function AEAChance(props) {
+function AEChance(props) {
     const { type, isShow, form } = props;
 
     const [isShowPlatform, setIsShowPlatform] = useState(false)
@@ -126,33 +126,9 @@ function AEAChance(props) {
                 {type == 'add' ? <Form.Item label="寻找证明" name="search_pic" rules={[{ required: true, message: '不能为空' }]} >
                     <UpLoadImg title="上传寻找证明" name="addSearchPic" setPicUrl={(value) => { form.setFieldValue('search_pic', value) }} />
                 </Form.Item> : null}
-                {type == 'advance' || (type == 'edit' && form.getFieldValue('status') == '已推进') ? <><Form.Item label="联系人类型" name="liaison_type" rules={[{ required: true, message: '不能为空' }]}>
-                    <Select
-                        allowClear
-                        style={{ width: '100%' }}
-                        placeholder="请选择"
-                        onChange={(value) => { form.setFieldValue('liaison_type', value) }}
-                        options={liaisonType}
-                    />
-                </Form.Item>
-                    <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '不能为空' }]}>
-                        <Input placeholder="请输入" />
-                    </Form.Item>
-                    <Form.Item label="联系人微信" name="liaison_v" rules={[{ required: true, message: '不能为空' }]}>
-                        <Input placeholder="请输入" />
-                    </Form.Item>
-                    <Form.Item label="联系人电话（选填）" name="liaison_phone">
-                        <Input placeholder="请输入" />
-                    </Form.Item>
-                    <Form.Item label="沟通群名称" name="crowd_name" rules={[{ required: true, message: '不能为空' }]}>
-                        <Input placeholder="请输入" />
-                    </Form.Item></> : null}
-                {type == 'advance' ? <Form.Item label="发货盘证明" name="advance_pic" rules={[{ required: true, message: '不能为空' }]} >
-                    <UpLoadImg title="发货盘证明" name="advance_pic" setPicUrl={(value) => { form.setFieldValue('advance_pic', value) }} />
-                </Form.Item> : null}
             </Form>
         </Modal>
     )
 }
 
-export default AEAChance
+export default AEChance
