@@ -95,7 +95,7 @@ router.post('/editMiddleman', (req, res) => {
 // 搜索中间人
 router.post('/searchMiddlemans', (req, res) => {
     let params = req.body
-    let sql = `SELECT * FROM middleman WHERE name like '%${params.value}%' and uid = '${params.userInfo.uid}'`
+    let sql = `SELECT * FROM middleman WHERE name like '%${params.value}%' and u_id = '${params.userInfo.uid}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let middlemans = []

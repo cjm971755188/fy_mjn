@@ -21,6 +21,7 @@ function Login() {
                     localStorage.setItem('company', res.data.data.company)
                     localStorage.setItem('department', res.data.data.department)
                     localStorage.setItem('position', res.data.data.position)
+                    localStorage.setItem('e_id', res.data.data.e_id)
                     message.success('登录成功')
                     navigate('/admin/workbench')
                 } else if (res.data.code == 202) {

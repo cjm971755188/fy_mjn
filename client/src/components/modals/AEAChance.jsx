@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import request from '../../service/request'
-import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, Radio, InputNumber, message } from 'antd';
-import { PlusOutlined, CheckCircleTwoTone, ClockCircleTwoTone, MinusCircleOutlined, PlayCircleTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
-import { chanceStatus, model, platform, liaisonType, accountType, accountModelType, ageCut, priceCut, middleType, yearDealType } from '../../baseData/talent'
+import { Card, Space, Form, Input, Modal, Button, Image, List, Select, message } from 'antd';
+import { model, platform, liaisonType } from '../../baseData/talent'
 import people from '../../assets/people.jpg'
 import UpLoadImg from '../../components/UpLoadImg'
 
@@ -38,6 +37,11 @@ function AEAChance(props) {
         })
     }
 
+    useEffect(() => {
+        setIsShowPlatform(form.getFieldValue('models') && form.getFieldValue('models').join(',').match('线上平台') ? true : false)
+        setIsShowGroup(form.getFieldValue('models') && form.getFieldValue('models').join(',').match('社群团购') ? true : false)
+        setIsShowProvide(form.getFieldValue('models') && form.getFieldValue('models').join(',').match('供货') ? true : false)
+    }, [isShow])
     return (
         <Modal
             title={type == 'add' ? '添加商机' : type == 'edit' ? '修改商机' : type == 'advance' ? '推进商机' : ''}
@@ -45,7 +49,7 @@ function AEAChance(props) {
             width='40%'
             maskClosable={false}
             onOk={() => { form.submit(); }}
-            onCancel={() => { props.onCancel(); form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); setHasFuSaleman(false); setHasFirstMiddle(false); setHasSecondMiddle(false); }}
+            onCancel={() => { props.onCancel(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setIsShowProvide(false); }}
         >
             <Form form={form} onFinish={(values) => { props.onOK(values); }}>
                 {type == 'add' ? null : <Form.Item label="商机编号" name="cid" rules={[{ required: true, message: '不能为空' }]}>
@@ -67,7 +71,7 @@ function AEAChance(props) {
                 </Form.Item> : null}
                 {isShowPlatform ? <Card title="线上平台" style={{ marginBottom: "20px" }}>
                     <Form.Item label="平台" name="platforms" rules={[{ required: true, message: '不能为空' }]}>
-                        <Select mode="multiple" allowClear style={{ width: '100%' }} placeholder="请选择" onChange={(value) => { form.setFieldValue('platforms', value) }} options={platform} />
+                        <Select mode="multiple" allowClear style={{ width: '100%' }} placeholder="请选择" options={platform} />
                     </Form.Item>
                     <Form.Item label="账号ID" name="account_ids" rules={[{ required: true, message: '不能为空' }]}>
                         <Select mode="tags" allowClear placeholder="请输入" onChange={(value) => { form.setFieldValue('account_ids', value) }} options={[]} />

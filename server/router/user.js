@@ -16,7 +16,16 @@ router.post('/login', (req, res) => {
         } else if (results[0].status == '禁用') {
             res.send({ code: 201, data: {}, msg: '该用户已被禁用' })
         } else {
-            res.send({ code: 200, data: results[0], msg: '登录成功' })
+            let sql = ''
+            if (results[0].position === '商务') {
+                sql = `SELECT * FROM user where department = '事业部' and position = '副总'`
+            } else {
+                sql = `SELECT * FROM user where uid = 'MJN00000'`
+            }
+            db.query(sql, (err, r) => {
+                if (err) throw err;
+                res.send({ code: 200, data: { ...results[0], e_id: r[0].uid }, msg: '登录成功' })
+            })
         }
     })
 })

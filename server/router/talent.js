@@ -6,7 +6,7 @@ const dayjs = require('dayjs');
 // 获取达人列表
 router.post('/getTalentList', (req, res) => {
     let params = req.body
-    let where = `where u1.status != '2' and t.talent_status != '已失效' and t.talent_status != '报备待审批' and td.detail_status != '已失效'`
+    let where = `where u1.status != '失效' and t.status != '已失效' and td.detail_status != '已失效'`
     // 权限筛选
     if (params.userInfo.position != '管理员') {
         if (params.userInfo.company != '总公司') {

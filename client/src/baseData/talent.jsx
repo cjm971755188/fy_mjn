@@ -1,7 +1,7 @@
 export const chanceStatus = [
-    { label: "未推进", value: "未推进" },
-    { label: "已推进", value: "已推进" },
-    { label: "报备待审批", value: "报备待审批" },
+    { label: "待推进", value: "待推进" },
+    { label: "待报备", value: "待报备" },
+    { label: "待审批", value: "待审批" },
     { label: "报备驳回", value: "报备驳回" }
 ]
 
