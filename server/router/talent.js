@@ -6,68 +6,59 @@ const dayjs = require('dayjs');
 // 获取达人列表
 router.post('/getTalentList', (req, res) => {
     let params = req.body
-    let where = `where u1.status != '失效' and t.status != '已失效' and td.detail_status != '已失效'`
     // 权限筛选
-    if (params.userInfo.position != '管理员') {
-        if (params.userInfo.company != '总公司') {
-            where += ` and u1.company = '${params.userInfo.company}'`
+    let whereUser = `where status != '失效'`
+    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
+        if (params.userInfo.position === '副总') {
+            whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department != '总裁办') {
-            where += ` and u1.department = '${params.userInfo.department}'`
-        }
-        if (params.userInfo.position != '主管') {
-            where += ` and u1.uid = '${params.userInfo.uid}'`
+        if (params.userInfo.department != '主管') {
+            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
     }
     // 条件筛选
+    let whereFilter = `where z.status != '已失效'`
     for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
         if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
-            where += ` and t.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
+            whereFilter += ` and z.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
         } else {
-            where += ` and t.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
+            whereFilter += ` and z.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
         }
     }
+    // 其他筛选
+    let whereTM = `WHERE tm.status != '已失效'`
     // 分页
-    let current = 0
-    let pageSize = 10
-    if (params.pagination.current) {
-        current = params.pagination.current
-    }
-    if (params.pagination.pageSize) {
-        pageSize = params.pagination.pageSize
-    }
-    let sql = `SELECT t.*, tl.yearpay_status, GROUP_CONCAT(DISTINCT td.model) as models, CONCAT(if(GROUP_CONCAT(DISTINCT u1.name) is null, '', GROUP_CONCAT(DISTINCT u1.name)), ',', if(GROUP_CONCAT(DISTINCT u2.name) is null, '', GROUP_CONCAT(DISTINCT u2.name))) as u_names, 
-                    CONCAT(if(GROUP_CONCAT(DISTINCT m1.name) is null, '', GROUP_CONCAT(DISTINCT m1.name)), ',', if(GROUP_CONCAT(DISTINCT m2.name) is null, '', GROUP_CONCAT(DISTINCT m2.name))) as m_names
-                FROM talentline tl
-                    INNER JOIN (SELECT MAX(date_line) as date FROM talentline WHERE type != '修改佣金提点' GROUP BY tdid) tl2 on tl2.date = tl.date_line 
-                    LEFT JOIN user u1 on u1.uid = tl.u_id_1 
-                    LEFT JOIN user u2 on u2.uid = tl.u_id_2 
-                    LEFT JOIN middleman m1 on m1.mid = tl.m_id_1 
-                    LEFT JOIN middleman m2 on m2.mid = tl.m_id_2 
-                    LEFT JOIN talentdetail td on td.tdid = tl.tdid 
-                    LEFT JOIN talent t ON t.tid = td.tid
-                ${where} 
-                GROUP BY t.tid, t.cid, t.talent_name, t.year_deal, t.talent_lavel, tl.yearpay_status`
+    let current = params.pagination.current ? params.pagination.current : 0
+    let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
+    let sql = `SELECT * FROM (
+                SELECT t.*, tm.models,  CONCAT(ts.m_id_1, ',', ts.m_id_2) as m_ids, ts.m_name_1, ts.m_name_2, CONCAT(ts.m_name_1, ',', ts.m_name_2) as m_names, 
+                    CONCAT(tm.u_id_1, ',', tm.u_id_2) as u_ids, CONCAT(tm.u_name_1, ',', tm.u_name_2) as u_names, tm.u_name_1, tm.u_name_2
+                FROM talent t
+                    LEFT JOIN (
+                        SELECT ts0.tid, IF(m1.mid IS NULL, '', m1.mid) as m_id_1, IF(m2.mid IS NULL, '', m2.mid) as m_id_2, IF(m1.name IS NULL, '', m1.name) as m_name_1, IF(m2.name IS NULL, '', m2.name) as m_name_2
+                        FROM talent_schedule ts0
+                            LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' GROUP BY tid) ts1 ON ts1.tsid = ts0.tsid
+                            LEFT JOIN middleman m1 ON m1.mid = ts0.m_id_1
+                            LEFT JOIN middleman m2 ON m2.mid = ts0.m_id_2
+                    ) ts ON ts.tid = t.tid
+                    INNER JOIN (
+                        SELECT tm.tid, GROUP_CONCAT(DISTINCT tm.model) as models, GROUP_CONCAT(DISTINCT tms.u_id_1) as u_id_1, GROUP_CONCAT(DISTINCT tms.u_id_2) as u_id_2, 
+                            GROUP_CONCAT(DISTINCT tms.u_name_1) as u_name_1, GROUP_CONCAT(DISTINCT tms.u_name_2) as u_name_2
+                        FROM talent_model tm
+                            INNER JOIN (
+                                SELECT tms0.tmid, IF(u1.uid IS NULL, '', u1.uid) as u_id_1, IF(u2.uid IS NULL, '', u2.uid) as u_id_2, IF(u1.name IS NULL, '', u1.name) as u_name_1, IF(u2.name IS NULL, '', u2.name) as u_name_2
+                                FROM talent_model_schedule tms0
+                                    LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms1 ON tms1.tmsid = tms0.tmsid
+                                    INNER JOIN (SELECT * FROM user ${whereUser}) u1 ON u1.uid = tms0.u_id_1
+                                    LEFT JOIN (SELECT * FROM user ${whereUser}) u2 ON u2.uid = tms0.u_id_2
+                            ) tms ON tms.tmid = tm.tmid
+                        ${whereTM}
+                        GROUP BY tm.tid
+                    ) tm ON tm.tid = t.tid
+                ) z ${whereFilter}`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        let sql = `SELECT t.*, tl.yearpay_status, GROUP_CONCAT(DISTINCT td.model) as models, CONCAT(if(GROUP_CONCAT(DISTINCT u1.name) is null, '', GROUP_CONCAT(DISTINCT u1.name)), ',', if(GROUP_CONCAT(DISTINCT u2.name) is null, '', GROUP_CONCAT(DISTINCT u2.name))) as u_names, 
-                        CONCAT(if(GROUP_CONCAT(DISTINCT m1.name) is null, '', GROUP_CONCAT(DISTINCT m1.name)), ',', if(GROUP_CONCAT(DISTINCT m2.name) is null, '', GROUP_CONCAT(DISTINCT m2.name))) as m_names
-                    FROM talentline tl
-                        INNER JOIN (SELECT MAX(date_line) as date FROM talentline WHERE type != '修改佣金提点' GROUP BY tdid) tl2 on tl2.date = tl.date_line 
-                        LEFT JOIN user u1 on u1.uid = tl.u_id_1 
-                        LEFT JOIN user u2 on u2.uid = tl.u_id_2 
-                        LEFT JOIN middleman m1 on m1.mid = tl.m_id_1 
-                        LEFT JOIN middleman m2 on m2.mid = tl.m_id_2 
-                        LEFT JOIN talentdetail td on td.tdid = tl.tdid 
-                        LEFT JOIN talent t ON t.tid = td.tid
-                    ${where} 
-                    GROUP BY t.tid, t.cid, t.talent_name, t.year_deal, t.talent_lavel, tl.yearpay_status
-                    limit ${pageSize} offset ${current * pageSize}`
-        db.query(sql, (err, r) => {
-            if (err) throw err;
-            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: `` })
-        })
-
+        res.send({ code: 200, data: results.slice(current*pageSize, (current + 1)*pageSize), pagination: { ...params.pagination, total: results.length }, msg: `` })
     })
 })
 

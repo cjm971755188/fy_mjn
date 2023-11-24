@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { NavLink } from 'react-router-dom'
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, message } from 'antd';
-import { PlusOutlined, CheckCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
-import { chanceStatus, model, platform } from '../baseData/talent'
+import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, message, Alert } from 'antd';
+import { PlusOutlined, CheckCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone } from '@ant-design/icons';
+import { chanceStatus, model } from '../baseData/talent'
 import MyDateSelect from '../components/MyDateSelect'
 import AEAChance from '../components/modals/AEAChance'
 import AETalent from '../components/modals/AETalent'
@@ -11,6 +10,7 @@ import AETalent from '../components/modals/AETalent'
 const { TextArea } = Input;
 
 function ChanceList() {
+    // 操作权限
     const userShowPower = localStorage.getItem('position') === '商务' ? true : false
     const addPower = localStorage.getItem('position') === '商务' ? true : false
     const editPower = localStorage.getItem('position') === '商务' ? true : false
@@ -21,9 +21,9 @@ function ChanceList() {
     let columns = [
         { title: '商机编号', dataIndex: 'cid', key: 'cid' },
         { title: '模式', dataIndex: 'models', key: 'models' },
-        { title: '线上达人名', dataIndex: 'account_names', key: 'account_names' },
-        { title: '团购达人名', dataIndex: 'group_name', key: 'group_name' },
-        { title: '供货达人名', dataIndex: 'provide_name', key: 'provide_name' },
+        { title: '线上名', dataIndex: 'account_names', key: 'account_names' },
+        { title: '团购名', dataIndex: 'group_name', key: 'group_name' },
+        { title: '供货名', dataIndex: 'provide_name', key: 'provide_name' },
         { title: '寻找证明', dataIndex: 'search_pic', key: 'search_pic', render: (_, record) => (<Image width={50} src={record.search_pic} />) },
         {
             title: '联系人',
@@ -64,7 +64,7 @@ function ChanceList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
-                    {editPower && !record.status.match('报备') ? <a onClick={() => {
+                    {editPower && record.status !== '待报备' && record.status !== '待审批' ? <a onClick={() => {
                         let models = record.models.split(',')
                         form.setFieldsValue({
                             ...record,
@@ -85,12 +85,16 @@ function ChanceList() {
                         setType('edit');
                         setIsShow(true)
                     }}>修改信息</a> : null}
-                    {advancePower && record.status === '未推进' ? <a onClick={() => {
+                    {advancePower && record.status === '待推进' ? <a onClick={() => {
+                        let models = record.models.split(',')
                         setType('advance');
-                        form.setFieldsValue(record)
+                        form.setFieldsValue({
+                            ...record,
+                            models
+                        })
                         setIsShow(true)
                     }}>推进</a> : null}
-                    {reportPower && record.status === '已推进' ? <a onClick={() => {
+                    {reportPower && record.status === '待报备' ? <a onClick={() => {
                         let models = record.models.split(',')
                         let platformList = []
                         let accountIdList = []
@@ -124,34 +128,11 @@ function ChanceList() {
                         setType('report');
                         setIsShowReport(true);
                     }}>报备</a> : null}
-                    {record.status === '报备驳回' ? <a onClick={() => {
-                        request({
-                            method: 'post',
-                            url: '/talent/getCheckNote',
-                            data: {
-                                cid: record.cid,
-                                userInfo: {
-                                    uid: localStorage.getItem('uid'),
-                                    name: localStorage.getItem('name'),
-                                    company: localStorage.getItem('company'),
-                                    department: localStorage.getItem('department'),
-                                    position: localStorage.getItem('position')
-                                }
-                            }
-                        }).then((res) => {
-                            if (res.status == 200) {
-                                if (res.data.code == 200) {
-                                    setCheckNoReason(res.data.data)
-                                    setIsShowCheckNo(true);
-                                } else {
-                                    message.error(res.data.msg)
-                                }
-                            } else {
-                                message.error(res.data.msg)
-                            }
-                        }).catch((err) => {
-                            console.error(err)
-                        })
+                    {record.status === '报备驳回' ? <a onClick={() => { 
+                        let payload = {
+                            cid: record.cid
+                        }
+                        getRefundReason(payload); 
                     }}>查看驳回备注</a> : null}
                 </Space>
             )
@@ -175,18 +156,19 @@ function ChanceList() {
             method: 'post',
             url: '/chance/getChanceList',
             data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                },
                 filtersDate: tableParams.filtersDate,
                 filters: tableParams.filters,
                 pagination: {
                     current: tableParams.pagination.current - 1,
                     pageSize: tableParams.pagination.pageSize,
+                },
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
                 }
             }
         }).then((res) => {
@@ -230,6 +212,7 @@ function ChanceList() {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -251,7 +234,7 @@ function ChanceList() {
         })
     }
 
-    // 添加、修改、推进
+    // 添加、修改、推进、报备
     const [type, setType] = useState('')
     const [isShow, setIsShow] = useState(false)
     const [form] = Form.useForm()
@@ -263,6 +246,7 @@ function ChanceList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -295,6 +279,7 @@ function ChanceList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -327,6 +312,7 @@ function ChanceList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -351,7 +337,6 @@ function ChanceList() {
             console.error(err)
         })
     }
-    // 报备
     const [isShowReport, setIsShowReport] = useState(false)
     const reportChanceAPI = (payload) => {
         request({
@@ -361,6 +346,7 @@ function ChanceList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -385,9 +371,39 @@ function ChanceList() {
             console.error(err)
         })
     }
-
+    // 查看驳回理由
     const [checkNoReason, setCheckNoReason] = useState('')
     const [isShowCheckNo, setIsShowCheckNo] = useState(false)
+    const getRefundReason = (payload) => {
+        request({
+            method: 'post',
+            url: '/talent/getCheckNote',
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setCheckNoReason(res.data.data)
+                    setIsShowCheckNo(true);
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     useEffect(() => {
         getChanceListAPI();
@@ -413,11 +429,11 @@ function ChanceList() {
                     <Form.Item label='模式' name='models' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={model} />
                     </Form.Item>
-                    <Form.Item label='线上达人名' name='account_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='团购达人名' name='group_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='供货达人名' name='provide_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='线上名' name='account_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='团购名' name='group_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='供货名' name='provide_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='联系人' name='liaison_name'><Input /></Form.Item>
-                    {userShowPower ? null : <Form.Item label='商务' name='uid' style={{ marginBottom: '20px' }}>
+                    {userShowPower ? null : <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemanItemsAPI(); }} />
                     </Form.Item>}
                     <Form.Item label='状态' name='status' style={{ marginBottom: '20px' }}>
@@ -437,6 +453,7 @@ function ChanceList() {
                         </Space>
                     </Form.Item>
                 </Form>
+                <Alert message={`总计：${tableParams.pagination.total} 条数据`} type="info" showIcon />
                 <Table
                     style={{ margin: '20px auto' }}
                     rowKey={(data) => data.cid}

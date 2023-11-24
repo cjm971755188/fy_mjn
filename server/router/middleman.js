@@ -6,42 +6,35 @@ const db = require('../config/db')
 // 获取中间人列表
 router.post('/getMiddlemanList', (req, res) => {
     let params = req.body
-    let where = `where u.status != '失效'`
     // 权限筛选
+    let whereUser = `where status != '失效'`
     if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
         if (params.userInfo.position === '副总') {
-            where += ` and u.department = '${params.userInfo.department}'`
+            whereUser += ` and department = '${params.userInfo.department}'`
         }
         if (params.userInfo.department != '主管') {
-            where += ` and u.department = '${params.userInfo.department}' and u.company = '${params.userInfo.company}'`
+            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
     }
     // 条件筛选
+    let whereFilter = `where m.status != '失效'`
     for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
         if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
-            where += ` and m.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
+            whereFilter += ` and m.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
         } else {
-            where += ` and m.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
+            whereFilter += ` and m.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
         }
     }
     // 分页
-    let current = 0
-    let pageSize = 10
-    if (params.pagination.current) {
-        current = params.pagination.current
-    }
-    if (params.pagination.pageSize) {
-        pageSize = params.pagination.pageSize
-    }
-    let sql = `SELECT * FROM middleman m LEFT JOIN user u on u.uid = m.u_id ${where} order by m.mid`
+    let current = params.pagination.current ? params.pagination.current : 0
+    let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
+    let sql = `SELECT m.*, u.name as u_name 
+                FROM middleman m 
+                    INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = m.u_id
+                ${whereFilter}`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        let sql = `SELECT m.*, u.name as u_name FROM middleman m LEFT JOIN user u on u.uid = m.u_id ${where} order by mid desc limit ${pageSize} offset ${current * pageSize}`
-        db.query(sql, (err, r) => {
-            if (err) throw err;
-            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: `` })
-        })
-
+        res.send({ code: 200, data: results.slice(current * pageSize, (current + 1) * pageSize), pagination: { ...params.pagination, total: results.length }, msg: `` })
     })
 })
 
@@ -61,7 +54,7 @@ router.post('/addMiddleman', (req, res) => {
                 let can_piao = params.can_piao ? `'${params.can_piao}'` : null
                 let piao_type = params.piao_type ? `'${params.piao_type}'` : null
                 let shui_point = params.shui_point ? `'${params.shui_point}'` : null
-                let sql = `INSERT INTO middleman values('${mid}', '${params.type}', '${params.name}', '${params.liaison_name}', '${params.liaison_v}', '${params.liaison_phone}', '${params.pay_way}', ${can_piao}, ${piao_type}, ${shui_point}, '${params.pay_name}', '${params.pay_bank}', '${params.pay_account}', '${params.userInfo.uid}', '${dayjs().valueOf()}')`
+                let sql = `INSERT INTO middleman values('${mid}', '${params.type}', '${params.name}', '${params.liaison_name}', '${params.liaison_v}', '${params.liaison_phone}', '${params.pay_way}', ${can_piao}, ${piao_type}, ${shui_point}, '${params.pay_name}', '${params.pay_bank}', '${params.pay_account}', '正常', '${params.userInfo.uid}', '${dayjs().valueOf()}')`
                 db.query(sql, (err, results) => {
                     if (err) throw err;
                     res.send({ code: 200, data: {}, msg: `` })

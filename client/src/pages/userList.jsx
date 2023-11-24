@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Button, Select, Popconfirm, message } from 'antd';
+import { Card, Table, Space, Form, Input, Button, Select, Popconfirm, message, Alert } from 'antd';
 import { PlusOutlined, PauseCircleTwoTone, ExclamationCircleTwoTone } from '@ant-design/icons';
 import { company, department, position } from '../baseData/user'
 import AEUser from '../components/modals/AEUser'
@@ -93,6 +93,7 @@ function UserList() {
                 },
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -244,7 +245,7 @@ function UserList() {
                     <Form.Item label='职位' name='position' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={position} />
                     </Form.Item>
-                    <Form.Item>
+                    <Form.Item style={{ marginBottom: '20px' }}>
                         <Space size={'middle'}>
                             <Button type="primary" htmlType="submit">查询</Button>
                             <Button type="primary" onClick={() => {
@@ -257,6 +258,7 @@ function UserList() {
                         </Space>
                     </Form.Item>
                 </Form>
+                <Alert message={`总计：${tableParams.pagination.total} 条数据`} type="info" showIcon />
                 <Table
                     style={{ margin: '20px auto' }}
                     rowKey={(data) => data.uid}

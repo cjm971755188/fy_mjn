@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from "react";
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Button, Select, Popover, List, message } from 'antd';
+import { Card, Table, Space, Form, Input, Button, Select, Popover, List, message, Alert } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { middleType } from '../baseData/talent'
 import AEMiddleman from '../components/modals/AEMiddleman'
 
 function MiddlemanList() {
+    // 操作权限
+    const userShowPower = localStorage.getItem('position') === '商务' ? true : false
+    const addPower = localStorage.getItem('position') === '商务' ? true : false
+    const editPower = localStorage.getItem('position') === '商务' ? true : false
+
     // 表格：格式
-    const columns = [
+    let columns = [
         { title: '编号', dataIndex: 'mid', key: 'mid' },
         { title: '类型', dataIndex: 'type', key: 'type' },
         { title: '名称', dataIndex: 'name', key: 'name' },
@@ -47,20 +52,22 @@ function MiddlemanList() {
                 </Popover>
             )
         },
+        { title: '商务', dataIndex: 'u_name', key: 'u_name' },
         {
             title: '操作',
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
-                    <a onClick={() => {
+                    {editPower ? <a onClick={() => {
                         setType('edit');
                         setIsShow(true);
                         form.setFieldsValue(record)
-                    }}>修改信息</a>
+                    }}>修改信息</a> : null}
                 </Space>
             )
         }
     ]
+    columns = userShowPower ? columns.filter(item => item.title !== '商务') : columns
     // 表格：获取数据、分页
     const [data, setData] = useState();
     const [loading, setLoading] = useState(false);
@@ -84,6 +91,7 @@ function MiddlemanList() {
                 },
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -122,6 +130,35 @@ function MiddlemanList() {
     }
     // 查询、清空筛选
     const [filterForm] = Form.useForm()
+    const [salemansItems, setSalemansItems] = useState()
+    const getSalemanItemsAPI = () => {
+        request({
+            method: 'post',
+            url: '/user/getSalemanItems',
+            data: {
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setSalemansItems(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     // 添加新中间人
     const [type, setType] = useState('add')
@@ -134,7 +171,12 @@ function MiddlemanList() {
             data: {
                 ...payload,
                 userInfo: {
-                    uid: localStorage.getItem('uid')
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
                 }
             }
         }).then((res) => {
@@ -160,7 +202,12 @@ function MiddlemanList() {
             data: {
                 ...payload,
                 userInfo: {
-                    uid: localStorage.getItem('uid')
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
                 }
             }
         }).then((res) => {
@@ -185,7 +232,7 @@ function MiddlemanList() {
     }, [JSON.stringify(tableParams)])
     return (
         <div>
-            <Card title="中间人列表" extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => { setType('add'); setIsShow(true); }}>添加新中间人</Button>}>
+            <Card title="中间人列表" extra={addPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setType('add'); setIsShow(true); }}>添加新中间人</Button> : null}>
                 <Form
                     layout="inline"
                     form={filterForm}
@@ -203,6 +250,9 @@ function MiddlemanList() {
                     <Form.Item label='名称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='联系人姓名' name='liaison_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='付款姓名' name='pay_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    {userShowPower ? null : <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
+                        <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemanItemsAPI(); }} />
+                    </Form.Item>}
                     <Form.Item style={{ marginBottom: '20px' }}>
                         <Space size={'large'}>
                             <Button type="primary" htmlType="submit">查询</Button>
@@ -217,6 +267,7 @@ function MiddlemanList() {
                         </Space>
                     </Form.Item>
                 </Form>
+                <Alert message={`总计：${tableParams.pagination.total} 条数据`} type="info" showIcon />
                 <Table
                     style={{ margin: '20px auto' }}
                     rowKey={(data) => data.mid}

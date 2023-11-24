@@ -79,22 +79,12 @@ router.post('/getUserList', (req, res) => {
         }
     }
     // 分页
-    let current = 0
-    let pageSize = 10
-    if (params.pagination.current) {
-        current = params.pagination.current
-    }
-    if (params.pagination.pageSize) {
-        pageSize = params.pagination.pageSize
-    }
-    let sql = `SELECT * FROM user ${where} order by uid`
+    let current = params.pagination.current ? params.pagination.current : 0
+    let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
+    let sql = `SELECT uid, name, phone, company, department, position, status FROM user ${where}`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        let sql = `SELECT	uid, name, phone, company, department, position, status FROM user ${where} order by uid limit ${pageSize} offSET ${current * pageSize}`
-        db.query(sql, (err, r) => {
-            if (err) throw err;
-            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: '' })
-        })
+        res.send({ code: 200, data: results.slice(current*pageSize, (current + 1)*pageSize), pagination: { ...params.pagination, total: results.length }, msg: '' })
     })
 })
 

@@ -96,7 +96,17 @@ function AETalent(props) {
             onOk={() => { form.submit(); }}
             onCancel={() => { props.onCancel(); }}
         >
-            <Form form={form} onFinish={(values) => { props.onOK(values); }}>
+            <Form form={form} onFinish={(values) => {
+                let payload = {
+                    ...values,
+                    liaison_type: form.getFieldValue('liaison_type'),
+                    liaison_name: form.getFieldValue('liaison_name'),
+                    liaison_v: form.getFieldValue('liaison_v'),
+                    liaison_phone: form.getFieldValue('liaison_phone'),
+                    crowd_name: form.getFieldValue('crowd_name')
+                }
+                props.onOK(payload);
+            }}>
                 {type == 'report' ? <>
                     <Form.Item label="商机编号" name="cid" rules={[{ required: true, message: '不能为空' }]}>
                         <Input disabled={true} />

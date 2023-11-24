@@ -2,50 +2,43 @@ const express = require('express');
 const router = express.Router();
 const dayjs = require('dayjs');
 const db = require('../config/db')
-const getTime = require('../myFun/getAnalysisTime')
 const sendRobot = require('../myFun/ddrobot')
 
 // 获取商机列表
 router.post('/getChanceList', (req, res) => {
     let params = req.body
-    let where = `where c.status != '报备通过'`
     // 权限筛选
+    let whereUser = `where status != '失效'`
     if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
         if (params.userInfo.position === '副总') {
-            where += ` and u.department = '${params.userInfo.department}'`
+            whereUser += ` and department = '${params.userInfo.department}'`
         }
         if (params.userInfo.department != '主管') {
-            where += ` and u.department = '${params.userInfo.department}' and u.company = '${params.userInfo.company}'`
+            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
     }
     // 条件筛选
+    let whereFilter = `where c.status != '报备通过'`
     if (params.filtersDate && params.filtersDate.length === 2) {
-        where += ` and c.create_time >= '${params.filtersDate[0]} 00:00:00' and c.create_time < '${params.filtersDate[1]} 00:00:00'`
+        whereFilter += ` and c.create_time >= '${params.filtersDate[0]} 00:00:00' and c.create_time < '${params.filtersDate[1]} 00:00:00'`
     }
     for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
         if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
-            where += ` and c.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
+            whereFilter += ` and c.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
         } else {
-            where += ` and c.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
+            whereFilter += ` and c.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
         }
     }
     // 分页
-    let current = 0
-    let pageSize = 10
-    if (params.pagination.current) {
-        current = params.pagination.current
-    }
-    if (params.pagination.pageSize) {
-        pageSize = params.pagination.pageSize
-    }
-    let sql = `SELECT * FROM chance c LEFT JOIN user u ON u.uid = c.u_id ${where} order by c.cid`
+    let current = params.pagination.current ? params.pagination.current : 0
+    let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
+    let sql = `SELECT c.*, u.name 
+                FROM chance c 
+                    INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = c.u_id
+                ${whereFilter}`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        let sql = `SELECT c.*, u.name FROM chance c LEFT JOIN user u on u.uid = c.u_id ${where} order by cid desc limit ${pageSize} offset ${current * pageSize}`
-        db.query(sql, (err, r) => {
-            if (err) throw err;
-            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: '' })
-        })
+        res.send({ code: 200, data: results.slice(current * pageSize, (current + 1) * pageSize), pagination: { ...params.pagination, total: results.length }, msg: '' })
     })
 })
 

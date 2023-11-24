@@ -105,3 +105,10 @@ export const yearCycleType = [
     { label: "一月一付", value: "一月一付" },
     { label: "一专场一付", value: "一专场一付" }
 ]
+
+export const yearBoxType = [
+    { label: "暂无", value: "暂无" },
+    { label: "已失效", value: "已失效" },
+    { label: "生效中", value: "生效中" },
+    { label: "待审批", value: "待审批" }
+]
