@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { Card, Space, Form, Input, Modal, Button, Image, List, Select, message } from 'antd';
-import { model, platform, liaisonType } from '../../baseData/talent'
-import people from '../../assets/people.jpg'
+import React from "react";
+import { Form, Input, Modal, Select } from 'antd';
+import { liaisonType } from '../../baseData/talent'
 import UpLoadImg from '../UpLoadImg'
 
 function AEAChance(props) {
@@ -9,14 +8,17 @@ function AEAChance(props) {
 
     return (
         <Modal
-            title={type == 'advance' ? '推进商机' : type == 'edit' ? '修改联系人' : ''}
+            title={type === 'advance' ? '推进商机' : type.match('edit') ? '修改联系人' : ''}
             open={isShow}
             maskClosable={false}
             onOk={() => { form.submit(); }}
             onCancel={() => { props.onCancel(); }}
         >
             <Form form={form} onFinish={(values) => { props.onOK(values); }}>
-                {type == 'advance' ? <Form.Item label="商机编号" name="cid" rules={[{ required: true, message: '不能为空' }]}>
+                {type !== 'edit_talent' ? <Form.Item label="商机编号" name="cid" rules={[{ required: true, message: '不能为空' }]}>
+                    <Input disabled={true} />
+                </Form.Item> : null}
+                {type === 'edit_talent' ? <Form.Item label="达人编号" name="tid" rules={[{ required: true, message: '不能为空' }]}>
                     <Input disabled={true} />
                 </Form.Item> : null}
                 <Form.Item label="联系人类型" name="liaison_type" rules={[{ required: true, message: '不能为空' }]}>

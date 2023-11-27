@@ -8,6 +8,7 @@ import { yearCycleType, liaisonType, platform, accountType, accountModelType, ag
 import { descriptionsItems } from '../baseData/talentDetail'
 import UpLoadImg from '../components/UpLoadImg'
 import people from '../assets/people.jpg'
+import AELiaison from '../components/modals/AELiaison'
 
 const { TextArea } = Input;
 
@@ -17,14 +18,13 @@ function TalentDetail() {
     const navigate = useNavigate()
     const { tid, type } = location.state;
     // 操作权限
-    const userShowPower = localStorage.getItem('position') === '商务' ? true : false
-    const addPower = localStorage.getItem('position') === '商务' ? true : false
-    const editPower = localStorage.getItem('position') === '商务' ? true : false
-    const advancePower = localStorage.getItem('position') === '商务' ? true : false
-    const reportPower = localStorage.getItem('position') === '商务' ? true : false
+    const examPower = localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 获取详情
-    const [detailData, setDetailData] = useState({})
+    const [detailData, setDetailData] = useState({
+        status: '',
+        yearbox_status: ''
+    })
     const getTalentDetailAPI = () => {
         request({
             method: 'post',
@@ -161,112 +161,65 @@ function TalentDetail() {
         }
         return items
     }
-
-    // 时间线
-    const [itemKey, setItemKey] = useState(19980426)
-    const [pointTags, setPointTags] = useState([])
+    const getModelsItems = (data) => {
+        let items = []
+        for (let i = 0; i < Object.getOwnPropertyNames(data).length; i++) {
+            for (let j = 0; j < descriptionsItems.length; j++) {
+                if (Object.keys(data)[i] === descriptionsItems[j].value) {
+                    const description = {
+                        key: i,
+                        label: descriptionsItems[j].label,
+                        children: Object.values(data)[i]
+                    }
+                    if (data.model === '线上平台') {
+                        if (descriptionsItems[j].key >= 28 && descriptionsItems[j].key <= 41) {
+                            if (descriptionsItems[j].key === 41) {
+                                description.span = 2
+                            }
+                            items.push(description)
+                        }
+                    } else if (data.model === '社群团购') {
+                        if (descriptionsItems[j].key >= 42 && descriptionsItems[j].key <= 45) {
+                            if (descriptionsItems[j].key === 45) {
+                                description.span = 2
+                            }
+                            items.push(description)
+                        }
+                    } else if (data.model === '供货') {
+                        if (descriptionsItems[j].key >= 46 && descriptionsItems[j].key <= 48) {
+                            if (descriptionsItems[j].key === 48) {
+                                description.span = 3
+                            }
+                            items.push(description)
+                        }
+                    }
+                    if ([50, 51, 53, 54, 55].indexOf(descriptionsItems[j].key) !== -1) {
+                        items.push(description)
+                    }
+                }
+            }
+        }
+        return items
+    }
     const getTimeItems = () => {
         let items = []
-        if (detailData.line) {
-            for (let i = 0; i < detailData.line.length; i++) {
-                const element = detailData.line[i];
+        if (detailData.schedule) {
+            for (let i = 0; i < detailData.schedule.length; i++) {
+                const element = detailData.schedule[i];
                 let item = {
-                    color: element.type.match('通过') ? 'green' : element.type.match('驳回') ? 'red' : '#1677ff',
+                    color: element.examine_result.match('通过') ? 'green' : element.examine_result.match('驳回') ? 'red' : '#1677ff',
                     children: <div>
                         <Space>
-                            <span>{`【${dayjs(Number(element.date)).format('YYYY-MM-DD')}】 ${element.name}---${element.type}${element.note === null ? '' : `---备注：${element.note}`}`}</span>
-                            {!element.type.match('审批') && !(element.type.match('新') && element.type.match('已通过')) ? itemKey !== i ? <a onClick={() => {
-                                if (element.type.match('报备')) {
-                                    request({
-                                        method: 'post',
-                                        url: '/talent/getLinePoint',
-                                        data: {
-                                            tlids: element.tlids,
-                                            userInfo: {
-                                                uid: localStorage.getItem('uid'),
-                                                name: localStorage.getItem('name'),
-                                                company: localStorage.getItem('company'),
-                                                department: localStorage.getItem('department'),
-                                                position: localStorage.getItem('position')
-                                            }
-                                        }
-                                    }).then((res) => {
-                                        if (res.status == 200) {
-                                            if (res.data.code == 200) {
-                                                setPointTags(res.data.data)
-                                                setItemKey(i)
-                                            } else {
-                                                message.error(res.data.msg)
-                                            }
-                                        } else {
-                                            message.error(res.data.msg)
-                                        }
-                                    }).catch((err) => {
-                                        console.error(err)
-                                    })
-                                } else if (element.type.match('年框')) {
-                                    request({
-                                        method: 'post',
-                                        url: '/talent/getYearPoint',
-                                        data: {
-                                            tlids: element.tlids,
-                                            userInfo: {
-                                                uid: localStorage.getItem('uid'),
-                                                name: localStorage.getItem('name'),
-                                                company: localStorage.getItem('company'),
-                                                department: localStorage.getItem('department'),
-                                                position: localStorage.getItem('position')
-                                            }
-                                        }
-                                    }).then((res) => {
-                                        if (res.status == 200) {
-                                            if (res.data.code == 200) {
-                                                setPointTags(res.data.data)
-                                                setItemKey(i)
-                                            } else {
-                                                message.error(res.data.msg)
-                                            }
-                                        } else {
-                                            message.error(res.data.msg)
-                                        }
-                                    }).catch((err) => {
-                                        console.error(err)
-                                    })
-                                } else {
-                                    request({
-                                        method: 'post',
-                                        url: '/talent/getOriInfo',
-                                        data: {
-                                            tlids: element.tlids,
-                                            userInfo: {
-                                                uid: localStorage.getItem('uid'),
-                                                name: localStorage.getItem('name'),
-                                                company: localStorage.getItem('company'),
-                                                department: localStorage.getItem('department'),
-                                                position: localStorage.getItem('position')
-                                            }
-                                        }
-                                    }).then((res) => {
-                                        if (res.status == 200) {
-                                            if (res.data.code == 200) {
-                                                setPointTags(res.data.data)
-                                                setItemKey(i)
-                                            } else {
-                                                message.error(res.data.msg)
-                                            }
-                                        } else {
-                                            message.error(res.data.msg)
-                                        }
-                                    }).catch((err) => {
-                                        console.error(err)
-                                    })
-                                }
+                            <Row>{`【${dayjs(Number(element.create_time)).format('YYYY-MM-DD')}】 ${element.u_name_1} ${element.operate}`}{element.examine_uid === null ? null : element.examine_time === null ? `-----@${element.u_name_2} 审批` : null}</Row>
+                            {/* {!element.operate.match('审批') ? itemKey !== i ? <a onClick={() => {
+                                
                             }}>查看</a> : <a onClick={() => {
                                 setPointTags([])
                                 setItemKey(19980426)
-                            }}>隐藏</a> : null}
+                            }}>隐藏</a> : null} */}
                         </Space>
-                        {itemKey !== i ? null : <List
+                        <Row>{element.examine_time === null ? null : `【${dayjs(Number(element.examine_time)).format('YYYY-MM-DD')}】 ${element.u_name_2} 审批${element.examine_result}`}{element.examine_note === null ? null : `备注：${element.examine_note}`}</Row>
+                        {/* {itemKey !== i ? null : <List
                             itemLayout="horizontal"
                             dataSource={pointTags}
                             renderItem={(item, index) => (
@@ -297,7 +250,7 @@ function TalentDetail() {
                                     />
                                 </List.Item>
                             )}
-                        />}
+                        />} */}
                     </div>
                 }
                 items.push(item)
@@ -307,19 +260,173 @@ function TalentDetail() {
         return items
     }
 
-    // 报备审批
-    const checkTalent = (_type, _note) => {
+    // 时间线
+    const [itemKey, setItemKey] = useState(19980426)
+    const [pointTags, setPointTags] = useState([])
+
+    // 新增年框
+    const [isShowYear, setIsShowYear] = useState(false)
+    const [yearType, setYearType] = useState()
+    const [formYear] = Form.useForm()
+    const editYearAPI = (operate, payload) => {
         request({
             method: 'post',
-            url: '/talent/checkTalent',
+            url: '/talent/editTalent',
             data: {
-                cid: cid,
-                tid: tid,
-                type: _type,
-                checkType: type,
-                note: _type ? null : _note,
+                tid,
+                operate,
+                ori: null,
+                new: payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShowYear(false)
+                    getTalentDetailAPI()
+                    formYear.resetFields()
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    // 修改联系人
+    const [isShowLiaison, setIsShowLiaison] = useState(false)
+    const [formLiaison] = Form.useForm()
+    const [editOri, setEditOri] = useState()
+    const editLiaisonAPI = (operate, payload) => {
+        request({
+            method: 'post',
+            url: '/talent/editTalent',
+            data: {
+                tid,
+                operate,
+                ori: JSON.stringify(editOri),
+                new: payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShowLiaison(false);
+                    getTalentDetailAPI();
+                    formLiaison.resetFields();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    // 新增、修改、删除中间人
+    const [isShowMiddle, setIsShowMiddle] = useState(false)
+    const [formMiddle] = Form.useForm()
+    const [middleType, setMiddleType] = useState()
+    const [middlemans, setMiddlemans] = useState()
+    const searchMiddlemansAPI = (value) => {
+        request({
+            method: 'post',
+            url: '/middleman/searchMiddlemans',
+            data: {
+                value,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setMiddlemans(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const filterOption = (input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
+    const editMiddleAPI = (operate, payload) => {
+        request({
+            method: 'post',
+            url: '/talent/editTalent',
+            data: {
+                tid,
+                operate,
+                ori: null,
+                new: payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShowMiddle(false);
+                    getTalentDetailAPI();
+                    formMiddle.resetFields();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    // 各类审批
+    const [isShowRefund, setIsShowRefund] = useState(false)
+    const [formRefund] = Form.useForm()
+    const examTalentAPI = (exam, note) => {
+        request({
+            method: 'post',
+            url: '/talent/examTalent',
+            data: {
+                tid, tid,
+                tsid: detailData.tsid,
+                status: detailData.status,
+                exam,
+                note: exam ? null : note,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -341,49 +448,6 @@ function TalentDetail() {
         })
     }
 
-    // 新增年框
-    const [isShowYear, setIsShowYear] = useState(false)
-    const [yearType, setYearType] = useState('add')
-    const [formYear] = Form.useForm()
-    const addYear = (note) => {
-        request({
-            method: 'post',
-            url: '/talent/addTalentYear',
-            data: {
-                tid: tid,
-                type: yearType === 'add' ? '新增年框' : yearType === 'continue' ? '续约年框' : '删除年框',
-                note: note,
-                ...formYear.getFieldsValue(),
-                yearpay_start: dayjs(formYear.getFieldValue('yearpay_start')).valueOf(),
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setIsShowYear(false)
-                    getTalentDetailAPI()
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-
-    // 修改信息
-    const [isShowEdit, setIsShowEdit] = useState(false)
-    const [formEdit] = Form.useForm()
-    const [editType, setEditType] = useState('')
-    const [editOri, setEditOri] = useState()
     const editDetail = () => {
         let formInfo = editType.match('修改') && editType.match('模式') ? form.getFieldsValue() : formEdit.getFieldsValue()
         console.log('formInfo: ', formInfo);
@@ -447,70 +511,7 @@ function TalentDetail() {
             })
         }
     }
-    const [middlemans1, setMiddlemans1] = useState(false)
-    const [middlemans2, setMiddlemans2] = useState(false)
-    const searchMiddleman1 = (value) => {
-        request({
-            method: 'post',
-            url: '/middleman/searchMiddlemans',
-            data: {
-                value: value,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setMiddlemans1(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const searchMiddleman2 = (value) => {
-        request({
-            method: 'post',
-            url: '/middleman/searchMiddlemans',
-            data: {
-                value: value,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setMiddlemans2(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const filterOption = (input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
-
-    // 驳回理由
-    const [isShowRefund, setIsShowRefund] = useState(false)
-    const [formRefund] = Form.useForm()
-
+    
     // 添加、修改合作模式
     const [isShowModel, setIsShowModel] = useState(false)
     const [form] = Form.useForm()
@@ -611,14 +612,14 @@ function TalentDetail() {
             <Row gutter={24}>
                 <Col span={16}>
                     <Card title={<Space><CrownOutlined /><span>基础信息</span>
-                        <Tag color={detailData.status && (detailData.status.match('待审批') ? 'gold' : detailData.status.match('合作中') ? 'green' : 'grey')}>{detailData.status}</Tag>
+                        <Tag color={detailData.status && (detailData.status.match('待审批') ? 'gold' : detailData.status.match('合作中') ? 'green' : 'grey')}>{detailData.status && detailData.status}</Tag>
                     </Space>}
                         style={{ marginBottom: '20px' }}
-                    /* extra={type !== 'look' ?
-                        <Space>
-                            <Button type="primary" onClick={() => { checkTalent(true, null); }}>通过</Button>
-                            <Button type="primary" danger onClick={() => { setIsShowRefund(true); }}>驳回</Button>
-                        </Space> : null} */
+                        extra={examPower && detailData.status.match('待审批') ?
+                            <Space>
+                                <Button type="primary" onClick={() => { examTalentAPI(true, null); }}>通过</Button>
+                                <Button type="primary" danger onClick={() => { setIsShowRefund(true); }}>驳回</Button>
+                            </Space> : null}
                     >
                         <Descriptions column={5} items={getBaseItems()} />
                     </Card>
@@ -626,179 +627,115 @@ function TalentDetail() {
                         <Tag color={detailData.yearbox_status === '待审批' ? "gold" : detailData.yearbox_status === '生效中' ? "green" : detailData.yearbox_status === '已失效' ? "red" : ""}>{detailData.yearbox_status}</Tag>
                     </Space>}
                         style={{ marginBottom: '20px' }}
-                    /* extra={
-                        detailData.year && (localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? null :
-                            detailData.year[4].children === '暂无' ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowYear(true); setYearType('add'); }}>新增</Button> :
-                                detailData.year[4].children === '已失效' ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowYear(true); setYearType('continue'); }}>续约</Button> : null
-                        )
-                    } */
+                        extra={examPower ? null :
+                            detailData.yearbox_status === '暂无' ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowYear(true); setYearType('新增年框'); }}>新增</Button> :
+                                detailData.yearbox_status === '已失效' ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowYear(true); setYearType('续约年框'); }}>续约</Button> : null
+                        }
                     >
                         <Descriptions column={5} items={getYearItems()} />
                     </Card>
                     <Card title={<Space><MessageOutlined /><span>联络信息</span></Space>} style={{ marginBottom: '20px' }}>
                         <Descriptions title="联系人" column={5} items={getLiaisonItems()}
-                            extra={(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null :
-                                <Button
-                                    type="text"
-                                    icon={<EditOutlined />}
-                                    onClick={() => { message.info('修改'); }}
-                                >修改</Button>}
+                            extra={examPower || (detailData.status.match('待审批')) ? null : <Button type="text" icon={<EditOutlined />} onClick={() => {
+                                let ori = {}
+                                for (const key in detailData) {
+                                    if (Object.hasOwnProperty.call(detailData, key)) {
+                                        if (key.match('liaison') || key === 'crowd_name') {
+                                            ori[key] = detailData[key]
+                                        }
+                                    }
+                                }
+                                setEditOri(ori)
+                                formLiaison.setFieldsValue({ tid: tid, ...ori })
+                                setIsShowLiaison(true);
+                            }}>修改</Button>}
                         />
                         {detailData.m_id_1 === null ? <Descriptions title="无一级中间人"
-                            extra={(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null :
-                                <Button
-                                    type="text"
-                                    icon={<PlusOutlined />}
-                                    onClick={() => { message.info('新增'); }}
-                                >新增</Button>}
+                            extra={examPower || (detailData.status.match('待审批')) ? null : <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowMiddle(true); setMiddleType('新增一级中间人'); }}>新增</Button>}
                         /> : <Descriptions title="一级中间人" column={5} items={getMiddleman1Items()}
-                            extra={<>{(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null :
-                                <Button
-                                    type="text"
-                                    icon={<EditOutlined />}
-                                    onClick={() => { message.info('修改'); }}
-                                >修改</Button>}
-                                {(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null :
+                            extra={<>
+                                {examPower || (detailData.status.match('待审批')) ? null : <Button type="text" icon={<EditOutlined />} onClick={() => {
+                                    formMiddle.setFieldsValue({
+                                        m_id: {
+                                            value: detailData.m_id_1,
+                                            label: detailData.m_name_1
+                                        },
+                                        m_point: detailData.m_point_1
+                                    })
+                                    setIsShowMiddle(true);
+                                    setMiddleType('修改一级中间人');
+                                }}>修改</Button>}
+                                {examPower || (detailData.status.match('待审批')) ? null :
                                     <Popconfirm
                                         title="删除一级中间人"
-                                        description={`确认删除 ${detailData.middle1 && detailData.middle1[2].children} 吗?`}
-                                        onConfirm={() => { editDetail(); }}
+                                        description={`确认删除 ${detailData.m_name_1} 吗?`}
+                                        onConfirm={() => {
+                                            editMiddleAPI('删除一级中间人', {
+                                                m_id_1: null,
+                                                m_point_1: null
+                                            });
+                                        }}
                                         okText="删除"
                                         cancelText="取消"
                                     >
-                                        <Button
-                                            type="text"
-                                            danger
-                                            icon={<MinusOutlined />}
-                                            onClick={() => { message.info('删除'); }}
-                                        >删除</Button>
+                                        <Button type="text" danger icon={<MinusOutlined />}>删除</Button>
                                     </Popconfirm>}
                             </>}
                         />}
                         {detailData.m_id_2 === null ? <Descriptions title="无二级中间人"
-                            extra={(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null :
-                                <Button
-                                    type="text"
-                                    icon={<PlusOutlined />}
-                                    onClick={() => { message.info('新增'); }}
-                                >新增</Button>}
+                            extra={examPower || (detailData.status.match('待审批')) ? null : <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowMiddle(true); setMiddleType('新增二级中间人'); }}>新增</Button>}
                         /> : <Descriptions title="二级中间人" column={5} items={getMiddleman2Items()}
-                            extra={<>{(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null :
-                                <Button
-                                    type="text"
-                                    icon={<EditOutlined />}
-                                    onClick={() => { message.info('修改'); }}
-                                >修改</Button>}
-                                {(localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员') || (detailData.base && detailData.base[3].children.match('待审批')) ? null :
+                            extra={<>
+                                {examPower || (detailData.status.match('待审批')) ? null : <Button type="text" icon={<EditOutlined />} onClick={() => {
+                                    formMiddle.setFieldsValue({
+                                        m_id: {
+                                            value: detailData.m_id_2,
+                                            label: detailData.m_name_2
+                                        },
+                                        m_point: detailData.m_point_2
+                                    })
+                                    setIsShowMiddle(true);
+                                    setMiddleType('修改二级中间人');
+                                }}>修改</Button>}
+                                {examPower || (detailData.status.match('待审批')) ? null :
                                     <Popconfirm
                                         title="删除二级中间人"
-                                        description={`确认删除 ${detailData.middle2 && detailData.middle2[2].children} 吗?`}
-                                        onConfirm={() => { editDetail(); }}
+                                        description={`确认删除 ${detailData.m_name_2} 吗?`}
+                                        onConfirm={() => {
+                                            editMiddleAPI('删除二级中间人', {
+                                                m_id_2: null,
+                                                m_point_2: null
+                                            });
+                                        }}
                                         okText="删除"
                                         cancelText="取消"
                                     >
-                                        <Button
-                                            type="text"
-                                            danger
-                                            icon={<MinusOutlined />}
-                                            onClick={() => { message.info('删除'); }}
-                                        >删除</Button>
-                                    </Popconfirm>}</>}
+                                        <Button type="text" danger icon={<MinusOutlined />}>删除</Button>
+                                    </Popconfirm>}
+                            </>}
                         />}
                     </Card>
                     <Card title={<Space><GlobalOutlined /><span>合作模式 ----- {detailData.models && detailData.models.length} 个</span></Space>}
-                        extra={localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? null : <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowModel(true); setEditType('新增线上模式'); }}>新增线上平台</Button>}
+                    /* extra={localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? null : 
+                    <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowModel(true); setEditType('新增线上模式'); }}>新增线上平台</Button>} */
                     >
                         {detailData.models && detailData.models.map((model, index) => {
-                            let mm = []
-                            for (let i = 0; i < model.length; i++) {
-                                if (model[i].label === '主商务编码' || model[i].label === '副商务编码') {
-                                    continue
-                                }
-                                mm.push(model[i])
-                            }
                             return (
                                 <Card
                                     key={index}
-                                    title={<span>{model[1].children} - {model[2].children}</span>}
+                                    title={<span>{model.model}__{model.platform}__{model.shop}</span>}
                                     style={{ marginBottom: '20px' }}
-                                    extra={localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? null :
-                                        <Button
-                                            type="text"
-                                            icon={<EditOutlined />}
-                                            onClick={() => {
-                                                let ori_values = {}
-                                                for (let i = 0; i < model.length; i++) {
-                                                    if (model[i].children !== null) {
-                                                        ori_values[model[i].label] = model[i].children
-                                                    }
-                                                }
-                                                setEditOri(ori_values)
-                                                if (model[1].children === '线上平台') {
-                                                    let account_models = model[6].children.split(',')
-                                                    let age_cuts = model[10].children.split(',')
-                                                    form.setFieldValue('tdid', model[0].children)
-                                                    form.setFieldValue('model', model[1].children)
-                                                    form.setFieldValue('platform_shop', model[2].children)
-                                                    form.setFieldValue('account_id', model[3].children)
-                                                    form.setFieldValue('account_name', model[4].children)
-                                                    form.setFieldValue('account_type', model[5].children)
-                                                    form.setFieldValue('account_models', account_models)
-                                                    form.setFieldValue('keyword', model[7].children)
-                                                    form.setFieldValue('people_count', model[8].children)
-                                                    form.setFieldValue('fe_proportion', model[9].children)
-                                                    form.setFieldValue('age_cuts', age_cuts)
-                                                    form.setFieldValue('main_province', model[11].children)
-                                                    form.setFieldValue('price_cut', model[12].children)
-                                                    form.setFieldValue('commission_normal', model[13].children)
-                                                    form.setFieldValue('commission_welfare', model[14].children)
-                                                    form.setFieldValue('commission_bao', model[15].children)
-                                                    form.setFieldValue('commission_note', model[16].children)
-                                                    form.setFieldValue('u_id_1', model[17].children)
-                                                    form.setFieldValue('u_name_1', model[18].children)
-                                                    form.setFieldValue('u_point_1', model[19].children)
-                                                    form.setFieldValue('u_id_2', model[20].children)
-                                                    form.setFieldValue('u_name_2', model[21].children)
-                                                    form.setFieldValue('u_point_2', model[22].children)
-                                                    form.setFieldValue('u_note', model[23].children)
-                                                    setEditType('修改线上模式');
-                                                } else if (model[1].children === '社群团购') {
-                                                    form.setFieldValue('tdid', model[0].children)
-                                                    form.setFieldValue('model', model[1].children)
-                                                    form.setFieldValue('platform_shop', model[2].children)
-                                                    form.setFieldValue('discount_normal', model[3].children)
-                                                    form.setFieldValue('discount_welfare', model[4].children)
-                                                    form.setFieldValue('discount_bao', model[5].children)
-                                                    form.setFieldValue('discount_note', model[6].children)
-                                                    form.setFieldValue('u_id_1', model[7].children)
-                                                    form.setFieldValue('u_name_1', model[8].children)
-                                                    form.setFieldValue('u_point_1', model[9].children)
-                                                    form.setFieldValue('u_id_2', model[10].children)
-                                                    form.setFieldValue('u_name_2', model[11].children)
-                                                    form.setFieldValue('u_point_2', model[12].children)
-                                                    form.setFieldValue('u_note', model[13].children)
-                                                    setEditType('修改社群团购模式');
-                                                } else if (model[1].children === '供货') {
-                                                    form.setFieldValue('tdid', model[0].children)
-                                                    form.setFieldValue('model', model[1].children)
-                                                    form.setFieldValue('platform_shop', model[2].children)
-                                                    form.setFieldValue('discount_buyout', model[3].children)
-                                                    form.setFieldValue('discount_back', model[4].children)
-                                                    form.setFieldValue('discount_label', model[5].children)
-                                                    form.setFieldValue('u_id_1', model[6].children)
-                                                    form.setFieldValue('u_name_1', model[7].children)
-                                                    form.setFieldValue('u_point_1', model[8].children)
-                                                    form.setFieldValue('u_id_2', model[9].children)
-                                                    form.setFieldValue('u_name_2', model[10].children)
-                                                    form.setFieldValue('u_point_2', model[11].children)
-                                                    form.setFieldValue('u_note', model[12].children)
-                                                    setEditType('修改供货模式');
-                                                }
-                                                setIsShowModel(true);
-                                            }}
-                                        >修改</Button>}
+                                /* extra={localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? null :
+                                    <Button
+                                        type="text"
+                                        icon={<EditOutlined />}
+                                        onClick={() => {
+                                            setIsShowModel(true);
+                                        }}
+                                    >修改</Button>
+                                } */
                                 >
-                                    <Descriptions column={5} items={model[1].children === '线上平台' ? mm.slice(3, 22) : model[1].children === '社群团购' ? mm.slice(3, 12) : model[1].children === '供货' ? mm.slice(3, 11) : mm} />
+                                    <Descriptions column={5} items={getModelsItems(model)} />
                                 </Card>
                             )
                         })}
@@ -810,84 +747,71 @@ function TalentDetail() {
                     </Card>
                 </Col>
             </Row>
+
             <Modal title="驳回理由填写" open={isShowRefund}
-                onOk={() => { checkTalent(false, formRefund.getFieldValue('note')); setIsShowRefund(false); }}
-                onCancel={() => { setIsShowRefund(false); }}>
+                onOk={() => { examTalentAPI(false, formRefund.getFieldValue('note')); setIsShowRefund(false); }}
+                onCancel={() => { setIsShowRefund(false); }}
+            >
                 <Form form={formRefund}>
                     <Form.Item label="驳回理由" name="note" rules={[{ required: true, message: '不能为空' }]}>
                         <TextArea placeholder="请输入" />
                     </Form.Item>
                 </Form>
             </Modal>
-            <Modal title={yearType === 'add' ? '新增年框' : yearType === 'continue' ? '续约年框' : '删除年框'} open={isShowYear}
-                onOk={() => { addYear(); formYear.resetFields(); }}
+            <Modal title={yearType} open={isShowYear}
+                onOk={() => {
+                    editYearAPI(yearType, {
+                        ...formYear.getFieldsValue(),
+                        yearbox_start_date: dayjs(formYear.getFieldValue('yearbox_start_date')).valueOf()
+                    });
+                }}
                 onCancel={() => { formYear.resetFields(); setIsShowYear(false); }}>
                 <Form form={formYear}>
-                    <Form.Item label="生效日期" name="yearpay_start" rules={[{ required: true, message: '不能为空' }]}>
-                        <DatePicker onChange={(value) => { formYear.setFieldValue('yearpay_start', value) }} />
+                    <Form.Item label="生效日期" name="yearbox_start_date" rules={[{ required: true, message: '不能为空' }]}>
+                        <DatePicker onChange={(value) => { formYear.setFieldValue('yearbox_start_date', value) }} />
                     </Form.Item>
-                    <Form.Item label="付款周期" name="yearpay_cycle" rules={[{ required: true, message: '不能为空' }]}>
+                    <Form.Item label="付款周期" name="yearbox_cycle" rules={[{ required: true, message: '不能为空' }]}>
                         <Select options={yearCycleType} />
                     </Form.Item>
-                    <Form.Item label="返点（%）" name="yearpay_point" rules={[{ required: true, message: '不能为空' }]}>
+                    <Form.Item label="返点（%）" name="yearbox_point" rules={[{ required: true, message: '不能为空' }]}>
                         <InputNumber />
                     </Form.Item>
-                    <Form.Item label="签约合同" name="yearpay_file" rules={[{ required: true, message: '不能为空' }]}>
-                        <UpLoadImg title="上传合同图片" name="add_yearpay_file" setPicUrl={(value) => { formYear.setFieldValue('yearpay_file', value) }} />
+                    <Form.Item label="签约合同" name="yearbox_pic" rules={[{ required: true, message: '不能为空' }]}>
+                        <UpLoadImg title="上传合同图片" name="add_yearbox_pic" setPicUrl={(value) => { formYear.setFieldValue('yearbox_pic', value) }} />
                     </Form.Item>
                 </Form>
             </Modal>
-            <Modal title="修改联系人" open={isShowEdit}
-                onOk={() => { editDetail(); formEdit.resetFields(); setIsShowEdit(false); }}
-                onCancel={() => { formEdit.resetFields(); setIsShowEdit(false); }}>
-                <Form form={formEdit}>
-                    {editType.match('联系人') ? <><Form.Item label="联系人类型" name="liaison_type" rules={[{ required: true, message: '不能为空' }]}>
-                        <Select
-                            allowClear
-                            style={{
-                                width: '100%',
-                            }}
-                            placeholder="请选择"
-                            onChange={(value) => {
-                                form.setFieldValue('liaison_type', value)
-                            }}
-                            options={liaisonType}
-                        />
+            <AELiaison
+                isShow={isShowLiaison}
+                type={'edit_talent'}
+                form={formLiaison}
+                onOK={(values) => { editLiaisonAPI('修改联系人', values); }}
+                onCancel={() => { setIsShowLiaison(false); formLiaison.resetFields(); setType(''); }}
+            />
+            <Modal title={middleType} open={isShowMiddle}
+                onOk={() => {
+                    let payload = {}
+                    if (middleType.match('一级')) {
+                        payload = {
+                            m_id_1: formMiddle.getFieldValue('m_id'),
+                            m_point_1: formMiddle.getFieldValue('m_point')
+                        }
+                    } else {
+                        payload = {
+                            m_id_2: formMiddle.getFieldValue('m_id'),
+                            m_point_2: formMiddle.getFieldValue('m_point')
+                        }
+                    }
+                    editMiddleAPI(middleType, payload);
+                }}
+                onCancel={() => { formMiddle.resetFields(); setIsShowMiddle(false); }}>
+                <Form form={formMiddle}>
+                    <Form.Item label="昵称" name="m_id" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select showSearch placeholder="请输入" options={middlemans} filterOption={filterOption} onChange={(value) => { searchMiddlemansAPI(value) }} onSearch={(value) => { searchMiddlemansAPI(value) }} />
                     </Form.Item>
-                        <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '不能为空' }]}>
-                            <Input placeholder="请输入" />
-                        </Form.Item>
-                        <Form.Item label="联系人微信" name="liaison_v" rules={[{ required: true, message: '不能为空' }]}>
-                            <Input placeholder="请输入" />
-                        </Form.Item>
-                        <Form.Item label="联系人电话（选填）" name="liaison_phone">
-                            <Input placeholder="请输入" />
-                        </Form.Item>
-                        <Form.Item label="沟通群名" name="crowd_name" rules={[{ required: true, message: '不能为空' }]}>
-                            <Input placeholder="请输入" />
-                        </Form.Item>
-                    </> : editType.match('一级中间人') ? <><Space size='large'>
-                        <Form.Item label="一级中间人" name="m_id_1" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select showSearch placeholder="请输入" options={middlemans1} filterOption={filterOption} onChange={(value) => { searchMiddleman1(value) }} onSearch={(value) => { searchMiddleman1(value) }} />
-                        </Form.Item>
-                        <Form.Item label="一级中间人提成点（%）" name="m_point_1" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber />
-                        </Form.Item>
-                    </Space>
-                        <Form.Item label="一级中间人提成备注" name="m_note_1">
-                            <TextArea />
-                        </Form.Item>
-                    </> : editType.match('二级中间人') ? <><Space size='large'>
-                        <Form.Item label="二级中间人" name="m_id_2" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select showSearch placeholder="请输入" options={middlemans2} filterOption={filterOption} onChange={(value) => { searchMiddleman2(value) }} onSearch={(value) => { searchMiddleman2(value) }} />
-                        </Form.Item>
-                        <Form.Item label="二级中间人提成点（%）" name="m_point_2" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber />
-                        </Form.Item>
-                    </Space>
-                        <Form.Item label="二级中间人提成备注" name="m_note_2">
-                            <TextArea />
-                        </Form.Item></> : null}
+                    <Form.Item label="提点（%）" name="m_point" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber />
+                    </Form.Item>
                 </Form>
             </Modal>
             <Modal title={editType === '新增线上模式' ? "新增线上账号" : editType === '修改线上模式' ? '修改线上账号' : editType === '修改社群团购模式' ? '修改社群团购模式' : '修改供货模式'} open={isShowModel}

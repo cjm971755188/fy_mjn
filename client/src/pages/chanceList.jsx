@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, message, Alert } from 'antd';
-import { PlusOutlined, CheckCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone } from '@ant-design/icons';
+import { PlusOutlined, CloseCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone } from '@ant-design/icons';
 import { chanceStatus, model } from '../baseData/talent'
 import MyDateSelect from '../components/MyDateSelect'
 import AEChance from '../components/modals/AEChance'
@@ -55,7 +55,7 @@ function ChanceList() {
                     {record.status === '待推进' ? <PlayCircleTwoTone twoToneColor="#ee9900" /> :
                         record.status === '待报备' ? <RightCircleTwoTone twoToneColor="#ee9900" /> :
                             record.status === '待审批' ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
-                                record.status === '报备驳回' ? <CheckCircleTwoTone twoToneColor="#f81d22" /> : null}
+                                record.status === '报备驳回' ? <CloseCircleTwoTone  twoToneColor="#f81d22" /> : null}
                     <span>{record.status}</span>
                 </Space>
             )
@@ -97,10 +97,10 @@ function ChanceList() {
                     }}>推进</a> : null}
                     {editPower && record.status === '待报备' ? <a onClick={() => {
                         form.setFieldsValue(record)
-                        setType('edit');
+                        setType('edit_chance');
                         setIsShowLiaison(true)
                     }}>修改联系人</a> : null}
-                    {reportPower && record.status === '待报备' ? <a onClick={() => {
+                    {reportPower && (record.status === '待报备' || record.status === '报备驳回') ? <a onClick={() => {
                         let models = record.models.split(',')
                         let platformList = []
                         let accountIdList = []
@@ -136,9 +136,10 @@ function ChanceList() {
                     }}>报备</a> : null}
                     {record.status === '报备驳回' ? <a onClick={() => { 
                         let payload = {
-                            cid: record.cid
+                            cid: record.cid,
+                            type: 'ts'
                         }
-                        getRefundReason(payload); 
+                        getRefundReasonAPI(payload); 
                     }}>查看驳回备注</a> : null}
                 </Space>
             )
@@ -344,6 +345,39 @@ function ChanceList() {
             console.error(err)
         })
     }
+    const editLiaisonAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/chance/editLiaison',
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShowLiaison(false);
+                    setType('');
+                    getChanceListAPI();
+                    form.resetFields();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
     const [isShowReport, setIsShowReport] = useState(false)
     const reportChanceAPI = (payload) => {
         request({
@@ -381,10 +415,10 @@ function ChanceList() {
     // 查看驳回理由
     const [checkNoReason, setCheckNoReason] = useState('')
     const [isShowCheckNo, setIsShowCheckNo] = useState(false)
-    const getRefundReason = (payload) => {
+    const getRefundReasonAPI = (payload) => {
         request({
             method: 'post',
-            url: '/talent/getCheckNote',
+            url: '/talent/getRefundReason',
             data: {
                 ...payload,
                 userInfo: {
@@ -482,7 +516,7 @@ function ChanceList() {
                 isShow={isShowLiaison}
                 type={type}
                 form={form}
-                onOK={(values) => { advanceChanceAPI(values); }}
+                onOK={(values) => { type === 'advance' ? advanceChanceAPI(values) : editLiaisonAPI(values) }}
                 onCancel={() => { setIsShowLiaison(false); form.resetFields(); setType(''); }}
             />
             <AETalent

@@ -66,8 +66,9 @@ function TalentList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
-                    {examinePower && record.status === '报备待审批' ?  <a>审批</a> : null}
-                    <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid, type: 'look' }}>查看详情</NavLink>
+                    {examinePower && record.status.match('待审批') ?  <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid, type: 'exam' }}>审批</NavLink> : 
+                        <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid, type: 'look' }}>查看详情</NavLink>}
+                    
                 </Space>
             )
         }
