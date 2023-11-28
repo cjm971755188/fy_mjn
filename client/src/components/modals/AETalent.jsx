@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import request from '../../service/request'
-import { Card, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, message } from 'antd';
+import { Card, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, message, List, Image } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import { accountType, accountModelType, ageCut, priceCut, yearDealType } from '../../baseData/talent'
+import { accountType, accountModelType, ageCut, priceCut, yearDealType, shop, platform } from '../../baseData/talent'
+import people from '../../assets/people.jpg'
 
 const { TextArea } = Input;
 
@@ -13,6 +14,31 @@ function AETalent(props) {
     const [isShowGroup, setIsShowGroup] = useState(false)
     const [isShowProvide, setIsShowProvide] = useState(false)
     const [isShowKeyword, setIsShowKeyword] = useState(false)
+    const [isShowSearch, setIsShowSearch] = useState(false)
+    const [searchList, setSearchList] = useState({})
+    const searchSameChanceAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/chance/searchSameChance',
+            data: payload
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code != 200) {
+                    setIsShowSearch(true)
+                    setSearchList(res.data.data)
+                    message.error(res.data.msg)
+                } else {
+                    setIsShowSearch(false)
+                    setSearchList({})
+                    message.success(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
     const [hasFuSaleman, setHasFuSaleman] = useState(false)
     const [hasFirstMiddle, setHasFirstMiddle] = useState(false)
     const [hasSecondMiddle, setHasSecondMiddle] = useState(false)
@@ -81,6 +107,7 @@ function AETalent(props) {
             console.error(err)
         })
     }
+    
 
     useEffect(() => {
         setIsShowPlatform(form.getFieldValue('models') && form.getFieldValue('models').join(',').match('线上平台') ? true : false)
@@ -89,7 +116,7 @@ function AETalent(props) {
     }, [isShow])
     return (
         <Modal
-            title={type == 'report' ? '达人合作报备' : '添加新合作模式'}
+            title={type == 'report' ? '达人报备' : type}
             open={isShow}
             width='40%'
             maskClosable={false}
@@ -97,13 +124,18 @@ function AETalent(props) {
             onCancel={() => { props.onCancel(); }}
         >
             <Form form={form} onFinish={(values) => {
-                let payload = {
-                    ...values,
-                    liaison_type: form.getFieldValue('liaison_type'),
-                    liaison_name: form.getFieldValue('liaison_name'),
-                    liaison_v: form.getFieldValue('liaison_v'),
-                    liaison_phone: form.getFieldValue('liaison_phone'),
-                    crowd_name: form.getFieldValue('crowd_name')
+                let payload = {}
+                if (type === 'report') {
+                    payload = {
+                        ...values,
+                        liaison_type: form.getFieldValue('liaison_type'),
+                        liaison_name: form.getFieldValue('liaison_name'),
+                        liaison_v: form.getFieldValue('liaison_v'),
+                        liaison_phone: form.getFieldValue('liaison_phone'),
+                        crowd_name: form.getFieldValue('crowd_name')
+                    }
+                } else {
+                    payload = values
                 }
                 props.onOK(payload);
             }}>
@@ -159,21 +191,57 @@ function AETalent(props) {
                                         <Form.Item label="平台" {...restField} name={[name, "platform"]} rules={[{ required: true, message: '不能为空' }]}>
                                             <Select
                                                 placeholder="请选择"
+                                                options={type === 'report' ? form.getFieldValue('platformList') : platform}
                                                 onChange={(value) => {
                                                     form.setFieldValue('platform', value)
                                                     if (value !== '闯货' && value !== '抖音' && value !== '快手' && value !== '视频号' && value !== '视频号服务商') {
                                                         setIsShowKeyword(true)
                                                     }
                                                 }}
-                                                options={form.getFieldValue('platformList')}
                                             />
                                         </Form.Item>
+                                        <Form.Item label="店铺" {...restField} name={[name, "shop"]} rules={[{ required: true, message: '不能为空' }]}>
+                                            <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('shop', value) }} options={shop} />
+                                        </Form.Item>
                                         <Form.Item label="账号ID" {...restField} name={[name, "account_id"]} rules={[{ required: true, message: '不能为空' }]}>
-                                            <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('account_id', value) }} options={form.getFieldValue('accountIdList')} />
+                                            {type === 'report' ? <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('account_id', value) }} options={form.getFieldValue('accountIdList')} /> : 
+                                                <Input placeholder="请输入" onChange={(e) => { form.setFieldValue('account_id', e.target.value) }} />}
                                         </Form.Item>
                                         <Form.Item label="账号名称" {...restField} name={[name, "account_name"]} rules={[{ required: true, message: '不能为空' }]}>
-                                            <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('account_name', value) }} options={form.getFieldValue('accountNameList')} />
+                                            {type === 'report' ? <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('account_name', value) }} options={form.getFieldValue('accountNameList')} /> : <Input placeholder="请输入" />}
                                         </Form.Item>
+                                        {type === 'report' ? null : <><Form.Item label="相同线上达人">
+                                            <Button onClick={() => {
+                                                if ((form.getFieldValue('account_name') && form.getFieldValue('account_name') !== '') || (form.getFieldValue('account_id') && form.getFieldValue('account_id') !== '')) {
+                                                    let payload = {
+                                                        type: 'single',
+                                                        account_name: form.getFieldValue('account_name') ? form.getFieldValue('account_name') : null,
+                                                        account_id: form.getFieldValue('account_id') ? form.getFieldValue('account_id') : null
+                                                    }
+                                                    searchSameChanceAPI(payload)
+                                                } else {
+                                                    setIsShowSearch(false)
+                                                    setSearchList({})
+                                                    message.error('未填写达人账号名/ID, 无法查询')
+                                                }
+                                            }}>查询</Button>
+                                        </Form.Item>
+                                        {isShowSearch && <Form.Item label="">
+                                            {searchList.length > 0 ? <List
+                                                itemLayout="horizontal"
+                                                bordered
+                                                dataSource={searchList}
+                                                renderItem={(item, index) => (
+                                                    <List.Item>
+                                                        <List.Item.Meta
+                                                            avatar={<Image width={50} src={people} preview={false} />}
+                                                            title={<Space size={'large'}><span>{`达人编号: ${item.tid}`}</span><span>{`主商务: ${item.u_name_1}`}</span></Space>}
+                                                            description={<Space size={'large'}><span>{`平台: ${item.platform}`}</span><span>{`账号ID: ${item.account_id}`}</span><span>{`账号名称: ${item.account_name}`}</span></Space>}
+                                                        />
+                                                    </List.Item>
+                                                )}
+                                            /> : null}
+                                        </Form.Item>}</>}
                                         <Form.Item label="账号类型" {...restField} name={[name, "account_type"]} rules={[{ required: true, message: '不能为空' }]}>
                                             <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('account_type', value) }} options={accountType} />
                                         </Form.Item>
@@ -246,7 +314,7 @@ function AETalent(props) {
                         )}
                     </Form.List>
                 </Card> : null}
-                {isShowGroup && type === 'report' ? <Card title="社群团购" style={{ marginBottom: "20px" }}>
+                {isShowGroup ? <Card title="社群团购" style={{ marginBottom: "20px" }}>
                     <Form.Item label="聚水潭店铺名" name="group_shop">
                         <Input placeholder="请输入" />
                     </Form.Item>
@@ -290,7 +358,7 @@ function AETalent(props) {
                         <TextArea />
                     </Form.Item>
                 </Card> : null}
-                {isShowProvide && type === 'report' ? <Card title="供货" style={{ marginBottom: "20px" }}>
+                {isShowProvide ? <Card title="供货" style={{ marginBottom: "20px" }}>
                     <Form.Item label="聚水潭店铺名" name="provide_shop">
                         <Input placeholder="请输入" />
                     </Form.Item>

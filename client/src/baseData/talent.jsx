@@ -28,10 +28,15 @@ export const platform = [
     { key: 2, label: "快手", value: "快手" },
     { key: 3, label: "拼多多", value: "拼多多" },
     { key: 4, label: "视频号", value: "视频号" },
-    { key: 5, label: "视频号服务商", value: "视频号服务商" },
     { key: 6, label: "淘宝", value: "淘宝" },
     { key: 7, label: "微店", value: "微店" },
     { key: 8, label: "有赞", value: "有赞" }
+]
+
+export const shop = [
+    { key: 0, label: "普通店铺", value: "普通店铺" },
+    { key: 1, label: "团长", value: "团长" },
+    { key: 2, label: "爱迪生", value: "爱迪生" }
 ]
 
 export const liaisonType = [

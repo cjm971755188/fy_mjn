@@ -17,7 +17,18 @@ function TalentList() {
         { title: '编号', dataIndex: 'tid', key: 'tid' },
         { title: '达人名称', dataIndex: 'name', key: 'name' },
         { title: '年成交额', dataIndex: 'year_deal', key: 'year_deal' },
-        { title: '年框状态', dataIndex: 'yearbox_status', key: 'yearbox_status' },
+        { 
+            title: '年框状态', 
+            dataIndex: 'yearbox_status', 
+            key: 'yearbox_status',
+            render: (_, record) => (
+                <Space size="small">
+                    {record.yearbox_status === '待审批' ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
+                        record.yearbox_status === '生效中' ? <PauseCircleTwoTone twoToneColor="#4ec990" /> : null}
+                    <span>{record.yearbox_status}</span>
+                </Space>
+            )
+        },
         { title: '合作模式', dataIndex: 'models', key: 'models' },
         { 
             title: '商务', 
@@ -66,14 +77,13 @@ function TalentList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
-                    {examinePower && record.status.match('待审批') ?  <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid, type: 'exam' }}>审批</NavLink> : 
-                        <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid, type: 'look' }}>查看详情</NavLink>}
+                    {examinePower && record.status.match('待审批') ?  <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> : 
+                        <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>查看详情</NavLink>}
                     
                 </Space>
             )
         }
     ]
-    columns = userShowPower ? columns.filter(item => item.title !== '商务') : columns
     // 表格：获取数据、分页
     const [data, setData] = useState();
     const [loading, setLoading] = useState(false);

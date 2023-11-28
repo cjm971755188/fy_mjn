@@ -2,35 +2,36 @@ import React, { Fragment, useEffect, useState } from "react";
 import { useLocation, useNavigate } from 'react-router-dom'
 import request from '../service/request'
 import dayjs from 'dayjs';
-import { Card, Input, Timeline, Button, Tag, List, Modal, Form, Descriptions, Tooltip, Row, Col, message, Space, DatePicker, Select, InputNumber, Image, Popconfirm, Radio } from 'antd';
-import { AuditOutlined, MessageOutlined, GlobalOutlined, CrownOutlined, SettingOutlined, EditOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
-import { yearCycleType, liaisonType, platform, accountType, accountModelType, ageCut, priceCut } from '../baseData/talent'
+import { Card, Input, Timeline, Button, Tag, Modal, Form, Descriptions, Row, Col, message, Space, DatePicker, Select, InputNumber, Image, Popconfirm } from 'antd';
+import { AuditOutlined, MessageOutlined, GlobalOutlined, CrownOutlined, SettingOutlined, EditOutlined, PlusOutlined, MinusOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { yearCycleType } from '../baseData/talent'
 import { descriptionsItems } from '../baseData/talentDetail'
 import UpLoadImg from '../components/UpLoadImg'
-import people from '../assets/people.jpg'
 import AELiaison from '../components/modals/AELiaison'
+import AETalentModel from '../components/modals/AETalentModel'
 
 const { TextArea } = Input;
 
 function TalentDetail() {
     // 路由
     let location = useLocation();
-    const navigate = useNavigate()
-    const { tid, type } = location.state;
+    const navigate = useNavigate();
+    const { tid } = location.state;
     // 操作权限
     const examPower = localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 获取详情
     const [detailData, setDetailData] = useState({
         status: '',
-        yearbox_status: ''
+        yearbox_status: '',
+        schedule: []
     })
     const getTalentDetailAPI = () => {
         request({
             method: 'post',
             url: '/talent/getTalentDetail',
             data: {
-                tid: tid,
+                tid,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     name: localStorage.getItem('name'),
@@ -123,12 +124,6 @@ function TalentDetail() {
                         label: descriptionsItems[j].label,
                         children: Object.values(detailData)[i]
                     }
-                    if (description.label === '提点') {
-                        description.span = 2
-                    }
-                    if (description.label === '提点备注') {
-                        description.span = 5
-                    }
                     if ([19, 20, 21, 22, 27].indexOf(descriptionsItems[j].key) !== -1) {
                         items.push(description)
                     }
@@ -136,6 +131,56 @@ function TalentDetail() {
             }
         }
         return items
+    }
+    const [isShowM1PayItems, setIsShowM1PayItems] = useState(false)
+    const [m1PayItems, setM1PayItems] = useState()
+    const [isShowM2PayItems, setIsShowM2PayItems] = useState(false)
+    const [m2PayItems, setM2PayItems] = useState()
+    const getMiddlemanInfoAPI = (type, mid) => {
+        request({
+            method: 'post',
+            url: '/middleman/getMiddlemanInfo',
+            data: {
+                mid,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    let items = []
+                    for (let i = 0; i < descriptionsItems.length; i++) {
+                        for (let j = 0; j < res.data.data.length; j++) {
+                            if (descriptionsItems[i].value === res.data.data[j].label) {
+                                const item = {
+                                    key: res.data.data[j].key,
+                                    label: descriptionsItems[i].label,
+                                    children: res.data.data[j].children
+                                }
+                                items.push(item)
+                            }
+                        }
+                    }
+                    if (type === 1) {
+                        setM1PayItems(items)
+                    } else {
+                        setM2PayItems(items)
+                    }
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
     }
     const getMiddleman2Items = () => {
         let items = []
@@ -146,12 +191,6 @@ function TalentDetail() {
                         key: i,
                         label: descriptionsItems[j].label,
                         children: Object.values(detailData)[i]
-                    }
-                    if (description.label === '提点') {
-                        description.span = 2
-                    }
-                    if (description.label === '提点备注') {
-                        description.span = 5
                     }
                     if ([23, 24, 25, 26, 27].indexOf(descriptionsItems[j].key) !== -1) {
                         items.push(description)
@@ -201,24 +240,27 @@ function TalentDetail() {
         }
         return items
     }
+    const [itemKey, setItemKey] = useState(19980426)
+    const [pointTags, setPointTags] = useState([])
     const getTimeItems = () => {
         let items = []
         if (detailData.schedule) {
             for (let i = 0; i < detailData.schedule.length; i++) {
                 const element = detailData.schedule[i];
                 let item = {
-                    color: element.examine_result.match('通过') ? 'green' : element.examine_result.match('驳回') ? 'red' : '#1677ff',
+                    color: element.examine_result ? (element.examine_result.match('通过') ? 'green' : element.examine_result.match('驳回') ? 'red' : '#1677ff') : '#1677ff',
                     children: <div>
                         <Space>
                             <Row>{`【${dayjs(Number(element.create_time)).format('YYYY-MM-DD')}】 ${element.u_name_1} ${element.operate}`}{element.examine_uid === null ? null : element.examine_time === null ? `-----@${element.u_name_2} 审批` : null}</Row>
-                            {/* {!element.operate.match('审批') ? itemKey !== i ? <a onClick={() => {
-                                
-                            }}>查看</a> : <a onClick={() => {
-                                setPointTags([])
-                                setItemKey(19980426)
-                            }}>隐藏</a> : null} */}
+                            {/* {element.examine_result && (element.examine_result === null || element.examine_result.match('通过')) && (element.operate.match('修改') || element.operate.match('删除')) ?
+                                itemKey !== i ? <a onClick={() => {
+                                    message.info('查看')
+                                }}>查看历史</a> : <a onClick={() => {
+                                    setPointTags([])
+                                    setItemKey(19980426)
+                                }}>隐藏</a> : null} */}
                         </Space>
-                        <Row>{element.examine_time === null ? null : `【${dayjs(Number(element.examine_time)).format('YYYY-MM-DD')}】 ${element.u_name_2} 审批${element.examine_result}`}{element.examine_note === null ? null : `备注：${element.examine_note}`}</Row>
+                        <Row>{element.examine_time === null ? null : `【${dayjs(Number(element.examine_time)).format('YYYY-MM-DD')}】 ${element.u_name_2} 审批${element.examine_result}`}{element.examine_note === null ? null : `(${element.examine_note})`}</Row>
                         {/* {itemKey !== i ? null : <List
                             itemLayout="horizontal"
                             dataSource={pointTags}
@@ -260,87 +302,14 @@ function TalentDetail() {
         return items
     }
 
-    // 时间线
-    const [itemKey, setItemKey] = useState(19980426)
-    const [pointTags, setPointTags] = useState([])
-
-    // 新增年框
+    // 新增、续约年框
     const [isShowYear, setIsShowYear] = useState(false)
     const [yearType, setYearType] = useState()
     const [formYear] = Form.useForm()
-    const editYearAPI = (operate, payload) => {
-        request({
-            method: 'post',
-            url: '/talent/editTalent',
-            data: {
-                tid,
-                operate,
-                ori: null,
-                new: payload,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setIsShowYear(false)
-                    getTalentDetailAPI()
-                    formYear.resetFields()
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
     // 修改联系人
     const [isShowLiaison, setIsShowLiaison] = useState(false)
     const [formLiaison] = Form.useForm()
     const [editOri, setEditOri] = useState()
-    const editLiaisonAPI = (operate, payload) => {
-        request({
-            method: 'post',
-            url: '/talent/editTalent',
-            data: {
-                tid,
-                operate,
-                ori: JSON.stringify(editOri),
-                new: payload,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setIsShowLiaison(false);
-                    getTalentDetailAPI();
-                    formLiaison.resetFields();
-                    message.success(res.data.msg)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
     // 新增、修改、删除中间人
     const [isShowMiddle, setIsShowMiddle] = useState(false)
     const [formMiddle] = Form.useForm()
@@ -376,14 +345,14 @@ function TalentDetail() {
         })
     }
     const filterOption = (input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
-    const editMiddleAPI = (operate, payload) => {
+    const editTalentAPI = (operate, ori, payload) => {
         request({
             method: 'post',
             url: '/talent/editTalent',
             data: {
                 tid,
                 operate,
-                ori: null,
+                ori,
                 new: payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
@@ -397,9 +366,17 @@ function TalentDetail() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setIsShowMiddle(false);
-                    getTalentDetailAPI();
-                    formMiddle.resetFields();
+                    if (operate.match('年框')) {
+                        setIsShowYear(false);
+                        formYear.resetFields();
+                    } else if (operate.match('联系人')) {
+                        setIsShowLiaison(false);
+                        formLiaison.resetFields();
+                    } else if (operate.match('中间人')) {
+                        setIsShowMiddle(false);
+                        formMiddle.resetFields();
+                    }
+                    getTalentDetailAPI()
                     message.success(res.data.msg)
                 } else {
                     message.error(res.data.msg)
@@ -411,7 +388,81 @@ function TalentDetail() {
             console.error(err)
         })
     }
-    // 各类审批
+    // 添加、修改合作模式
+    const [isShowModel, setIsShowModel] = useState(false)
+    const [formModel] = Form.useForm()
+    const [typeModel, setTypeModel] = useState()
+    const addTalentModelAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/talent/addTalentModel',
+            data: {
+                tid,
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShowModel(false);
+                    setTypeModel();
+                    getTalentDetailAPI();
+                    formModel.resetFields();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const editTalentModelAPI = (operate, ori, payload) => {
+        request({
+            method: 'post',
+            url: '/talent/editTalentModel',
+            data: {
+                tid,
+                operate,
+                ori,
+                new: payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShowModel(false);
+                    setTypeModel();
+                    getTalentDetailAPI();
+                    formModel.resetFields();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    // 审批
     const [isShowRefund, setIsShowRefund] = useState(false)
     const [formRefund] = Form.useForm()
     const examTalentAPI = (exam, note) => {
@@ -419,7 +470,7 @@ function TalentDetail() {
             method: 'post',
             url: '/talent/examTalent',
             data: {
-                tid, tid,
+                tid,
                 tsid: detailData.tsid,
                 status: detailData.status,
                 exam,
@@ -447,114 +498,19 @@ function TalentDetail() {
             console.error(err)
         })
     }
-
-    const editDetail = () => {
-        let formInfo = editType.match('修改') && editType.match('模式') ? form.getFieldsValue() : formEdit.getFieldsValue()
-        console.log('formInfo: ', formInfo);
-        if (editType.match('线上')) {
-            formInfo.account_models = formInfo.account_models.join(',')
-            formInfo.age_cuts = formInfo.age_cuts.join(',')
-        }
-        let length = Object.keys(formInfo).length, x = 0, y = 0, ori = {}, neww = {}
-        for (let i = 0; i < Object.getOwnPropertyNames(editOri).length; i++) {
-            let o = Object.values(editOri)[i]
-            for (let j = 0; j < Object.getOwnPropertyNames(formInfo).length; j++) {
-                let n = Object.values(formInfo)[j]
-                if (i === j && o === n) {
-                    x++
-                } else if (i === j && o !== n) {
-                    ori[Object.keys(editOri)[i]] = Object.values(editOri)[i]
-                    neww[Object.keys(formInfo)[j]] = Object.values(formInfo)[j]
-                    if (Object.keys(formInfo)[j].split('_')[0] === 'u' || Object.keys(formInfo)[j].split('_')[0] === 'm' || Object.keys(formInfo)[j].split('_')[0] === 'commission' || Object.keys(formInfo)[j].split('_')[0] === 'discount') {
-                        y++
-                    }
-                }
-            }
-        }
-        if (x === length && length != 0) {
-            message.error('未修改信息')
-        } else {
-            request({
-                method: 'post',
-                url: '/talent/editDetail',
-                data: {
-                    cid: cid,
-                    tid: tid,
-                    tdid: editType.match('修改') && editType.match('模式') ? form.getFieldValue('tdid') : null,
-                    baseOrPoint: y === 0 ? 'base' : 'point',
-                    editType: editType,
-                    ori: editType === '修改联系人' ? JSON.stringify(ori) : Object.keys(editOri).length === 0 ? null : JSON.stringify(editOri),
-                    new: editType.match('删除') ? null : Object.keys(neww).length === 0 ? formInfo : neww,
-                    userInfo: {
-                        uid: localStorage.getItem('uid'),
-                        name: localStorage.getItem('name'),
-                        company: localStorage.getItem('company'),
-                        department: localStorage.getItem('department'),
-                        position: localStorage.getItem('position')
-                    }
-                }
-            }).then((res) => {
-                if (res.status == 200) {
-                    if (res.data.code == 200) {
-                        getTalentDetailAPI()
-                        form.resetFields();
-                        setIsShowEdit(false)
-                        setIsShowModel(false)
-                    } else {
-                        message.error(res.data.msg)
-                    }
-                } else {
-                    message.error(res.data.msg)
-                }
-            }).catch((err) => {
-                console.error(err)
-            })
-        }
-    }
-    
-    // 添加、修改合作模式
-    const [isShowModel, setIsShowModel] = useState(false)
-    const [form] = Form.useForm()
-    const [isShowSearch, setIsShowSearch] = useState(false)
-    const [searchList, setSearchList] = useState({})
-    const searchSame = () => {
+    const examTalentModelAPI = (tmids, exam, note) => {
         request({
             method: 'post',
-            url: '/chance/searchSameChance',
+            url: '/talent/examTalentModel',
             data: {
-                type: 'single',
-                account_name: form.getFieldValue('account_name'),
-                account_id: form.getFieldValue('account_id')
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code != 200) {
-                    setIsShowSearch(true)
-                    setSearchList(res.data.data)
-                    message.error(res.data.msg)
-                } else {
-                    setIsShowSearch(false)
-                    setSearchList({})
-                    message.success(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [isShowKeyword, setIsShowKeyword] = useState(false)
-    const [hasFuSaleman, setHasFuSaleman] = useState(false)
-    const addTalent = () => {
-        request({
-            method: 'post',
-            url: '/talent/addTalent',
-            data: {
-                tid: tid,
-                accounts: [{ ...form.getFieldsValue() }],
+                tid,
+                tmids,
+                status: detailData.status,
+                exam,
+                note: exam ? null : note,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -564,35 +520,7 @@ function TalentDetail() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setIsShowModel(false);
-                    getTalentDetailAPI();
-                    form.resetFields(); setIsShowSearch(false); setSearchList({}); setIsShowPlatform(false); setIsShowGroup(false); setHasFuSaleman(false);
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [salemans, setSalemans] = useState()
-    const getSalemans = () => {
-        request({
-            method: 'post',
-            url: '/user/getSalemans',
-            data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setSalemans(res.data.data)
+                    navigate(-1)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -610,14 +538,26 @@ function TalentDetail() {
     return (
         <Fragment>
             <Row gutter={24}>
-                <Col span={16}>
+                <Col span={18}>
                     <Card title={<Space><CrownOutlined /><span>基础信息</span>
-                        <Tag color={detailData.status && (detailData.status.match('待审批') ? 'gold' : detailData.status.match('合作中') ? 'green' : 'grey')}>{detailData.status && detailData.status}</Tag>
+                        <Tag color={detailData.status.match('待审批') ? 'gold' : detailData.status.match('合作中') ? 'green' : 'grey'}>{detailData.status}</Tag>
                     </Space>}
                         style={{ marginBottom: '20px' }}
                         extra={examPower && detailData.status.match('待审批') ?
                             <Space>
-                                <Button type="primary" onClick={() => { examTalentAPI(true, null); }}>通过</Button>
+                                <Button type="primary" onClick={() => {
+                                    if (detailData.status.match('合作')) {
+                                        let ids = []
+                                        for (let i = 0; i < detailData.models.length; i++) {
+                                            if (detailData.models[i].status === '待审批') {
+                                                ids.push(detailData.models[i].tmid);
+                                            }
+                                        }
+                                        examTalentModelAPI(ids, true, null)
+                                    } else {
+                                        examTalentAPI(true, null);
+                                    }
+                                }}>通过</Button>
                                 <Button type="primary" danger onClick={() => { setIsShowRefund(true); }}>驳回</Button>
                             </Space> : null}
                     >
@@ -654,6 +594,10 @@ function TalentDetail() {
                             extra={examPower || (detailData.status.match('待审批')) ? null : <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowMiddle(true); setMiddleType('新增一级中间人'); }}>新增</Button>}
                         /> : <Descriptions title="一级中间人" column={5} items={getMiddleman1Items()}
                             extra={<>
+                                {!isShowM1PayItems ? <Button type="text" icon={<UnorderedListOutlined />} onClick={() => {
+                                    getMiddlemanInfoAPI(1, detailData.m_id_1)
+                                    setIsShowM1PayItems(true)
+                                }}>查看付款账号</Button> : null}
                                 {examPower || (detailData.status.match('待审批')) ? null : <Button type="text" icon={<EditOutlined />} onClick={() => {
                                     formMiddle.setFieldsValue({
                                         m_id: {
@@ -670,7 +614,7 @@ function TalentDetail() {
                                         title="删除一级中间人"
                                         description={`确认删除 ${detailData.m_name_1} 吗?`}
                                         onConfirm={() => {
-                                            editMiddleAPI('删除一级中间人', {
+                                            editTalentAPI('删除一级中间人', null, {
                                                 m_id_1: null,
                                                 m_point_1: null
                                             });
@@ -682,10 +626,15 @@ function TalentDetail() {
                                     </Popconfirm>}
                             </>}
                         />}
+                        {isShowM1PayItems ? <Descriptions column={5} items={m1PayItems}></Descriptions> : null}
                         {detailData.m_id_2 === null ? <Descriptions title="无二级中间人"
                             extra={examPower || (detailData.status.match('待审批')) ? null : <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowMiddle(true); setMiddleType('新增二级中间人'); }}>新增</Button>}
                         /> : <Descriptions title="二级中间人" column={5} items={getMiddleman2Items()}
                             extra={<>
+                                {!isShowM2PayItems ? <Button type="text" icon={<UnorderedListOutlined />} onClick={() => {
+                                    getMiddlemanInfoAPI(2, detailData.m_id_2)
+                                    setIsShowM2PayItems(true)
+                                }}>查看付款账号</Button> : null}
                                 {examPower || (detailData.status.match('待审批')) ? null : <Button type="text" icon={<EditOutlined />} onClick={() => {
                                     formMiddle.setFieldsValue({
                                         m_id: {
@@ -702,7 +651,7 @@ function TalentDetail() {
                                         title="删除二级中间人"
                                         description={`确认删除 ${detailData.m_name_2} 吗?`}
                                         onConfirm={() => {
-                                            editMiddleAPI('删除二级中间人', {
+                                            editTalentAPI('删除二级中间人', null, {
                                                 m_id_2: null,
                                                 m_point_2: null
                                             });
@@ -714,26 +663,49 @@ function TalentDetail() {
                                     </Popconfirm>}
                             </>}
                         />}
+                        {isShowM2PayItems ? <Descriptions column={5} items={m2PayItems}></Descriptions> : null}
                     </Card>
                     <Card title={<Space><GlobalOutlined /><span>合作模式 ----- {detailData.models && detailData.models.length} 个</span></Space>}
-                    /* extra={localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? null : 
-                    <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowModel(true); setEditType('新增线上模式'); }}>新增线上平台</Button>} */
+                        extra={examPower || detailData.status.match('待审批') ? null : <Button type="text" icon={<PlusOutlined />} onClick={() => {
+                            formModel.setFieldValue('models', ['线上平台'])
+                            setIsShowModel(true);
+                            setTypeModel('新增线上合作');
+                        }}>新增线上平台</Button>}
                     >
                         {detailData.models && detailData.models.map((model, index) => {
                             return (
                                 <Card
                                     key={index}
-                                    title={<span>{model.model}__{model.platform}__{model.shop}</span>}
+                                    title={<Space><span>{model.model}__{model.platform}__{model.shop}</span>
+                                        <Tag color={model.status === '待审批' ? "gold" : model.status === '合作中' ? "green" : model.status === '已失效' ? "red" : ""}>{model.status}</Tag>
+                                    </Space>}
                                     style={{ marginBottom: '20px' }}
-                                /* extra={localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? null :
-                                    <Button
-                                        type="text"
-                                        icon={<EditOutlined />}
-                                        onClick={() => {
-                                            setIsShowModel(true);
-                                        }}
-                                    >修改</Button>
-                                } */
+                                    extra={examPower || detailData.status.match('待审批') ? null : <Button type="text" icon={<EditOutlined />} onClick={() => {
+                                        let f = { tmid: model.tmid }
+                                        for (const key in model) {
+                                            if (Object.hasOwnProperty.call(model, key)) {
+                                                if (key === 'u_id_1') {
+                                                    f[key] = {
+                                                        label: model.u_name_1,
+                                                        value: model[key]
+                                                    }
+                                                } else if (model[key] !== null && key === 'u_id_2') {
+                                                    f[key] = {
+                                                        label: model.u_name_2,
+                                                        value: model[key]
+                                                    }
+                                                } else if (model.model !== '线上平台' && model[key] !== null && (key.match('discount') || key.match('u_') || key.match('shop'))) {
+                                                    f[key] = model[key]
+                                                } else if (model.model === '线上平台' && model[key] !== null && ['create_time', 'create_uid', 'model', 'platform', 'shop', 'status', 'tid'].indexOf(key) === -1) {
+                                                    f[key] = model[key]
+                                                }
+                                            }
+                                        }
+                                        formModel.setFieldsValue(f)
+                                        setEditOri(f)
+                                        setIsShowModel(true);
+                                        setTypeModel(`修改${model.model}`);
+                                    }}>修改</Button>}
                                 >
                                     <Descriptions column={5} items={getModelsItems(model)} />
                                 </Card>
@@ -741,7 +713,7 @@ function TalentDetail() {
                         })}
                     </Card>
                 </Col>
-                <Col span={8}>
+                <Col span={6}>
                     <Card title={<Space><SettingOutlined /><span>历史时间线</span></Space>}>
                         <Timeline items={getTimeItems()} />
                     </Card>
@@ -749,7 +721,20 @@ function TalentDetail() {
             </Row>
 
             <Modal title="驳回理由填写" open={isShowRefund}
-                onOk={() => { examTalentAPI(false, formRefund.getFieldValue('note')); setIsShowRefund(false); }}
+                onOk={() => {
+                    if (detailData.status.match('合作')) {
+                        let ids = []
+                        for (let i = 0; i < detailData.models.length; i++) {
+                            if (detailData.models[i].status === '待审批') {
+                                ids.push(detailData.models[i].tmid);
+                            }
+                        }
+                        examTalentModelAPI(ids, false, formRefund.getFieldValue('note'))
+                    } else {
+                        examTalentAPI(false, formRefund.getFieldValue('note'));
+                    }
+                    setIsShowRefund(false);
+                }}
                 onCancel={() => { setIsShowRefund(false); }}
             >
                 <Form form={formRefund}>
@@ -760,7 +745,7 @@ function TalentDetail() {
             </Modal>
             <Modal title={yearType} open={isShowYear}
                 onOk={() => {
-                    editYearAPI(yearType, {
+                    editTalentAPI(yearType, null, {
                         ...formYear.getFieldsValue(),
                         yearbox_start_date: dayjs(formYear.getFieldValue('yearbox_start_date')).valueOf()
                     });
@@ -785,7 +770,7 @@ function TalentDetail() {
                 isShow={isShowLiaison}
                 type={'edit_talent'}
                 form={formLiaison}
-                onOK={(values) => { editLiaisonAPI('修改联系人', values); }}
+                onOK={(values) => { editTalentAPI('修改联系人', JSON.stringify(editOri), values); }}
                 onCancel={() => { setIsShowLiaison(false); formLiaison.resetFields(); setType(''); }}
             />
             <Modal title={middleType} open={isShowMiddle}
@@ -802,7 +787,7 @@ function TalentDetail() {
                             m_point_2: formMiddle.getFieldValue('m_point')
                         }
                     }
-                    editMiddleAPI(middleType, payload);
+                    editTalentAPI(middleType, null, payload);
                 }}
                 onCancel={() => { formMiddle.resetFields(); setIsShowMiddle(false); }}>
                 <Form form={formMiddle}>
@@ -814,166 +799,62 @@ function TalentDetail() {
                     </Form.Item>
                 </Form>
             </Modal>
-            <Modal title={editType === '新增线上模式' ? "新增线上账号" : editType === '修改线上模式' ? '修改线上账号' : editType === '修改社群团购模式' ? '修改社群团购模式' : '修改供货模式'} open={isShowModel}
-                onOk={() => { form.submit(); }}
-                onCancel={() => { setIsShowModel(false); form.resetFields(); }}>
-                <Form
-                    form={form}
-                    onFinish={(values) => {
-                        if (editType === '新增线上模式') {
-                            addTalent(values)
-                        } else {
-                            editDetail()
-                        }
-                    }}
-                >
-                    {editType === '新增线上模式' || editType === '修改线上模式' ? <><Form.Item label="编号" name="tdid" rules={[{ required: true, message: '不能为空' }]}>
-                        <Input placeholder="请输入" disabled={editType === '修改线上模式' ? true : false} />
-                    </Form.Item>
-                        <Form.Item label="模式" name="model" rules={[{ required: true, message: '不能为空' }]}>
-                            <Input placeholder="请输入" disabled={editType === '修改线上模式' ? true : false} />
-                        </Form.Item>
-                        <Form.Item label="平台" name="platform_shop" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select
-                                placeholder="请选择"
-                                options={platform}
-                                disabled={editType === '修改线上模式' ? true : false}
-                                onChange={(value) => {
-                                    form.setFieldValue('platform', value)
-                                    if (value !== '闯货' && value !== '抖音' && value !== '快手' && value !== '视频号' && value !== '视频号服务商') {
-                                        setIsShowKeyword(true)
+            <AETalentModel
+                isShow={isShowModel}
+                type={typeModel}
+                form={formModel}
+                onOK={(values) => {
+                    let ori = editOri
+                    ori.u_id_1 = editOri.u_id_1.value
+                    if (ori.u_id_2) {
+                        ori.u_id_2 = editOri.u_id_2.value
+                    }
+                    delete ori.u_name_1
+                    delete ori.u_name_2
+                    let payload = values
+                    payload.u_id_1 = values.u_id_1.value
+                    if (payload.u_id_2) {
+                        payload.u_id_2 = values.u_id_2.value
+                    }
+                    let z = {}, type = ''
+                    for (const key in ori) {
+                        if (Object.hasOwnProperty.call(ori, key)) {
+                            for (const k in payload) {
+                                if (Object.hasOwnProperty.call(payload, k)) {
+                                    if (key === k && ori[key] !== payload[k]) {
+                                        z[key] = payload[k]
+                                        if (key.match('u_') || key.match('discount_')) {
+                                            type = '佣金提点'
+                                        } else {
+                                            type = '基础信息'
+                                        }
                                     }
-                                }}
-                            />
-                        </Form.Item>
-                        <Form.Item label="账号ID" name="account_id" rules={[{ required: true, message: '不能为空' }]}>
-                            <Input placeholder="请输入" disabled={editType === '修改线上模式' ? true : false} />
-                        </Form.Item>
-                        <Form.Item label="账号名称" name="account_name" rules={[{ required: true, message: '不能为空' }]}>
-                            <Input placeholder="请输入" disabled={editType === '修改线上模式' ? true : false} />
-                        </Form.Item>
-                        {editType === '修改线上模式' ? null : <Form.Item label="相同线上达人">
-                            <Button onClick={() => {
-                                if ((form.getFieldValue('account_name') && form.getFieldValue('account_name').length > 0) || (form.getFieldValue('account_id') && form.getFieldValue('account_id').length > 0)) {
-                                    searchSame()
-                                } else {
-                                    setIsShowSearch(false)
-                                    setSearchList({})
-                                    message.error('未填写达人账号名/ID, 无法查询')
                                 }
-                            }}>查询</Button>
-                        </Form.Item>}
-                        {isShowSearch && <Form.Item label="">
-                            {searchList.length > 0 ? <List
-                                itemLayout="horizontal"
-                                bordered
-                                dataSource={searchList}
-                                renderItem={(item, index) => (
-                                    <List.Item>
-                                        <List.Item.Meta
-                                            avatar={<Image width={50} src={people} preview={false} />}
-                                            title={<Space size={'large'}><span>{`编号: ${item.tdid}`}</span><span>{`商务: ${item.name}`}</span></Space>}
-                                            description={<Space size={'large'}><span>{`平台: ${item.platform_shop}`}</span><span>{`账号ID: ${item.account_id}`}</span><span>{`账号名称: ${item.account_name}`}</span></Space>}
-                                        />
-                                    </List.Item>
-                                )}
-                            /> : null}
-                        </Form.Item>}
-                        <Form.Item label="账号类型" name="account_type" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('account_type', value) }} options={accountType} />
-                        </Form.Item>
-                        <Form.Item label="合作方式" name="account_models" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select mode="multiple" allowClear placeholder="请选择" onChange={(value) => { form.setFieldValue('account_models', value) }} options={accountModelType} />
-                        </Form.Item>
-                        {isShowKeyword ? <Form.Item label="关键字（前后缀）" name="keyword" rules={[{ required: true, message: '不能为空' }]}>
-                            <Input placeholder="请输入" />
-                        </Form.Item> : null}
-                        <Form.Item label="平时带货在线（人）" name="people_count" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber />
-                        </Form.Item>
-                        <Form.Item label="女粉比例（%）" name="fe_proportion" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber />
-                        </Form.Item>
-                        <Form.Item label="粉丝购买主力年龄段（岁）" name="age_cuts" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select mode="multiple" allowClear options={ageCut} />
-                        </Form.Item>
-                        <Form.Item label="粉丝地域分布（省份）" name="main_province" rules={[{ required: true, message: '不能为空' }]}>
-                            <Input />
-                        </Form.Item>
-                        <Form.Item label="平均客单价（元）" name="price_cut" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select options={priceCut} />
-                        </Form.Item>
-                        <Form.Item label="常规品线上佣金比例（%）" name="commission_normal" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber />
-                        </Form.Item>
-                        <Form.Item label="福利品线上佣金比例（%）" name="commission_welfare" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber />
-                        </Form.Item>
-                        <Form.Item label="爆品线上佣金比例（%）" name="commission_bao" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber />
-                        </Form.Item>
-                        <Form.Item label="佣金备注" name="commission_note">
-                            <TextArea />
-                        </Form.Item></> : null}
-                    {editType === '修改社群团购模式' ? <Card title="社群团购" style={{ marginBottom: "20px" }}>
-                        <Form.Item label="聚水潭店铺名" name="platform_shop">
-                            <Input placeholder="请输入" disabled={true} />
-                        </Form.Item>
-                        <Form.Item label="常规品折扣（折）" name="discount_normal" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber placeholder="请输入" />
-                        </Form.Item>
-                        <Form.Item label="福利品折扣（折）" name="discount_welfare" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber placeholder="请输入" />
-                        </Form.Item>
-                        <Form.Item label="爆品折扣（折）" name="discount_bao" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber placeholder="请输入" />
-                        </Form.Item>
-                        <Form.Item label="折扣备注" name="discount_note">
-                            <TextArea placeholder="请输入" />
-                        </Form.Item>
-                    </Card> : null}
-                    {editType === '修改供货模式' ? <Card title="供货" style={{ marginBottom: "20px" }}>
-                        <Form.Item label="聚水潭店铺名" name="platform_shop">
-                            <Input placeholder="请输入" disabled={true} />
-                        </Form.Item>
-                        <Form.Item label="买断折扣（折）" name="discount_buyout" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber placeholder="请输入" />
-                        </Form.Item>
-                        <Form.Item label="含退货率折扣（折）" name="discount_back" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber placeholder="请输入" />
-                        </Form.Item>
-                        <Form.Item label="折扣备注" name="discount_label">
-                            <TextArea placeholder="请输入" />
-                        </Form.Item>
-                    </Card> : null}
-                    <Form.Item label="主商务编号" name="u_id_1" >
-                        <Input defaultValue={localStorage.getItem('uid')} disabled={true} />
-                    </Form.Item>
-                    <Form.Item label="主商务" name="u_name_1" >
-                        <Input defaultValue={localStorage.getItem('name')} disabled={true} />
-                    </Form.Item>
-                    <Form.Item label="主商务提成点（%）" name="u_point_1" rules={[{ required: true, message: '不能为空' }]}>
-                        <InputNumber />
-                    </Form.Item>
-                    <Form.Item label="是否有副商务">
-                        <Radio.Group onChange={(e) => { setHasFuSaleman(e.target.value); }} value={hasFuSaleman} style={{ marginLeft: '20px' }}>
-                            <Radio value={false}>无副商务</Radio>
-                            <Radio value={true}>有副商务</Radio>
-                        </Radio.Group>
-                    </Form.Item>
-                    {hasFuSaleman ? <>
-                        <Form.Item label="副商务" name="u_id_2" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select style={{ width: 160 }} options={salemans} onFocus={() => { getSalemans(); }} />
-                        </Form.Item>
-                        <Form.Item label="副商务提成点（%）" name="u_point_2" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber />
-                        </Form.Item>
-                    </> : null}
-                    <Form.Item label="商务提成备注" name="u_note">
-                        <TextArea />
-                    </Form.Item>
-                </Form>
-            </Modal>
+                            }
+                        }
+                    }
+                    if (Object.keys(ori).length !== Object.keys(payload).length) {
+                        type = '佣金提点'
+                    }
+                    let operate = typeModel + type
+                    if (typeModel.match('新增')) {
+                        addTalentModelAPI(values)
+                    } else if (Object.keys(z).length === 0) {
+                        if (type.match('基础信息')) {
+                            formModel.resetFields();
+                            setIsShowModel(false);
+                            message.info('未修改任何信息');
+                        } else {
+                            z.u_id_2 = payload.u_id_2 ? payload.u_id_2 : ori.u_id_2
+                            z.u_point_2 = payload.u_point_2 ? payload.u_point_2 : ori.u_point_2
+                            editTalentModelAPI(operate, JSON.stringify(z), payload)
+                        }
+                    } else {
+                        editTalentModelAPI(operate, JSON.stringify(z), payload)
+                    }
+                }}
+                onCancel={() => { setIsShowModel(false); formModel.resetFields(); setTypeModel(''); }}
+            />
         </Fragment>
     )
 }

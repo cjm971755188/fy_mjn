@@ -79,7 +79,7 @@ function AEChance(props) {
                     <Form.Item label="达人账号" name="account_names" rules={[{ required: true, message: '不能为空' }]}>
                         <Select mode="tags" allowClear placeholder="请输入" onChange={(value) => { form.setFieldValue('account_names', value) }} options={[]} />
                     </Form.Item>
-                    <Form.Item label="相同线上达人" name="pic">
+                    <Form.Item label="相同线上达人">
                         <Button onClick={() => {
                             if ((form.getFieldValue('account_names') && form.getFieldValue('account_names').length > 0) || (form.getFieldValue('account_ids') && form.getFieldValue('account_ids').length > 0)) {
                                 let payload = {
@@ -96,7 +96,7 @@ function AEChance(props) {
                             }
                         }}>查询</Button>
                     </Form.Item>
-                    {isShowSearch && <Form.Item label="" name="pic">
+                    {isShowSearch && <Form.Item label="">
                         {searchList.length > 0 ? <List
                             itemLayout="horizontal"
                             bordered

@@ -55,5 +55,13 @@ export const descriptionsItems = [
     { key: 52, label: "副商务ID", value: "u_id_2" },
     { key: 53, label: "副商务", value: "u_name_2" },
     { key: 54, label: "提点", value: "u_point_2" },
-    { key: 55, label: "提点备注", value: "u_note" }
+    { key: 55, label: "提点备注", value: "u_note" },
+
+    { key: 56, label: "付款方式", value: "pay_way" },
+    { key: 57, label: "能否开票", value: "can_piao" },
+    { key: 58, label: "票型", value: "piao_type" },
+    { key: 59, label: "税点", value: "shui_point" },
+    { key: 60, label: "付款姓名", value: "pay_name" },
+    { key: 61, label: "开户行", value: "pay_bank" },
+    { key: 62, label: "账号", value: "pay_account" }
 ]

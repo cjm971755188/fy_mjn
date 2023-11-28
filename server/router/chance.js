@@ -69,11 +69,21 @@ router.post('/searchSameChance', (req, res) => {
                     ) a 
                 GROUP BY a.cid, a.name`
     } else {
-        sql = `SELECT DISTINCT tm.tmid, u1.name as u_name_1, u2.name as u_name_2, tm.platform, tm.shop, tm.account_id, tm.account_name 
-                FROM talent_model tm 
-                    LEFT JOIN user u1 ON u1.uid = tms.u_id_1
-                    LEFT JOIN user u2 ON u2.uid = tms.u_id_2
-                WHERE tm.status = '生效中' and (tm.account_id = ${params.account_id} or tm.account_name = ${params.account_name})`
+        let where = 'WHERE '
+        if (params.account_id !== null && params.account_name !== null) {
+            where += `(tm.account_id = '${params.account_id}' or tm.account_name = '${params.account_name}')`
+        } else if (params.account_id === null) {
+            where += `(tm.account_name = '${params.account_name}')`
+        } else {
+            where += `(tm.account_id = '${params.account_id}')`
+        }
+        sql = `SELECT tm.tid, u1.name as u_name_1, u2.name as u_name_2, tm.platform, tm.shop, tm.account_id, tm.account_name 
+                FROM talent_model tm
+                    LEFT JOIN talent_model_schedule tms0 ON tms0.tmid = tm.tmid
+                    INNER JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms1 ON tms1.tmsid = tms0.tmsid
+                    LEFT JOIN user u1 ON u1.uid = tms0.u_id_1
+                    LEFT JOIN user u2 ON u2.uid = tms0.u_id_2
+                ${where}`
     }
     db.query(sql, (err, results) => {
         if (err) throw err;
@@ -164,7 +174,7 @@ router.post('/editLiaison', (req, res) => {
     })
 })
 
-// 报备达人
+// 报备商机
 router.post('/reportChance', (req, res) => {
     let time = dayjs().valueOf()
     let params = req.body
@@ -205,7 +215,7 @@ router.post('/reportChance', (req, res) => {
                                     let u_id_2 = params.accounts[i].u_id_2 ? `'${params.accounts[i].u_id_2}'` : null
                                     let u_point_2 = params.accounts[i].u_point_2 ? `'${params.accounts[i].u_point_2}'` : null
                                     let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
-                                    sql_d += `('${tmid}', '${tid}', '线上平台', '${params.accounts[i].platform}', '普通店铺', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', '待审批', '${params.userInfo.uid}', '${time}'),`
+                                    sql_d += `('${tmid}', '${tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].shop}', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', '待审批', '${params.userInfo.uid}', '${time}'),`
                                     sql_l += `('${tmsid}', '${tmid}', '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', '${params.accounts[i].commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '达人报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
                                 }
                                 count_d += params.accounts.length

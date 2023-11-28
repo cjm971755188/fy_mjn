@@ -103,4 +103,28 @@ router.post('/searchMiddlemans', (req, res) => {
     })
 })
 
+// 查看中间人支付信息
+router.post('/getMiddlemanInfo', (req, res) => {
+    let params = req.body
+    let sql = `SELECT * FROM middleman WHERE mid = '${params.mid}'`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        let items = [], i = 0
+        for (const key in results[0]) {
+            if (Object.hasOwnProperty.call(results[0], key)) {
+                const element = {
+                    key: i,
+                    label: key,
+                    children: results[0][key]
+                }
+                if (i >= 6 && i <= 12) {
+                    items.push(element)
+                }
+            }
+            i++
+        }
+        res.send({ code: 200, data: items, msg: `` })
+    })
+})
+
 module.exports = router
