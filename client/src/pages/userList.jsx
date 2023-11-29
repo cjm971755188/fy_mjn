@@ -141,7 +141,17 @@ function UserList() {
         request({
             method: 'post',
             url: '/user/addUser',
-            data: payload
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
@@ -162,7 +172,17 @@ function UserList() {
         request({
             method: 'post',
             url: '/user/editUser',
-            data: payload
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
@@ -184,7 +204,17 @@ function UserList() {
         request({
             method: 'post',
             url: '/user/editUserStatus',
-            data: payload
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
@@ -202,7 +232,17 @@ function UserList() {
         request({
             method: 'post',
             url: '/user/deleteUser',
-            data: payload
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {

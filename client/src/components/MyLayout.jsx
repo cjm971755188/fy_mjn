@@ -32,11 +32,11 @@ const items = [
 
 // 左侧菜单 menus
 const menuItemsTotal = [
-    {
+    /* {
         key: '/admin/workbench',
         icon: <CalendarOutlined />,
         label: '工作台',
-    },
+    }, */
     /* {
         key: '/admin/bi',
         icon: <AreaChartOutlined />,
@@ -59,13 +59,13 @@ const menuItemsTotal = [
     },
     {
         key: '/admin/middleman',
-        label: '中间人列表',
+        label: '中间人管理',
         icon: <BranchesOutlined />
     },
     {
         key: '/admin/user',
         icon: <UserOutlined />,
-        label: '用户列表'
+        label: '用户管理'
     },
     {
         key: '/admin/talent/chance_list/talent_detail',
@@ -85,6 +85,8 @@ const getMenuItems = (department, position) => {
     for (let i = 0; i < menuItemsTotal.length; i++) {
         let menu = menuItemsTotal[i];
         if (menu.label === '达人详情') {
+            continue
+        } else if (menu.label === '用户列表' && position === '助理') {
             continue
         } else {
             arrObj.push(menu)

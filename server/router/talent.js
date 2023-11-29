@@ -156,7 +156,7 @@ router.post('/editTalent', (req, res) => {
                         for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
                             if (isAdd && Object.keys(params.new)[i] === key) {
                                 isAdd = false
-                                sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i]}',`
+                                sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i].replace('/public', '')}',`
                             }
                         }
                         if (isAdd && key === 'need_examine') {
@@ -321,7 +321,7 @@ router.post('/addTalentModel', (req, res) => {
     })
 })
 
-// 修改达人信息
+// 修改达人模式信息
 router.post('/editTalentModel', (req, res) => {
     let time = dayjs().valueOf()
     let params = req.body
@@ -330,9 +330,9 @@ router.post('/editTalentModel', (req, res) => {
         if (err) throw err;
         let tmsid = 'TMS' + `${results.length + 1}`.padStart(7, '0')
         let sql = `SELECT tms0.*
-                        FROM talent_model_schedule tms0 
-                            INNER JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status = '生效中' GROUP BY tmid) tms1 ON tms1.tmsid = tms0.tmsid
-                        WHERE tms0.tmid = '${params.new.tmid}'`
+                    FROM talent_model_schedule tms0 
+                        INNER JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status = '生效中' GROUP BY tmid) tms1 ON tms1.tmsid = tms0.tmsid
+                    WHERE tms0.tmid = '${params.new.tmid}'`
         db.query(sql, (err, results) => {
             if (err) throw err;
             let sql = `INSERT INTO talent_model_schedule VALUES('${tmsid}',`
@@ -397,7 +397,7 @@ router.post('/editTalentModel', (req, res) => {
                 if (params.operate.match('基础信息')) {
                     let sql = 'UPDATE talent_model SET'
                     for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
-                        if (Object.keys(params.new)[i] !== 'tmid' && !Object.keys(params.new)[i].match('commission') && !Object.keys(params.new)[i].match('u_')) {
+                        if (Object.keys(params.new)[i] !== 'tmid' && !Object.keys(params.new)[i].match('commission_') && !Object.keys(params.new)[i].match('discount_') && !Object.keys(params.new)[i].match('u_')) {
                             sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
                         }
                     }
@@ -445,179 +445,6 @@ router.post('/examTalentModel', (req, res) => {
             db.query(sql, (err, results) => {
                 if (err) throw err;
                 res.send({ code: 200, data: {}, msg: `` })
-            })
-        })
-    })
-})
-
-
-
-// 获取提点详情
-router.post('/getLinePoint', (req, res) => {
-    let params = req.body
-    let tlids = ''
-    for (let i = 0; i < params.tlids.split(',').length; i++) {
-        tlids += `'${params.tlids.split(',')[i]}',`
-    }
-    tlids = tlids.substring(0, tlids.length - 1)
-    let sql = `SELECT IF(td.account_name IS NULL, CONCAT(td.model, '_', td.platform_shop), CONCAT(td.model, '_', td.platform_shop, '_', td.account_name)) as title, tl.commission_note, tl.discount_note, tl.discount_label, tl.u_note, tl.m_note_1, tl.m_note_2, 
-                    CONCAT('常规品(', tl.commission_normal, '%)'), CONCAT('福利品(', tl.commission_welfare, '%)'), CONCAT('爆品(', tl.commission_bao, '%)'), CONCAT('常规品(', tl.discount_normal, '折)'), CONCAT('福利品(', tl.discount_welfare, '折)'), CONCAT('爆品(', tl.discount_bao, '折)'), 
-                    CONCAT('买断品(', tl.discount_buyout, '折)'), CONCAT('含退货品(', tl.discount_back, '折)'), 
-                    CONCAT(u1.name, '(', tl.u_point_1, '%)'), CONCAT(u2.name, '(', tl.u_point_2, '%)'), CONCAT('①', m1.name, '[', tl.m_point_1, '%]'), CONCAT('②', m2.name, '[', tl.m_point_2, '%]')
-                FROM talentline tl 
-                    LEFT JOIN talentdetail td ON tl.tdid = td.tdid 
-                    LEFT JOIN user u1 ON tl.u_id_1 = u1.uid 
-                    LEFT JOIN user u2 ON tl.u_id_2 = u2.uid 
-                    LEFT JOIN middleman m1 ON tl.m_id_1 = m1.mid 
-                    LEFT JOIN middleman m2 ON tl.m_id_2 = m2.mid 
-                WHERE tlid in (${tlids})`
-    db.query(sql, (err, results) => {
-        if (err) throw err;
-        for (let i = 0; i < results.length; i++) {
-            const element = results[i]
-            let tags = []
-            for (let j = 0; j < Object.getOwnPropertyNames(results[i]).length; j++) {
-                if (Object.keys(results[i])[j].match('CONCAT') && Object.values(results[i])[j] !== null) {
-                    tags.push(Object.values(results[i])[j])
-                }
-            }
-            element.tags = tags
-        }
-        res.send({ code: 200, data: results, msg: '' })
-    })
-})
-
-// 获取年框详情
-router.post('/getYearPoint', (req, res) => {
-    let params = req.body
-    let tlids = ''
-    for (let i = 0; i < params.tlids.split(',').length; i++) {
-        tlids += `'${params.tlids.split(',')[i]}',`
-    }
-    tlids = tlids.substring(0, tlids.length - 1)
-    let sql = `SELECT DISTINCT CONCAT('生效时间(', DATE(FROM_UNIXTIME(LEFT(tl.yearpay_start, 10))), ')'), CONCAT(tl.yearpay_cycle, '(', tl.yearpay_point, '%)')
-                FROM talentline tl 
-                    LEFT JOIN talentdetail td ON tl.tdid = td.tdid 
-                WHERE tlid in (${tlids})`
-    db.query(sql, (err, results) => {
-        if (err) throw err;
-        for (let i = 0; i < results.length; i++) {
-            const element = results[i]
-            let tags = []
-            for (let j = 0; j < Object.getOwnPropertyNames(results[i]).length; j++) {
-                if (Object.keys(results[i])[j].match('CONCAT') && Object.values(results[i])[j] !== null) {
-                    tags.push(Object.values(results[i])[j])
-                }
-            }
-            element.tags = tags
-        }
-        res.send({ code: 200, data: results, msg: '' })
-    })
-})
-
-// 获取历史修改信息
-router.post('/getOriInfo', (req, res) => {
-    let params = req.body
-    let tlids = ''
-    for (let i = 0; i < params.tlids.split(',').length; i++) {
-        tlids += `'${params.tlids.split(',')[i]}',`
-    }
-    tlids = tlids.substring(0, tlids.length - 1)
-    let sql = `SELECT DISTINCT '历史信息' as title, edit_ori
-                FROM talentline tl 
-                    LEFT JOIN talentdetail td ON tl.tdid = td.tdid 
-                WHERE tlid in (${tlids})`
-    db.query(sql, (err, results) => {
-        if (err) throw err;
-        let ori = JSON.parse(results[0].edit_ori) === null ? {} : JSON.parse(results[0].edit_ori)
-        for (let i = 0; i < results.length; i++) {
-            const element = results[i]
-            let tags = []
-            for (let j = 0; j < Object.getOwnPropertyNames(ori).length; j++) {
-                tags.push(`${Object.keys(ori)[j]}: ${Object.values(ori)[j]}`)
-            }
-            element.tags = tags
-        }
-        res.send({ code: 200, data: results, msg: '' })
-    })
-})
-
-// 新增达人合作模式
-router.post('/addTalent', (req, res) => {
-    let time = dayjs().valueOf()
-    let params = req.body
-    let sql = `SELECT * FROM talentdetail`
-    db.query(sql, (err, results_d) => {
-        if (err) throw err;
-        let sql = `SELECT * FROM talentline`
-        db.query(sql, (err, results_l) => {
-            if (err) throw err;
-            let sql = `SELECT DISTINCT tl.* 
-                        FROM talentline tl 
-                            INNER JOIN (SELECT MAX(date_line) as date FROM talentline GROUP BY tdid) tl2 on tl2.date = tl.date_line 
-                            LEFT JOIN talentdetail td on td.tdid = tl.tdid 
-                        LEFT JOIN talent t ON t.tid = td.tid
-                        WHERE t.tid = '${params.tid}'`
-            db.query(sql, (err, results_o) => {
-                if (err) throw err;
-                let s = ''
-                for (let i = 24; i < Object.getOwnPropertyNames(results_o[0]).length; i++) {
-                    s += Object.values(results_o[0])[i] !== null ? `'${Object.values(results_o[0])[i]}',` : `null,`
-                }
-                s = s.substring(0, s.length - 1)
-                let sql_d = `INSERT INTO talentdetail values`
-                let sql_l = `INSERT INTO talentline values`
-                let count_d = results_d.length
-                let count_l = results_l.length
-                if (params.accounts) {
-                    for (let i = 0; i < params.accounts.length; i++) {
-                        let tdid = 'TD' + `${count_d + i + 1}`.padStart(5, '0')
-                        let tlid = 'TL' + `${count_l + i + 1}`.padStart(5, '0')
-                        let keyword = params.accounts[i].keyword ? `'${params.accounts[i].keyword}'` : null
-                        let u_id_2 = params.accounts[i].u_id_2 ? `'${params.accounts[i].u_id_2}'` : null
-                        let u_point_2 = params.accounts[i].u_point_2 ? `'${params.accounts[i].u_point_2}'` : null
-                        let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
-                        sql_d += `('${tdid}', '${params.tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', null, null, '待审批'),`
-                        sql_l += `('${tlid}', '${params.userInfo.uid}', '报备新模式', null, '${tdid}', ${time}, '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', '${params.accounts[i].commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, null, null, ${u_note}, ${s}),`
-                    }
-                    count_d += params.accounts.length
-                    count_l += params.accounts.length
-                }
-                if (params.group_name) {
-                    let tdid = 'TD' + `${count_d + 1}`.padStart(5, '0')
-                    let tlid = 'TL' + `${count_l + 1}`.padStart(5, '0')
-                    let u_id_2 = params.group_u_id_2 ? `'${params.group_u_id_2}'` : null
-                    let u_point_2 = params.group_u_point_2 ? `'${params.group_u_point_2}'` : null
-                    let group_u_note = params.group_u_note ? `'${params.group_u_note}'` : null
-                    sql_d += `('${tdid}', '${params.tid}', '社群团购', '${params.group_shop}', null, null, null, null, null, null, null, null, null, null, '${params.group_name}', null, '待审批'),`
-                    sql_l += `('${tlid}', '${params.userInfo.uid}', '报备新模式', null, '${tdid}', ${time}, null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, null, null, ${group_u_note}, ${s}),`
-                    count_d += 1
-                    count_l += 1
-                }
-                if (params.provide_name) {
-                    let tdid = 'TD' + `${count_d + 1}`.padStart(5, '0')
-                    let tlid = 'TL' + `${count_l + 1}`.padStart(5, '0')
-                    let u_id_2 = params.provide_u_id_2 ? `'${params.provide_u_id_2}'` : null
-                    let u_point_2 = params.provide_u_point_2 ? `'${params.provide_u_point_2}'` : null
-                    let provide_u_note = params.provide_u_note ? `'${params.provide_u_note}'` : null
-                    sql_d += `('${tdid}', '${params.tid}', '供货', '${params.provide_shop}', null, null, null, null, null, null, null, null, null, null, null, '${params.provide_name}', '待审批'),`
-                    sql_l += `('${tlid}', '${params.userInfo.uid}', '报备新模式', null, '${tdid}', ${time}, null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, null, null, ${provide_u_note}, ${s}),`
-                    count_d += 1
-                    count_l += 1
-                }
-                sql_d = sql_d.substring(0, sql_d.length - 1)
-                sql_l = sql_l.substring(0, sql_l.length - 1)
-                db.query(sql_d, (err, results) => {
-                    if (err) throw err;
-                    db.query(sql_l, (err, results) => {
-                        if (err) throw err;
-                        let sql = `UPDATE talent SET talent_status = '新模式待审批' WHERE tid = '${params.tid}'`
-                        db.query(sql, (err, results) => {
-                            if (err) throw err;
-                            res.send({ code: 200, data: {}, msg: `` })
-                        })
-                    })
-                })
             })
         })
     })

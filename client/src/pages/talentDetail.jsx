@@ -252,13 +252,14 @@ function TalentDetail() {
                     children: <div>
                         <Space>
                             <Row>{`【${dayjs(Number(element.create_time)).format('YYYY-MM-DD')}】 ${element.u_name_1} ${element.operate}`}{element.examine_uid === null ? null : element.examine_time === null ? `-----@${element.u_name_2} 审批` : null}</Row>
-                            {/* {element.examine_result && (element.examine_result === null || element.examine_result.match('通过')) && (element.operate.match('修改') || element.operate.match('删除')) ?
+                            {element.operate.match('修改') || element.operate.match('删除') ?
                                 itemKey !== i ? <a onClick={() => {
-                                    message.info('查看')
+                                    getHistoryInfoAPI(element.tsid);
+                                    setItemKey(i);
                                 }}>查看历史</a> : <a onClick={() => {
                                     setPointTags([])
                                     setItemKey(19980426)
-                                }}>隐藏</a> : null} */}
+                                }}>隐藏</a> : null}
                         </Space>
                         <Row>{element.examine_time === null ? null : `【${dayjs(Number(element.examine_time)).format('YYYY-MM-DD')}】 ${element.u_name_2} 审批${element.examine_result}`}{element.examine_note === null ? null : `(${element.examine_note})`}</Row>
                         {/* {itemKey !== i ? null : <List
@@ -300,6 +301,36 @@ function TalentDetail() {
             items.push({ color: 'gray', children: '' })
         }
         return items
+    }
+    const getHistoryInfoAPI = (tsid) => {
+        message.info('getHistoryInfoAPI')
+        /* request({
+            method: 'post',
+            url: '/talent/getHistoryInfo',
+            data: {
+                tsid,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    console.log(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        }) */
     }
 
     // 新增、续约年框

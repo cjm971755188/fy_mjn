@@ -62,12 +62,15 @@ router.post('/getUserList', (req, res) => {
     // 去除 已删除 + 自己 + 管理员
     let where = `where status != '失效' and position != '管理员' and uid != '${params.userInfo.uid}'`
     // 权限筛选
-    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
+    if (params.userInfo.position !== '管理员' || params.userInfo.position.match('总裁')) {
         if (params.userInfo.position === '副总') {
             where += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department != '主管') {
+        if (params.userInfo.department === '主管') {
             where += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+        }
+        if (params.userInfo.position === '商务') {
+            where += ` and position = '助理' and create_uid = '${params.userInfo.uid}'`
         }
     }
     // 条件筛选
@@ -113,7 +116,7 @@ router.post('/addUser', (req, res) => {
                     if (results[0].status != '禁用') {
                         res.send({ code: 201, data: {}, msg: `${params.phone} 手机号已存在，添加失败` })
                     } else {
-                        let sql = `UPDATE user SET status = '正常', create_time = '${dayjs().valueOf()}' where phone = '${params.phone}'`
+                        let sql = `UPDATE user SET status = '正常', create_uid = '${params.userInfo.uid}', create_time = '${dayjs().valueOf()}' where phone = '${params.phone}'`
                         db.query(sql, (err, results) => {
                             if (err) throw err;
                             res.send({ code: 200, data: {}, msg: `${params.name} 重启成功` })
@@ -124,7 +127,7 @@ router.post('/addUser', (req, res) => {
                     db.query(sql, (err, results) => {
                         if (err) throw err;
                         let uid = 'MJN' + `${results[0].sum}`.padStart(5, '0')
-                        let sql = `INSERT INTO user values('${uid}', '${params.name}', '${params.phone}', '123456', '${params.combine[0]}', '${params.combine[1]}', '${params.combine[2]}', '正常', '${dayjs().valueOf()}')`
+                        let sql = `INSERT INTO user values('${uid}', '${params.name}', '${params.phone}', '123456', '${params.combine[0]}', '${params.combine[1]}', '${params.combine[2]}', '正常', '${params.userInfo.uid}', '${dayjs().valueOf()}')`
                         db.query(sql, (err, results) => {
                             if (err) throw err;
                             res.send({ code: 200, data: {}, msg: `${params.name} 添加成功` })
@@ -190,11 +193,11 @@ router.post('/deleteUser', (req, res) => {
     })
 })
 
-// 获取商务下拉框
+// 获取商务/助理下拉框
 router.post('/getSalemanItems', (req, res) => {
     let params = req.body
     // 去除 已删除 + 自己 + 管理员
-    let where = `where status != '失效' and position = '商务'`
+    let where = `where status != '失效' and (position = '商务' or (position = '助理' and department = '事业部'))`
     // 权限筛选
     if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
         if (params.userInfo.position === '副总') {

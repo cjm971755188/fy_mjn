@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { NavLink } from 'react-router-dom'
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Alert } from 'antd';
+import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Alert, Modal } from 'antd';
 import { PauseCircleTwoTone, ClockCircleTwoTone } from '@ant-design/icons';
 import { model, yearDealType, yearBoxType } from '../baseData/talent'
 
@@ -17,9 +17,9 @@ function TalentList() {
         { title: '编号', dataIndex: 'tid', key: 'tid' },
         { title: '达人名称', dataIndex: 'name', key: 'name' },
         { title: '年成交额', dataIndex: 'year_deal', key: 'year_deal' },
-        { 
-            title: '年框状态', 
-            dataIndex: 'yearbox_status', 
+        {
+            title: '年框状态',
+            dataIndex: 'yearbox_status',
             key: 'yearbox_status',
             render: (_, record) => (
                 <Space size="small">
@@ -30,9 +30,9 @@ function TalentList() {
             )
         },
         { title: '合作模式', dataIndex: 'models', key: 'models' },
-        { 
-            title: '商务', 
-            dataIndex: 'u_names', 
+        {
+            title: '商务',
+            dataIndex: 'u_names',
             key: 'u_names',
             render: (_, record) => (
                 <Popover title="商务信息" content={
@@ -45,9 +45,9 @@ function TalentList() {
                 </Popover>
             )
         },
-        { 
-            title: '中间人', 
-            dataIndex: 'm_names', 
+        {
+            title: '中间人',
+            dataIndex: 'm_names',
             key: 'm_names',
             render: (_, record) => (
                 <Popover title="中间人信息" content={
@@ -77,9 +77,9 @@ function TalentList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
-                    {examinePower && record.status.match('待审批') ?  <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> : 
+                    {examinePower && record.status.match('待审批') ? <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> :
                         <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>查看详情</NavLink>}
-                    
+                    {examinePower ? null : <a onClick={() => { setClickTid(record.tid); setIsShowGive(true); }}>移交</a>}
                 </Space>
             )
         }
@@ -147,7 +147,7 @@ function TalentList() {
     // 查询、清空筛选
     const [filterForm] = Form.useForm()
     const [salemansItems, setSalemansItems] = useState()
-    const getSalemanItemsAPI = () => {
+    const getSalemansItemsAPI = () => {
         request({
             method: 'post',
             url: '/user/getSalemanItems',
@@ -175,6 +175,10 @@ function TalentList() {
             console.error(err)
         })
     }
+    // 移交
+    const [isShowGive, setIsShowGive] = useState()
+    const [formGive] = Form.useForm()
+    const [clickTid, setClickTid] = useState()
 
     useEffect(() => {
         getTalentListAPI();
@@ -204,7 +208,7 @@ function TalentList() {
                         <Select style={{ width: 160 }} options={model} />
                     </Form.Item>
                     {userShowPower ? null : <Form.Item label='商务' name='u_ids' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemanItemsAPI(); }} />
+                        <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
                     </Form.Item>}
                     <Form.Item style={{ marginBottom: '20px' }}>
                         <Space size={'large'}>
@@ -231,6 +235,19 @@ function TalentList() {
                     onChange={handleTableChange}
                 />
             </Card>
+            <Modal title="移交达人" open={isShowGive}
+                onOk={() => {
+                    message.info('移交达人')
+                    setIsShowGive(false);
+                }}
+                onCancel={() => { setIsShowGive(false); }}
+            >
+                <Form form={formGive}>
+                    <Form.Item label="承接商务" name="u_id_1" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select placeholder="请选择" options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
+                    </Form.Item>
+                </Form>
+            </Modal>
         </Fragment>
     )
 }
