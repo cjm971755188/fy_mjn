@@ -4,7 +4,7 @@ fs = require("fs");
 const BASE_URL = require('../config/config')
 
 // 上传文件
-router.post('/uploadFiles', (req, res) => {
+router.post('/upload', (req, res) => {
     let r = []
     for (let i = 0; i < req.files.length; i++) {
         let oldName = Buffer.from(req.files[i].filename, "latin1").toString("utf8");
@@ -18,6 +18,29 @@ router.post('/uploadFiles', (req, res) => {
         })
     }
     res.send(r);
+})
+
+// 下载文件
+router.get('/download', (req, res) => {
+    try {
+        //获取文件路径e
+        let filePath = path.join(__dirname, '/../public/' + req.query.url)
+        res.download(filePath)
+    } catch (e) {
+        res.json({ code: 2000 })
+    }
+})
+
+// 删除文件
+router.post('/delete', (req, res) => {
+    let parmas = req.body
+    fs.unlink(parmas.url, (error) => {
+        if(error) {
+            throw error;
+        } else {
+            console.log('文件删除成功...');
+        }
+    })
 })
 
 module.exports = router

@@ -1,5 +1,6 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { useLocation, useNavigate } from 'react-router-dom'
+import DocViewer from 'react-doc-viewer';
 import request from '../service/request'
 import dayjs from 'dayjs';
 import { Card, Input, Timeline, Button, Tag, Modal, Form, Descriptions, Row, Col, message, Space, Select, InputNumber, Image, Popconfirm } from 'antd';
@@ -83,9 +84,6 @@ function TalentDetail() {
                     }
                     if (description.label === '生效日期') {
                         description.children = description.children === null ? null : dayjs(Number(description.children)).format('YYYY-MM-DD')
-                    }
-                    if (description.label === '合同') {
-                        description.children = <Image width={50} src={description.children} />
                     }
                     if ([15, 16, 17, 18].indexOf(descriptionsItems[j].key) !== -1) {
                         items.push(description)

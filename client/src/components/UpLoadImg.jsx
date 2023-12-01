@@ -59,7 +59,7 @@ function UpLoadImg(props) {
                 className="avatar-uploader"
                 showUploadList={false}
                 // 上传的后端地址
-                action={`${BASE_URL}/api/uploadFiles`}
+                action={`${BASE_URL}/file/upload`}
                 beforeUpload={beforeUpload}
                 onChange={handleChange}
             >

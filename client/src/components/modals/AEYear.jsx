@@ -46,7 +46,7 @@ function AEUser(props) {
                 <Form.Item label="合同文件" name="yearbox_files" rules={[{ required: true, message: '不能为空' }]}>
                     <Upload
                         name={`${localStorage.getItem('name')}_年框_${form.getFieldValue('tid')}`}
-                        action={`${BASE_URL}/api/uploadFiles`}
+                        action={`${BASE_URL}/file/upload`}
                         fileList={fileList}
                         onChange={handleChange}
                         multiple={true}

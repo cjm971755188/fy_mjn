@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Button, Select, Popconfirm, message, Alert } from 'antd';
-import { PlusOutlined, PauseCircleTwoTone, ExclamationCircleTwoTone } from '@ant-design/icons';
+import { Card, Table, Space, Form, Input, Button, message, Alert, Popconfirm } from 'antd';
+import { CloseCircleTwoTone, PauseCircleTwoTone } from '@ant-design/icons';
 
 function YearList() {
     // 表格：格式
@@ -15,7 +15,7 @@ function YearList() {
             key: 'status',
             render: (_, record) => (
                 <Space size={'middle'}>
-                    {record.status === '生效中' ? <PauseCircleTwoTone twoToneColor="#4ec9b0" /> : <ExclamationCircleTwoTone twoToneColor="#f81d22" />}
+                    {record.status === '生效中' ? <PauseCircleTwoTone twoToneColor="#4ec9b0" /> : <CloseCircleTwoTone twoToneColor="#f81d22" />}
                     <span>{record.status}</span>
                 </Space>
             )
@@ -26,19 +26,19 @@ function YearList() {
             render: (_, record) => (
                 <Space size="middle">
                     <a onClick={() => { downloadAPI(record.url); }}>下载</a>
-                    {record.status === '生效中' ? <a onClick={() => {
-                        let payload = {
-                            uid: record.uid,
-                            type: false
-                        }
-                        editUserStatusAPI(payload);
-                    }}>失效</a> : <a onClick={() => {
-                        let payload = {
-                            uid: record.uid,
-                            type: true
-                        }
-                        editUserStatusAPI(payload);
-                    }}>恢复正常</a>}
+                    <Popconfirm
+                        title="确认要删除该文件吗"
+                        okText="删除"
+                        cancelText="取消"
+                        onConfirm={() => {
+                            let payload = {
+                                rid: record.rid
+                            }
+                            deleteResourceAPI(payload);
+                        }}
+                    >
+                        <a>删除</a>
+                    </Popconfirm>
                 </Space>
             ),
         }
@@ -105,137 +105,44 @@ function YearList() {
     }
     // 查询、清空筛选
     const [filterForm] = Form.useForm()
-
-    // 用户：添加、修改、删除
-    const [type, setType] = useState(false)
-    const [isShow, setIsShow] = useState(false)
-    const [form] = Form.useForm()
-    const addUserAPI = (payload) => {
-        request({
-            method: 'post',
-            url: '/user/addUser',
-            data: {
-                ...payload,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setIsShow(false);
-                    getYearListAPI();
-                    message.success(res.data.msg)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const editUserAPI = (payload) => {
-        request({
-            method: 'post',
-            url: '/user/editUser',
-            data: {
-                ...payload,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setIsShow(false)
-                    getYearListAPI();
-                    form.resetFields();
-                    message.success(res.data.msg)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const editUserStatusAPI = (payload) => {
-        request({
-            method: 'post',
-            url: '/user/editUserStatus',
-            data: {
-                ...payload,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    getYearListAPI();
-                    message.success(res.data.msg)
-                } else {
-                    message.error(res.data.msg)
-                }
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const deleteUserAPI = (payload) => {
-        request({
-            method: 'post',
-            url: '/user/deleteUser',
-            data: {
-                ...payload,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    getYearListAPI();
-                    message.success(res.data.msg)
-                } else {
-                    message.error(res.data.msg)
-                }
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-
-    // 下载文件
+    
+    // 下载、修改状态
     const downloadAPI = (url) => {
         request({
             method: 'get',
-            url: '/api/download',
-            params: {url}
+            url: '/file/download',
+            params: { url },
+            responseType: 'blob'
+        }).then((res) => {
+            if (res.status == 200) {
+                const url = window.URL.createObjectURL(
+                    new Blob([res.data]),
+                );
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', res.config.params.url.split('_')[3]);
+                document.body.appendChild(link);
+                link.click();
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const deleteResourceAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/resource/deleteResource',
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
@@ -244,8 +151,6 @@ function YearList() {
                 } else {
                     message.error(res.data.msg)
                 }
-            } else {
-                message.error(res.data.msg)
             }
         }).catch((err) => {
             console.error(err)
@@ -257,9 +162,7 @@ function YearList() {
     }, [JSON.stringify(tableParams)])
     return (
         <Fragment>
-            <Card title="年框资料列表"
-                extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => { setType('add'); setIsShow(true); }}>添加新年框资料</Button>}
-            >
+            <Card title="年框资料列表">
                 <Form layout="inline" form={filterForm}
                     onFinish={(values) => {
                         setTableParams({
@@ -268,8 +171,9 @@ function YearList() {
                         })
                     }}
                 >
-                    <Form.Item label='达人编码' name='tid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='文件名' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='文件编码' name='rid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='文件名' name='filename' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='达人昵称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item style={{ marginBottom: '20px' }}>
                         <Space size={'middle'}>
                             <Button type="primary" htmlType="submit">查询</Button>
@@ -286,7 +190,7 @@ function YearList() {
                 <Alert message={`总计：${tableParams.pagination.total} 条数据`} type="info" showIcon />
                 <Table
                     style={{ margin: '20px auto' }}
-                    rowKey={(data) => data.uid}
+                    rowKey={(data) => data.rid}
                     columns={columns}
                     dataSource={data}
                     pagination={tableParams.pagination}
@@ -294,13 +198,6 @@ function YearList() {
                     onChange={handleTableChange}
                 />
             </Card>
-            {/* <AEUser
-                type={type}
-                isShow={isShow}
-                form={form}
-                onOK={(values) => { type === 'add' ? addUserAPI(values) : editUserAPI(values) }}
-                onCancel={() => { setIsShow(false); form.resetFields(); }}
-            /> */}
         </Fragment>
     )
 }
