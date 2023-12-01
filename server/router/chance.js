@@ -20,7 +20,7 @@ router.post('/getChanceList', (req, res) => {
     // 条件筛选
     let whereFilter = `where c.status != '报备通过'`
     if (params.filtersDate && params.filtersDate.length === 2) {
-        whereFilter += ` and c.create_time >= '${params.filtersDate[0]} 00:00:00' and c.create_time < '${params.filtersDate[1]} 00:00:00'`
+        whereFilter += ` and c.create_time >= '${params.filtersDate[0]}' and c.create_time < '${params.filtersDate[1]}'`
     }
     for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
         if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
@@ -35,7 +35,8 @@ router.post('/getChanceList', (req, res) => {
     let sql = `SELECT c.*, u.name 
                 FROM chance c 
                     INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = c.u_id
-                ${whereFilter}`
+                ${whereFilter}
+                ORDER BY c.cid DESC`
     db.query(sql, (err, results) => {
         if (err) throw err;
         res.send({ code: 200, data: results.slice(current * pageSize, (current + 1) * pageSize), pagination: { ...params.pagination, total: results.length }, msg: '' })
@@ -178,81 +179,89 @@ router.post('/editLiaison', (req, res) => {
 router.post('/reportChance', (req, res) => {
     let time = dayjs().valueOf()
     let params = req.body
-    let m_id_1 = params.m_id_1 ? `'${params.m_id_1}'` : null
-    let m_point_1 = params.m_point_1 ? `'${params.m_point_1}'` : null
-    let m_id_2 = params.m_id_2 ? `'${params.m_id_2}'` : null
-    let m_point_2 = params.m_point_2 ? `'${params.m_point_2}'` : null
-    let m_note = params.m_note_2 ? `'${params.m_note_2}'` : null
-    let sql = `SELECT * FROM talent`
+    let sql = `SELECT * FROM talent WHERE name = ${params.talent_name}`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        let tid = 'T' + `${results.length + 1}`.padStart(7, '0')
-        let sql = `INSERT INTO talent values('${tid}', '${params.cid}', '${params.talent_name}', '${params.province}', '${params.year_deal}', '${params.liaison_type}', '${params.liaison_name}', '${params.liaison_v}', '${params.liaison_phone}', '${params.crowd_name}', '暂无', '报备待审批', '${params.userInfo.uid}', '${time}')`
-        db.query(sql, (err, results) => {
-            if (err) throw err;
-            let sql = `SELECT * FROM talent_schedule`
+        if (results.length !== 0) {
+            res.send({ code: 201, data: {}, msg: `重复 达人昵称` })
+        } else {
+            let m_id_1 = params.m_id_1 ? `'${params.m_id_1}'` : null
+            let m_point_1 = params.m_point_1 ? `'${params.m_point_1}'` : null
+            let m_id_2 = params.m_id_2 ? `'${params.m_id_2}'` : null
+            let m_point_2 = params.m_point_2 ? `'${params.m_point_2}'` : null
+            let m_note = params.m_note_2 ? `'${params.m_note_2}'` : null
+            let sql = `SELECT * FROM talent`
             db.query(sql, (err, results) => {
                 if (err) throw err;
-                let tsid = 'TS' + `${results.length + 1}`.padStart(7, '0')
-                let sql = `INSERT INTO talent_schedule values('${tsid}', '${tid}', null, null, null, null, ${m_id_1}, ${m_point_1}, ${m_id_2}, ${m_point_2}, ${m_note}, null, '${params.userInfo.uid}', '${time}', '达人报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批')`
+                let tid = 'T' + `${results.length + 1}`.padStart(7, '0')
+                let sql = `INSERT INTO talent values('${tid}', '${params.cid}', '${params.talent_name}', '${params.province}', '${params.year_deal}', '${params.liaison_type}', '${params.liaison_name}', '${params.liaison_v}', '${params.liaison_phone}', '${params.crowd_name}', '暂无', '报备待审批', '${params.userInfo.uid}', '${time}')`
                 db.query(sql, (err, results) => {
                     if (err) throw err;
-                    let sql = `SELECT * FROM talent_model`
-                    db.query(sql, (err, results_d) => {
+                    let sql = `SELECT * FROM talent_schedule`
+                    db.query(sql, (err, results) => {
                         if (err) throw err;
-                        let sql = `SELECT * FROM talent_model_schedule`
-                        db.query(sql, (err, results_l) => {
+                        let tsid = 'TS' + `${results.length + 1}`.padStart(7, '0')
+                        let sql = `INSERT INTO talent_schedule values('${tsid}', '${tid}', null, null, null, ${m_id_1}, ${m_point_1}, ${m_id_2}, ${m_point_2}, ${m_note}, null, '${params.userInfo.uid}', '${time}', '达人报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批')`
+                        db.query(sql, (err, results) => {
                             if (err) throw err;
-                            let sql_d = `INSERT INTO talent_model values`
-                            let sql_l = `INSERT INTO talent_model_schedule values`
-                            let count_d = results_d.length
-                            let count_l = results_l.length
-                            if (params.accounts) {
-                                for (let i = 0; i < params.accounts.length; i++) {
-                                    let tmid = 'TM' + `${count_d + i + 1}`.padStart(7, '0')
-                                    let tmsid = 'TMS' + `${count_l + i + 1}`.padStart(7, '0')
-                                    let keyword = params.accounts[i].keyword ? `'${params.accounts[i].keyword}'` : null
-                                    let u_id_2 = params.accounts[i].u_id_2 ? `'${params.accounts[i].u_id_2}'` : null
-                                    let u_point_2 = params.accounts[i].u_point_2 ? `'${params.accounts[i].u_point_2}'` : null
-                                    let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
-                                    sql_d += `('${tmid}', '${tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].shop}', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', '待审批', '${params.userInfo.uid}', '${time}'),`
-                                    sql_l += `('${tmsid}', '${tmid}', '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', '${params.accounts[i].commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '达人报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
-                                }
-                                count_d += params.accounts.length
-                                count_l += params.accounts.length
-                            }
-                            if (params.group_shop) {
-                                let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
-                                let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
-                                let u_id_2 = params.group_u_id_2 ? `'${params.group_u_id_2}'` : null
-                                let u_point_2 = params.group_u_point_2 ? `'${params.group_u_point_2}'` : null
-                                let u_note = params.group_u_note ? `'${params.group_u_note}'` : null
-                                sql_d += `('${tmid}', '${tid}', '社群团购', '聚水潭', '${params.group_shop}', null, null, null, null, null, null, null, null, null, null, '待审批', '${params.userInfo.uid}', '${time}'),`
-                                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '达人报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
-                                count_d += 1
-                                count_l += 1
-                            }
-                            if (params.provide_shop) {
-                                let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
-                                let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
-                                let u_id_2 = params.provide_u_id_2 ? `'${params.provide_u_id_2}'` : null
-                                let u_point_2 = params.provide_u_point_2 ? `'${params.provide_u_point_2}'` : null
-                                let u_note = params.provide_u_note ? `'${params.provide_u_note}'` : null
-                                sql_d += `('${tmid}', '${tid}', '供货', '聚水潭', '${params.provide_shop}', null, null, null, null, null, null, null, null, null, null, '待审批', '${params.userInfo.uid}', '${time}'),`
-                                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '达人报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
-                                count_d += 1
-                                count_l += 1
-                            }
-                            sql_d = sql_d.substring(0, sql_d.length - 1)
-                            sql_l = sql_l.substring(0, sql_l.length - 1)
-                            db.query(sql_d, (err, results) => {
+                            let sql = `SELECT * FROM talent_model`
+                            db.query(sql, (err, results_d) => {
                                 if (err) throw err;
-                                db.query(sql_l, (err, results) => {
+                                let sql = `SELECT * FROM talent_model_schedule`
+                                db.query(sql, (err, results_l) => {
                                     if (err) throw err;
-                                    let sql = `UPDATE chance SET status = '待审批' WHERE cid = '${params.cid}'`
-                                    db.query(sql, (err, results) => {
+                                    let sql_d = `INSERT INTO talent_model values`
+                                    let sql_l = `INSERT INTO talent_model_schedule values`
+                                    let count_d = results_d.length
+                                    let count_l = results_l.length
+                                    if (params.accounts) {
+                                        for (let i = 0; i < params.accounts.length; i++) {
+                                            let tmid = 'TM' + `${count_d + i + 1}`.padStart(7, '0')
+                                            let tmsid = 'TMS' + `${count_l + i + 1}`.padStart(7, '0')
+                                            let keyword = params.accounts[i].keyword ? `'${params.accounts[i].keyword}'` : null
+                                            let u_id_2 = params.accounts[i].u_id_2 ? `'${params.accounts[i].u_id_2}'` : null
+                                            let u_point_2 = params.accounts[i].u_point_2 ? `'${params.accounts[i].u_point_2}'` : null
+                                            let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
+                                            sql_d += `('${tmid}', '${tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].shop}', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', '待审批', '${params.userInfo.uid}', '${time}'),`
+                                            sql_l += `('${tmsid}', '${tmid}', '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', '${params.accounts[i].commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '达人报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                                        }
+                                        count_d += params.accounts.length
+                                        count_l += params.accounts.length
+                                    }
+                                    if (params.group_shop) {
+                                        let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
+                                        let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
+                                        let u_id_2 = params.group_u_id_2 ? `'${params.group_u_id_2}'` : null
+                                        let u_point_2 = params.group_u_point_2 ? `'${params.group_u_point_2}'` : null
+                                        let u_note = params.group_u_note ? `'${params.group_u_note}'` : null
+                                        sql_d += `('${tmid}', '${tid}', '社群团购', '聚水潭', '${params.group_shop}', null, null, null, null, null, null, null, null, null, null, '待审批', '${params.userInfo.uid}', '${time}'),`
+                                        sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '达人报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                                        count_d += 1
+                                        count_l += 1
+                                    }
+                                    if (params.provide_shop) {
+                                        let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
+                                        let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
+                                        let u_id_2 = params.provide_u_id_2 ? `'${params.provide_u_id_2}'` : null
+                                        let u_point_2 = params.provide_u_point_2 ? `'${params.provide_u_point_2}'` : null
+                                        let u_note = params.provide_u_note ? `'${params.provide_u_note}'` : null
+                                        sql_d += `('${tmid}', '${tid}', '供货', '聚水潭', '${params.provide_shop}', null, null, null, null, null, null, null, null, null, null, '待审批', '${params.userInfo.uid}', '${time}'),`
+                                        sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '达人报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                                        count_d += 1
+                                        count_l += 1
+                                    }
+                                    sql_d = sql_d.substring(0, sql_d.length - 1)
+                                    sql_l = sql_l.substring(0, sql_l.length - 1)
+                                    db.query(sql_d, (err, results) => {
                                         if (err) throw err;
-                                        res.send({ code: 200, data: {}, msg: `报备成功` })
+                                        db.query(sql_l, (err, results) => {
+                                            if (err) throw err;
+                                            let sql = `UPDATE chance SET status = '待审批' WHERE cid = '${params.cid}'`
+                                            db.query(sql, (err, results) => {
+                                                if (err) throw err;
+                                                res.send({ code: 200, data: {}, msg: `报备成功` })
+                                            })
+                                        })
                                     })
                                 })
                             })
@@ -260,7 +269,7 @@ router.post('/reportChance', (req, res) => {
                     })
                 })
             })
-        })
+        }
     })
 })
 

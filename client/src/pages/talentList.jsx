@@ -2,33 +2,18 @@ import React, { Fragment, useEffect, useState } from "react";
 import { NavLink } from 'react-router-dom'
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Alert, Modal } from 'antd';
-import { PauseCircleTwoTone, ClockCircleTwoTone } from '@ant-design/icons';
-import { model, yearDealType, yearBoxType } from '../baseData/talent'
+import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone } from '@ant-design/icons';
+import { model, yearBoxType, talentStatus } from '../baseData/talent'
 
 function TalentList() {
     // 操作权限
     const userShowPower = localStorage.getItem('position') === '商务' ? true : false
-    const addPower = localStorage.getItem('position') === '商务' ? true : false
-    const editPower = localStorage.getItem('position') === '商务' ? true : false
     const examinePower = localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
     let columns = [
         { title: '编号', dataIndex: 'tid', key: 'tid' },
         { title: '达人名称', dataIndex: 'name', key: 'name' },
-        { title: '年成交额', dataIndex: 'year_deal', key: 'year_deal' },
-        {
-            title: '年框状态',
-            dataIndex: 'yearbox_status',
-            key: 'yearbox_status',
-            render: (_, record) => (
-                <Space size="small">
-                    {record.yearbox_status === '待审批' ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
-                        record.yearbox_status === '生效中' ? <PauseCircleTwoTone twoToneColor="#4ec990" /> : null}
-                    <span>{record.yearbox_status}</span>
-                </Space>
-            )
-        },
         { title: '合作模式', dataIndex: 'models', key: 'models' },
         {
             title: '商务',
@@ -60,6 +45,20 @@ function TalentList() {
                 </Popover>
             )
         },
+        { title: '预估慕江南年GMV', dataIndex: 'year_deal', key: 'year_deal' },
+        {
+            title: '年框状态',
+            dataIndex: 'yearbox_status',
+            key: 'yearbox_status',
+            render: (_, record) => (
+                <Space size="small">
+                    {record.yearbox_status === '待审批' ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
+                        record.yearbox_status === '生效中' ? <PauseCircleTwoTone twoToneColor="#4ec990" /> : 
+                            record.yearbox_status === '暂无' ? <StopTwoTone twoToneColor="#999999" /> : null}
+                    <span>{record.yearbox_status}</span>
+                </Space>
+            )
+        },
         {
             title: '达人状态',
             dataIndex: 'status',
@@ -79,7 +78,7 @@ function TalentList() {
                 <Space size="large">
                     {examinePower && record.status.match('待审批') ? <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> :
                         <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>查看详情</NavLink>}
-                    {examinePower ? null : <a onClick={() => { setClickTid(record.tid); setIsShowGive(true); }}>移交</a>}
+                    {record.status === '合作中' ? <a onClick={() => { setClickTid(record.tid); setIsShowGive(true); }}>移交</a> : null}
                 </Space>
             )
         }
@@ -179,7 +178,40 @@ function TalentList() {
     const [isShowGive, setIsShowGive] = useState()
     const [formGive] = Form.useForm()
     const [clickTid, setClickTid] = useState()
-
+    const giveTalnetAPI = () => {
+        request({
+            method: 'post',
+            url: '/talent/giveTalent',
+            data: {
+                tid: clickTid,
+                newTid: formGive.getFieldValue('u_id'),
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShowGive(false);
+                    formGive.resetFields();
+                    setClickTid();
+                    getTalentListAPI();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
     useEffect(() => {
         getTalentListAPI();
     }, [JSON.stringify(tableParams)])
@@ -198,18 +230,18 @@ function TalentList() {
                 >
                     <Form.Item label='编号' name='tid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='达人名称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='年成交额' name='year_deal'>
-                        <Select style={{ width: 160 }} options={yearDealType} />
-                    </Form.Item>
-                    <Form.Item label='年框状态' name='yearbox_status'>
-                        <Select style={{ width: 160 }} options={yearBoxType} />
-                    </Form.Item>
                     <Form.Item label='合作模式' name='models'>
                         <Select style={{ width: 160 }} options={model} />
                     </Form.Item>
                     {userShowPower ? null : <Form.Item label='商务' name='u_ids' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
                     </Form.Item>}
+                    <Form.Item label='年框状态' name='yearbox_status'>
+                        <Select style={{ width: 160 }} options={yearBoxType} />
+                    </Form.Item>
+                    <Form.Item label='达人状态' name='status'>
+                        <Select style={{ width: 160 }} options={talentStatus} />
+                    </Form.Item>
                     <Form.Item style={{ marginBottom: '20px' }}>
                         <Space size={'large'}>
                             <Button type="primary" htmlType="submit">查询</Button>
@@ -235,15 +267,9 @@ function TalentList() {
                     onChange={handleTableChange}
                 />
             </Card>
-            <Modal title="移交达人" open={isShowGive}
-                onOk={() => {
-                    message.info('移交达人')
-                    setIsShowGive(false);
-                }}
-                onCancel={() => { setIsShowGive(false); }}
-            >
+            <Modal title="移交达人" open={isShowGive} onOk={() => { giveTalnetAPI(); }} onCancel={() => { setIsShowGive(false); }}>
                 <Form form={formGive}>
-                    <Form.Item label="承接商务" name="u_id_1" rules={[{ required: true, message: '不能为空' }]}>
+                    <Form.Item label="承接商务" name="u_id" rules={[{ required: true, message: '不能为空' }]}>
                         <Select placeholder="请选择" options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
                     </Form.Item>
                 </Form>

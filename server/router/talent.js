@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db')
+const BASE_URL = require('../config/config')
 const dayjs = require('dayjs');
 
 // 获取达人列表
@@ -12,8 +13,11 @@ router.post('/getTalentList', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department != '主管') {
+        if (params.userInfo.department === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+        }
+        if (params.userInfo.position === '商务') {
+            whereUser += ` and uid = '${params.userInfo.uid}'`
         }
     }
     // 条件筛选
@@ -50,7 +54,7 @@ router.post('/getTalentList', (req, res) => {
                                 FROM talent_model_schedule tms0
                                     INNER JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms1 ON tms1.tmsid = tms0.tmsid
                                     INNER JOIN (SELECT * FROM user ${whereUser}) u1 ON u1.uid = tms0.u_id_1
-                                    LEFT JOIN (SELECT * FROM user ${whereUser}) u2 ON u2.uid = tms0.u_id_2
+                                    LEFT JOIN user u2 ON u2.uid = tms0.u_id_2
                             ) tms ON tms.tmid = tm.tmid
                         ${whereTM}
                         GROUP BY tm.tid
@@ -68,7 +72,7 @@ router.post('/getTalentDetail', (req, res) => {
     let sql = `SELECT t.*, ts.*
                 FROM talent t
                     LEFT JOIN (
-                            SELECT ts0.tid, ts0.tsid, ts0.yearbox_start_date, ts0.yearbox_point, ts0.yearbox_cycle, ts0.yearbox_pic, 
+                            SELECT ts0.tid, ts0.tsid, ts0.yearbox_start_date, ts0.yearbox_point, ts0.yearbox_cycle, 
                                 ts0.m_id_1, m1.type as m_type_1, m1.name as m_name_1, ts0.m_point_1, ts0.m_id_2, m2.type as m_type_2, m2.name as m_name_2, ts0.m_point_2, ts0.m_note
                             FROM talent_schedule ts0
                                 INNER JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' GROUP BY tid) ts1 ON ts1.tsid = ts0.tsid
@@ -89,16 +93,18 @@ router.post('/getTalentDetail', (req, res) => {
                     ORDER BY tm.tmid DESC`
         db.query(sql, (err, results_models) => {
             if (err) throw err;
-            let sql = `SELECT ts.tsid, ts.create_time, ts.create_uid, ts.status, u1.name as u_name_1, ts.operate, ts.examine_time, ts.examine_uid, u2.name as u_name_2, if(ts.examine_result is null, '', ts.examine_result) as examine_result, ts.examine_note
+            let sql = `(SELECT ts.tsid, ts.history_other_info, ts.create_time, ts.create_uid, ts.status, u1.name as u_name_1, ts.operate, ts.examine_time, ts.examine_uid, u2.name as u_name_2, if(ts.examine_result is null, '', ts.examine_result) as examine_result, ts.examine_note
                         FROM talent_schedule ts
                             LEFT JOIN user u1 ON u1.uid = ts.create_uid
                             LEFT JOIN user u2 ON u2.uid = ts.examine_uid
+                        WHERE ts.tid = '${params.tid}')
                         UNION ALL
-                        SELECT tms.tmsid, tms.create_time, tms.create_uid, tms.status, u1.name, tms.operate, tms.examine_time, tms.examine_uid, u2.name, tms.examine_result, tms.examine_note
+                        (SELECT tms.tmsid, tms.history_other_info, tms.create_time, tms.create_uid, tms.status, u1.name, tms.operate, tms.examine_time, tms.examine_uid, u2.name, tms.examine_result, tms.examine_note
                         FROM talent_model_schedule tms
+                            LEFT JOIN talent_model tm ON tms.tmid = tm.tmid
                             LEFT JOIN user u1 ON u1.uid = tms.create_uid
                             LEFT JOIN user u2 ON u2.uid = tms.examine_uid
-                        WHERE tms.operate != '达人报备'
+                        WHERE tms.operate != '达人报备' and tm.tid = '${params.tid}')
                         ORDER BY create_time`
             db.query(sql, (err, results_schedule) => {
                 if (err) throw err;
@@ -152,11 +158,36 @@ router.post('/editTalent', (req, res) => {
                             isAdd = false
                             sql += results[0][key] === null ? ` null,` : ` '${results[0][key]}',`
                         }
-                    } else if (params.operate.match('年框') || params.operate.match('中间人')) {
+                    } else if (params.operate.match('年框')) {
                         for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
                             if (isAdd && Object.keys(params.new)[i] === key) {
                                 isAdd = false
-                                sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i].replace('/public', '')}',`
+                                if (key.match('pic')) {
+                                    sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i].replace('/public', '')}',`
+                                } else {
+                                    sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i]}',`
+                                }
+                            }
+                        }
+                        if (isAdd && key === 'need_examine') {
+                            isAdd = false
+                            sql += ` '无需审批',`
+                        } else if (isAdd && (key === 'examine_uid' || key === 'examine_time' || key === 'examine_result' || key === 'examine_note')) {
+                            isAdd = false
+                            sql += ` null,`
+                        } else if (isAdd) {
+                            isAdd = false
+                            sql += results[0][key] === null ? ` null,` : ` '${results[0][key]}',`
+                        }
+                    } else if (params.operate.match('中间人')) {
+                        for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
+                            if (isAdd && Object.keys(params.new)[i] === key) {
+                                isAdd = false
+                                if (key.match('pic')) {
+                                    sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i].replace('/public', '')}',`
+                                } else {
+                                    sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i]}',`
+                                }
                             }
                         }
                         if (isAdd && key === 'need_examine') {
@@ -195,10 +226,25 @@ router.post('/editTalent', (req, res) => {
                         res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
                     })
                 } else if (params.operate.match('年框')) {
-                    let sql = `UPDATE talent set status = '年框待审批', yearbox_status = '待审批' WHERE tid = '${params.tid}'`
+                    let sql = `UPDATE talent set yearbox_status = '生效中' WHERE tid = '${params.tid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
-                        res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                        let sql = `SELECT * FROM resource`
+                        db.query(sql, (err, results) => {
+                            if (err) throw err;
+                            let sql = 'INSERT INTO resource VALUES'
+                            for (let i = 0; i < params.new.yearbox_files.fileList.length; i++) {
+                                const element = params.new.yearbox_files.fileList[i];
+                                let rid = 'R' + `${results.length + i + 1}`.padStart(7, '0')
+                                let s = `('${rid}', '${element.response[0].url.replace(`${BASE_URL}/public/`, '')}', '生效中', '${params.userInfo.uid}', '${time}'),`
+                                sql += s
+                            }
+                            sql = sql.substring(0, sql.length - 1)
+                            db.query(sql, (err, results) => {
+                                if (err) throw err;
+                                res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                            })
+                        })
                     })
                 } else if (params.operate.match('中间人')) {
                     let sql = `UPDATE talent set status = '中间人待审批' WHERE tid = '${params.tid}'`
@@ -241,12 +287,6 @@ router.post('/examTalent', (req, res) => {
                         })
                     })
                 })
-            } else if (params.status === '年框待审批') {
-                let sql = `UPDATE talent SET yearbox_status = '${params.exam ? '生效中' : '暂无'}' WHERE tid = '${params.tid}'`
-                db.query(sql, (err, results) => {
-                    if (err) throw err;
-                    res.send({ code: 200, data: {}, msg: `` })
-                })
             } else if (params.status === '中间人待审批') {
                 res.send({ code: 200, data: {}, msg: `` })
             }
@@ -268,42 +308,24 @@ router.post('/addTalentModel', (req, res) => {
             let sql_l = `INSERT INTO talent_model_schedule values`
             let count_d = results_d.length
             let count_l = results_l.length
-            if (params.accounts) {
-                for (let i = 0; i < params.accounts.length; i++) {
-                    let tmid = 'TM' + `${count_d + i + 1}`.padStart(7, '0')
-                    let tmsid = 'TMS' + `${count_l + i + 1}`.padStart(7, '0')
-                    let keyword = params.accounts[i].keyword ? `'${params.accounts[i].keyword}'` : null
-                    let u_id_2 = params.accounts[i].u_id_2 ? `'${params.accounts[i].u_id_2}'` : null
-                    let u_point_2 = params.accounts[i].u_point_2 ? `'${params.accounts[i].u_point_2}'` : null
-                    let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
-                    sql_d += `('${tmid}', '${params.tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].shop}', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', '待审批', '${params.userInfo.uid}', '${time}'),`
-                    sql_l += `('${tmsid}', '${tmid}', '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', '${params.accounts[i].commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
-                }
-                count_d += params.accounts.length
-                count_l += params.accounts.length
-            }
-            if (params.group_shop) {
-                let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
-                let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
-                let u_id_2 = params.group_u_id_2 ? `'${params.group_u_id_2}'` : null
-                let u_point_2 = params.group_u_point_2 ? `'${params.group_u_point_2}'` : null
-                let u_note = params.group_u_note ? `'${params.group_u_note}'` : null
+            let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
+            let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
+            let keyword = params.keyword ? `'${params.keyword}'` : null
+            let u_id_2 = params.u_id_2 ? `'${params.u_id_2}'` : null
+            let u_point_2 = params.u_point_2 ? `'${params.u_point_2}'` : null
+            let u_note = params.u_note ? `'${params.u_note}'` : null
+            if (params.commission_note) {
+                sql_d += `('${tmid}', '${params.tid}', '线上平台', '${params.platform}', '${params.shop}', '${params.account_id}', '${params.account_name}', '${params.account_type}', '${params.account_models}', ${keyword}, '${params.people_count}', '${params.fe_proportion}', '${params.age_cuts}', '${params.main_province}', '${params.price_cut}', '待审批', '${params.userInfo.uid}', '${time}'),`
+                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', '${params.commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+            } else if (params.discount_note) {
                 sql_d += `('${tmid}', '${params.tid}', '社群团购', '聚水潭', '${params.group_shop}', null, null, null, null, null, null, null, null, null, null, '待审批', '${params.userInfo.uid}', '${time}'),`
                 sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
-                count_d += 1
-                count_l += 1
-            }
-            if (params.provide_shop) {
-                let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
-                let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
-                let u_id_2 = params.provide_u_id_2 ? `'${params.provide_u_id_2}'` : null
-                let u_point_2 = params.provide_u_point_2 ? `'${params.provide_u_point_2}'` : null
-                let u_note = params.provide_u_note ? `'${params.provide_u_note}'` : null
+            } else if (params.discount_label) {
                 sql_d += `('${tmid}', '${params.tid}', '供货', '聚水潭', '${params.provide_shop}', null, null, null, null, null, null, null, null, null, null, '待审批', '${params.userInfo.uid}', '${time}'),`
                 sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
-                count_d += 1
-                count_l += 1
             }
+            count_d += 1
+            count_l += 1
             sql_d = sql_d.substring(0, sql_d.length - 1)
             sql_l = sql_l.substring(0, sql_l.length - 1)
             db.query(sql_d, (err, results) => {
@@ -365,20 +387,23 @@ router.post('/editTalentModel', (req, res) => {
                             isAdd = false
                             sql += results[0][key] === null ? ` null,` : ` '${results[0][key]}',`
                         }
-                    } else if (params.operate.match('佣金提点')) {
+                    } else if (params.operate.match('佣金提点') || params.operate.match('综合')) {
                         for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
                             if (isAdd && Object.keys(params.new)[i] === key) {
                                 isAdd = false
                                 sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i]}',`
                             }
                         }
-                        if (isAdd && key === 'need_examine') {
+                        if (isAdd && key === 'history_other_info') {
+                            isAdd = false
+                            sql += ` '${params.ori}',`
+                        } else if (isAdd && key === 'need_examine') {
                             isAdd = false
                             sql += ` '需要审批',`
                         } else if (isAdd && key === 'examine_uid') {
                             isAdd = false
                             sql += ` '${params.userInfo.e_id}',`
-                        } else if (isAdd && (key === 'history_other_info' || key === 'u_id_2' || key === 'u_point_2' || key === 'examine_time' || key === 'examine_result' || key === 'examine_note')) {
+                        } else if (isAdd && (key === 'u_id_2' || key === 'u_point_2' || key === 'examine_time' || key === 'examine_result' || key === 'examine_note')) {
                             isAdd = false
                             sql += ` null,`
                         } else if (isAdd && key === 'status') {
@@ -417,6 +442,27 @@ router.post('/editTalentModel', (req, res) => {
                             res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
                         })
                     })
+                } else if (params.operate.match('综合')) {
+                    let sql = 'UPDATE talent_model SET'
+                    for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
+                        if (Object.keys(params.new)[i] !== 'tmid' && !Object.keys(params.new)[i].match('commission_') && !Object.keys(params.new)[i].match('discount_') && !Object.keys(params.new)[i].match('u_')) {
+                            sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
+                        }
+                    }
+                    sql = sql.substring(0, sql.length - 1)
+                    sql += ` WHERE tmid = '${params.new.tmid}'`
+                    db.query(sql, (err, results) => {
+                        if (err) throw err;
+                        let sql = `UPDATE talent_model set status = '待审批' WHERE tmid = '${params.new.tmid}'`
+                        db.query(sql, (err, results) => {
+                            if (err) throw err;
+                            let sql = `UPDATE talent set status = '合作变更待审批' WHERE tid = '${params.tid}'`
+                            db.query(sql, (err, results) => {
+                                if (err) throw err;
+                                res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                            })
+                        })
+                    })
                 }
             })
         })
@@ -450,7 +496,84 @@ router.post('/examTalentModel', (req, res) => {
     })
 })
 
-// 获取审批驳回理由
+// 移交达人
+router.post('/giveTalent', (req, res) => {
+    let time = dayjs().valueOf()
+    let params = req.body
+    let sql = `SELECT * FROM talent_model_schedule`
+    db.query(sql, (err, results_l) => {
+        if (err) throw err;
+
+        let sql = `SELECT tms0.*
+                    FROM talent_model_schedule tms0 
+                        INNER JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status = '生效中' GROUP BY tmid) tms1 ON tms1.tmsid = tms0.tmsid
+                        LEFT JOIN talent_model tm ON tm.tmid = tms0.tmid
+                    WHERE tm.tid = '${params.tid}'`
+        db.query(sql, (err, results) => {
+            if (err) throw err;
+            let sql = `INSERT INTO talent_model_schedule VALUES`
+            for (let i = 0; i < results.length; i++) {
+                let tmsid = 'TMS' + `${results_l.length + i + 1}`.padStart(7, '0')
+                let s = `('${tmsid}',`
+                for (const key in results[i]) {
+                    let isAdd = true
+                    if (Object.hasOwnProperty.call(results[i], key)) {
+                        if (isAdd && key === 'tmsid') {
+                            isAdd = false
+                            continue
+                        } else if (isAdd && key === 'u_id_1') {
+                            isAdd = false
+                            s += ` '${params.newTid}',`
+                        } else if (isAdd && key === 'u_point_1') {
+                            isAdd = false
+                            s += ` '0.5',`
+                        } else if (isAdd && key === 'create_uid') {
+                            isAdd = false
+                            s += ` '${params.userInfo.uid}',`
+                        } else if (isAdd && key === 'create_time') {
+                            isAdd = false
+                            s += ` '${time}',`
+                        } else if (isAdd && key === 'operate') {
+                            isAdd = false
+                            s += ` '移交达人',`
+                        } else if (isAdd && key === 'need_examine') {
+                            isAdd = false
+                            s += ` '需要审批',`
+                        } else if (isAdd && key === 'examine_uid') {
+                            isAdd = false
+                            s += ` '${params.userInfo.e_id}',`
+                        } else if (isAdd && (key === 'history_other_info' || key === 'u_id_2' || key === 'u_point_2' || key === 'examine_time' || key === 'examine_result' || key === 'examine_note')) {
+                            isAdd = false
+                            s += ` null,`
+                        } else if (isAdd && key === 'status') {
+                            isAdd = false
+                            s += ` '待审批',`
+                        } else if (isAdd) {
+                            s += results[i][key] === null ? ` null,` : ` '${results[i][key]}',`
+                        }
+                    }
+                }
+                s = s.substring(0, s.length - 1)
+                sql += s + `),`
+            }
+            sql = sql.substring(0, sql.length - 1)
+            db.query(sql, (err, results) => {
+                if (err) throw err;
+                let sql = `UPDATE talent_model set status = '待审批' WHERE tid = '${params.tid}'`
+                db.query(sql, (err, results) => {
+                    if (err) throw err;
+                    let sql = `UPDATE talent set status = '移交待审批' WHERE tid = '${params.tid}'`
+                    db.query(sql, (err, results) => {
+                        if (err) throw err;
+                        res.send({ code: 200, data: {}, msg: `移交达人成功` })
+                    })
+                })
+            })
+        })
+    })
+})
+
+// 获取达人审批驳回理由
 router.post('/getRefundReason', (req, res) => {
     let params = req.body
     if (params.type === 'ts') {

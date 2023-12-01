@@ -203,7 +203,7 @@ router.post('/getSalemanItems', (req, res) => {
         if (params.userInfo.position === '副总') {
             where += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department != '主管') {
+        if (params.userInfo.department === '主管') {
             where += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
     }

@@ -3,6 +3,7 @@ import request from '../../service/request'
 import { Card, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, message, List, Image } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { accountType, accountModelType, ageCut, priceCut, yearDealType, shop, platform } from '../../baseData/talent'
+import { province } from '../../baseData/province'
 import people from '../../assets/people.jpg'
 import AEMiddleman from './AEMiddleman'
 
@@ -185,10 +186,10 @@ function AETalent(props) {
                             <Input placeholder="请输入达人昵称（公司内部、唯一、比较简单好记）" />
                         </Form.Item>
                         <Form.Item label="达人所在省份" name="province" rules={[{ required: true, message: '不能为空' }]}>
-                            <Input placeholder="请输入" />
+                            <Select placeholder="请选择" options={province} />
                         </Form.Item>
-                        <Form.Item label="年成交额" name="year_deal" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select placeholder="请选择" options={yearDealType} />
+                        <Form.Item label="预估慕江南年销售额（万）" name="year_deal" rules={[{ required: true, message: '不能为空' }]}>
+                            <Input placeholder="请输入" />
                         </Form.Item>
                         <Form.Item label="若中间人暂未添加">
                             <Button onClick={() => { setIsShowMid(true); setTypeMid('add'); }}>添加</Button>

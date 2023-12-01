@@ -124,7 +124,7 @@ function AEChance(props) {
                     </Form.Item>
                 </Card> : null}
                 {type == 'add' ? <Form.Item label="寻找证明" name="search_pic" rules={[{ required: true, message: '不能为空' }]} >
-                    <UpLoadImg title="上传寻找证明" name="addSearchPic" setPicUrl={(value) => { form.setFieldValue('search_pic', value) }} />
+                    <UpLoadImg title="上传寻找证明" name={`${localStorage.getItem('name')}_寻找商机_null`} setPicUrl={(value) => { form.setFieldValue('search_pic', value) }} />
                 </Form.Item> : null}
             </Form>
         </Modal>

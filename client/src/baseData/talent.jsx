@@ -6,14 +6,12 @@ export const chanceStatus = [
 ]
 
 export const talentStatus = [
-    { key: 0, label: "合作中", value: "合作中" },
-    { key: 1, label: "修改待审批", value: "修改待审批" },
-    { key: 2, label: "修改失败", value: "修改失败" },
-    { key: 3, label: "移交待审批", value: "移交待审批" },
-    { key: 4, label: "移交失败", value: "移交失败" },
-    { key: 5, label: "移交中", value: "移交中" },
-    { key: 6, label: "释放中", value: "释放中" },
-    { key: 7, label: "释放失败", value: "释放失败" }
+    { key: 0, label: "报备待审批", value: "报备待审批" },
+    { key: 1, label: "合作中", value: "合作中" },
+    { key: 2, label: "年框待审批", value: "年框待审批" },
+    { key: 3, label: "新合作待审批", value: "新合作待审批" },
+    { key: 4, label: "合作变更待审批", value: "合作变更待审批" },
+    { key: 5, label: "移交待审批", value: "移交待审批" }
 ]
 
 export const model = [
@@ -36,7 +34,7 @@ export const platform = [
 export const shop = [
     { key: 0, label: "普通店铺", value: "普通店铺" },
     { key: 1, label: "团长", value: "团长" },
-    { key: 2, label: "爱迪生", value: "爱迪生" }
+    { key: 2, label: "独特艾琳旗舰店", value: "独特艾琳旗舰店" }
 ]
 
 export const liaisonType = [

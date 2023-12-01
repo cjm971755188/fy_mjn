@@ -36,7 +36,7 @@ function UpLoadImg(props) {
                 setLoading(false);
                 setImageUrl(url);
             });
-            props.setPicUrl(info.file.response.url);
+            props.setPicUrl(info.file.response[0].url);
         }
     };
     const uploadButton = (
@@ -59,7 +59,7 @@ function UpLoadImg(props) {
                 className="avatar-uploader"
                 showUploadList={false}
                 // 上传的后端地址
-                action={`${BASE_URL}/api/uploadimg`}
+                action={`${BASE_URL}/api/uploadFiles`}
                 beforeUpload={beforeUpload}
                 onChange={handleChange}
             >

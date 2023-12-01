@@ -12,8 +12,11 @@ router.post('/getMiddlemanList', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department != '主管') {
+        if (params.userInfo.department === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+        }
+        if (params.userInfo.department === '商务') {
+            whereUser += ` and uid = '${params.userInfo.uid}'`
         }
     }
     // 条件筛选

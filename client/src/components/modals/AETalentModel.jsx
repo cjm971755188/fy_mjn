@@ -72,6 +72,7 @@ function AETalentModel(props) {
         setIsShowPlatform(type && type.match('线上平台') ? true : false)
         setIsShowGroup(type && type.match('社群团购') ? true : false)
         setIsShowProvide(type && type.match('供货') ? true : false)
+        setIsShowKeyword(form.getFieldValue('keyword') && form.getFieldValue('keyword') !== null ? true : false)
         setHasFuSaleman(form.getFieldValue('u_id_2') && form.getFieldValue('u_id_2') !== null ? true : false)
     }, [isShow])
     return (
@@ -84,14 +85,14 @@ function AETalentModel(props) {
             onCancel={() => { props.onCancel(); setHasFuSaleman(false); }}
         >
             <Form form={form} onFinish={(values) => { props.onOK(values); }}>
-                <Form.Item label="合作模式编码" name="tmid" rules={[{ required: true, message: '不能为空' }]}>
+                {type && type.match('新增') ? null : <Form.Item label="合作模式编码" name="tmid" rules={[{ required: true, message: '不能为空' }]}>
                     <Input disabled={true} />
-                </Form.Item>
+                </Form.Item>}
                 {isShowPlatform ? <Card title="线上平台" style={{ marginBottom: "20px" }}>
                     {type && type.match('修改') ? null : <><Form.Item label="平台" name="platform" rules={[{ required: true, message: '不能为空' }]}>
                         <Select
                             placeholder="请选择"
-                            options={type === 'report' ? form.getFieldValue('platformList') : platform}
+                            options={platform}
                             onChange={(value) => {
                                 form.setFieldValue('platform', value)
                                 if (value !== '闯货' && value !== '抖音' && value !== '快手' && value !== '视频号' && value !== '视频号服务商') {

@@ -464,7 +464,7 @@ function ChanceList() {
                     }}
                 >
                     <Form.Item label='日期选择' name='date' style={{ marginBottom: '20px' }}>
-                        <MyDateSelect setDate={(value) => { setDateSelect(value) }} />
+                        <MyDateSelect setDate={(value) => { setDateSelect(value); }} />
                     </Form.Item>
                     <Form.Item label='商机编号' name='cid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='模式' name='models' style={{ marginBottom: '20px' }}>
@@ -485,6 +485,7 @@ function ChanceList() {
                             <Button type="primary" htmlType="submit">查询</Button>
                             <Button type="primary" onClick={() => {
                                 filterForm.resetFields();
+                                setDateSelect([]);
                                 setTableParams({
                                     ...tableParams,
                                     filtersDate: [],

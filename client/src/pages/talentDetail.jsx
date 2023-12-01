@@ -2,12 +2,11 @@ import React, { Fragment, useEffect, useState } from "react";
 import { useLocation, useNavigate } from 'react-router-dom'
 import request from '../service/request'
 import dayjs from 'dayjs';
-import { Card, Input, Timeline, Button, Tag, Modal, Form, Descriptions, Row, Col, message, Space, DatePicker, Select, InputNumber, Image, Popconfirm } from 'antd';
+import { Card, Input, Timeline, Button, Tag, Modal, Form, Descriptions, Row, Col, message, Space, Select, InputNumber, Image, Popconfirm } from 'antd';
 import { AuditOutlined, MessageOutlined, GlobalOutlined, CrownOutlined, SettingOutlined, EditOutlined, PlusOutlined, MinusOutlined, UnorderedListOutlined } from '@ant-design/icons';
-import { yearCycleType } from '../baseData/talent'
 import { descriptionsItems } from '../baseData/talentDetail'
-import UpLoadImg from '../components/UpLoadImg'
 import AELiaison from '../components/modals/AELiaison'
+import AEYear from '../components/modals/AEYear'
 import AETalentModel from '../components/modals/AETalentModel'
 
 const { TextArea } = Input;
@@ -240,8 +239,19 @@ function TalentDetail() {
         }
         return items
     }
-    const [itemKey, setItemKey] = useState(19980426)
-    const [pointTags, setPointTags] = useState([])
+    const getHistoryTags = (data) => {
+        let items = []
+        for (const key in data) {
+            if (Object.hasOwnProperty.call(data, key)) {
+                for (let j = 0; j < descriptionsItems.length; j++) {
+                    if (key === descriptionsItems[j].value) {
+                        items.push(`${descriptionsItems[j].label}(${data[key]})`)
+                    }
+                }
+            }
+        }
+        return items
+    }
     const getTimeItems = () => {
         let items = []
         if (detailData.schedule) {
@@ -249,88 +259,17 @@ function TalentDetail() {
                 const element = detailData.schedule[i];
                 let item = {
                     color: element.examine_result ? (element.examine_result.match('通过') ? 'green' : element.examine_result.match('驳回') ? 'red' : '#1677ff') : '#1677ff',
-                    children: <div>
-                        <Space>
-                            <Row>{`【${dayjs(Number(element.create_time)).format('YYYY-MM-DD')}】 ${element.u_name_1} ${element.operate}`}{element.examine_uid === null ? null : element.examine_time === null ? `-----@${element.u_name_2} 审批` : null}</Row>
-                            {element.operate.match('修改') || element.operate.match('删除') ?
-                                itemKey !== i ? <a onClick={() => {
-                                    getHistoryInfoAPI(element.tsid);
-                                    setItemKey(i);
-                                }}>查看历史</a> : <a onClick={() => {
-                                    setPointTags([])
-                                    setItemKey(19980426)
-                                }}>隐藏</a> : null}
-                        </Space>
+                    children: <Fragment>
+                        <Row>{`【${dayjs(Number(element.create_time)).format('YYYY-MM-DD')}】 ${element.u_name_1} ${element.operate}`}{element.examine_uid === null ? null : element.examine_time === null ? `-----@${element.u_name_2} 审批` : null}</Row>
                         <Row>{element.examine_time === null ? null : `【${dayjs(Number(element.examine_time)).format('YYYY-MM-DD')}】 ${element.u_name_2} 审批${element.examine_result}`}{element.examine_note === null ? null : `(${element.examine_note})`}</Row>
-                        {/* {itemKey !== i ? null : <List
-                            itemLayout="horizontal"
-                            dataSource={pointTags}
-                            renderItem={(item, index) => (
-                                <List.Item>
-                                    <List.Item.Meta
-                                        title={item.title ? <span>{`● ${item.title}`}</span> : null}
-                                        description={item.tags.map((tag, key) => {
-                                            if (tag.match('品')) {
-                                                return (
-                                                    <Tooltip key={key} title={`备注：${item.title.match('线上') ? item.commission_note : item.title.match('社群团购') ? item.discount_note : item.discount_label}`}>
-                                                        <Tag style={{ margin: '5px' }} color="volcano">{tag}</Tag>
-                                                    </Tooltip>
-                                                )
-                                            } else if (tag.match(']')) {
-                                                return (
-                                                    <Tooltip key={key} title={`备注：${tag.match('①') ? item.m_note_1 : item.m_note_2}`}>
-                                                        <Tag style={{ margin: '5px' }} color="gold">{tag}</Tag>
-                                                    </Tooltip>
-                                                )
-                                            } else {
-                                                return (
-                                                    item.u_note ? <Tooltip key={key} title={`备注：${item.u_note}`}>
-                                                        <Tag style={{ margin: '5px' }} color="gold">{tag}</Tag>
-                                                    </Tooltip> : <Tag key={key} style={{ margin: '5px' }} color="gold">{tag}</Tag>
-                                                )
-                                            }
-                                        })}
-                                    />
-                                </List.Item>
-                            )}
-                        />} */}
-                    </div>
+                        <Row> {getHistoryTags(JSON.parse(element.history_other_info)).map((info, index) => { return <Tag key={index}>{info}</Tag> })}</Row>
+                    </Fragment>
                 }
                 items.push(item)
             }
             items.push({ color: 'gray', children: '' })
         }
         return items
-    }
-    const getHistoryInfoAPI = (tsid) => {
-        message.info('getHistoryInfoAPI')
-        /* request({
-            method: 'post',
-            url: '/talent/getHistoryInfo',
-            data: {
-                tsid,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    console.log(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        }) */
     }
 
     // 新增、续约年框
@@ -577,7 +516,7 @@ function TalentDetail() {
                         extra={examPower && detailData.status.match('待审批') ?
                             <Space>
                                 <Button type="primary" onClick={() => {
-                                    if (detailData.status.match('合作')) {
+                                    if (detailData.status.match('合作') || detailData.status.match('移交')) {
                                         let ids = []
                                         for (let i = 0; i < detailData.models.length; i++) {
                                             if (detailData.models[i].status === '待审批') {
@@ -598,8 +537,8 @@ function TalentDetail() {
                         <Tag color={detailData.yearbox_status === '待审批' ? "gold" : detailData.yearbox_status === '生效中' ? "green" : detailData.yearbox_status === '已失效' ? "red" : ""}>{detailData.yearbox_status}</Tag>
                     </Space>}
                         style={{ marginBottom: '20px' }}
-                        extra={examPower ? null :
-                            detailData.yearbox_status === '暂无' ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowYear(true); setYearType('新增年框'); }}>新增</Button> :
+                        extra={examPower || detailData.status.match('待审批') ? null :
+                            detailData.yearbox_status === '暂无' ? <Button type="text" icon={<PlusOutlined />} onClick={() => { formYear.setFieldValue('tid', tid); setIsShowYear(true); setYearType('新增年框'); }}>新增</Button> :
                                 detailData.yearbox_status === '已失效' ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowYear(true); setYearType('续约年框'); }}>续约</Button> : null
                         }
                     >
@@ -698,9 +637,12 @@ function TalentDetail() {
                     </Card>
                     <Card title={<Space><GlobalOutlined /><span>合作模式 ----- {detailData.models && detailData.models.length} 个</span></Space>}
                         extra={examPower || detailData.status.match('待审批') ? null : <Button type="text" icon={<PlusOutlined />} onClick={() => {
-                            formModel.setFieldValue('models', ['线上平台'])
+                            formModel.setFieldValue('u_id_1', {
+                                label: localStorage.getItem('name'),
+                                value: localStorage.getItem('uid')
+                            })
                             setIsShowModel(true);
-                            setTypeModel('新增线上合作');
+                            setTypeModel('新增线上平台');
                         }}>新增线上平台</Button>}
                     >
                         {detailData.models && detailData.models.map((model, index) => {
@@ -725,6 +667,8 @@ function TalentDetail() {
                                                         label: model.u_name_2,
                                                         value: model[key]
                                                     }
+                                                } else if (model[key] !== null && (key === 'account_models' || key === 'age_cuts')) {
+                                                    f[key] = model[key].split(',')
                                                 } else if (model.model !== '线上平台' && model[key] !== null && (key.match('discount') || key.match('u_') || key.match('shop'))) {
                                                     f[key] = model[key]
                                                 } else if (model.model === '线上平台' && model[key] !== null && ['create_time', 'create_uid', 'model', 'platform', 'shop', 'status', 'tid'].indexOf(key) === -1) {
@@ -774,47 +718,52 @@ function TalentDetail() {
                     </Form.Item>
                 </Form>
             </Modal>
-            <Modal title={yearType} open={isShowYear}
-                onOk={() => {
+            <AEYear
+                isShow={isShowYear}
+                type={yearType}
+                form={formYear}
+                onOK={(values) => {
                     editTalentAPI(yearType, null, {
-                        ...formYear.getFieldsValue(),
-                        yearbox_start_date: dayjs(formYear.getFieldValue('yearbox_start_date')).valueOf()
-                    });
+                    ...values,
+                    yearbox_start_date: dayjs(values.yearbox_start_date).valueOf()
+                });
                 }}
-                onCancel={() => { formYear.resetFields(); setIsShowYear(false); }}>
-                <Form form={formYear}>
-                    <Form.Item label="生效日期" name="yearbox_start_date" rules={[{ required: true, message: '不能为空' }]}>
-                        <DatePicker onChange={(value) => { formYear.setFieldValue('yearbox_start_date', value) }} />
-                    </Form.Item>
-                    <Form.Item label="付款周期" name="yearbox_cycle" rules={[{ required: true, message: '不能为空' }]}>
-                        <Select options={yearCycleType} />
-                    </Form.Item>
-                    <Form.Item label="返点（%）" name="yearbox_point" rules={[{ required: true, message: '不能为空' }]}>
-                        <InputNumber />
-                    </Form.Item>
-                    <Form.Item label="签约合同" name="yearbox_pic" rules={[{ required: true, message: '不能为空' }]}>
-                        <UpLoadImg title="上传合同图片" name="add_yearbox_pic" setPicUrl={(value) => { formYear.setFieldValue('yearbox_pic', value) }} />
-                    </Form.Item>
-                </Form>
-            </Modal>
+                onCancel={() => { formYear.resetFields(); setIsShowYear(false); }}
+            />
             <AELiaison
                 isShow={isShowLiaison}
                 type={'edit_talent'}
                 form={formLiaison}
-                onOK={(values) => { editTalentAPI('修改联系人', JSON.stringify(editOri), values); }}
-                onCancel={() => { setIsShowLiaison(false); formLiaison.resetFields(); setType(''); }}
+                onOK={(values) => {
+                    let ori = editOri
+                    let payload = values
+                    let z = {}
+                    for (const key in ori) {
+                        if (Object.hasOwnProperty.call(ori, key)) {
+                            for (const k in payload) {
+                                if (Object.hasOwnProperty.call(payload, k)) {
+                                    if (key === k && ori[key] !== payload[k]) {
+                                        z[key] = ori[key]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    editTalentAPI('修改联系人', JSON.stringify(z), payload);
+                }}
+                onCancel={() => { setIsShowLiaison(false); formLiaison.resetFields(); }}
             />
             <Modal title={middleType} open={isShowMiddle}
                 onOk={() => {
                     let payload = {}
                     if (middleType.match('一级')) {
                         payload = {
-                            m_id_1: formMiddle.getFieldValue('m_id'),
+                            m_id_1: formMiddle.getFieldValue('m_id').value,
                             m_point_1: formMiddle.getFieldValue('m_point')
                         }
                     } else {
                         payload = {
-                            m_id_2: formMiddle.getFieldValue('m_id'),
+                            m_id_2: formMiddle.getFieldValue('m_id').value,
                             m_point_2: formMiddle.getFieldValue('m_point')
                         }
                     }
@@ -835,17 +784,32 @@ function TalentDetail() {
                 type={typeModel}
                 form={formModel}
                 onOK={(values) => {
-                    let ori = editOri
-                    ori.u_id_1 = editOri.u_id_1.value
-                    if (ori.u_id_2) {
-                        ori.u_id_2 = editOri.u_id_2.value
+                    let ori = null
+                    if (editOri) {
+                        ori = editOri
+                        ori.u_id_1 = editOri.u_id_1.value
+                        if (ori.u_id_2) {
+                            ori.u_id_2 = editOri.u_id_2.value
+                        }
+                        if (ori.account_models) {
+                            ori.account_models = editOri.account_models.join()
+                        }
+                        if (ori.age_cuts) {
+                            ori.age_cuts = editOri.age_cuts.join()
+                        }
+                        delete ori.u_name_1
+                        delete ori.u_name_2
                     }
-                    delete ori.u_name_1
-                    delete ori.u_name_2
                     let payload = values
                     payload.u_id_1 = values.u_id_1.value
                     if (payload.u_id_2) {
                         payload.u_id_2 = values.u_id_2.value
+                    }
+                    if (payload.account_models) {
+                        payload.account_models = values.account_models.join()
+                    }
+                    if (payload.age_cuts) {
+                        payload.age_cuts = values.age_cuts.join()
                     }
                     let z = {}, type = ''
                     for (const key in ori) {
@@ -853,19 +817,19 @@ function TalentDetail() {
                             for (const k in payload) {
                                 if (Object.hasOwnProperty.call(payload, k)) {
                                     if (key === k && ori[key] !== payload[k]) {
-                                        z[key] = payload[k]
-                                        if (key.match('u_') || key.match('discount_')) {
-                                            type = '佣金提点'
+                                        z[key] = ori[key]
+                                        if ((key.match('u_') || key.match('discount_') || key.match('commission_'))) {
+                                            type = type.match('综合信息') ? type : type.match('基础信息') ? '综合信息' : '佣金提点'
                                         } else {
-                                            type = '基础信息'
+                                            type = type.match('综合信息') ? type : type.match('佣金提点') ? '综合信息' : '基础信息'
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                    if (Object.keys(ori).length !== Object.keys(payload).length) {
-                        type = '佣金提点'
+                    if (ori !== null && Object.keys(ori).length !== Object.keys(payload).length) {
+                        type = type.match('综合信息') ? type : type.match('基础信息') ? '综合信息' : '佣金提点'
                     }
                     let operate = typeModel + type
                     if (typeModel.match('新增')) {

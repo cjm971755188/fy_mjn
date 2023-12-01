@@ -43,7 +43,7 @@ function AEAChance(props) {
                     <Input placeholder="请输入" />
                 </Form.Item>
                 {type == 'advance' ? <Form.Item label="发货盘证明" name="advance_pic" rules={[{ required: true, message: '不能为空' }]} >
-                    <UpLoadImg title="发货盘证明" name="advance_pic" setPicUrl={(value) => { form.setFieldValue('advance_pic', value) }} />
+                    <UpLoadImg title="发货盘证明" name={`${localStorage.getItem('name')}_推进商机_${form.getFieldValue('cid')}`} setPicUrl={(value) => { form.setFieldValue('advance_pic', value) }} />
                 </Form.Item> : null}
             </Form>
         </Modal>

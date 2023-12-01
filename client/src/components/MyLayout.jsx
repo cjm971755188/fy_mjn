@@ -9,7 +9,7 @@ import {
     UserOutlined,
     AreaChartOutlined,
     CarryOutOutlined,
-    AuditOutlined,
+    AppstoreOutlined,
     BranchesOutlined,
     TeamOutlined
 } from '@ant-design/icons';
@@ -44,8 +44,8 @@ const menuItemsTotal = [
     }, */
     {
         key: '/admin/talent',
-        icon: <TeamOutlined />,
         label: '达人管理',
+        icon: <TeamOutlined />,
         children: [
             {
                 key: '/admin/talent/chance_list',
@@ -63,14 +63,28 @@ const menuItemsTotal = [
         icon: <BranchesOutlined />
     },
     {
+        key: '/admin/resource',
+        label: '资源管理',
+        icon: <AppstoreOutlined />,
+        children: [
+            {
+                key: '/admin/resource/year_list',
+                label: '年框资料'
+            },
+            {
+                key: '/admin/resource/polit_list',
+                label: '货盘资料'
+            },
+            {
+                key: '/admin/resource/product_list',
+                label: '聚水潭商品资料'
+            }
+        ]
+    },
+    {
         key: '/admin/user',
         icon: <UserOutlined />,
         label: '用户管理'
-    },
-    {
-        key: '/admin/talent/chance_list/talent_detail',
-        icon: <UserOutlined />,
-        label: '达人详情'
     },
     {
         key: '/admin/talent/talent_list/talent_detail',
@@ -86,7 +100,7 @@ const getMenuItems = (department, position) => {
         let menu = menuItemsTotal[i];
         if (menu.label === '达人详情') {
             continue
-        } else if (menu.label === '用户列表' && position === '助理') {
+        } else if (menu.label === '用户管理' && (position === '助理' || position === '商务')) {
             continue
         } else {
             arrObj.push(menu)
