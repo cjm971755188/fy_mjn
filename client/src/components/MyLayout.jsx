@@ -70,7 +70,7 @@ const menuItemsTotal = [
             {
                 key: '/admin/resource/year_list',
                 label: '年框资料'
-            },
+            }/* ,
             {
                 key: '/admin/resource/polit_list',
                 label: '货盘资料'
@@ -78,7 +78,7 @@ const menuItemsTotal = [
             {
                 key: '/admin/resource/product_list',
                 label: '聚水潭商品资料'
-            }
+            } */
         ]
     },
     {

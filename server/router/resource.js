@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db')
 const dayjs = require('dayjs');
+const jst = require('../myFun/jst')
 
 // 获取年框文件列表
 router.post('/getYearList', (req, res) => {
@@ -52,13 +53,41 @@ router.post('/getYearList', (req, res) => {
     })
 })
 
-// 删除文件
+// 删除年框文件
 router.post('/deleteResource', (req, res) => {
     let params = req.body
     let sql = `UPDATE resource SET status = '已失效' where rid = '${params.rid}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
         res.send({ code: 200, data: {}, msg: `${params.rid} '已失效'` })
+    })
+})
+
+// 获取商品列表
+router.post('/getProductList', (req, res) => {
+    let time = dayjs().valueOf()
+    let params = req.body
+    // 条件筛选
+    let whereFilter = `where status = '生效'`
+    for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
+        if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
+            whereFilter += ` and ${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
+        } else {
+            whereFilter += ` and ${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
+        }
+    }
+    // 分页
+    let current = params.pagination.current ? params.pagination.current : 0
+    let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
+    jst.CallJSTAPI("open/inventory/query", { 
+        page_index: current, 
+        page_size: pageSize,
+        names: '羊绒袜(盒装)'
+    })
+    let sql = `SELECT * FROM product ${whereFilter}`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        res.send({ code: 200, data: results.slice(current * pageSize, (current + 1) * pageSize), pagination: { ...params.pagination, total: results.length }, msg: `` })
     })
 })
 

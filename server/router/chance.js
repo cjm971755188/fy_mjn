@@ -179,7 +179,7 @@ router.post('/editLiaison', (req, res) => {
 router.post('/reportChance', (req, res) => {
     let time = dayjs().valueOf()
     let params = req.body
-    let sql = `SELECT * FROM talent WHERE name = ${params.talent_name}`
+    let sql = `SELECT * FROM talent WHERE name = '${params.talent_name}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
         if (results.length !== 0) {

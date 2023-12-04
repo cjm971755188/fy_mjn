@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors')
 const multer = require("multer");
 const app = express();
+const jst = require('./myFun/jst')
 
 app.use(cors())
 // 监听端口
@@ -38,7 +39,7 @@ app.all('*', function (req, res, next) {
 });
 
 // 上传图片
-let objMulter = multer({ dest: "./public"});
+let objMulter = multer({ dest: "./public" });
 //实例化multer，传递的参数对象，dest表示上传文件的存储路径
 app.use(objMulter.any());//any表示任意类型的文件
 // app.use(objMulter.image())//仅允许上传图片类型
@@ -58,3 +59,22 @@ const talentRouter = require('./router/talent')
 app.use('/talent', talentRouter)
 const resourceRouter = require('./router/resource')
 app.use('/resource', resourceRouter)
+
+/* // 钉钉token
+const axios = require('axios');
+const appInfo = require('./config/ddToken');
+axios.get('https://oapi.dingtalk.com/gettoken', { params: appInfo }) //请求外部接口
+    .then((res) => {
+        console.log(res.data.access_token);
+        axios.post(`https://oapi.dingtalk.com/topapi/im/chat/scencegroup/interactivecard/callback/register?access_token=${res.data.access_token}`) //请求外部接口
+            .then((res) => {
+                console.log(res.data);
+
+            })
+            .catch((error) => {
+                console.error(error)
+            })
+    })
+    .catch((error) => {
+        console.error(error)
+    }) */

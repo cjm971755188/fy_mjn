@@ -34,6 +34,9 @@ function AEUser(props) {
             onCancel={() => { props.onCancel(); }}
         >
             <Form form={form} onFinish={(values) => { props.onOK(values); }}>
+                <Form.Item label="付款周期" name="name" rules={[{ required: true, message: '不能为空' }]}>
+                    <Select options={yearCycleType} />
+                </Form.Item>
                 <Form.Item label="生效日期" name="yearbox_start_date" rules={[{ required: true, message: '不能为空' }]}>
                     <DatePicker onChange={(value) => { form.setFieldValue('yearbox_start_date', value) }} />
                 </Form.Item>

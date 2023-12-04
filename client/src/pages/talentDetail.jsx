@@ -1,6 +1,5 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { useLocation, useNavigate } from 'react-router-dom'
-import DocViewer from 'react-doc-viewer';
 import request from '../service/request'
 import dayjs from 'dayjs';
 import { Card, Input, Timeline, Button, Tag, Modal, Form, Descriptions, Row, Col, message, Space, Select, InputNumber, Image, Popconfirm } from 'antd';

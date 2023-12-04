@@ -1,7 +1,8 @@
 import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Button, message, Alert, Popconfirm } from 'antd';
-import { CloseCircleTwoTone, PauseCircleTwoTone } from '@ant-design/icons';
+import { PlusOutlined, PauseCircleTwoTone, ExclamationCircleTwoTone } from '@ant-design/icons';
+import AEYear from '../components/modals/AEYear'
 
 function YearList() {
     // 表格：格式
@@ -9,17 +10,6 @@ function YearList() {
         { title: '文件编码', dataIndex: 'rid', key: 'rid' },
         { title: '文件名', dataIndex: 'filename', key: 'filename' },
         { title: '关联达人', dataIndex: 'name', key: 'name' },
-        {
-            title: '状态',
-            dataIndex: 'status',
-            key: 'status',
-            render: (_, record) => (
-                <Space size={'middle'}>
-                    {record.status === '生效中' ? <PauseCircleTwoTone twoToneColor="#4ec9b0" /> : <CloseCircleTwoTone twoToneColor="#f81d22" />}
-                    <span>{record.status}</span>
-                </Space>
-            )
-        },
         {
             title: '操作',
             key: 'action',
@@ -106,13 +96,49 @@ function YearList() {
     // 查询、清空筛选
     const [filterForm] = Form.useForm()
     
-    // 下载、修改状态
+    // 新增、下载、修改状态
+    const [isShow, setIsShow] = useState(false)
+    const [type, setType] = useState()
+    const [form] = Form.useForm()
+    const editTalentAPI = (operate, ori, payload) => {
+        request({
+            method: 'post',
+            url: '/talent/editTalent',
+            data: {
+                tid: form.getFieldValue('tid'),
+                operate,
+                ori,
+                new: payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    getTalentDetailAPI()
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
     const downloadAPI = (url) => {
         request({
             method: 'get',
             url: '/file/download',
             params: { url },
-            responseType: 'blob'
+            responsetype: 'blob'
         }).then((res) => {
             if (res.status == 200) {
                 const url = window.URL.createObjectURL(
@@ -162,7 +188,9 @@ function YearList() {
     }, [JSON.stringify(tableParams)])
     return (
         <Fragment>
-            <Card title="年框资料列表">
+            <Card title="年框资料列表"
+                extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('新增年框'); }}>添加新年框</Button>}
+            >
                 <Form layout="inline" form={filterForm}
                     onFinish={(values) => {
                         setTableParams({
@@ -176,7 +204,7 @@ function YearList() {
                     <Form.Item label='达人昵称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item style={{ marginBottom: '20px' }}>
                         <Space size={'middle'}>
-                            <Button type="primary" htmlType="submit">查询</Button>
+                            <Button type="primary" htmltype="submit">查询</Button>
                             <Button type="primary" onClick={() => {
                                 filterForm.resetFields();
                                 setTableParams({
@@ -198,6 +226,18 @@ function YearList() {
                     onChange={handleTableChange}
                 />
             </Card>
+            <AEYear
+                isShow={isShow}
+                type={type}
+                form={form}
+                onOK={(values) => {
+                    editTalentAPI(type, null, {
+                    ...values,
+                    yearbox_start_date: dayjs(values.yearbox_start_date).valueOf()
+                });
+                }}
+                onCancel={() => { form.resetFields(); setIsShow(false); }}
+            />
         </Fragment>
     )
 }
