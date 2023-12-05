@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const dayjs = require('dayjs');
 const db = require('../config/db')
+const ddurls = require('../config/commentDD')
 const sendRobot = require('../myFun/ddrobot')
 
 // 获取商机列表
@@ -259,7 +260,12 @@ router.post('/reportChance', (req, res) => {
                                             let sql = `UPDATE chance SET status = '待审批' WHERE cid = '${params.cid}'`
                                             db.query(sql, (err, results) => {
                                                 if (err) throw err;
-                                                res.send({ code: 200, data: {}, msg: `报备成功` })
+                                                let sql = `SELECT phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                                                db.query(sql, (err, results) => {
+                                                    if (err) throw err;
+                                                    sendRobot(ddurls.report, `【${params.userInfo.name} 报备达人 ${params.talent_name}】请尽快审批\n网址：http://1.15.89.163:5173/admin/talent/talent_list`, [results[0].phone], false)
+                                                    res.send({ code: 200, data: {}, msg: `报备成功` })
+                                                })
                                             })
                                         })
                                     })

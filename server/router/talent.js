@@ -108,7 +108,22 @@ router.post('/getTalentDetail', (req, res) => {
                         ORDER BY create_time`
             db.query(sql, (err, results_schedule) => {
                 if (err) throw err;
-                res.send({ code: 200, data: { ...results_base[0], models: results_models, schedule: results_schedule }, msg: '' })
+                let sql = `SELECT u.name
+                            FROM talent_model_schedule tms
+                                LEFT JOIN talent_model tm ON tm.tmid = tms.tmid
+                                LEFT JOIN user u ON u.uid = tms.create_uid
+                            WHERE tm.tid = '${params.tid}'
+                                and tms.operate = '移交达人'
+                                and tms.examine_result = '通过'`
+                db.query(sql, (err, results_original) => {
+                    if (err) throw err;
+                    if (results_original.length === 0) {
+                        original = null
+                    } else {
+                        original = results_original[0].name
+                    }
+                    res.send({ code: 200, data: { ...results_base[0], models: results_models, schedule: results_schedule, original }, msg: '' })
+                })
             })
         })
     })

@@ -7,8 +7,6 @@ import {
     CalendarOutlined,
     RollbackOutlined,
     UserOutlined,
-    AreaChartOutlined,
-    CarryOutOutlined,
     AppstoreOutlined,
     BranchesOutlined,
     TeamOutlined
@@ -32,16 +30,6 @@ const items = [
 
 // 左侧菜单 menus
 const menuItemsTotal = [
-    /* {
-        key: '/admin/workbench',
-        icon: <CalendarOutlined />,
-        label: '工作台',
-    }, */
-    /* {
-        key: '/admin/bi',
-        icon: <AreaChartOutlined />,
-        label: '数据看板',
-    }, */
     {
         key: '/admin/talent',
         label: '达人管理',
@@ -58,6 +46,21 @@ const menuItemsTotal = [
         ]
     },
     {
+        key: '/admin/live',
+        label: '专场管理',
+        icon: <CalendarOutlined />,
+        children: [
+            {
+                key: '/admin/live/live_calendar',
+                label: '总排班日历'
+            },
+            {
+                key: '/admin/live/live_list',
+                label: '我的专场列表'
+            }
+        ]
+    },
+    {
         key: '/admin/middleman',
         label: '中间人管理',
         icon: <BranchesOutlined />
@@ -70,15 +73,7 @@ const menuItemsTotal = [
             {
                 key: '/admin/resource/year_list',
                 label: '年框资料'
-            }/* ,
-            {
-                key: '/admin/resource/polit_list',
-                label: '货盘资料'
-            },
-            {
-                key: '/admin/resource/product_list',
-                label: '聚水潭商品资料'
-            } */
+            }
         ]
     },
     {
@@ -101,6 +96,8 @@ const getMenuItems = (department, position) => {
         if (menu.label === '达人详情') {
             continue
         } else if (menu.label === '用户管理' && (position === '助理' || position === '商务')) {
+            continue
+        } else if (menu.label === '专场管理' && position !== '管理员') {
             continue
         } else {
             arrObj.push(menu)
@@ -151,7 +148,7 @@ const createBreadcrumb = (key) => {
 
 const MyLayout = ({ children }) => {
     const [collapsed, setCollapsed] = useState(false);
-    const {token: { colorBgContainer }} = theme.useToken();
+    const { token: { colorBgContainer } } = theme.useToken();
     // 路由
     const navigate = useNavigate()
     // 个人中心conclick

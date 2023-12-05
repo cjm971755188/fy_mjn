@@ -23,7 +23,8 @@ function TalentDetail() {
     const [detailData, setDetailData] = useState({
         status: '',
         yearbox_status: '',
-        schedule: []
+        schedule: [],
+        original: ''
     })
     const getTalentDetailAPI = () => {
         request({
@@ -69,6 +70,11 @@ function TalentDetail() {
                 }
             }
         }
+        items.push({
+            key: 5,
+            label: "原商务",
+            children: detailData.original === null ? '无' : detailData.original + '(0.5%)'
+        })
         return items
     }
     const getYearItems = () => {

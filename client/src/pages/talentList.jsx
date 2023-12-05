@@ -2,12 +2,14 @@ import React, { Fragment, useEffect, useState } from "react";
 import { NavLink } from 'react-router-dom'
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Alert, Modal } from 'antd';
-import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone } from '@ant-design/icons';
+import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined } from '@ant-design/icons';
 import { model, yearBoxType, talentStatus } from '../baseData/talent'
+import AETalent from '../components/modals/AETalent'
 
 function TalentList() {
     // 操作权限
     const userShowPower = localStorage.getItem('position') === '商务' ? true : false
+    const addPower = localStorage.getItem('position') === '商务' ? true : false
     const examinePower = localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
@@ -78,7 +80,7 @@ function TalentList() {
                 <Space size="large">
                     {examinePower && record.status.match('待审批') ? <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> :
                         <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>查看详情</NavLink>}
-                    {record.status === '合作中' ? <a onClick={() => { setClickTid(record.tid); setIsShowGive(true); }}>移交</a> : null}
+                    {!examinePower && record.status === '合作中' ? <a onClick={() => { setClickTid(record.tid); setIsShowGive(true); }}>移交</a> : null}
                 </Space>
             )
         }
@@ -174,6 +176,44 @@ function TalentList() {
             console.error(err)
         })
     }
+
+    // 添加、修改、推进、报备
+    const [type, setType] = useState('')
+    const [isShow, setIsShow] = useState(false)
+    const [form] = Form.useForm()
+    const addHistoryTalentAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/chance/reportChance',
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShow(false);
+                    setType('');
+                    getTalentListAPI();
+                    form.resetFields();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
     // 移交
     const [isShowGive, setIsShowGive] = useState()
     const [formGive] = Form.useForm()
@@ -212,12 +252,13 @@ function TalentList() {
             console.error(err)
         })
     }
+
     useEffect(() => {
         getTalentListAPI();
     }, [JSON.stringify(tableParams)])
     return (
         <Fragment>
-            <Card title="达人列表">
+            <Card title="达人列表" extra={addPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('history'); }}>添加历史达人（限时开放到12-20）</Button> : null}>
                 <Form
                     layout="inline"
                     form={filterForm}
@@ -267,6 +308,13 @@ function TalentList() {
                     onChange={handleTableChange}
                 />
             </Card>
+            <AETalent
+                isShow={isShow}
+                type={type}
+                form={form}
+                onOK={(values) => { addHistoryTalentAPI(values); }}
+                onCancel={() => { setIsShow(false); form.resetFields(); setType(''); }}
+            />
             <Modal title="移交达人" open={isShowGive} onOk={() => { giveTalnetAPI(); }} onCancel={() => { setIsShowGive(false); }}>
                 <Form form={formGive}>
                     <Form.Item label="承接商务" name="u_id" rules={[{ required: true, message: '不能为空' }]}>

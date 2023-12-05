@@ -2,7 +2,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import request from '../../service/request'
 import { Card, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, message, List, Image } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import { accountType, accountModelType, ageCut, priceCut, yearDealType, shop, platform } from '../../baseData/talent'
+import { accountType, accountModelType, ageCut, priceCut, liaisonType, shop, platform, model } from '../../baseData/talent'
 import { province } from '../../baseData/province'
 import people from '../../assets/people.jpg'
 import AEMiddleman from './AEMiddleman'
@@ -152,10 +152,9 @@ function AETalent(props) {
         setIsShowProvide(form.getFieldValue('models') && form.getFieldValue('models').join(',').match('供货') ? true : false)
     }, [isShow])
     return (
-
         <Fragment>
             <Modal
-                title={type == 'report' ? '达人报备' : type}
+                title={type == 'report' ? '达人报备' : type == 'history' ? '历史达人报备' : type}
                 open={isShow}
                 width='40%'
                 maskClosable={false}
@@ -178,10 +177,10 @@ function AETalent(props) {
                     }
                     props.onOK(payload);
                 }}>
-                    {type == 'report' ? <>
-                        <Form.Item label="商机编号" name="cid" rules={[{ required: true, message: '不能为空' }]}>
+                    {type == 'report' || type == 'history' ? <>
+                        {type == 'history' ? null : <Form.Item label="商机编号" name="cid" rules={[{ required: true, message: '不能为空' }]}>
                             <Input disabled={true} />
-                        </Form.Item>
+                        </Form.Item>}
                         <Form.Item label="达人昵称" name="talent_name" rules={[{ required: true, message: '不能为空' }]}>
                             <Input placeholder="请输入达人昵称（公司内部、唯一、比较简单好记）" />
                         </Form.Item>
@@ -191,6 +190,27 @@ function AETalent(props) {
                         <Form.Item label="预估慕江南年销售额（万）" name="year_deal" rules={[{ required: true, message: '不能为空' }]}>
                             <Input placeholder="请输入" />
                         </Form.Item>
+                        {type == 'history' ? <><Form.Item label="联系人类型" name="liaison_type" rules={[{ required: true, message: '不能为空' }]}>
+                            <Select
+                                allowClear
+                                style={{ width: '100%' }}
+                                placeholder="请选择"
+                                onChange={(value) => { form.setFieldValue('liaison_type', value) }}
+                                options={liaisonType}
+                            />
+                        </Form.Item>
+                        <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '不能为空' }]}>
+                            <Input placeholder="请输入" />
+                        </Form.Item>
+                        <Form.Item label="联系人微信" name="liaison_v" rules={[{ required: true, message: '不能为空' }]}>
+                            <Input placeholder="请输入" />
+                        </Form.Item>
+                        <Form.Item label="联系人电话（选填）" name="liaison_phone">
+                            <Input placeholder="请输入" />
+                        </Form.Item>
+                        <Form.Item label="沟通群名称" name="crowd_name" rules={[{ required: true, message: '不能为空' }]}>
+                            <Input placeholder="请输入" />
+                        </Form.Item></> : null}
                         <Form.Item label="若中间人暂未添加">
                             <Button onClick={() => { setIsShowMid(true); setTypeMid('add'); }}>添加</Button>
                         </Form.Item>
@@ -224,6 +244,20 @@ function AETalent(props) {
                             <TextArea />
                         </Form.Item> : null}
                     </> : null}
+                    {type == 'history' ? <Form.Item label="模式" name="models" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select
+                            mode="multiple"
+                            allowClear
+                            placeholder="请选择"
+                            options={model}
+                            onChange={(value) => {
+                                form.setFieldValue('models', value)
+                                setIsShowPlatform(value.join(',').match('线上平台') ? true : false)
+                                setIsShowGroup(value.join(',').match('社群团购') ? true : false)
+                                setIsShowProvide(value.join(',').match('供货') ? true : false)
+                            }}
+                        />
+                    </Form.Item> : null}
                     {isShowPlatform ? <Card title="线上平台" style={{ marginBottom: "20px" }}>
                         <Form.List name="accounts">
                             {(fields, { add, remove }) => (

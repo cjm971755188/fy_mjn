@@ -34,3 +34,13 @@ export const province = [
     { key: 32, label: "香港特别行政区", value: "香港特别行政区" },
     { key: 33, label: "澳门特别行政区", value: "澳门特别行政区" }
 ]
+
+export const weeks = [
+    { key: 0, label: "星期一", value: 1 },
+    { key: 1, label: "星期二", value: 2 },
+    { key: 2, label: "星期三", value: 3 },
+    { key: 3, label: "星期四", value: 4 },
+    { key: 4, label: "星期五", value: 5 },
+    { key: 5, label: "星期六", value: 6 },
+    { key: 6, label: "星期日", value: 7 }
+]
