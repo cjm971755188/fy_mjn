@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import request from '../../service/request';
 import { Button, Modal, Form, DatePicker, Select, InputNumber, Upload } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { yearCycleType } from '../../baseData/talent'
@@ -7,6 +8,36 @@ import { BASE_URL } from '../../service/config';
 function AEUser(props) {
     const { type, isShow, form } = props;
 
+    const [talents, setTalents] = useState(false)
+    const filterOption = (input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+    const searchtalentsAPI = (value) => {
+        request({
+            method: 'post',
+            url: '/talent/searchtalents',
+            data: {
+                value: value,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setTalents(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
     const [fileList, setFileList] = useState();
     const handleChange = (info) => {
         let newFileList = [...info.fileList];
@@ -28,15 +59,15 @@ function AEUser(props) {
 
     return (
         <Modal
-            title={type}
+            title="新增年框"
             open={isShow}
             onOk={() => { form.submit(); }}
             onCancel={() => { props.onCancel(); }}
         >
             <Form form={form} onFinish={(values) => { props.onOK(values); }}>
-                <Form.Item label="付款周期" name="name" rules={[{ required: true, message: '不能为空' }]}>
-                    <Select options={yearCycleType} />
-                </Form.Item>
+                {type === 'detail' ? null : <Form.Item label="达人昵称" name="tid" rules={[{ required: true, message: '不能为空' }]}>
+                    <Select showSearch placeholder="请输入" options={talents} filterOption={filterOption} onChange={(value) => { searchtalentsAPI(value) }} onSearch={(value) => { searchtalentsAPI(value) }} />
+                </Form.Item>}
                 <Form.Item label="生效日期" name="yearbox_start_date" rules={[{ required: true, message: '不能为空' }]}>
                     <DatePicker onChange={(value) => { form.setFieldValue('yearbox_start_date', value) }} />
                 </Form.Item>

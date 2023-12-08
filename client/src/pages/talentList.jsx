@@ -10,7 +10,7 @@ function TalentList() {
     // 操作权限
     const userShowPower = localStorage.getItem('position') === '商务' ? true : false
     const addPower = localStorage.getItem('position') === '商务' ? true : false
-    const examinePower = localStorage.getItem('position') === '主管' || localStorage.getItem('position') === '管理员' ? true : false
+    const examPower = localStorage.getItem('position') === '副总' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
     let columns = [
@@ -78,9 +78,15 @@ function TalentList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
-                    {examinePower && record.status.match('待审批') ? <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> :
+                    {examPower && record.status.match('待审批') ? <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> :
                         <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>查看详情</NavLink>}
-                    {!examinePower && record.status === '合作中' ? <a onClick={() => { setClickTid(record.tid); setIsShowGive(true); }}>移交</a> : null}
+                    {!examPower && record.status === '合作中' ? <a onClick={() => { 
+                        formGive.setFieldValue('hasYear', record.yearbox_status === '生效中' ? true : false)
+                        formGive.setFieldValue('hasMid', record.m_ids === ',' ? false : true)
+                        formGive.setFieldValue('mids', record.m_ids)
+                        setClickTid(record.tid); 
+                        setIsShowGive(true); 
+                    }}>移交</a> : null}
                 </Space>
             )
         }
@@ -225,6 +231,9 @@ function TalentList() {
             data: {
                 tid: clickTid,
                 newTid: formGive.getFieldValue('u_id'),
+                hasYear: formGive.getFieldValue('hasYear'),
+                hasMid: formGive.getFieldValue('hasMid'),
+                mids: formGive.getFieldValue('mids'),
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     e_id: localStorage.getItem('e_id'),

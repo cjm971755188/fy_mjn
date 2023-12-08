@@ -82,9 +82,9 @@ function AETalentModel(props) {
             width='40%'
             maskClosable={false}
             onOk={() => { form.submit(); }}
-            onCancel={() => { props.onCancel(); setHasFuSaleman(false); }}
+            onCancel={() => { props.onCancel(); }}
         >
-            <Form form={form} onFinish={(values) => { props.onOK(values); }}>
+            <Form form={form} onFinish={() => { props.onOK(); }}>
                 {type && type.match('新增') ? null : <Form.Item label="合作模式编码" name="tmid" rules={[{ required: true, message: '不能为空' }]}>
                     <Input disabled={true} />
                 </Form.Item>}
@@ -194,7 +194,7 @@ function AETalentModel(props) {
                     </Form.Item>
                     {hasFuSaleman ? <Space size='large'>
                         <Form.Item label="副商务" name="u_id_2" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
+                            <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} onChange={(value) => { form.setFieldValue('u_id_2', value) }} />
                         </Form.Item>
                         <Form.Item label="副商务提成点（%）" name="u_point_2" rules={[{ required: true, message: '不能为空' }]}>
                             <InputNumber />
@@ -237,10 +237,10 @@ function AETalentModel(props) {
                         </Radio.Group>
                     </Form.Item>
                     {hasFuSaleman ? <Space size='large'>
-                        <Form.Item label="副商务" name={"u_id_2"} rules={[{ required: true, message: '不能为空' }]} >
-                            <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
+                        <Form.Item label="副商务" name="u_id_2" rules={[{ required: true, message: '不能为空' }]} >
+                            <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} onChange={(value) => { form.setFieldValue('u_id_2', value) }} />
                         </Form.Item>
-                        <Form.Item label="副商务提成点（%）" name={"u_point_2"} rules={[{ required: true, message: '不能为空' }]} >
+                        <Form.Item label="副商务提成点（%）" name="u_point_2" rules={[{ required: true, message: '不能为空' }]} >
                             <InputNumber />
                         </Form.Item>
                     </Space> : null}
@@ -278,10 +278,10 @@ function AETalentModel(props) {
                         </Radio.Group>
                     </Form.Item>
                     {hasFuSaleman ? <Space size='large'>
-                        <Form.Item label="副商务" name={"u_id_2"} rules={[{ required: true, message: '不能为空' }]} >
-                            <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
+                        <Form.Item label="副商务" name="u_id_2" rules={[{ required: true, message: '不能为空' }]} >
+                            <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} onChange={(value) => { form.setFieldValue('u_id_2', value) }} />
                         </Form.Item>
-                        <Form.Item label="副商务提成点（%）" name={"u_point_2"} rules={[{ required: true, message: '不能为空' }]} >
+                        <Form.Item label="副商务提成点（%）" name="u_point_2" rules={[{ required: true, message: '不能为空' }]} >
                             <InputNumber />
                         </Form.Item>
                     </Space> : null}

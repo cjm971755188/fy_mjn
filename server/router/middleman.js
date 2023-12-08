@@ -15,7 +15,7 @@ router.post('/getMiddlemanList', (req, res) => {
         if (params.userInfo.department === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
-        if (params.userInfo.department === '商务') {
+        if (params.userInfo.position === '商务') {
             whereUser += ` and uid = '${params.userInfo.uid}'`
         }
     }
@@ -37,7 +37,11 @@ router.post('/getMiddlemanList', (req, res) => {
                 ${whereFilter}`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        res.send({ code: 200, data: results.slice(current * pageSize, (current + 1) * pageSize), pagination: { ...params.pagination, total: results.length }, msg: `` })
+        let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`
+        db.query(s, (err, r) => {
+            if (err) throw err;
+            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: `` })
+        })
     })
 })
 

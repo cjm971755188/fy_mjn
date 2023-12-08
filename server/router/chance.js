@@ -3,7 +3,7 @@ const router = express.Router();
 const dayjs = require('dayjs');
 const db = require('../config/db')
 const ddurls = require('../config/commentDD')
-const sendRobot = require('../myFun/ddrobot')
+const sendRobot = require('../api/ddrobot')
 
 // 获取商机列表
 router.post('/getChanceList', (req, res) => {
@@ -16,6 +16,9 @@ router.post('/getChanceList', (req, res) => {
         }
         if (params.userInfo.department != '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+        }
+        if (params.userInfo.position === '商务') {
+            whereUser += ` and uid = '${params.userInfo.uid}'`
         }
     }
     // 条件筛选
@@ -40,7 +43,11 @@ router.post('/getChanceList', (req, res) => {
                 ORDER BY c.cid DESC`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        res.send({ code: 200, data: results.slice(current * pageSize, (current + 1) * pageSize), pagination: { ...params.pagination, total: results.length }, msg: '' })
+        let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`
+        db.query(s, (err, r) => {
+            if (err) throw err;
+            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: `` })
+        })
     })
 })
 
@@ -263,7 +270,6 @@ router.post('/reportChance', (req, res) => {
                                                 let sql = `SELECT phone FROM user WHERE uid = '${params.userInfo.e_id}'`
                                                 db.query(sql, (err, results) => {
                                                     if (err) throw err;
-                                                    sendRobot(ddurls.report, `【${params.userInfo.name} 报备达人 ${params.talent_name}】请尽快审批\n网址：http://1.15.89.163:5173/admin/talent/talent_list`, [results[0].phone], false)
                                                     res.send({ code: 200, data: {}, msg: `报备成功` })
                                                 })
                                             })

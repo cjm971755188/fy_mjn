@@ -2,7 +2,9 @@ const express = require('express');
 const cors = require('cors')
 const multer = require("multer");
 const app = express();
-const jst = require('./myFun/jst')
+const jst = require('./api/jst')
+const ddurls = require('./config/commentDD')
+const sendRobot = require('./api/ddrobot')
 
 app.use(cors())
 // 监听端口
@@ -51,14 +53,18 @@ app.use('/file', file)
 // 引入路由
 const userRouter = require('./router/user')
 app.use('/user', userRouter)
-const middlemanRouter = require('./router/middleman')
-app.use('/middleman', middlemanRouter)
 const chanceRouter = require('./router/chance')
 app.use('/chance', chanceRouter)
 const talentRouter = require('./router/talent')
 app.use('/talent', talentRouter)
+const pointRouter = require('./router/point')
+app.use('/point', pointRouter)
+const middlemanRouter = require('./router/middleman')
+app.use('/middleman', middlemanRouter)
 const resourceRouter = require('./router/resource')
 app.use('/resource', resourceRouter)
+
+/* sendRobot(ddurls.report, `标题`, `![]('http://1.15.89.163:3000/public/people.jpg') \n@17764585713`, `http://1.15.89.163:5173/admin/talent/talent_list`, ["17764585713"], false) */
 
 /* // 钉钉token
 const axios = require('axios');

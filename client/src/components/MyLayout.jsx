@@ -61,6 +61,11 @@ const menuItemsTotal = [
         ]
     },
     {
+        key: '/admin/point',
+        label: '提点结算',
+        icon: <CalendarOutlined />
+    },
+    {
         key: '/admin/middleman',
         label: '中间人管理',
         icon: <BranchesOutlined />

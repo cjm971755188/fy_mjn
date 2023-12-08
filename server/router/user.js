@@ -87,7 +87,11 @@ router.post('/getUserList', (req, res) => {
     let sql = `SELECT uid, name, phone, company, department, position, status FROM user ${where}`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        res.send({ code: 200, data: results.slice(current*pageSize, (current + 1)*pageSize), pagination: { ...params.pagination, total: results.length }, msg: '' })
+        let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`
+        db.query(s, (err, r) => {
+            if (err) throw err;
+            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: `` })
+        })
     })
 })
 

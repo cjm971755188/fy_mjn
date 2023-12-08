@@ -3,6 +3,7 @@ import request from '../service/request'
 import { Card, Table, Space, Form, Input, Button, message, Alert, Popconfirm } from 'antd';
 import { PlusOutlined, PauseCircleTwoTone, ExclamationCircleTwoTone } from '@ant-design/icons';
 import AEYear from '../components/modals/AEYear'
+import dayjs from 'dayjs';
 
 function YearList() {
     // 表格：格式
@@ -121,7 +122,10 @@ function YearList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    getTalentDetailAPI()
+                    setIsShow(false)
+                    form.resetFields()
+                    setType()
+                    getYearListAPI()
                     message.success(res.data.msg)
                 } else {
                     message.error(res.data.msg)
@@ -138,17 +142,20 @@ function YearList() {
             method: 'get',
             url: '/file/download',
             params: { url },
-            responsetype: 'blob'
+            responseType: 'blob'
         }).then((res) => {
+            console.log(res);
             if (res.status == 200) {
                 const url = window.URL.createObjectURL(
                     new Blob([res.data]),
                 );
                 const link = document.createElement('a');
+                link.style.display = 'none';
                 link.href = url;
                 link.setAttribute('download', res.config.params.url.split('_')[3]);
                 document.body.appendChild(link);
                 link.click();
+                document.body.removeChild(link);
             }
         }).catch((err) => {
             console.error(err)

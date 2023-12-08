@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
 fs = require("fs");
 const BASE_URL = require('../config/config')
 
@@ -22,20 +23,16 @@ router.post('/upload', (req, res) => {
 
 // 下载文件
 router.get('/download', (req, res) => {
-    try {
-        //获取文件路径e
-        let filePath = path.join(__dirname, '/../public/' + req.query.url)
-        res.download(filePath)
-    } catch (e) {
-        res.json({ code: 2000 })
-    }
+    //获取文件路径e
+    let filePath = path.join(__dirname, '/../public/' + req.query.url)
+    res.download(filePath)
 })
 
 // 删除文件
 router.post('/delete', (req, res) => {
     let parmas = req.body
     fs.unlink(parmas.url, (error) => {
-        if(error) {
+        if (error) {
             throw error;
         } else {
             console.log('文件删除成功...');

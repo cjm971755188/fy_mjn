@@ -165,6 +165,7 @@ function AETalent(props) {
                     let payload = {}
                     if (type === 'report') {
                         payload = {
+                            cid: 'history',
                             ...values,
                             liaison_type: form.getFieldValue('liaison_type'),
                             liaison_name: form.getFieldValue('liaison_name'),
@@ -394,17 +395,15 @@ function AETalent(props) {
                         <Form.Item label="聚水潭店铺名" name="group_shop">
                             <Input placeholder="请输入" />
                         </Form.Item>
-                        <Space size='large'>
-                            <Form.Item label="常规品折扣（折）" name="discount_normal" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber placeholder="请输入" />
-                            </Form.Item>
-                            <Form.Item label="福利品折扣（折）" name="discount_welfare" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber placeholder="请输入" />
-                            </Form.Item>
-                            <Form.Item label="爆品折扣（折）" name="discount_bao" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber placeholder="请输入" />
-                            </Form.Item>
-                        </Space>
+                        <Form.Item label="常规品折扣（折）(例：7.5)" name="discount_normal" rules={[{ required: true, message: '不能为空' }]}>
+                            <InputNumber placeholder="请输入" />
+                        </Form.Item>
+                        <Form.Item label="福利品折扣（折）(例：7.5)" name="discount_welfare" rules={[{ required: true, message: '不能为空' }]}>
+                            <InputNumber placeholder="请输入" />
+                        </Form.Item>
+                        <Form.Item label="爆品折扣（折）(例：7.5)" name="discount_bao" rules={[{ required: true, message: '不能为空' }]}>
+                            <InputNumber placeholder="请输入" />
+                        </Form.Item>
                         <Form.Item label="折扣备注" name="discount_note">
                             <TextArea placeholder="请输入" />
                         </Form.Item>
@@ -438,14 +437,12 @@ function AETalent(props) {
                         <Form.Item label="聚水潭店铺名" name="provide_shop">
                             <Input placeholder="请输入" />
                         </Form.Item>
-                        <Space size='large'>
-                            <Form.Item label="买断折扣（折）" name="discount_buyout" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber placeholder="请输入" />
-                            </Form.Item>
-                            <Form.Item label="含退货率折扣（折）" name="discount_back" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber placeholder="请输入" />
-                            </Form.Item>
-                        </Space>
+                        <Form.Item label="买断折扣（折）(例：7.5)" name="discount_buyout" rules={[{ required: true, message: '不能为空' }]}>
+                            <InputNumber placeholder="请输入" />
+                        </Form.Item>
+                        <Form.Item label="含退货率折扣（折）(例：7.5)" name="discount_back" rules={[{ required: true, message: '不能为空' }]}>
+                            <InputNumber placeholder="请输入" />
+                        </Form.Item>
                         <Form.Item label="折扣备注" name="discount_label">
                             <TextArea placeholder="请输入" />
                         </Form.Item>

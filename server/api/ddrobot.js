@@ -1,17 +1,18 @@
 const request = require('request');//加载此模块失败请使用在本目录下使用nmp i request控制台命令
 const crypto = require('crypto');
 
-const sendRobot = (ddurl, msg, at, isAtAll) => {
-    let sendData = `小蝣提醒：${msg}`;//你自己定义的关键字
-    let secret = ""//签名，如果有的话
+const sendRobot = (ddurl, title, msg, link, at, isAtAll) => {
+    let secret = "SEC45e67354216ae3d5229271cb34b26f7274132075550b973a67f67f36599427f9"//签名，如果有的话
     let url = ddurl//钉钉机器人的链接，当你创建是便会看到
     let data = {
-        "msgtype": "text",
-        "text": {
-            "content": sendData//聊天内容，若群机器人设置了自定义关键字，则必须加上关键字
+        "msgtype": "markdown",
+        "markdown": {
+            "title": `## ${title}`,
+            "text": `## ${title} \n> ${msg} \n> ###### 网址：${link}`
+            // ![]('http://1.15.89.163:3000/public/people.jpg') 加图片
         },
         "at": {
-            "atMobiles":at,//要@的人的电话号码，可以有多个
+            "atMobiles": at,//要@的人的电话号码，可以有多个
             "isAtAll": isAtAll//是否@全体成员
         }
     }

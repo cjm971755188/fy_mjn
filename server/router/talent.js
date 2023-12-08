@@ -59,10 +59,15 @@ router.post('/getTalentList', (req, res) => {
                         ${whereTM}
                         GROUP BY tm.tid
                     ) tm ON tm.tid = t.tid
-                ) z ${whereFilter}`
+                ) z 
+                ${whereFilter}`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        res.send({ code: 200, data: results.slice(current * pageSize, (current + 1) * pageSize), pagination: { ...params.pagination, total: results.length }, msg: `` })
+        let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`
+        db.query(s, (err, r) => {
+            if (err) throw err;
+            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: `` })
+        })
     })
 })
 
@@ -104,7 +109,7 @@ router.post('/getTalentDetail', (req, res) => {
                             LEFT JOIN talent_model tm ON tms.tmid = tm.tmid
                             LEFT JOIN user u1 ON u1.uid = tms.create_uid
                             LEFT JOIN user u2 ON u2.uid = tms.examine_uid
-                        WHERE tms.operate != '达人报备' and tm.tid = '${params.tid}')
+                        WHERE tms.operate != '达人报备' and tms.operate != '移交达人' and tm.tid = '${params.tid}')
                         ORDER BY create_time`
             db.query(sql, (err, results_schedule) => {
                 if (err) throw err;
@@ -159,28 +164,19 @@ router.post('/editTalent', (req, res) => {
                     } else if (isAdd && key === 'operate') {
                         isAdd = false
                         sql += ` '${params.operate}',`
-                    } else if (params.operate.match('联系人')) {
-                        if (isAdd && key === 'history_other_info') {
-                            isAdd = false
-                            sql += ` '${params.ori}',`
-                        } else if (isAdd && key === 'need_examine') {
-                            isAdd = false
-                            sql += ` '无需审批',`
-                        } else if (isAdd && (key === 'examine_uid' || key === 'examine_time' || key === 'examine_result' || key === 'examine_note')) {
-                            isAdd = false
-                            sql += ` null,`
-                        } else if (isAdd) {
-                            isAdd = false
-                            sql += results[0][key] === null ? ` null,` : ` '${results[0][key]}',`
-                        }
-                    } else if (params.operate.match('年框')) {
-                        for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
-                            if (isAdd && Object.keys(params.new)[i] === key) {
-                                isAdd = false
-                                if (key.match('pic')) {
-                                    sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i].replace('/public', '')}',`
-                                } else {
-                                    sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i]}',`
+                    } else if (isAdd && key === 'history_other_info') {
+                        isAdd = false
+                        sql += ` '${params.ori}',`
+                    } else if (params.operate.match('年框') || params.operate.match('联系人')) {
+                        if (params.operate.match('年框')) {
+                            for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
+                                if (isAdd && Object.keys(params.new)[i] === key) {
+                                    isAdd = false
+                                    if (key.match('pic')) {
+                                        sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i].replace('/public', '')}',`
+                                    } else {
+                                        sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i]}',`
+                                    }
                                 }
                             }
                         }
@@ -518,7 +514,6 @@ router.post('/giveTalent', (req, res) => {
     let sql = `SELECT * FROM talent_model_schedule`
     db.query(sql, (err, results_l) => {
         if (err) throw err;
-
         let sql = `SELECT tms0.*
                     FROM talent_model_schedule tms0 
                         INNER JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status = '生效中' GROUP BY tmid) tms1 ON tms1.tmsid = tms0.tmsid
@@ -550,7 +545,7 @@ router.post('/giveTalent', (req, res) => {
                             s += ` '${time}',`
                         } else if (isAdd && key === 'operate') {
                             isAdd = false
-                            s += ` '移交达人',`
+                            s += ` '达人移交${params.newTid}',`
                         } else if (isAdd && key === 'need_examine') {
                             isAdd = false
                             s += ` '需要审批',`
@@ -580,7 +575,132 @@ router.post('/giveTalent', (req, res) => {
                     let sql = `UPDATE talent set status = '移交待审批' WHERE tid = '${params.tid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
-                        res.send({ code: 200, data: {}, msg: `移交达人成功` })
+                        if (params.hasYear) {
+                            let sql = `SELECT * FROM resource`
+                            db.query(sql, (err, results_l) => {
+                                if (err) throw err;
+                                let sql = `SELECT * FROM resource WHERE SUBSTRING_INDEX(SUBSTRING_INDEX(url, '_', 3), '_', -1) = '${params.tid}'`
+                                db.query(sql, (err, results) => {
+                                    if (err) throw err;
+                                    let sql = `INSERT INTO resource VALUES`
+                                    for (let i = 0; i < results.length; i++) {
+                                        let rid = 'R' + `${results_l.length + i + 1}`.padStart(7, '0')
+                                        let s = `('${rid}',`
+                                        for (const key in results[i]) {
+                                            if (key === 'rid') {
+                                                continue
+                                            } else if (key === 'u_id') {
+                                                s += ` '${params.newTid}',`
+                                            } else if (Object.hasOwnProperty.call(results[i], key)) {
+                                                s += results[i][key] === null ? ` null,` : ` '${results[i][key]}',`
+                                            }
+                                        }
+                                        s = s.substring(0, s.length - 1)
+                                        sql += s + `),`
+                                    }
+                                    sql = sql.substring(0, sql.length - 1)
+                                    db.query(sql, (err, results) => {
+                                        if (err) throw err;
+                                    })
+                                })
+                            })
+                        }
+                        let ms = []
+                        if (params.hasMid) {
+                            let m = ''
+                            for (let i = 0; i < params.mids.split(',').length; i++) {
+                                m += ` '${params.mids.split(',')[i]}',`
+                            }
+                            m = m.substring(0, m.length - 1)
+                            let sql = `SELECT * FROM middleman`
+                            db.query(sql, (err, results_l) => {
+                                if (err) throw err;
+                                let sql = `SELECT * FROM middleman WHERE mid in (${m})`
+                                db.query(sql, (err, results) => {
+                                    if (err) throw err;
+                                    let ss = `INSERT INTO middleman VALUES`
+                                    for (let i = 0; i < results.length; i++) {
+                                        let mid = 'M' + `${results_l.length + i + 1}`.padStart(5, '0')
+                                        ms.push(mid)
+                                        let s = `('${mid}',`
+                                        for (const key in results[i]) {
+                                            if (key === 'mid') {
+                                                continue
+                                            } else if (key === 'u_id') {
+                                                s += ` '${params.newTid}',`
+                                            } else if (Object.hasOwnProperty.call(results[i], key)) {
+                                                s += results[i][key] === null ? ` null,` : ` '${results[i][key]}',`
+                                            }
+                                        }
+                                        s = s.substring(0, s.length - 1)
+                                        ss += s + `),`
+                                    }
+                                    ss = ss.substring(0, ss.length - 1)
+                                    db.query(ss, (err, results) => {
+                                        if (err) throw err;
+                                    })
+                                })
+                            })
+
+                        }
+                        let sql2 = `SELECT * FROM talent_schedule`
+                        db.query(sql2, (err, results) => {
+                            if (err) throw err;
+                            let tsid = 'TS' + `${results.length + 1}`.padStart(7, '0')
+                            let sql = `SELECT ts0.*
+                                            FROM talent_schedule ts0 
+                                                INNER JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status = '生效中' GROUP BY tid) ts1 ON ts1.tsid = ts0.tsid
+                                            WHERE ts0.tid = '${params.tid}'`
+                            db.query(sql, (err, results) => {
+                                if (err) throw err;
+                                let sql = `INSERT INTO talent_schedule VALUES('${tsid}',`
+                                for (const key in results[0]) {
+                                    let isAdd = true
+                                    if (Object.hasOwnProperty.call(results[0], key)) {
+                                        if (isAdd && key === 'tsid') {
+                                            isAdd = false
+                                            continue
+                                        } else if (isAdd && key === 'm_id_1') {
+                                            isAdd = false
+                                            sql += ` '${ms.length !== 0 ? ms[0] : null}',`
+                                        } else if (isAdd && key === 'm_id_2') {
+                                            isAdd = false
+                                            sql += ` '${ms.length === 2 ? ms[1] : null}',`
+                                        } else if (isAdd && key === 'create_uid') {
+                                            isAdd = false
+                                            sql += ` '${params.userInfo.uid}',`
+                                        } else if (isAdd && key === 'create_time') {
+                                            isAdd = false
+                                            sql += ` '${time}',`
+                                        } else if (isAdd && key === 'operate') {
+                                            isAdd = false
+                                            sql += ` '达人移交${params.newTid}',`
+                                        } else if (isAdd && key === 'need_examine') {
+                                            isAdd = false
+                                            sql += ` '需要审批',`
+                                        } else if (isAdd && key === 'examine_uid') {
+                                            isAdd = false
+                                            sql += ` '${params.userInfo.e_id}',`
+                                        } else if (isAdd && (key === 'history_other_info' || key === 'examine_time' || key === 'examine_result' || key === 'examine_note')) {
+                                            isAdd = false
+                                            sql += ` null,`
+                                        } else if (isAdd && key === 'status') {
+                                            isAdd = false
+                                            sql += ` '待审批',`
+                                        } else if (isAdd) {
+                                            sql += results[0][key] === null ? ` null,` : ` '${results[0][key]}',`
+                                        }
+                                    }
+                                }
+                                sql = sql.substring(0, sql.length - 1)
+                                sql += `)`
+                                db.query(sql, (err, results) => {
+                                    if (err) throw err;
+                                    res.send({ code: 200, data: {}, msg: `移交达人成功` })
+                                })
+                            })
+                        })
+
                     })
                 })
             })
@@ -602,6 +722,35 @@ router.post('/getRefundReason', (req, res) => {
     } else {
 
     }
+})
+
+// 搜索达人
+router.post('/searchTalents', (req, res) => {
+    let params = req.body
+    let sql = `SELECT t.tid, t.name
+                FROM talent t 
+                    LEFT JOIN (
+                        SELECT tm.tid, GROUP_CONCAT(DISTINCT u1.uid) as u_id_1, GROUP_CONCAT(DISTINCT u2.uid) as u_id_2 
+                        FROM talent_model tm
+                            LEFT JOIN talent_model_schedule tms ON tms.tmid = tm.tmid
+                            LEFT JOIN user u1 ON u1.uid = tms.u_id_1
+                            LEFT JOIN user u2 ON u2.uid = tms.u_id_2
+                        WHERE '${params.userInfo.uid}' LIKE CONCAT("'%", tms.u_id_1, "%'") OR '${params.userInfo.uid}' LIKE CONCAT("'%", tms.u_id_2, "%'")
+                        GROUP BY tm.tid
+                    ) tm ON tm.tid = t.tid
+                WHERE t.name like '%${params.value}%' and t.status = '合作中'`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        let talents = []
+        for (let i = 0; i < results.length; i++) {
+            const element = results[i];
+            talents.push({
+                label: element.name,
+                value: element.tid
+            })
+        }
+        res.send({ code: 200, data: talents, msg: `` })
+    })
 })
 
 module.exports = router
