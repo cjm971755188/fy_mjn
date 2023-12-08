@@ -33,10 +33,12 @@ router.post('/getPointList', (req, res) => {
     let current = params.pagination.current ? params.pagination.current : 0
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
     let sql = `SELECT z.* FROM (
-                (SELECT a.tid, a.create_time, a.operate, t.name, tm.model, tm.platform, tm.shop, ts.m_id_1, m1.name as m_name_1, ts.m_point_1, ts.m_id_2, m2.name as m_name_2, ts.m_point_2, ts.m_note, ts.yearbox_point, 
-                    IF(tms.commission_normal IS NULL, IF(tms.discount_normal IS NULL, tms.discount_buyout, tms.discount_normal), tms.commission_normal) as commission_1,
-                    IF(tms.commission_welfare IS NULL, IF(tms.discount_welfare IS NULL, tms.discount_back, tms.discount_welfare), tms.commission_welfare) as commission_2,
-                    IF(tms.commission_bao IS NULL, IF(tms.discount_bao IS NULL, null, tms.discount_bao), tms.commission_bao) as commission_3, 
+                (SELECT a.tid, a.create_time, a.operate, t.name, tm.model, tm.platform, tm.shop, ts.m_id_1, m1.name as m_name_1, ts.m_point_1, ts.m_id_2, m2.name as m_name_2, ts.m_point_2, ts.m_note, t.yearbox_lavels_base, t.yearbox_lavels, 
+                    IF(tms.commission_normal IS NULL, tms.discount_normal, tms.commission_normal) as commission_1,
+                    IF(tms.commission_welfare IS NULL, tms.discount_welfare, tms.commission_welfare) as commission_2,
+                    IF(tms.commission_bao IS NULL, tms.discount_bao, tms.commission_bao) as commission_3, 
+                    discount_buyout as commission_4, 
+                    discount_back as commission_5, 
                     IF(tms.commission_note IS NULL, IF(tms.discount_note IS NULL, tms.discount_label, tms.discount_note), tms.commission_note) as commission_note,
                     tms.u_id_1, u1.name as u_name_1, tms.u_point_1, tms.u_id_2, u2.name as u_name_2, tms.u_point_2, tms.u_note, u0.u_id_0, u0.name as u_name_0, IF(u0.u_id_0 IS NULL, null, 0.5) as u_point_0, t.status
                 FROM	(
@@ -73,10 +75,12 @@ router.post('/getPointList', (req, res) => {
                     ) u0 ON u0.tid = t.tid and a.create_time >= u0.create_time
                 )
                 UNION ALL
-                (SELECT a.tid, a.create_time, a.operate, t.name, tm.model, tm.platform, tm.shop, ts.m_id_1, m1.name as m_name_1, ts.m_point_1, ts.m_id_2, m2.name as m_name_2, ts.m_point_2, ts.m_note, ts.yearbox_point, 
-                    IF(tms.commission_normal IS NULL, IF(tms.discount_normal IS NULL, tms.discount_buyout, tms.discount_normal), tms.commission_normal) as commission_1,
-                    IF(tms.commission_welfare IS NULL, IF(tms.discount_welfare IS NULL, tms.discount_back, tms.discount_welfare), tms.commission_welfare) as commission_2,
-                    IF(tms.commission_bao IS NULL, IF(tms.discount_bao IS NULL, null, tms.discount_bao), tms.commission_bao) as commission_3, 
+                (SELECT a.tid, a.create_time, a.operate, t.name, tm.model, tm.platform, tm.shop, ts.m_id_1, m1.name as m_name_1, ts.m_point_1, ts.m_id_2, m2.name as m_name_2, ts.m_point_2, ts.m_note, t.yearbox_lavels_base, t.yearbox_lavels, 
+                    IF(tms.commission_normal IS NULL, tms.discount_normal, tms.commission_normal) as commission_1,
+                    IF(tms.commission_welfare IS NULL, tms.discount_welfare, tms.commission_welfare) as commission_2,
+                    IF(tms.commission_bao IS NULL, tms.discount_bao, tms.commission_bao) as commission_3, 
+                    discount_buyout as commission_4, 
+                    discount_back as commission_5,
                     IF(tms.commission_note IS NULL, IF(tms.discount_note IS NULL, tms.discount_label, tms.discount_note), tms.commission_note) as commission_note,
                     tms.u_id_1, u1.name as u_name_1, tms.u_point_1, tms.u_id_2, u2.name as u_name_2, tms.u_point_2, tms.u_note, u0.u_id_0, u0.name as u_name_0, IF(u0.u_id_0 IS NULL, null, 0.5) as u_point_0, t.status
                 FROM	(
@@ -114,7 +118,7 @@ router.post('/getPointList', (req, res) => {
                 )
                 UNION ALL
                 (
-                    SELECT t.tid, ts.create_time, '达人移交', t.name, '全部', '全部', '全部', null, null, null, null, null, null, null, null, null, null, null, null, REPLACE(ts.operate, '达人移交', ''), u1.name as u_name_1, null, null, null, null, null, ts.create_uid, u0.name as u_name_0, 0.5, t.status
+                    SELECT t.tid, ts.create_time, '达人移交', t.name, '全部', '全部', '全部', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, REPLACE(ts.operate, '达人移交', ''), u1.name as u_name_1, 0.5, null, null, null, null, ts.create_uid, u0.name as u_name_0, 0.5, t.status
                     FROM talent_schedule ts
                         LEFT JOIN talent t ON t.tid = ts.tid
                         INNER JOIN (SELECT * FROM user ${whereUser}) u0 ON u0.uid = ts.create_uid

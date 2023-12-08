@@ -24,6 +24,7 @@ function TalentDetail() {
         status: '',
         yearbox_status: '',
         schedule: [],
+        models: [],
         original: ''
     })
     const getTalentDetailAPI = () => {
@@ -90,7 +91,7 @@ function TalentDetail() {
                     if (description.label === '生效日期') {
                         description.children = description.children === null ? null : dayjs(Number(description.children)).format('YYYY-MM-DD')
                     }
-                    if ([15, 16, 17, 18].indexOf(descriptionsItems[j].key) !== -1) {
+                    if ([15, 16, 17, 18, 63].indexOf(descriptionsItems[j].key) !== -1) {
                         items.push(description)
                     }
                 }
@@ -448,6 +449,7 @@ function TalentDetail() {
                 status: detailData.status,
                 exam,
                 note: exam ? null : note,
+                uid: detailData.models[0].u_id_1,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     e_id: localStorage.getItem('e_id'),
@@ -481,6 +483,7 @@ function TalentDetail() {
                 status: detailData.status,
                 exam,
                 note: exam ? null : note,
+                uid: detailData.models[0].u_id_1,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     e_id: localStorage.getItem('e_id'),
@@ -546,12 +549,11 @@ function TalentDetail() {
                         <Descriptions column={5} items={getBaseItems()} />
                     </Card>
                     <Card title={<Space><AuditOutlined /><span>年框信息</span>
-                        <Tag color={detailData.yearbox_status === '待审批' ? "gold" : detailData.yearbox_status === '生效中' ? "green" : detailData.yearbox_status === '已失效' ? "red" : ""}>{detailData.yearbox_status}</Tag>
+                        <Tag color={detailData.yearbox_start_date === null ? "" : "green"}>{detailData.yearbox_start_date === null ? "暂无" : "生效中"}</Tag>
                     </Space>}
                         style={{ marginBottom: '20px' }}
                         extra={examPower || detailData.status.match('待审批') ? null :
-                            detailData.yearbox_status === '暂无' ? <Button type="text" icon={<PlusOutlined />} onClick={() => { formYear.setFieldValue('tid', tid); setIsShowYear(true); setYearType('detail'); }}>新增</Button> :
-                                detailData.yearbox_status === '已失效' ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowYear(true); setYearType('续约年框'); }}>续约</Button> : null
+                            detailData.yearbox_start_date === null ? <Button type="text" icon={<PlusOutlined />} onClick={() => { formYear.setFieldValue('tid', tid); setIsShowYear(true); setYearType('detail'); }}>新增</Button> : null
                         }
                     >
                         <Descriptions column={5} items={getYearItems()} />
@@ -753,6 +755,7 @@ function TalentDetail() {
                 onOK={(values) => {
                     editTalentAPI('新增年框', null, {
                     ...values,
+                    yearbox_lavels: JSON.stringify(values.yearbox_lavels),
                     yearbox_start_date: dayjs(values.yearbox_start_date).valueOf()
                 });
                 }}

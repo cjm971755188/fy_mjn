@@ -17,7 +17,9 @@ export const descriptionsItems = [
     { key: 15, label: "生效日期", value: "yearbox_start_date" },
     { key: 16, label: "返点", value: "yearbox_point" },
     { key: 17, label: "付款周期", value: "yearbox_cycle" },
-    { key: 18, label: "合同", value: "yearbox_pic" },
+    { key: 18, label: "付款类型", value: "yearbox_type" },
+    { key: 63, label: "提点", value: "yearbox_lavels" },
+    
     { key: 19, label: "编码", value: "m_id_1" },
     { key: 20, label: "类型", value: "m_type_1" },
     { key: 21, label: "昵称", value: "m_name_1" },

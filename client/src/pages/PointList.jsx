@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Button, Select, message, Alert } from 'antd';
+import { Card, Table, Space, Form, Input, Button, Select, message, Alert, Tag, Popover, List } from 'antd';
+import { VerticalAlignBottomOutlined } from '@ant-design/icons';
 import { model, platform } from '../baseData/talent'
 import dayjs from 'dayjs'
 import MyDateSelect from '../components/MyDateSelect'
@@ -22,26 +23,82 @@ function PointList() {
             )
         },
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
+        { 
+            title: '变动操作', 
+            dataIndex: 'operate', 
+            key: 'operate',
+            render: (_, record) => (
+                <span>{record.operate.match('达人移交') ? '达人移交' : record.operate}</span>
+            )
+        },
         { title: '模式', dataIndex: 'model', key: 'model' },
         { title: '平台', dataIndex: 'platform', key: 'platform' },
         { title: '店铺', dataIndex: 'shop', key: 'shop' },
-        { title: '常规品/买断品', dataIndex: 'commission_1', key: 'commission_1' },
-        { title: '福利品/含退货品', dataIndex: 'commission_2', key: 'commission_2' },
-        { title: '爆品', dataIndex: 'commission_3', key: 'commission_3' },
-        { title: '佣金/折扣备注', dataIndex: 'commission_note', key: 'commission_note' },
-        { title: '年框提点', dataIndex: 'yearbox_point', key: 'yearbox_point' },
-        { title: '一级中间人', dataIndex: 'm_name_1', key: 'm_name_1' },
-        { title: '提点(%)', dataIndex: 'm_point_1', key: 'm_point_1' },
-        { title: '二级中间人', dataIndex: 'm_name_2', key: 'm_name_2' },
-        { title: '提点(%)', dataIndex: 'm_point_2', key: 'm_point_2' },
-        { title: '备注', dataIndex: 'm_note', key: 'm_note' },
-        { title: '主商务', dataIndex: 'u_name_1', key: 'u_name_1' },
-        { title: '提点(%)', dataIndex: 'u_point_1', key: 'u_point_1' },
-        { title: '副商务', dataIndex: 'u_name_2', key: 'u_name_2' },
-        { title: '提点(%)', dataIndex: 'u_point_2', key: 'u_point_2' },
-        { title: '原商务', dataIndex: 'u_name_0', key: 'u_name_0' },
-        { title: '提点(%)', dataIndex: 'u_point_0', key: 'u_point_0' },
-        { title: '备注', dataIndex: 'u_note', key: 'u_note' }
+        { 
+            title: '佣金折扣', 
+            dataIndex: 'commission', 
+            key: 'commission',
+            render: (_, record) => (
+                <Popover title="佣金详情" content={
+                    <List>
+                        {record.commission_1 === null ? null : <List.Item>常规品：{record.commission_1}%</List.Item>}
+                        {record.commission_2 === null ? null : <List.Item>福利品：{record.commission_2}%</List.Item>}
+                        {record.commission_3 === null ? null : <List.Item>爆品：{record.commission_3}%</List.Item>}
+                        {record.commission_4 === null ? null : <List.Item>买断品：{record.commission_4}折</List.Item>}
+                        {record.commission_5 === null ? null : <List.Item>含退货品：{record.commission_5}折</List.Item>}
+                        <List.Item>备注：{record.commission_note}</List.Item>
+                    </List>
+                }>
+                    {record.commission_1 === null ? null : <Tag>{`常规品( ${record.commission_1}% )`}</Tag>}
+                    {record.commission_2 === null ? null : <Tag>{`福利品( ${record.commission_2}% )`}</Tag>}
+                    {record.commission_3 === null ? null : <Tag>{`爆品( ${record.commission_3}% )`}</Tag>}
+                    {record.commission_4 === null ? null : <Tag>{`买断品( ${record.commission_4}折 )`}</Tag>}
+                    {record.commission_5 === null ? null : <Tag>{`含退货品( ${record.commission_5}折 )`}</Tag>}
+                </Popover>
+            )
+        },
+        { 
+            title: '中间人', 
+            dataIndex: 'middleman', 
+            key: 'middleman',
+            render: (_, record) => (
+                <Popover title="提点备注" content={
+                    <List>
+                        {record.m_name_1 === null ? null : <List.Item>一级中间人：{record.m_name_1}</List.Item>}
+                        {record.m_name_1 === null ? null : <List.Item>一级中间人提点：{record.m_point_1}%</List.Item>}
+                        {record.m_name_2 === null ? null : <List.Item>二级中间人：{record.m_name_2}</List.Item>}
+                        {record.m_name_2 === null ? null : <List.Item>二级中间人提点：{record.m_point_2}%</List.Item>}
+                        <List.Item>备注：{record.m_note}</List.Item>
+                    </List>
+                }>
+                    {record.m_name_1 === null ? null : <Tag>{`${record.m_name_1}( ${record.m_point_1}% )`}</Tag>}
+                    {record.m_name_2 === null ? null : <Tag>{`${record.m_name_2}( ${record.m_point_2}% )`}</Tag>}
+                </Popover>
+            )
+        },
+        { 
+            title: '商务', 
+            dataIndex: 'middleman', 
+            key: 'middleman',
+            render: (_, record) => (
+                <Popover title="提点备注" content={
+                    <List>
+                        {record.u_name_1 === null ? null : <List.Item>主商务：{record.u_name_1}</List.Item>}
+                        {record.u_name_1 === null ? null : <List.Item>主商务提点：{record.u_point_1}%</List.Item>}
+                        {record.u_name_2 === null ? null : <List.Item>副商务：{record.u_name_2}</List.Item>}
+                        {record.u_name_2 === null ? null : <List.Item>副商务提点：{record.u_point_2}%</List.Item>}
+                        {record.u_name_0 === null ? null : <List.Item>原商务：{record.u_name_0}</List.Item>}
+                        {record.u_name_0 === null ? null : <List.Item>原商务提点：{record.u_point_0}%</List.Item>}
+                        <List.Item>备注：{record.u_note}</List.Item>
+                    </List>
+                }>
+                    {record.u_name_1 === null ? null : <Tag>{`${record.u_name_1}( ${record.u_point_1}% )`}</Tag>}
+                    {record.u_name_2 === null ? null : <Tag>{`${record.u_name_2}( ${record.u_point_2}% )`}</Tag>}
+                    {record.u_name_0 === null ? null : <Tag>{`${record.u_name_0}( ${record.u_point_0}% )`}</Tag>}
+                </Popover>
+            )
+        },
+        { title: '年框提点', dataIndex: 'yearbox_point', key: 'yearbox_point' }
     ]
     // 表格：获取数据、分页
     const [data, setData] = useState();
@@ -113,7 +170,7 @@ function PointList() {
     }, [JSON.stringify(tableParams)])
     return (
         <div>
-            <Card title="达人结算列表">
+            <Card title="达人结算列表" extra={<Button type="primary" icon={<VerticalAlignBottomOutlined />} onClick={() => { message.info('导出') }}>导出</Button>}>
                 <Form
                     layout="inline"
                     form={filterForm}

@@ -105,9 +105,9 @@ export const yearDealType = [
 export const yearCycleType = [
     { key: 0, label: "一年一付", value: "一年一付" },
     { key: 1, label: "半年一付", value: "半年一付" },
-    { key: 2, label: "一季一付", value: "一季一付" },
-    { key: 3, label: "一月一付", value: "一月一付" },
-    { key: 4, label: "一专场一付", value: "一专场一付" }
+    { key: 2, label: "季度一付", value: "季度一付" },
+    { key: 3, label: "月度一付", value: "月度一付" },
+    { key: 4, label: "专场一付", value: "专场一付" }
 ]
 
 export const yearBoxType = [
@@ -115,4 +115,17 @@ export const yearBoxType = [
     { key: 1, label: "已失效", value: "已失效" },
     { key: 2, label: "生效中", value: "生效中" },
     { key: 3, label: "待审批", value: "待审批" }
+]
+
+export const yearType1 = [
+    { key: 0, label: "阶梯型", value: "阶梯型" }
+]
+
+export const yearType2 = [
+    { key: 0, label: "阶梯型", value: "阶梯型" },
+    { key: 1, label: "基础 + 额外阶梯型", value: "基础 + 额外阶梯型" }
+]
+
+export const yearType3 = [
+    { key: 2, label: "基础型", value: "基础型" }
 ]

@@ -7,8 +7,8 @@ const sendRobot = (ddurl, title, msg, link, at, isAtAll) => {
     let data = {
         "msgtype": "markdown",
         "markdown": {
-            "title": `## ${title}`,
-            "text": `## ${title} \n> ${msg} \n> ###### 网址：${link}`
+            "title": `${title}`,
+            "text": `### ${title} \n> ${msg} \n> ###### 网址：${link}`
             // ![]('http://1.15.89.163:3000/public/people.jpg') 加图片
         },
         "at": {

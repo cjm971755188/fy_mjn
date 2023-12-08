@@ -50,14 +50,12 @@ function TalentList() {
         { title: '预估慕江南年GMV', dataIndex: 'year_deal', key: 'year_deal' },
         {
             title: '年框状态',
-            dataIndex: 'yearbox_status',
-            key: 'yearbox_status',
+            dataIndex: 'yearbox_start_date',
+            key: 'yearbox_start_date',
             render: (_, record) => (
                 <Space size="small">
-                    {record.yearbox_status === '待审批' ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
-                        record.yearbox_status === '生效中' ? <PauseCircleTwoTone twoToneColor="#4ec990" /> : 
-                            record.yearbox_status === '暂无' ? <StopTwoTone twoToneColor="#999999" /> : null}
-                    <span>{record.yearbox_status}</span>
+                    {record.yearbox_start_date === null ? <StopTwoTone twoToneColor="#999999" /> : <PauseCircleTwoTone twoToneColor="#4ec990" />}
+                    <span>{record.yearbox_start_date === null ? '暂无' : '生效中'}</span>
                 </Space>
             )
         },

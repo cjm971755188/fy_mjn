@@ -3,6 +3,8 @@ const router = express.Router();
 const db = require('../config/db')
 const BASE_URL = require('../config/config')
 const dayjs = require('dayjs');
+const ddurls = require('../config/commentDD')
+const sendRobot = require('../api/ddrobot')
 
 // 获取达人列表
 router.post('/getTalentList', (req, res) => {
@@ -77,8 +79,7 @@ router.post('/getTalentDetail', (req, res) => {
     let sql = `SELECT t.*, ts.*
                 FROM talent t
                     LEFT JOIN (
-                            SELECT ts0.tid, ts0.tsid, ts0.yearbox_start_date, ts0.yearbox_point, ts0.yearbox_cycle, 
-                                ts0.m_id_1, m1.type as m_type_1, m1.name as m_name_1, ts0.m_point_1, ts0.m_id_2, m2.type as m_type_2, m2.name as m_name_2, ts0.m_point_2, ts0.m_note
+                            SELECT ts0.tid, ts0.tsid, ts0.m_id_1, m1.type as m_type_1, m1.name as m_name_1, ts0.m_point_1, ts0.m_id_2, m2.type as m_type_2, m2.name as m_name_2, ts0.m_point_2, ts0.m_note
                             FROM talent_schedule ts0
                                 INNER JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' GROUP BY tid) ts1 ON ts1.tsid = ts0.tsid
                                 LEFT JOIN middleman m1 ON m1.mid = ts0.m_id_1
@@ -168,18 +169,13 @@ router.post('/editTalent', (req, res) => {
                         isAdd = false
                         sql += ` '${params.ori}',`
                     } else if (params.operate.match('年框') || params.operate.match('联系人')) {
-                        if (params.operate.match('年框')) {
+                        /* if (params.operate.match('年框')) {
                             for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
                                 if (isAdd && Object.keys(params.new)[i] === key) {
-                                    isAdd = false
-                                    if (key.match('pic')) {
-                                        sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i].replace('/public', '')}',`
-                                    } else {
-                                        sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i]}',`
-                                    }
+                                    isAdd = falsesql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i]}',`
                                 }
                             }
-                        }
+                        } */
                         if (isAdd && key === 'need_examine') {
                             isAdd = false
                             sql += ` '无需审批',`
@@ -223,45 +219,50 @@ router.post('/editTalent', (req, res) => {
             sql += `)`
             db.query(sql, (err, results) => {
                 if (err) throw err;
-                if (params.operate === '修改联系人') {
+                if (params.operate === '修改联系人' || params.operate.match('年框')) {
                     let sql = 'UPDATE talent SET'
                     for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
-                        if (Object.keys(params.new)[i] !== 'tid') {
-                            sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
+                        if (Object.keys(params.new)[i] !== 'tid' && Object.keys(params.new)[i] !== 'yearbox_files') {
+                            sql += Object.values(params.new)[i] !== null && Object.values(params.new)[i] !== '' ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
                         }
                     }
                     sql = sql.substring(0, sql.length - 1)
                     sql += ` WHERE tid = '${params.tid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
-                        res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
-                    })
-                } else if (params.operate.match('年框')) {
-                    let sql = `UPDATE talent set yearbox_status = '生效中' WHERE tid = '${params.tid}'`
-                    db.query(sql, (err, results) => {
-                        if (err) throw err;
-                        let sql = `SELECT * FROM resource`
-                        db.query(sql, (err, results) => {
-                            if (err) throw err;
-                            let sql = 'INSERT INTO resource VALUES'
-                            for (let i = 0; i < params.new.yearbox_files.fileList.length; i++) {
-                                const element = params.new.yearbox_files.fileList[i];
-                                let rid = 'R' + `${results.length + i + 1}`.padStart(7, '0')
-                                let s = `('${rid}', '${element.response[0].url.replace(`${BASE_URL}/public/`, '')}', '生效中', '${params.userInfo.uid}', '${time}'),`
-                                sql += s
-                            }
-                            sql = sql.substring(0, sql.length - 1)
+                        if (params.operate.match('年框')) {
+                            let sql = `SELECT * FROM resource`
                             db.query(sql, (err, results) => {
                                 if (err) throw err;
-                                res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                                let sql = 'INSERT INTO resource VALUES'
+                                for (let i = 0; i < params.new.yearbox_files.fileList.length; i++) {
+                                    const element = params.new.yearbox_files.fileList[i];
+                                    let rid = 'R' + `${results.length + i + 1}`.padStart(7, '0')
+                                    let s = `('${rid}', '${element.response[0].url.replace(`${BASE_URL}/public/`, '')}', '生效中', '${params.userInfo.uid}', '${time}'),`
+                                    sql += s
+                                }
+                                sql = sql.substring(0, sql.length - 1)
+                                db.query(sql, (err, results) => {
+                                    if (err) throw err;
+                                })
                             })
-                        })
+                        }
+                        res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
                     })
                 } else if (params.operate.match('中间人')) {
                     let sql = `UPDATE talent set status = '中间人待审批' WHERE tid = '${params.tid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
-                        res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                        let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
+                        db.query(sql, (err, results_t) => {
+                            if (err) throw err;
+                            let sql = `SELECT phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                            db.query(sql, (err, results_e) => {
+                                if (err) throw err;
+                                sendRobot(ddurls.report, `${results_t[0].name} ${params.operate}`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                            })
+                        })
                     })
                 }
             })
@@ -274,33 +275,47 @@ router.post('/examTalent', (req, res) => {
     let time = dayjs().valueOf()
     let params = req.body
     let note = params.note === null ? null : `'${params.note}'`
-    let sql = `UPDATE talent_schedule 
+    let sql = `SELECT t.name, ts.operate
+                        FROM talent t
+                            INNER JOIN (SELECT tmid, operate FROM talent_model WHERE status = '待审批') ts ON ts.tid = t.tid 
+                        WHERE t.tid = '${params.tid}'`
+    db.query(sql, (err, results_t) => {
+        if (err) throw err;
+        let sql = `UPDATE talent_schedule 
                 SET examine_time = '${time}', examine_uid = '${params.userInfo.uid}', examine_result = '${params.exam ? '通过' : '驳回'}', examine_note = ${note}, status = '${params.exam ? '生效中' : '已失效'}' 
                 WHERE tsid = '${params.tsid}' and status = '待审批'`
-    db.query(sql, (err, results) => {
-        if (err) throw err;
-        let sql = `UPDATE talent SET status = '${params.exam || params.status !== '报备待审批' ? '合作中' : '已失效'}' WHERE tid = '${params.tid}'`
         db.query(sql, (err, results) => {
             if (err) throw err;
-            if (params.status === '报备待审批') {
-                let sql = `UPDATE talent_model_schedule tms, talent_model tm
+            let sql = `UPDATE talent SET status = '${params.exam || params.status !== '报备待审批' ? '合作中' : '已失效'}' WHERE tid = '${params.tid}'`
+            db.query(sql, (err, results) => {
+                if (err) throw err;
+                if (params.status === '报备待审批') {
+                    let sql = `UPDATE talent_model_schedule tms, talent_model tm
                             SET tms.examine_time = '${time}', tms.examine_uid = '${params.userInfo.uid}', tms.examine_result = '${params.exam ? '通过' : '驳回'}', tms.examine_note = ${note}, tms.status = '${params.exam ? '生效中' : '已失效'}' 
                             WHERE tms.tmid = tm.tmid and tm.tid = '${params.tid}'`
-                db.query(sql, (err, results) => {
-                    if (err) throw err;
-                    let sql = `UPDATE talent_model SET status = '${params.exam ? '合作中' : '已失效'}' WHERE tid = '${params.tid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
-                        let sql = `UPDATE chance c, talent t SET c.status = '${params.exam ? '报备通过' : '报备驳回'}' WHERE c.cid = t.cid and t.tid = '${params.tid}'`
+                        let sql = `UPDATE talent_model SET status = '${params.exam ? '合作中' : '已失效'}' WHERE tid = '${params.tid}'`
                         db.query(sql, (err, results) => {
                             if (err) throw err;
-                            res.send({ code: 200, data: {}, msg: `` })
+                            let sql = `UPDATE chance c, talent t SET c.status = '${params.exam ? '报备通过' : '报备驳回'}' WHERE c.cid = t.cid and t.tid = '${params.tid}'`
+                            db.query(sql, (err, results) => {
+                                if (err) throw err;
+                            })
                         })
                     })
+                }
+                let sql = `SELECT name, phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                db.query(sql, (err, results_e) => {
+                    if (err) throw err;
+                    let sql = `SELECT name, phone FROM user WHERE uid = '${params.uid}'`
+                    db.query(sql, (err, results_u) => {
+                        if (err) throw err;
+                        sendRobot(ddurls.report, `${results_e[0].name} 审批 ${results_t[0].name}( ${results_t[0].operate} ) ${params.exam ? '通过' : '驳回'}`, `提点结算，按提交时间生效@${results_u[0].phone}`, `http://1.15.89.163:5173`, [results_u[0].phone], false)
+                        res.send({ code: 200, data: {}, msg: `` })
+                    })
                 })
-            } else if (params.status === '中间人待审批') {
-                res.send({ code: 200, data: {}, msg: `` })
-            }
+            })
         })
     })
 })
@@ -346,7 +361,16 @@ router.post('/addTalentModel', (req, res) => {
                     let sql = `UPDATE talent SET status = '新合作待审批' WHERE tid = '${params.tid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
-                        res.send({ code: 200, data: {}, msg: `添加成功` })
+                        let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
+                        db.query(sql, (err, results_t) => {
+                            if (err) throw err;
+                            let sql = `SELECT phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                            db.query(sql, (err, results_e) => {
+                                if (err) throw err;
+                                sendRobot(ddurls.report, `${results_t[0].name} 新合作报备`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                res.send({ code: 200, data: {}, msg: `添加成功` })
+                            })
+                        })
                     })
                 })
             })
@@ -450,7 +474,16 @@ router.post('/editTalentModel', (req, res) => {
                         let sql = `UPDATE talent set status = '合作变更待审批' WHERE tid = '${params.tid}'`
                         db.query(sql, (err, results) => {
                             if (err) throw err;
-                            res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                            let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
+                            db.query(sql, (err, results_t) => {
+                                if (err) throw err;
+                                let sql = `SELECT phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                                db.query(sql, (err, results_e) => {
+                                    if (err) throw err;
+                                    sendRobot(ddurls.report, `${results_t[0].name} ${params.operate}`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                    res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                                })
+                            })
                         })
                     })
                 } else if (params.operate.match('综合')) {
@@ -470,7 +503,16 @@ router.post('/editTalentModel', (req, res) => {
                             let sql = `UPDATE talent set status = '合作变更待审批' WHERE tid = '${params.tid}'`
                             db.query(sql, (err, results) => {
                                 if (err) throw err;
-                                res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                                let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
+                                db.query(sql, (err, results_t) => {
+                                    if (err) throw err;
+                                    let sql = `SELECT phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                                    db.query(sql, (err, results_e) => {
+                                        if (err) throw err;
+                                        sendRobot(ddurls.report, `${results_t[0].name} ${params.operate}`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                        res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                                    })
+                                })
                             })
                         })
                     })
@@ -490,18 +532,35 @@ router.post('/examTalentModel', (req, res) => {
     }
     tmids = tmids.substring(0, tmids.length - 1)
     let note = params.note === null ? null : `'${params.note}'`
-    let sql = `UPDATE talent_model_schedule 
+    let sql = `SELECT t.name, tms.operate
+                    FROM talent_model tm 
+                        LEFT JOIN talent t ON t.tid = tm.tid
+                        INNER JOIN (SELECT tmid, operate FROM talent_model_schedule WHERE status = '待审批') tms ON tms.tmid = tm.tmid  
+                    WHERE tm.tmid in (${tmids})`
+    db.query(sql, (err, results_t) => {
+        if (err) throw err;
+        let sql = `UPDATE talent_model_schedule 
                 SET examine_time = '${time}', examine_uid = '${params.userInfo.uid}', examine_result = '${params.exam ? '通过' : '驳回'}', examine_note = ${note}, status = '${params.exam ? '生效中' : '已失效'}' 
                 WHERE tmid in (${tmids}) and status = '待审批'`
-    db.query(sql, (err, results) => {
-        if (err) throw err;
-        let sql = `UPDATE talent_model SET status = '${params.exam || params.status !== '新合作待审批' ? '合作中' : '已失效'}' WHERE tmid in (${tmids}) and status = '待审批'`
         db.query(sql, (err, results) => {
             if (err) throw err;
-            let sql = `UPDATE talent SET status = '合作中' WHERE tid = '${params.tid}'`
+            let sql = `UPDATE talent_model SET status = '${params.exam || params.status !== '新合作待审批' ? '合作中' : '已失效'}' WHERE tmid in (${tmids}) and status = '待审批'`
             db.query(sql, (err, results) => {
                 if (err) throw err;
-                res.send({ code: 200, data: {}, msg: `` })
+                let sql = `UPDATE talent SET status = '合作中' WHERE tid = '${params.tid}'`
+                db.query(sql, (err, results) => {
+                    if (err) throw err;
+                    let sql = `SELECT name, phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                    db.query(sql, (err, results_e) => {
+                        if (err) throw err;
+                        let sql = `SELECT name, phone FROM user WHERE uid = '${params.uid}'`
+                        db.query(sql, (err, results_u) => {
+                            if (err) throw err;
+                            sendRobot(ddurls.report, `${results_e[0].name} 审批 ${results_t[0].name}( ${results_t[0].operate} ) ${params.exam ? '通过' : '驳回'}`, `提点结算，按提交时间生效@${results_u[0].phone}`, `http://1.15.89.163:5173`, [results_u[0].phone], false)
+                            res.send({ code: 200, data: {}, msg: `` })
+                        })
+                    })
+                })
             })
         })
     })
@@ -696,7 +755,16 @@ router.post('/giveTalent', (req, res) => {
                                 sql += `)`
                                 db.query(sql, (err, results) => {
                                     if (err) throw err;
-                                    res.send({ code: 200, data: {}, msg: `移交达人成功` })
+                                    let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
+                                    db.query(sql, (err, results_t) => {
+                                        if (err) throw err;
+                                        let sql = `SELECT phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                                        db.query(sql, (err, results_e) => {
+                                            if (err) throw err;
+                                            sendRobot(ddurls.report, `${results_t[0].name} ${params.operate}`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                            res.send({ code: 200, data: {}, msg: `移交达人成功` })
+                                        })
+                                    })
                                 })
                             })
                         })

@@ -385,6 +385,7 @@ function ChanceList() {
             url: '/chance/reportChance',
             data: {
                 ...payload,
+                operate: '达人报备',
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     e_id: localStorage.getItem('e_id'),
