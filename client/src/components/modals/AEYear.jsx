@@ -71,7 +71,7 @@ function AEUser(props) {
                     ...values,
                     yearbox_lavels_base: values.yearbox_lavels_base ? values.yearbox_lavels_base : null
                 }
-                props.onOK(values);
+                props.onOK(v);
                 setYearType('');
             }}>
                 {type === 'detail' ? null : <Form.Item label="达人昵称" name="tid" rules={[{ required: true, message: '不能为空' }]}>

@@ -110,7 +110,7 @@ router.post('/getTalentDetail', (req, res) => {
                             LEFT JOIN talent_model tm ON tms.tmid = tm.tmid
                             LEFT JOIN user u1 ON u1.uid = tms.create_uid
                             LEFT JOIN user u2 ON u2.uid = tms.examine_uid
-                        WHERE tms.operate != '达人报备' and tms.operate != '移交达人' and tm.tid = '${params.tid}')
+                        WHERE tms.operate != '达人报备' and tms.operate NOT LIKE '达人移交%' and tm.tid = '${params.tid}')
                         ORDER BY create_time`
             db.query(sql, (err, results_schedule) => {
                 if (err) throw err;
@@ -167,7 +167,7 @@ router.post('/editTalent', (req, res) => {
                         sql += ` '${params.operate}',`
                     } else if (isAdd && key === 'history_other_info') {
                         isAdd = false
-                        sql += ` '${params.ori}',`
+                        sql += params.ori === null ? ` null,` : ` '${params.ori}',`
                     } else if (params.operate.match('年框') || params.operate.match('联系人')) {
                         /* if (params.operate.match('年框')) {
                             for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
@@ -276,9 +276,9 @@ router.post('/examTalent', (req, res) => {
     let params = req.body
     let note = params.note === null ? null : `'${params.note}'`
     let sql = `SELECT t.name, ts.operate
-                        FROM talent t
-                            INNER JOIN (SELECT tmid, operate FROM talent_model WHERE status = '待审批') ts ON ts.tid = t.tid 
-                        WHERE t.tid = '${params.tid}'`
+                FROM talent t
+                    INNER JOIN (SELECT tid, operate FROM talent_schedule WHERE status = '待审批') ts ON ts.tid = t.tid 
+                WHERE t.tid = '${params.tid}'`
     db.query(sql, (err, results_t) => {
         if (err) throw err;
         let sql = `UPDATE talent_schedule 
@@ -604,7 +604,7 @@ router.post('/giveTalent', (req, res) => {
                             s += ` '${time}',`
                         } else if (isAdd && key === 'operate') {
                             isAdd = false
-                            s += ` '达人移交${params.newTid}',`
+                            s += ` '${params.operate}给${params.newTid}',`
                         } else if (isAdd && key === 'need_examine') {
                             isAdd = false
                             s += ` '需要审批',`
@@ -733,7 +733,7 @@ router.post('/giveTalent', (req, res) => {
                                             sql += ` '${time}',`
                                         } else if (isAdd && key === 'operate') {
                                             isAdd = false
-                                            sql += ` '达人移交${params.newTid}',`
+                                            sql += ` '${params.operate}给${params.newTid}',`
                                         } else if (isAdd && key === 'need_examine') {
                                             isAdd = false
                                             sql += ` '需要审批',`
@@ -762,7 +762,7 @@ router.post('/giveTalent', (req, res) => {
                                         db.query(sql, (err, results_e) => {
                                             if (err) throw err;
                                             sendRobot(ddurls.report, `${results_t[0].name} ${params.operate}`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
-                                            res.send({ code: 200, data: {}, msg: `移交达人成功` })
+                                            res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
                                         })
                                     })
                                 })

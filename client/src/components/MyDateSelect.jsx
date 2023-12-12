@@ -17,15 +17,15 @@ function MyDateSelect(props) {
 
     const FinnalDate = (date) => {
         if (type === 'date') {
-            return [dayjs(date).valueOf(), dayjs(dayjs(date).add(1, "day")).valueOf()]
+            return [dayjs(date.format('YYYY-MM-DD')).valueOf(), dayjs(date.add(1, "day").format('YYYY-MM-DD')).valueOf()]
         } else if (type === 'week') {
-            return [dayjs(dayjs(date).startOf("week").add(1, "day").valueOf()).valueOf(), dayjs(dayjs(date).endOf("week").add(2, "day").valueOf()).valueOf()]
+            return [dayjs(date.startOf("week").add(1, "day").format('YYYY-MM-DD')).valueOf(), dayjs(date.endOf("week").add(2, "day").format('YYYY-MM-DD')).valueOf()]
         } else if (type === 'month') {
-            return [dayjs(dayjs(date).startOf("month").valueOf()).valueOf(), dayjs(dayjs(date).endOf("month").add(1, "day").valueOf()).valueOf()]
+            return [dayjs(date.startOf("month").format('YYYY-MM-DD')).valueOf(), dayjs(date.endOf("month").add(1, "day").format('YYYY-MM-DD')).valueOf()]
         } else if (type === 'quarter') {
-            return [dayjs(dayjs(date).startOf("quarter").valueOf()).valueOf(), dayjs(dayjs(date).startOf("quarter").add(3, "month").valueOf()).valueOf()]
+            return [dayjs(date.startOf("quarter").format('YYYY-MM-DD')).valueOf(), dayjs(date.startOf("quarter").add(3, "month").format('YYYY-MM-DD')).valueOf()]
         } else if (type === 'year') {
-            return [dayjs(dayjs(date).startOf("year").valueOf()).valueOf(), dayjs(dayjs(date).endOf("year").add(1, "day").valueOf()).valueOf()]
+            return [dayjs(date.startOf("year").format('YYYY-MM-DD')).valueOf(), dayjs(date.endOf("year").add(1, "day").format('YYYY-MM-DD')).valueOf()]
         } else {
             return 'error'
         }

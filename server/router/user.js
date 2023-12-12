@@ -13,8 +13,8 @@ router.post('/login', (req, res) => {
             res.send({ code: 201, data: {}, msg: '无该用户' })
         } else if (params.password != results[0].password) {
             res.send({ code: 201, data: {}, msg: '密码错误' })
-        } else if (results[0].status == '禁用') {
-            res.send({ code: 201, data: {}, msg: '该用户已被禁用' })
+        } else if (results[0].status == '失效') {
+            res.send({ code: 201, data: {}, msg: '该用户已被失效' })
         } else {
             let sql = ''
             if (results[0].position === '商务') {
@@ -38,8 +38,8 @@ router.post('/editPassword', (req, res) => {
         if (err) throw err;
         if (results.length == 0) {
             res.send({ code: 201, data: {}, msg: '无该用户' })
-        } else if (results[0].status == '禁用') {
-            res.send({ code: 201, data: {}, msg: '该用户已被禁用' })
+        } else if (results[0].status == '失效') {
+            res.send({ code: 201, data: {}, msg: '该用户已被失效' })
         } else if (params.password != results[0].password) {
             res.send({ code: 201, data: {}, msg: '原密码错误' })
         } else if (params.password2 != params.password3) {
@@ -99,7 +99,7 @@ router.post('/getUserList', (req, res) => {
 router.post('/addUser', (req, res) => {
     let time = dayjs().valueOf()
     let params = req.body
-    let sql = `SELECT * FROM user where status != '禁用' and company = '${params.combine[0]}' and department = '${params.combine[1]}' and position = '${params.combine[2]}' and position in ('总裁', '副总', '主管')`
+    let sql = `SELECT * FROM user where status != '失效' and company = '${params.combine[0]}' and department = '${params.combine[1]}' and position = '${params.combine[2]}' and position in ('总裁', '副总', '主管')`
     db.query(sql, (err, results) => {
         if (err) throw err;
         if (results.length != 0) {
@@ -117,7 +117,7 @@ router.post('/addUser', (req, res) => {
             db.query(sql, (err, results) => {
                 if (err) throw err;
                 if (results.length != 0) {
-                    if (results[0].status != '禁用') {
+                    if (results[0].status != '失效') {
                         res.send({ code: 201, data: {}, msg: `${params.phone} 手机号已存在，添加失败` })
                     } else {
                         let sql = `UPDATE user SET status = '正常', create_uid = '${params.userInfo.uid}', create_time = '${dayjs().valueOf()}' where phone = '${params.phone}'`
@@ -172,10 +172,10 @@ router.post('/editUser', (req, res) => {
 // 修改用户状态
 router.post('/editUserStatus', (req, res) => {
     let params = req.body
-    let sql = `UPDATE user SET status = '${params.type ? '正常' : '禁用'}' where uid = '${params.uid}'`
+    let sql = `UPDATE user SET status = '${params.type ? '正常' : '失效'}' where uid = '${params.uid}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        res.send({ code: 200, data: {}, msg: `${params.uid} ${params.type ? '恢复正常' : '已禁用'}` })
+        res.send({ code: 200, data: {}, msg: `${params.uid} ${params.type ? '恢复正常' : '已失效'}` })
     })
 })
 

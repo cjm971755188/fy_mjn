@@ -8,9 +8,8 @@ import AETalent from '../components/modals/AETalent'
 
 function TalentList() {
     // 操作权限
-    const userShowPower = localStorage.getItem('position') === '商务' ? true : false
-    const addPower = localStorage.getItem('position') === '商务' ? true : false
-    const examPower = localStorage.getItem('position') === '副总' || localStorage.getItem('position') === '管理员' ? true : false
+    const editPower = localStorage.getItem('position') === '商务' ? true : false
+    const examPower = localStorage.getItem('position') === '副总' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
     let columns = [
@@ -78,8 +77,8 @@ function TalentList() {
                 <Space size="large">
                     {examPower && record.status.match('待审批') ? <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> :
                         <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>查看详情</NavLink>}
-                    {!examPower && record.status === '合作中' ? <a onClick={() => { 
-                        formGive.setFieldValue('hasYear', record.yearbox_status === '生效中' ? true : false)
+                    {editPower && record.status === '合作中' ? <a onClick={() => { 
+                        formGive.setFieldValue('hasYear', record.yearbox_start_date === null ? false : true)
                         formGive.setFieldValue('hasMid', record.m_ids === ',' ? false : true)
                         formGive.setFieldValue('mids', record.m_ids)
                         setClickTid(record.tid); 
@@ -191,6 +190,7 @@ function TalentList() {
             url: '/chance/reportChance',
             data: {
                 ...payload,
+                operate: '达人报备',
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     e_id: localStorage.getItem('e_id'),
@@ -222,7 +222,7 @@ function TalentList() {
     const [isShowGive, setIsShowGive] = useState()
     const [formGive] = Form.useForm()
     const [clickTid, setClickTid] = useState()
-    const giveTalnetAPI = () => {
+    const giveTalentAPI = () => {
         request({
             method: 'post',
             url: '/talent/giveTalent',
@@ -232,6 +232,7 @@ function TalentList() {
                 hasYear: formGive.getFieldValue('hasYear'),
                 hasMid: formGive.getFieldValue('hasMid'),
                 mids: formGive.getFieldValue('mids'),
+                operate: '达人移交',
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     e_id: localStorage.getItem('e_id'),
@@ -265,7 +266,7 @@ function TalentList() {
     }, [JSON.stringify(tableParams)])
     return (
         <Fragment>
-            <Card title="达人列表" extra={addPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('history'); }}>添加历史达人（限时开放到12-20）</Button> : null}>
+            <Card title="达人列表" extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('history'); }}>添加历史达人（限时开放到12-20）</Button> : null}>
                 <Form
                     layout="inline"
                     form={filterForm}
@@ -281,12 +282,9 @@ function TalentList() {
                     <Form.Item label='合作模式' name='models'>
                         <Select style={{ width: 160 }} options={model} />
                     </Form.Item>
-                    {userShowPower ? null : <Form.Item label='商务' name='u_ids' style={{ marginBottom: '20px' }}>
+                    {editPower ? null : <Form.Item label='商务' name='u_ids' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
                     </Form.Item>}
-                    <Form.Item label='年框状态' name='yearbox_status'>
-                        <Select style={{ width: 160 }} options={yearBoxType} />
-                    </Form.Item>
                     <Form.Item label='达人状态' name='status'>
                         <Select style={{ width: 160 }} options={talentStatus} />
                     </Form.Item>
@@ -322,7 +320,7 @@ function TalentList() {
                 onOK={(values) => { addHistoryTalentAPI(values); }}
                 onCancel={() => { setIsShow(false); form.resetFields(); setType(''); }}
             />
-            <Modal title="移交达人" open={isShowGive} onOk={() => { giveTalnetAPI(); }} onCancel={() => { setIsShowGive(false); }}>
+            <Modal title="移交达人" open={isShowGive} onOk={() => { giveTalentAPI(); }} onCancel={() => { setIsShowGive(false); }}>
                 <Form form={formGive}>
                     <Form.Item label="承接商务" name="u_id" rules={[{ required: true, message: '不能为空' }]}>
                         <Select placeholder="请选择" options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />

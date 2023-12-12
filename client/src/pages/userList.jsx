@@ -6,6 +6,9 @@ import { company, department, position } from '../baseData/user'
 import AEUser from '../components/modals/AEUser'
 
 function UserList() {
+    // 操作权限
+    const editPower = localStorage.getItem('position') === '管理员' ? true : false
+
     // 表格：格式
     const columns = [
         { title: '编号', dataIndex: 'uid', key: 'uid' },
@@ -29,7 +32,7 @@ function UserList() {
             title: '操作',
             key: 'action',
             render: (_, record) => (
-                <Space size="middle">
+                editPower ? <Space size="middle">
                     <a onClick={() => {
                         let combine = [record.company, record.department, record.position]
                         form.setFieldsValue({
@@ -66,7 +69,7 @@ function UserList() {
                     >
                         <a>删除</a>
                     </Popconfirm>
-                </Space>
+                </Space> : null
             ),
         }
     ]
@@ -263,7 +266,7 @@ function UserList() {
     return (
         <Fragment>
             <Card title="用户列表"
-                extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => { setType('add'); setIsShow(true); }}>添加新用户</Button>}
+                extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setType('add'); setIsShow(true); }}>添加新用户</Button> : null}
             >
                 <Form layout="inline" form={filterForm}
                     onFinish={(values) => {

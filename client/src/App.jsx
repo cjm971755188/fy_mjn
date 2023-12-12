@@ -5,10 +5,11 @@ import Workbench from './pages/workbench.jsx'
 import UserList from './pages/userList.jsx'
 import ChanceList from './pages/chanceList.jsx'
 import TalentList from './pages/talentList.jsx'
-import PointList from './pages/PointList.jsx'
 import TalentDetail from './pages/talentDetail.jsx'
 import LiveCalendar from './pages/liveCalendar.jsx'
 import LiveList from './pages/liveList.jsx'
+import KeywordList from './pages/keywordList.jsx'
+import PointList from './pages/pointList.jsx'
 import MiddlemanList from './pages/middlemanList.jsx'
 import YearList from './pages/yearList.jsx'
 
@@ -23,7 +24,8 @@ function App() {
                 <Route path='/talent/talent_list/talent_detail' element={<TalentDetail />} />
                 <Route path='/live/live_calendar' element={<LiveCalendar />} />
                 <Route path='/live/live_list' element={<LiveList />} />
-                <Route path='/point' element={<PointList />} />
+                <Route path='/point/keyword_list' element={<KeywordList />} />
+                <Route path='/point/point_list' element={<PointList />} />
                 <Route path='/middleman' element={<MiddlemanList />} />
                 <Route path='/resource/year_list' element={<YearList />} />
             </Routes>

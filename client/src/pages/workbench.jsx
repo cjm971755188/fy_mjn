@@ -2,7 +2,7 @@ import React from "react";
 
 function Workbench() {
     return (
-        <div>this is Workbench</div>
+        <div>工作台，暂未开放</div>
     )
 }
 

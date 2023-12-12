@@ -65,7 +65,7 @@ function ChanceList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
-                    {editPower && record.status !== '待报备' && record.status !== '待审批' ? <a onClick={() => {
+                    {editPower && record.status === '待推进' ? <a onClick={() => {
                         let models = record.models.split(',')
                         form.setFieldsValue({
                             ...record,

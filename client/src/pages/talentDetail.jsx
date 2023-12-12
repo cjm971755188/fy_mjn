@@ -2,7 +2,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import { useLocation, useNavigate } from 'react-router-dom'
 import request from '../service/request'
 import dayjs from 'dayjs';
-import { Card, Input, Timeline, Button, Tag, Modal, Form, Descriptions, Row, Col, message, Space, Select, InputNumber, Image, Popconfirm } from 'antd';
+import { Card, Input, Timeline, Button, Tag, Modal, Form, Descriptions, Row, Col, message, Space, Select, InputNumber, Image, Popconfirm, List } from 'antd';
 import { AuditOutlined, MessageOutlined, GlobalOutlined, CrownOutlined, SettingOutlined, EditOutlined, PlusOutlined, MinusOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { descriptionsItems } from '../baseData/talentDetail'
 import AELiaison from '../components/modals/AELiaison'
@@ -16,13 +16,15 @@ function TalentDetail() {
     let location = useLocation();
     const navigate = useNavigate();
     const { tid } = location.state;
+
     // 操作权限
-    const examPower = localStorage.getItem('uid') === '副总' || localStorage.getItem('position') === '管理员' ? true : false
+    const editPower = localStorage.getItem('position') === '商务' ? true : false
+    const examPower = localStorage.getItem('uid') === '副总' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 获取详情
     const [detailData, setDetailData] = useState({
         status: '',
-        yearbox_status: '',
+        yearbox_start_date: null,
         schedule: [],
         models: [],
         original: ''
@@ -90,6 +92,17 @@ function TalentDetail() {
                     }
                     if (description.label === '生效日期') {
                         description.children = description.children === null ? null : dayjs(Number(description.children)).format('YYYY-MM-DD')
+                    }
+                    if (detailData.yearbox_start_date !== null && descriptionsItems[j].key === 63) {
+                        let items = JSON.parse(Object.values(detailData)[i])
+                        description.children = <List style={{ marginLeft: '10px' }}>
+                            {detailData.yearbox_lavels_base !== null ? <List.Item key={0} style={{ paddingTop: 0 }}>0：每个专场基础提点 {detailData.yearbox_lavels_base}% 【一专场一付】</List.Item> : null}
+                            {items && items.map((item, index) => {
+                                return (
+                                    <List.Item key={index+1} style={{ paddingTop: 0 }}>{index+1}：每{detailData.yearbox_cycle.slice(0, 2)}成交额达到 {item[`y_lavel_${index+1}`]}万，提点 {item[`y_point_${index+1}`]}%</List.Item>
+                                )
+                            })}
+                        </List>
                     }
                     if ([15, 16, 17, 18, 63].indexOf(descriptionsItems[j].key) !== -1) {
                         items.push(description)
@@ -552,15 +565,15 @@ function TalentDetail() {
                         <Tag color={detailData.yearbox_start_date === null ? "" : "green"}>{detailData.yearbox_start_date === null ? "暂无" : "生效中"}</Tag>
                     </Space>}
                         style={{ marginBottom: '20px' }}
-                        extra={examPower || detailData.status.match('待审批') ? null :
-                            detailData.yearbox_start_date === null ? <Button type="text" icon={<PlusOutlined />} onClick={() => { formYear.setFieldValue('tid', tid); setIsShowYear(true); setYearType('detail'); }}>新增</Button> : null
+                        extra={detailData.status.match('待审批') ? null : 
+                            editPower && detailData.yearbox_start_date === null ? <Button type="text" icon={<PlusOutlined />} onClick={() => { formYear.setFieldValue('tid', tid); setIsShowYear(true); setYearType('detail'); }}>新增</Button> : null
                         }
                     >
                         <Descriptions column={5} items={getYearItems()} />
                     </Card>
                     <Card title={<Space><MessageOutlined /><span>联络信息</span></Space>} style={{ marginBottom: '20px' }}>
                         <Descriptions title="联系人" column={5} items={getLiaisonItems()}
-                            extra={examPower || (detailData.status.match('待审批')) ? null : <Button type="text" icon={<EditOutlined />} onClick={() => {
+                            extra={(detailData.status.match('待审批')) ? null : editPower ? <Button type="text" icon={<EditOutlined />} onClick={() => {
                                 let ori = {}
                                 for (const key in detailData) {
                                     if (Object.hasOwnProperty.call(detailData, key)) {
@@ -572,17 +585,17 @@ function TalentDetail() {
                                 setEditOri(ori)
                                 formLiaison.setFieldsValue({ tid: tid, ...ori })
                                 setIsShowLiaison(true);
-                            }}>修改</Button>}
+                            }}>修改</Button> : null}
                         />
                         {detailData.m_id_1 === null ? <Descriptions title="无一级中间人"
-                            extra={examPower || (detailData.status.match('待审批')) ? null : <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowMiddle(true); setMiddleType('新增一级中间人'); }}>新增</Button>}
+                            extra={(detailData.status.match('待审批')) ? null : editPower ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowMiddle(true); setMiddleType('新增一级中间人'); }}>新增</Button> : null}
                         /> : <Descriptions title="一级中间人" column={5} items={getMiddleman1Items()}
                             extra={<>
                                 {!isShowM1PayItems ? <Button type="text" icon={<UnorderedListOutlined />} onClick={() => {
                                     getMiddlemanInfoAPI(1, detailData.m_id_1)
                                     setIsShowM1PayItems(true)
                                 }}>查看付款账号</Button> : null}
-                                {examPower || (detailData.status.match('待审批')) ? null : <Button type="text" icon={<EditOutlined />} onClick={() => {
+                                {(detailData.status.match('待审批')) ? null : editPower ? <Button type="text" icon={<EditOutlined />} onClick={() => {
                                     setEditOri({
                                         m_id_1: detailData.m_id_1,
                                         m_point_1: detailData.m_point_1
@@ -596,8 +609,8 @@ function TalentDetail() {
                                     })
                                     setIsShowMiddle(true);
                                     setMiddleType('修改一级中间人');
-                                }}>修改</Button>}
-                                {examPower || (detailData.status.match('待审批')) ? null :
+                                }}>修改</Button> : null}
+                                {(detailData.status.match('待审批')) ? null : editPower ? 
                                     <Popconfirm
                                         title="删除一级中间人"
                                         description={`确认删除 ${detailData.m_name_1} 吗?`}
@@ -615,19 +628,19 @@ function TalentDetail() {
                                         cancelText="取消"
                                     >
                                         <Button type="text" danger icon={<MinusOutlined />}>删除</Button>
-                                    </Popconfirm>}
+                                    </Popconfirm> : null}
                             </>}
                         />}
                         {isShowM1PayItems ? <Descriptions column={5} items={m1PayItems}></Descriptions> : null}
                         {detailData.m_id_2 === null ? <Descriptions title="无二级中间人"
-                            extra={examPower || (detailData.status.match('待审批')) ? null : <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowMiddle(true); setMiddleType('新增二级中间人'); }}>新增</Button>}
+                            extra={(detailData.status.match('待审批')) ? null : editPower ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowMiddle(true); setMiddleType('新增二级中间人'); }}>新增</Button> : null}
                         /> : <Descriptions title="二级中间人" column={5} items={getMiddleman2Items()}
                             extra={<>
                                 {!isShowM2PayItems ? <Button type="text" icon={<UnorderedListOutlined />} onClick={() => {
                                     getMiddlemanInfoAPI(2, detailData.m_id_2)
                                     setIsShowM2PayItems(true)
                                 }}>查看付款账号</Button> : null}
-                                {examPower || (detailData.status.match('待审批')) ? null : <Button type="text" icon={<EditOutlined />} onClick={() => {
+                                {(detailData.status.match('待审批')) ? null : editPower ? <Button type="text" icon={<EditOutlined />} onClick={() => {
                                     setEditOri({
                                         m_id_2: detailData.m_id_2,
                                         m_point_2: detailData.m_point_2
@@ -641,8 +654,8 @@ function TalentDetail() {
                                     })
                                     setIsShowMiddle(true);
                                     setMiddleType('修改二级中间人');
-                                }}>修改</Button>}
-                                {examPower || (detailData.status.match('待审批')) ? null :
+                                }}>修改</Button> : null}
+                                {(detailData.status.match('待审批')) ? null : editPower ? 
                                     <Popconfirm
                                         title="删除二级中间人"
                                         description={`确认删除 ${detailData.m_name_2} 吗?`}
@@ -660,20 +673,20 @@ function TalentDetail() {
                                         cancelText="取消"
                                     >
                                         <Button type="text" danger icon={<MinusOutlined />}>删除</Button>
-                                    </Popconfirm>}
+                                    </Popconfirm> : null}
                             </>}
                         />}
                         {isShowM2PayItems ? <Descriptions column={5} items={m2PayItems}></Descriptions> : null}
                     </Card>
                     <Card title={<Space><GlobalOutlined /><span>合作模式 ----- {detailData.models && detailData.models.length} 个</span></Space>}
-                        extra={examPower || detailData.status.match('待审批') ? null : <Button type="text" icon={<PlusOutlined />} onClick={() => {
+                        extra={detailData.status.match('待审批') ? null : editPower ? <Button type="text" icon={<PlusOutlined />} onClick={() => {
                             formModel.setFieldValue('u_id_1', {
                                 label: localStorage.getItem('name'),
                                 value: localStorage.getItem('uid')
                             })
                             setIsShowModel(true);
                             setTypeModel('新增线上平台');
-                        }}>新增线上平台</Button>}
+                        }}>新增线上平台</Button> : null}
                     >
                         {detailData.models && detailData.models.map((model, index) => {
                             return (
@@ -683,7 +696,7 @@ function TalentDetail() {
                                         <Tag color={model.status === '待审批' ? "gold" : model.status === '合作中' ? "green" : model.status === '已失效' ? "red" : ""}>{model.status}</Tag>
                                     </Space>}
                                     style={{ marginBottom: '20px' }}
-                                    extra={examPower || detailData.status.match('待审批') ? null : <Button type="text" icon={<EditOutlined />} onClick={() => {
+                                    extra={detailData.status.match('待审批') ? null : editPower ? <Button type="text" icon={<EditOutlined />} onClick={() => {
                                         let f = { ...model, tmid: model.tmid }
                                         for (const key in model) {
                                             if (Object.hasOwnProperty.call(model, key)) {
@@ -701,8 +714,8 @@ function TalentDetail() {
                                                     f[key] = model[key].split(',')
                                                 } else if (model.model !== '线上平台' && model[key] !== null && (key.match('discount') || key.match('u_') || key.match('shop'))) {
                                                     f[key] = model[key]
-                                                } else if (model.model === '线上平台' && model[key] !== null && ['create_time', 'create_uid', 'model', 'platform', 'shop', 'status', 'tid'].indexOf(key) === -1) {
-                                                    f[key] = model[key]
+                                                } else if (model.model === '线上平台' && model[key] !== null && ['create_time', 'create_uid', 'model', 'platform', 'shop', 'status', 'tid'].indexOf(key) !== -1) {
+                                                    delete f[key]
                                                 }
                                             }
                                         }
@@ -710,7 +723,7 @@ function TalentDetail() {
                                         setEditOri(f)
                                         setIsShowModel(true);
                                         setTypeModel(`修改${model.model}`);
-                                    }}>修改</Button>}
+                                    }}>修改</Button> : null}
                                 >
                                     <Descriptions column={5} items={getModelsItems(model)} />
                                 </Card>
@@ -754,10 +767,10 @@ function TalentDetail() {
                 form={formYear}
                 onOK={(values) => {
                     editTalentAPI('新增年框', null, {
-                    ...values,
-                    yearbox_lavels: JSON.stringify(values.yearbox_lavels),
-                    yearbox_start_date: dayjs(values.yearbox_start_date).valueOf()
-                });
+                        ...values,
+                        yearbox_lavels: JSON.stringify(values.yearbox_lavels),
+                        yearbox_start_date: dayjs(values.yearbox_start_date).valueOf()
+                    });
                 }}
                 onCancel={() => { formYear.resetFields(); setIsShowYear(false); }}
             />
@@ -798,7 +811,7 @@ function TalentDetail() {
                             m_id_2: formMiddle.getFieldValue('m_id').value ? formMiddle.getFieldValue('m_id').value : formMiddle.getFieldValue('m_id'),
                             m_point_2: formMiddle.getFieldValue('m_point')
                         }
-                    } 
+                    }
                     let z = {}
                     for (const key in ori) {
                         if (Object.hasOwnProperty.call(ori, key)) {
@@ -844,6 +857,16 @@ function TalentDetail() {
                         delete ori.u_name_1
                         delete ori.u_name_2
                     }
+                    let o = {}
+                    for (const key in ori) {
+                        if (Object.hasOwnProperty.call(ori, key)) {
+                            if (ori[key] === null) {
+                                continue
+                            } else {
+                                o[key] = ori[key]
+                            }
+                        }
+                    }
                     let payload = formModel.getFieldsValue()
                     payload.u_id_1 = formModel.getFieldValue('u_id_1').value
                     if (payload.account_models) {
@@ -853,12 +876,13 @@ function TalentDetail() {
                         payload.age_cuts = formModel.getFieldValue('age_cuts').join()
                     }
                     let z = {}, type = ''
-                    for (const key in ori) {
-                        if (Object.hasOwnProperty.call(ori, key)) {
+
+                    for (const key in o) {
+                        if (Object.hasOwnProperty.call(o, key)) {
                             for (const k in payload) {
                                 if (Object.hasOwnProperty.call(payload, k)) {
-                                    if (key === k && ori[key] !== payload[k]) {
-                                        z[key] = ori[key]
+                                    if (key === k && o[key] !== payload[k]) {
+                                        z[key] = o[key]
                                         if ((key.match('u_') || key.match('discount_') || key.match('commission_'))) {
                                             type = type.match('综合信息') ? type : type.match('基础信息') ? '综合信息' : '佣金提点'
                                         } else {
@@ -869,7 +893,7 @@ function TalentDetail() {
                             }
                         }
                     }
-                    if (ori !== null && Object.keys(ori).length !== Object.keys(payload).length) {
+                    if (o !== null && Object.keys(o).length !== Object.keys(payload).length) {
                         type = type.match('综合信息') ? type : type.match('基础信息') ? '综合信息' : '佣金提点'
                     }
                     let operate = typeModel + type
@@ -881,8 +905,8 @@ function TalentDetail() {
                             setIsShowModel(false);
                             message.info('未修改任何信息');
                         } else {
-                            z.u_id_2 = payload.u_id_2 ? payload.u_id_2 : ori.u_id_2
-                            z.u_point_2 = payload.u_point_2 ? payload.u_point_2 : ori.u_point_2
+                            z.u_id_2 = payload.u_id_2 ? payload.u_id_2 : o.u_id_2
+                            z.u_point_2 = payload.u_point_2 ? payload.u_point_2 : o.u_point_2
                             editTalentModelAPI(operate, JSON.stringify(z), payload)
                         }
                     } else {

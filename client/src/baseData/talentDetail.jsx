@@ -18,7 +18,7 @@ export const descriptionsItems = [
     { key: 16, label: "返点", value: "yearbox_point" },
     { key: 17, label: "付款周期", value: "yearbox_cycle" },
     { key: 18, label: "付款类型", value: "yearbox_type" },
-    { key: 63, label: "提点", value: "yearbox_lavels" },
+    { key: 63, label: "提点详情", value: "yearbox_lavels" },
     
     { key: 19, label: "编码", value: "m_id_1" },
     { key: 20, label: "类型", value: "m_type_1" },

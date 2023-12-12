@@ -1,11 +1,14 @@
 import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Button, message, Alert, Popconfirm } from 'antd';
-import { PlusOutlined, PauseCircleTwoTone, ExclamationCircleTwoTone } from '@ant-design/icons';
+import { Card, Table, Space, Form, Input, Button, message, Alert, Popconfirm, Select } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import AEYear from '../components/modals/AEYear'
 import dayjs from 'dayjs';
 
 function YearList() {
+    // 操作权限
+    const editPower = localStorage.getItem('position') === '商务' ? true : false
+
     // 表格：格式
     const columns = [
         { title: '文件编码', dataIndex: 'rid', key: 'rid' },
@@ -15,7 +18,7 @@ function YearList() {
             title: '操作',
             key: 'action',
             render: (_, record) => (
-                <Space size="middle">
+                editPower ? <Space size="middle">
                     <a onClick={() => { downloadAPI(record.url); }}>下载</a>
                     <Popconfirm
                         title="确认要删除该文件吗"
@@ -30,7 +33,7 @@ function YearList() {
                     >
                         <a>删除</a>
                     </Popconfirm>
-                </Space>
+                </Space> : null
             ),
         }
     ]
@@ -96,7 +99,7 @@ function YearList() {
     }
     // 查询、清空筛选
     const [filterForm] = Form.useForm()
-    
+
     // 新增、下载、修改状态
     const [isShow, setIsShow] = useState(false)
     const [type, setType] = useState()
@@ -195,10 +198,10 @@ function YearList() {
     }, [JSON.stringify(tableParams)])
     return (
         <Fragment>
-            <Card title="年框资料列表"
-                extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('新增年框'); }}>添加新年框</Button>}
-            >
-                <Form layout="inline" form={filterForm}
+            <Card title="年框资料列表" extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('新增年框'); }}>添加新年框</Button> : null}>
+                <Form
+                    layout="inline"
+                    form={filterForm}
                     onFinish={(values) => {
                         setTableParams({
                             ...tableParams,
@@ -206,16 +209,17 @@ function YearList() {
                         })
                     }}
                 >
-                    <Form.Item label='文件编码' name='rid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='文件编号' name='rid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='文件名' name='filename' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='达人昵称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='关联达人' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item style={{ marginBottom: '20px' }}>
-                        <Space size={'middle'}>
-                            <Button type="primary" htmltype="submit">查询</Button>
+                        <Space size={'large'}>
+                            <Button type="primary" htmlType="submit">查询</Button>
                             <Button type="primary" onClick={() => {
                                 filterForm.resetFields();
                                 setTableParams({
                                     ...tableParams,
+                                    filtersDate: [],
                                     filters: {}
                                 })
                             }}>清空筛选</Button>
@@ -239,9 +243,9 @@ function YearList() {
                 form={form}
                 onOK={(values) => {
                     editTalentAPI(type, null, {
-                    ...values,
-                    yearbox_start_date: dayjs(values.yearbox_start_date).valueOf()
-                });
+                        ...values,
+                        yearbox_start_date: dayjs(values.yearbox_start_date).valueOf()
+                    });
                 }}
                 onCancel={() => { form.resetFields(); setIsShow(false); }}
             />

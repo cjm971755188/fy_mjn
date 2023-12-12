@@ -113,8 +113,7 @@ export const yearCycleType = [
 export const yearBoxType = [
     { key: 0, label: "暂无", value: "暂无" },
     { key: 1, label: "已失效", value: "已失效" },
-    { key: 2, label: "生效中", value: "生效中" },
-    { key: 3, label: "待审批", value: "待审批" }
+    { key: 2, label: "生效中", value: "生效中" }
 ]
 
 export const yearType1 = [

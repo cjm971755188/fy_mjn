@@ -7,8 +7,6 @@ import AEMiddleman from '../components/modals/AEMiddleman'
 
 function MiddlemanList() {
     // 操作权限
-    const userShowPower = localStorage.getItem('position') === '商务' ? true : false
-    const addPower = localStorage.getItem('position') === '商务' ? true : false
     const editPower = localStorage.getItem('position') === '商务' ? true : false
 
     // 表格：格式
@@ -57,17 +55,17 @@ function MiddlemanList() {
             title: '操作',
             key: 'action',
             render: (_, record) => (
-                <Space size="large">
-                    {editPower ? <a onClick={() => {
+                editPower ? <Space size="large">
+                    <a onClick={() => {
                         setType('edit');
                         setIsShow(true);
                         form.setFieldsValue(record)
-                    }}>修改信息</a> : null}
-                </Space>
+                    }}>修改信息</a>
+                </Space> : null
             )
         }
     ]
-    columns = userShowPower ? columns.filter(item => item.title !== '商务') : columns
+    columns = editPower ? columns.filter(item => item.title !== '商务') : columns
     // 表格：获取数据、分页
     const [data, setData] = useState();
     const [loading, setLoading] = useState(false);
@@ -232,7 +230,7 @@ function MiddlemanList() {
     }, [JSON.stringify(tableParams)])
     return (
         <div>
-            <Card title="中间人列表" extra={addPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setType('add'); setIsShow(true); }}>添加新中间人</Button> : null}>
+            <Card title="中间人列表" extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setType('add'); setIsShow(true); }}>添加新中间人</Button> : null}>
                 <Form
                     layout="inline"
                     form={filterForm}
@@ -250,7 +248,7 @@ function MiddlemanList() {
                     <Form.Item label='名称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='联系人姓名' name='liaison_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='付款姓名' name='pay_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    {userShowPower ? null : <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
+                    {editPower ? null : <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemanItemsAPI(); }} />
                     </Form.Item>}
                     <Form.Item style={{ marginBottom: '20px' }}>

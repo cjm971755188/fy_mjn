@@ -9,7 +9,8 @@ import {
     UserOutlined,
     AppstoreOutlined,
     BranchesOutlined,
-    TeamOutlined
+    TeamOutlined,
+    DollarOutlined
 } from '@ant-design/icons';
 import { Layout, Menu, Button, theme, Dropdown, Breadcrumb, Form, Modal, Input, message, Col, Row } from 'antd';
 import logo from '../assets/logo_white.jpg'
@@ -62,8 +63,18 @@ const menuItemsTotal = [
     },
     {
         key: '/admin/point',
-        label: '提点结算',
-        icon: <CalendarOutlined />
+        label: '结算管理',
+        icon: <DollarOutlined />,
+        children: [
+            {
+                key: '/admin/point/keyword_list',
+                label: '达人昵称匹配规则'
+            },
+            {
+                key: '/admin/point/point_list',
+                label: '提点规则'
+            }
+        ]
     },
     {
         key: '/admin/middleman',

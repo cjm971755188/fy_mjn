@@ -395,16 +395,16 @@ function AETalent(props) {
                         <Form.Item label="聚水潭店铺名" name="group_shop">
                             <Input placeholder="请输入" />
                         </Form.Item>
-                        <Form.Item label="常规品折扣（折）(例：7.5)" name="discount_normal" rules={[{ required: true, message: '不能为空' }]}>
+                        <Form.Item label="常规品佣金（%）(例：20)" name="discount_normal" rules={[{ required: true, message: '不能为空' }]}>
                             <InputNumber placeholder="请输入" />
                         </Form.Item>
-                        <Form.Item label="福利品折扣（折）(例：7.5)" name="discount_welfare" rules={[{ required: true, message: '不能为空' }]}>
+                        <Form.Item label="福利品佣金（%）(例：20)" name="discount_welfare" rules={[{ required: true, message: '不能为空' }]}>
                             <InputNumber placeholder="请输入" />
                         </Form.Item>
-                        <Form.Item label="爆品折扣（折）(例：7.5)" name="discount_bao" rules={[{ required: true, message: '不能为空' }]}>
+                        <Form.Item label="爆品佣金（%）(例：20)" name="discount_bao" rules={[{ required: true, message: '不能为空' }]}>
                             <InputNumber placeholder="请输入" />
                         </Form.Item>
-                        <Form.Item label="折扣备注" name="discount_note">
+                        <Form.Item label="佣金备注" name="discount_note">
                             <TextArea placeholder="请输入" />
                         </Form.Item>
                         <Space size='large'>
