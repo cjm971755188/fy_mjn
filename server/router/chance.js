@@ -10,11 +10,11 @@ router.post('/getChanceList', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where status != '失效'`
-    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
+    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department != '主管') {
+        if (params.userInfo.department === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {

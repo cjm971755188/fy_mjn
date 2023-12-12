@@ -11,7 +11,7 @@ router.post('/getTalentList', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where status != '失效'`
-    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
+    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
@@ -119,7 +119,7 @@ router.post('/getTalentDetail', (req, res) => {
                                 LEFT JOIN talent_model tm ON tm.tmid = tms.tmid
                                 LEFT JOIN user u ON u.uid = tms.create_uid
                             WHERE tm.tid = '${params.tid}'
-                                and tms.operate = '移交达人'
+                                and tms.operate LIKE '达人移交%'
                                 and tms.examine_result = '通过'`
                 db.query(sql, (err, results_original) => {
                     if (err) throw err;
@@ -671,6 +671,7 @@ router.post('/giveTalent', (req, res) => {
                                 m += ` '${params.mids.split(',')[i]}',`
                             }
                             m = m.substring(0, m.length - 1)
+                            console.log('m: ', m);
                             let sql = `SELECT * FROM middleman`
                             db.query(sql, (err, results_l) => {
                                 if (err) throw err;
@@ -680,6 +681,7 @@ router.post('/giveTalent', (req, res) => {
                                     let ss = `INSERT INTO middleman VALUES`
                                     for (let i = 0; i < results.length; i++) {
                                         let mid = 'M' + `${results_l.length + i + 1}`.padStart(5, '0')
+                                        console.log('mid: ', mid);
                                         ms.push(mid)
                                         let s = `('${mid}',`
                                         for (const key in results[i]) {
@@ -700,8 +702,8 @@ router.post('/giveTalent', (req, res) => {
                                     })
                                 })
                             })
-
                         }
+                        console.log('ms: ', ms);
                         let sql2 = `SELECT * FROM talent_schedule`
                         db.query(sql2, (err, results) => {
                             if (err) throw err;
@@ -721,10 +723,10 @@ router.post('/giveTalent', (req, res) => {
                                             continue
                                         } else if (isAdd && key === 'm_id_1') {
                                             isAdd = false
-                                            sql += ` '${ms.length !== 0 ? ms[0] : null}',`
+                                            sql += ms.length === 1 ? ` '${ms[0]}',` : ` null,`
                                         } else if (isAdd && key === 'm_id_2') {
                                             isAdd = false
-                                            sql += ` '${ms.length === 2 ? ms[1] : null}',`
+                                            sql += ms.length === 2 ? ` '${ms[1]}',` : ` null,`
                                         } else if (isAdd && key === 'create_uid') {
                                             isAdd = false
                                             sql += ` '${params.userInfo.uid}',`

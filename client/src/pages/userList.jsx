@@ -159,6 +159,7 @@ function UserList() {
             if (res.status == 200) {
                 if (res.data.code == 200) {
                     setIsShow(false);
+                    form.resetFields();
                     getUserListAPI();
                     message.success(res.data.msg)
                 } else {

@@ -25,6 +25,7 @@ function PointList() {
         { title: '平台', dataIndex: 'platform', key: 'platform' },
         { title: '店铺', dataIndex: 'shop', key: 'shop' },
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
+        { title: '达人账号', dataIndex: 'account_name', key: 'account_name' },
         {
             title: '变动操作',
             dataIndex: 'operate',
@@ -102,10 +103,11 @@ function PointList() {
             dataIndex: 'yearbox_start_date',
             key: 'yearbox_start_date',
             render: (_, record) => (
-                record.yearbox_start_date === null ? <Space size="small">
+                record.yearbox_start_date >= record.create_time ? <Space size="small">
                     <StopTwoTone twoToneColor="#999999" /><span>暂无</span>
                 </Space> : <Popover title="提点备注" content={
                     <List style={{ marginLeft: '10px' }}>
+                        <List.Item key={9999}>生效时间：{dayjs(Number(record.yearbox_start_date)).format('YYYY-MM-DD')}</List.Item>
                         {record.yearbox_lavels_base !== null ? <List.Item key={0}>0：每个专场基础提点 {record.yearbox_lavels_base}% 【一专场一付】</List.Item> : null}
                         {JSON.parse(record.yearbox_lavels) && JSON.parse(record.yearbox_lavels).length > 0 && JSON.parse(record.yearbox_lavels).map((item, index) => {
                             return (
@@ -319,7 +321,7 @@ function PointList() {
                 <Alert message={`总计：${tableParams.pagination.total} 条数据`} type="info" showIcon />
                 <Table
                     style={{ margin: '20px auto' }}
-                    rowKey={(data) => `${data.tid}_${data.tmid}_${data.create_time}`}
+                    rowKey={(data) => data.key}
                     columns={columns}
                     dataSource={data}
                     pagination={tableParams.pagination}

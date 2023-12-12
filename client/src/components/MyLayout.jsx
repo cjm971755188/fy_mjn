@@ -111,7 +111,7 @@ const getMenuItems = (department, position) => {
         let menu = menuItemsTotal[i];
         if (menu.label === '达人详情') {
             continue
-        } else if (menu.label === '用户管理' && (position === '助理' || position === '商务')) {
+        } else if (menu.label === '用户管理' && (position === '助理' || position === '商务' || position === '主播' || position === '财务')) {
             continue
         } else if (menu.label === '专场管理' && position !== '管理员') {
             continue

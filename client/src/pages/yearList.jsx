@@ -4,6 +4,7 @@ import { Card, Table, Space, Form, Input, Button, message, Alert, Popconfirm, Se
 import { PlusOutlined } from '@ant-design/icons';
 import AEYear from '../components/modals/AEYear'
 import dayjs from 'dayjs';
+import FilePreview from '../components/FilePreview'
 
 function YearList() {
     // 操作权限
@@ -12,7 +13,30 @@ function YearList() {
     // 表格：格式
     const columns = [
         { title: '文件编码', dataIndex: 'rid', key: 'rid' },
-        { title: '文件名', dataIndex: 'filename', key: 'filename' },
+        { 
+            title: '文件', 
+            dataIndex: 'url', 
+            key: 'url',
+            render: (_, record) => (
+                <FilePreview 
+                    fileUrl={`${record.url}`} 
+                    fileType={
+                        ['jpg', 'png'].indexOf(record.url.split('.')[1]) !== -1 ? 'image' : 
+                        ['pdf'].indexOf(record.url.split('.')[1]) !== -1 ? 'pdf' : 
+                        ['xlsx', 'xls'].indexOf(record.url.split('.')[1]) !== -1 ? 'excel' : 
+                        ['doc'].indexOf(record.url.split('.')[1]) !== -1 ? 'word' : ''
+                    } 
+                />
+            )
+        },
+        { 
+            title: '文件', 
+            dataIndex: 'url', 
+            key: 'url',
+            render: (_, record) => (
+                <span>{record.url.split('.')[1]}</span>
+            )
+        },
         { title: '关联达人', dataIndex: 'name', key: 'name' },
         {
             title: '操作',

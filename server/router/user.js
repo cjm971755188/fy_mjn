@@ -62,7 +62,7 @@ router.post('/getUserList', (req, res) => {
     // 去除 已删除 + 自己 + 管理员
     let where = `where status != '失效' and position != '管理员' and uid != '${params.userInfo.uid}'`
     // 权限筛选
-    if (params.userInfo.position !== '管理员' || params.userInfo.position.match('总裁')) {
+    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
             where += ` and department = '${params.userInfo.department}'`
         }

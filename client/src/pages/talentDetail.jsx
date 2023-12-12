@@ -19,7 +19,7 @@ function TalentDetail() {
 
     // 操作权限
     const editPower = localStorage.getItem('position') === '商务' ? true : false
-    const examPower = localStorage.getItem('uid') === '副总' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '管理员' ? true : false
+    const examPower = localStorage.getItem('position') === '副总' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 获取详情
     const [detailData, setDetailData] = useState({
