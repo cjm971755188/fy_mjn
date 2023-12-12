@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Button, Select, message, Alert, Tag, Popover, List } from 'antd';
+import { Card, Table, Space, Form, Input, Button, Select, message, Alert, Tag, Popover, List, Modal } from 'antd';
 import { VerticalAlignBottomOutlined, PauseCircleTwoTone, StopTwoTone } from '@ant-design/icons';
 import { model, platform } from '../baseData/talent'
 import dayjs from 'dayjs'
@@ -256,7 +256,7 @@ function PointList() {
                 }
                 itemData.push(val)
             })
-            
+
             blobData += `${itemData}\n`
         })
         const blob = new Blob([blobData], {
@@ -270,62 +270,65 @@ function PointList() {
         getPointListAPI();
     }, [JSON.stringify(tableParams)])
     return (
-        <Card title="提点规则" extra={exportPower ? <Button type="primary" icon={<VerticalAlignBottomOutlined />} onClick={() => { getExportPointListAPI(); }}>导出</Button> : null}>
-            <Form
-                layout="inline"
-                form={filterForm}
-                onFinish={(values) => {
-                    setTableParams({
-                        ...tableParams,
-                        filtersDate: dateSelect,
-                        filters: values
-                    })
-                }}
-            >
-                <Form.Item label='开始时间' name='create_time' style={{ marginBottom: '20px' }}>
-                    <MyDateSelect setDate={(value) => { setDateSelect(value); }} />
-                </Form.Item>
-                <Form.Item label='达人昵称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                <Form.Item label='模式' name='model'>
-                    <Select style={{ width: 160 }} options={model} />
-                </Form.Item>
-                <Form.Item label='平台' name='platform'>
-                    <Select style={{ width: 160 }} options={platform} />
-                </Form.Item>
-                <Form.Item label='店铺' name='shop'><Input /></Form.Item>
-                <Form.Item label='常规/买断' name='commission_1'><Input /></Form.Item>
-                <Form.Item label='福利/含退货' name='commission_2'><Input /></Form.Item>
-                <Form.Item label='爆品' name='commission_3'><Input /></Form.Item>
-                <Form.Item label='一级中间人' name='m_name_1' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                <Form.Item label='二级中间人' name='m_name_2' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                <Form.Item label='主商务' name='u_name_1' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                <Form.Item label='副商务' name='u_name_2' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                <Form.Item label='原商务' name='u_name_0' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                <Form.Item style={{ marginBottom: '20px' }}>
-                    <Space size={'large'}>
-                        <Button type="primary" htmlType="submit">查询</Button>
-                        <Button type="primary" onClick={() => {
-                            filterForm.resetFields();
-                            setTableParams({
-                                ...tableParams,
-                                filtersDate: [],
-                                filters: {}
-                            })
-                        }}>清空筛选</Button>
-                    </Space>
-                </Form.Item>
-            </Form>
-            <Alert message={`总计：${tableParams.pagination.total} 条数据`} type="info" showIcon />
-            <Table
-                style={{ margin: '20px auto' }}
-                rowKey={(data) => `${data.tid}_${data.tmid}_${data.create_time}`}
-                columns={columns}
-                dataSource={data}
-                pagination={tableParams.pagination}
-                loading={loading}
-                onChange={handleTableChange}
-            />
-        </Card>
+        <Fragment>
+            <Card title="提点规则" extra={exportPower ? <Button type="primary" icon={<VerticalAlignBottomOutlined />} onClick={() => { getExportPointListAPI(); }}>导出</Button> : null}>
+                <Form
+                    layout="inline"
+                    form={filterForm}
+                    onFinish={(values) => {
+                        setTableParams({
+                            ...tableParams,
+                            filtersDate: dateSelect,
+                            filters: values
+                        })
+                    }}
+                >
+                    <Form.Item label='开始时间' name='create_time' style={{ marginBottom: '20px' }}>
+                        <MyDateSelect setDate={(value) => { setDateSelect(value); }} />
+                    </Form.Item>
+                    <Form.Item label='达人昵称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='模式' name='model'>
+                        <Select style={{ width: 160 }} options={model} />
+                    </Form.Item>
+                    <Form.Item label='平台' name='platform'>
+                        <Select style={{ width: 160 }} options={platform} />
+                    </Form.Item>
+                    <Form.Item label='店铺' name='shop'><Input /></Form.Item>
+                    <Form.Item label='常规/买断' name='commission_1'><Input /></Form.Item>
+                    <Form.Item label='福利/含退货' name='commission_2'><Input /></Form.Item>
+                    <Form.Item label='爆品' name='commission_3'><Input /></Form.Item>
+                    <Form.Item label='一级中间人' name='m_name_1' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='二级中间人' name='m_name_2' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='主商务' name='u_name_1' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='副商务' name='u_name_2' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='原商务' name='u_name_0' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item style={{ marginBottom: '20px' }}>
+                        <Space size={'large'}>
+                            <Button type="primary" htmlType="submit">查询</Button>
+                            <Button type="primary" onClick={() => {
+                                filterForm.resetFields();
+                                setTableParams({
+                                    ...tableParams,
+                                    filtersDate: [],
+                                    filters: {}
+                                })
+                            }}>清空筛选</Button>
+                        </Space>
+                    </Form.Item>
+                </Form>
+                <Alert message={`总计：${tableParams.pagination.total} 条数据`} type="info" showIcon />
+                <Table
+                    style={{ margin: '20px auto' }}
+                    rowKey={(data) => `${data.tid}_${data.tmid}_${data.create_time}`}
+                    columns={columns}
+                    dataSource={data}
+                    pagination={tableParams.pagination}
+                    loading={loading}
+                    onChange={handleTableChange}
+                />
+            </Card>
+        </Fragment>
+
     )
 }
 
