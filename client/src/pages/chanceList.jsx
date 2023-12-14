@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, message, Alert } from 'antd';
-import { PlusOutlined, CloseCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone } from '@ant-design/icons';
+import { PlusOutlined, CloseCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone, CheckCircleTwoTone } from '@ant-design/icons';
 import { chanceStatus, model } from '../baseData/talent'
 import MyDateSelect from '../components/MyDateSelect'
 import AEChance from '../components/modals/AEChance'
 import AELiaison from '../components/modals/AELiaison'
 import AETalent from '../components/modals/AETalent'
+
 
 const { TextArea } = Input;
 
@@ -36,8 +37,8 @@ function ChanceList() {
                         <List.Item>姓名：{record.liaison_type}</List.Item>
                         <List.Item>微信：{record.liaison_name}</List.Item>
                         <List.Item>微信：{record.liaison_v}</List.Item>
-                        <List.Item>电话：{record.liaison_phone}</List.Item>
-                        <List.Item>微信：{record.crowd_name}</List.Item>
+                        <List.Item>手机号：{record.liaison_phone}</List.Item>
+                        <List.Item>沟通群：{record.crowd_name}</List.Item>
                     </List>}
                 >
                     <span>{record.liaison_name}</span>
@@ -55,7 +56,8 @@ function ChanceList() {
                     {record.status === '待推进' ? <PlayCircleTwoTone twoToneColor="#ee9900" /> :
                         record.status === '待报备' ? <RightCircleTwoTone twoToneColor="#ee9900" /> :
                             record.status === '待审批' ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
-                                record.status === '报备驳回' ? <CloseCircleTwoTone  twoToneColor="#f81d22" /> : null}
+                                record.status === '报备驳回' ? <CloseCircleTwoTone twoToneColor="#f81d22" /> : 
+                                    record.status === '报备通过' ? <CheckCircleTwoTone twoToneColor="#4ec9b0" /> : null}
                     <span>{record.status}</span>
                 </Space>
             )
@@ -451,7 +453,7 @@ function ChanceList() {
         getChanceListAPI();
     }, [JSON.stringify(tableParams)])
     return (
-        <div>
+        <Fragment>
             <Card title="商机列表" extra={addPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('add'); }}>添加新商机</Button> : null}>
                 <Form
                     layout="inline"
@@ -531,7 +533,7 @@ function ChanceList() {
             <Modal title="报备驳回备注" open={isShowCheckNo} onOk={() => { setIsShowCheckNo(false); }} onCancel={() => { setIsShowCheckNo(false); }}>
                 <TextArea placeholder="请输入" value={checkNoReason} disabled={true} />
             </Modal>
-        </div >
+        </Fragment >
     )
 }
 

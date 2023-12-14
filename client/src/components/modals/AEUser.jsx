@@ -2,7 +2,6 @@ import React from "react";
 import { Form, Input, Modal, Cascader } from 'antd';
 import { combine } from '../../baseData/user'
 
-
 function AEUser(props) {
     const { type, isShow, form } = props;
 
@@ -21,7 +20,7 @@ function AEUser(props) {
                 <Form.Item label="姓名" name="name" rules={[{ required: true, message: '不能为空' }]}>
                     <Input placeholder="请输入" />
                 </Form.Item>
-                <Form.Item label="手机号（钉钉）" name="phone" rules={[{ required: true, message: '不能为空' }]}>
+                <Form.Item label="手机号（钉钉）" name="phone" rules={[{ required: true, message: '不能为空' }, { len: 11, message: '手机号长度需11位' }, { pattern: /^1[3-9]\d{9}$/, message: '手机号错误' }]}>
                     <Input placeholder="请输入" />
                 </Form.Item>
                 <Form.Item label="岗位" name="combine" rules={[{ required: true, message: '不能为空' }]}>

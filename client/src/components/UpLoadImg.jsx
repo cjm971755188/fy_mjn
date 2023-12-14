@@ -2,6 +2,7 @@ import React, { useState, Fragment } from 'react';
 import { message, Upload } from 'antd';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { BASE_URL } from '../service/config';
+import dayjs from 'dayjs'
 
 const getBase64 = (img, callback) => {
     const reader = new FileReader();
@@ -26,6 +27,7 @@ function UpLoadImg(props) {
     // 上传后的地址
     const [imageUrl, setImageUrl] = useState();
     const handleChange = (info) => {
+        console.log('info: ', info);
         if (info.file.status === 'uploading') {
             setLoading(true);
             return;
@@ -54,7 +56,7 @@ function UpLoadImg(props) {
     return (
         <Fragment>
             <Upload
-                name={props.name}
+                name={`${localStorage.getItem('name')}_${dayjs().valueOf()}_${props.name}`}
                 listType="picture-card"
                 className="avatar-uploader"
                 showUploadList={false}

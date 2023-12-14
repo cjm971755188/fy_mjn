@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import request from '../../service/request';
-import { Button, Modal, Form, DatePicker, Select, InputNumber, Upload, Space, Input, Card } from 'antd';
+import { Button, Modal, Form, DatePicker, Select, InputNumber, Upload, Input, Card } from 'antd';
 import { UploadOutlined, PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { yearCycleType, yearType1, yearType2, yearType3 } from '../../baseData/talent'
 import { BASE_URL } from '../../service/config';
 
-function AEUser(props) {
+function AEYear(props) {
     const { type, isShow, form } = props;
 
     const [talents, setTalents] = useState(false)
@@ -38,24 +38,6 @@ function AEUser(props) {
             console.error(err)
         })
     }
-    const [fileList, setFileList] = useState();
-    const handleChange = (info) => {
-        let newFileList = [...info.fileList];
-
-        // 1. Limit the number of uploaded files
-        // Only to show two recent uploaded files, and old ones will be replaced by the new
-        /* newFileList = newFileList.slice(-2); */
-
-        // 2. Read from response and show file link
-        newFileList = newFileList.map((file) => {
-            if (file.response) {
-                // Component will show file.url as link
-                file.url = file.response.url;
-            }
-            return file;
-        });
-        setFileList(newFileList);
-    };
     const [cycleType, setCycleType] = useState();
     const [yearType, setYearType] = useState('');
 
@@ -89,8 +71,8 @@ function AEUser(props) {
                         onChange={(value) => { setYearType(value); form.setFieldValue('yearbox_lavels', null); form.setFieldValue('yearbox_lavels_base', null); }}
                     />
                 </Form.Item>
-                {yearType.match('基础') ? <Form.Item label={yearType === '基础型' ? `每${cycleType.slice(0, 2)} 的基础提点(%)` : `${cycleType.slice(0, 2)}中每个专场 的基础提点(%)`} name="yearbox_lavels_base" rules={[{ required: true, message: '不能为空' }]}>
-                    <InputNumber />
+                {yearType.match('基础') ? <Form.Item label={yearType === '基础型' ? `每${cycleType.slice(0, 2)} 的基础提点（%）[例：0.5]` : `${cycleType.slice(0, 2)}中每个专场 的基础提点（%）[例：0.5]`} name="yearbox_lavels_base" rules={[{ required: true, message: '不能为空' }]}>
+                    <InputNumber min={0} max={100} />
                 </Form.Item> : null}
                 {yearType.match('阶梯') ? <Form.List name="yearbox_lavels">
                     {(fields, { add, remove }) => (
@@ -100,8 +82,8 @@ function AEUser(props) {
                                     <Form.Item label={`每${cycleType.slice(0, 2)}达成 成交额(万)`} {...restField} name={[name, `y_lavel_${key + 1}`]} rules={[{ required: true, message: '不能为空' }]}>
                                         <Input />
                                     </Form.Item>
-                                    <Form.Item label="额外提点(%)" {...restField} name={[name, `y_point_${key + 1}`]} rules={[{ required: true, message: '不能为空' }]}>
-                                        <InputNumber />
+                                    <Form.Item label="额外提点（%）[例：0.5]" {...restField} name={[name, `y_point_${key + 1}`]} rules={[{ required: true, message: '不能为空' }]}>
+                                        <InputNumber min={0} max={100} />
                                     </Form.Item>
                                     <Button type="text" danger icon={<MinusCircleOutlined />} onClick={() => remove(name)}>删除</Button>
                                 </Card>
@@ -114,20 +96,9 @@ function AEUser(props) {
                         </>
                     )}
                 </Form.List> : null}
-                <Form.Item label="合同文件" name="yearbox_files" rules={[{ required: true, message: '不能为空' }]}>
-                    <Upload
-                        name={`${localStorage.getItem('name')}_年框_${form.getFieldValue('tid')}`}
-                        action={`${BASE_URL}/file/upload`}
-                        fileList={fileList}
-                        onChange={handleChange}
-                        multiple={true}
-                    >
-                        <Button icon={<UploadOutlined />}>上传文件</Button>
-                    </Upload>
-                </Form.Item>
             </Form>
         </Modal>
     )
 }
 
-export default AEUser
+export default AEYear

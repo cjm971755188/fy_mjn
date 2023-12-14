@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const path = require('path');
-fs = require("fs");
+const fs = require("fs");
+const db = require('../config/db')
 const BASE_URL = require('../config/config')
 
 // 上传文件
@@ -36,6 +37,25 @@ router.post('/delete', (req, res) => {
             throw error;
         } else {
             console.log('文件删除成功...');
+        }
+    })
+})
+
+// 获取文件列表
+router.post('/getFiles', (req, res) => {
+    let params = req.body
+    let sql = ''
+    if (params.type.match('年框')) {
+        sql = `SELECT yearbox_files as files FROM talent WHERE tid = '${params.id}'`
+    } else {
+        sql = `SELECT model_files as files FROM talent_model WHERE tmid = '${params.id}'`
+    }
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        if (results.length === 0 || results[0].files === null) {
+            res.send({ code: 200, data: [], msg: `` })
+        } else {
+            res.send({ code: 200, data: JSON.parse(results[0].files), msg: `` })
         }
     })
 })

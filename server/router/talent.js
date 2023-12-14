@@ -120,7 +120,7 @@ router.post('/getTalentDetail', (req, res) => {
                                 LEFT JOIN user u ON u.uid = tms.create_uid
                             WHERE tm.tid = '${params.tid}'
                                 and tms.operate LIKE '达人移交%'
-                                and tms.examine_result = '通过'`
+                                and (tms.examine_result = '通过' or tms.status = '待审批')`
                 db.query(sql, (err, results_original) => {
                     if (err) throw err;
                     if (results_original.length === 0) {
@@ -169,13 +169,6 @@ router.post('/editTalent', (req, res) => {
                         isAdd = false
                         sql += params.ori === null ? ` null,` : ` '${params.ori}',`
                     } else if (params.operate.match('年框') || params.operate.match('联系人')) {
-                        /* if (params.operate.match('年框')) {
-                            for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
-                                if (isAdd && Object.keys(params.new)[i] === key) {
-                                    isAdd = falsesql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i]}',`
-                                }
-                            }
-                        } */
                         if (isAdd && key === 'need_examine') {
                             isAdd = false
                             sql += ` '无需审批',`
@@ -222,7 +215,7 @@ router.post('/editTalent', (req, res) => {
                 if (params.operate === '修改联系人' || params.operate.match('年框')) {
                     let sql = 'UPDATE talent SET'
                     for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
-                        if (Object.keys(params.new)[i] !== 'tid' && Object.keys(params.new)[i] !== 'yearbox_files') {
+                        if (Object.keys(params.new)[i] !== 'tid') {
                             sql += Object.values(params.new)[i] !== null && Object.values(params.new)[i] !== '' ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
                         }
                     }
@@ -230,24 +223,7 @@ router.post('/editTalent', (req, res) => {
                     sql += ` WHERE tid = '${params.tid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
-                        if (params.operate.match('年框')) {
-                            let sql = `SELECT * FROM resource`
-                            db.query(sql, (err, results) => {
-                                if (err) throw err;
-                                let sql = 'INSERT INTO resource VALUES'
-                                for (let i = 0; i < params.new.yearbox_files.fileList.length; i++) {
-                                    const element = params.new.yearbox_files.fileList[i];
-                                    let rid = 'R' + `${results.length + i + 1}`.padStart(7, '0')
-                                    let s = `('${rid}', '${element.response[0].url.replace(`${BASE_URL}/public/`, '')}', '生效中', '${params.userInfo.uid}', '${time}'),`
-                                    sql += s
-                                }
-                                sql = sql.substring(0, sql.length - 1)
-                                db.query(sql, (err, results) => {
-                                    if (err) throw err;
-                                })
-                            })
-                        }
-                        res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                        res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                     })
                 } else if (params.operate.match('中间人')) {
                     let sql = `UPDATE talent set status = '中间人待审批' WHERE tid = '${params.tid}'`
@@ -260,7 +236,7 @@ router.post('/editTalent', (req, res) => {
                             db.query(sql, (err, results_e) => {
                                 if (err) throw err;
                                 sendRobot(ddurls.report, `${results_t[0].name} ${params.operate}`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
-                                res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                                res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                             })
                         })
                     })
@@ -312,7 +288,7 @@ router.post('/examTalent', (req, res) => {
                     db.query(sql, (err, results_u) => {
                         if (err) throw err;
                         sendRobot(ddurls.report, `${results_e[0].name} 审批 ${results_t[0].name}( ${results_t[0].operate} ) ${params.exam ? '通过' : '驳回'}`, `提点结算，按提交时间生效@${results_u[0].phone}`, `http://1.15.89.163:5173`, [results_u[0].phone], false)
-                        res.send({ code: 200, data: {}, msg: `` })
+                        res.send({ code: 200, data: [], msg: `` })
                     })
                 })
             })
@@ -336,18 +312,28 @@ router.post('/addTalentModel', (req, res) => {
             let count_l = results_l.length
             let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
             let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
+            let f = []
+            if (params.model_files) {
+                for (let i = 0; i < params.model_files.fileList.length; i++) {
+                    const element = params.model_files.fileList[i].response[0].url;
+                    f.push(element)
+                    let rid = 'R' + `${count_r + i + 1}`.padStart(7, '0')
+                    sql_r += `('${rid}', '${element.replace(`${BASE_URL}/public/`, '')}', '生效中', '${params.userInfo.uid}', '${time}'),`
+                }
+            }
+            let model_files = params.model_files ? `'${JSON.stringify(f)}'` : null
             let keyword = params.keyword ? `'${params.keyword}'` : null
             let u_id_2 = params.u_id_2 ? `'${params.u_id_2}'` : null
             let u_point_2 = params.u_point_2 ? `'${params.u_point_2}'` : null
             let u_note = params.u_note ? `'${params.u_note}'` : null
             if (params.commission_note) {
-                sql_d += `('${tmid}', '${params.tid}', '线上平台', '${params.platform}', '${params.shop}', '${params.account_id}', '${params.account_name}', '${params.account_type}', '${params.account_models}', ${keyword}, '${params.people_count}', '${params.fe_proportion}', '${params.age_cuts}', '${params.main_province}', '${params.price_cut}', '待审批', '${params.userInfo.uid}', '${time}'),`
+                sql_d += `('${tmid}', '${params.tid}', '线上平台', '${params.platform}', '${params.shop}', '${params.account_id}', '${params.account_name}', null, null, '${params.account_type}', '${params.account_models}', ${keyword}, '${params.people_count}', '${params.fe_proportion}', '${params.age_cuts}', '${params.main_province}', '${params.price_cut}',  ${model_files}, '待审批', '${params.userInfo.uid}', '${time}'),`
                 sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', '${params.commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
             } else if (params.discount_note) {
-                sql_d += `('${tmid}', '${params.tid}', '社群团购', '聚水潭', '${params.group_shop}', null, null, null, null, null, null, null, null, null, null, '待审批', '${params.userInfo.uid}', '${time}'),`
+                sql_d += `('${tmid}', '${params.tid}', '社群团购', '聚水潭', '${params.group_shop}', null, null, '${params.group_name}', null, null, null, null, null, null, null, null, null, ${model_files}, '待审批', '${params.userInfo.uid}', '${time}'),`
                 sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
             } else if (params.discount_label) {
-                sql_d += `('${tmid}', '${params.tid}', '供货', '聚水潭', '${params.provide_shop}', null, null, null, null, null, null, null, null, null, null, '待审批', '${params.userInfo.uid}', '${time}'),`
+                sql_d += `('${tmid}', '${params.tid}', '供货', '聚水潭', '${params.provide_shop}', null, null, null, '${params.provide_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批', '${params.userInfo.uid}', '${time}'),`
                 sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
             }
             count_d += 1
@@ -368,7 +354,7 @@ router.post('/addTalentModel', (req, res) => {
                             db.query(sql, (err, results_e) => {
                                 if (err) throw err;
                                 sendRobot(ddurls.report, `${results_t[0].name} 新合作报备`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
-                                res.send({ code: 200, data: {}, msg: `添加成功` })
+                                res.send({ code: 200, data: [], msg: `添加成功` })
                             })
                         })
                     })
@@ -408,10 +394,10 @@ router.post('/editTalentModel', (req, res) => {
                     } else if (isAdd && key === 'operate') {
                         isAdd = false
                         sql += ` '${params.operate}',`
-                    } else if (params.operate.match('基础信息')) {
+                    } else if (params.operate.match('基础信息') || params.operate.match('合作协议')) {
                         if (isAdd && key === 'history_other_info') {
                             isAdd = false
-                            sql += ` '${params.ori}',`
+                            sql += params.ori === null ? ' null, ' : ` '${params.ori}',`
                         } else if (isAdd && key === 'need_examine') {
                             isAdd = false
                             sql += ` '无需审批',`
@@ -431,7 +417,7 @@ router.post('/editTalentModel', (req, res) => {
                         }
                         if (isAdd && key === 'history_other_info') {
                             isAdd = false
-                            sql += ` '${params.ori}',`
+                            sql += params.ori === null ? ' null, ' : ` '${params.ori}',`
                         } else if (isAdd && key === 'need_examine') {
                             isAdd = false
                             sql += ` '需要审批',`
@@ -454,10 +440,12 @@ router.post('/editTalentModel', (req, res) => {
             sql += `)`
             db.query(sql, (err, results) => {
                 if (err) throw err;
-                if (params.operate.match('基础信息')) {
+                if (params.operate.match('基础信息') || params.operate.match('合作协议')) {
                     let sql = 'UPDATE talent_model SET'
                     for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
-                        if (Object.keys(params.new)[i] !== 'tmid' && !Object.keys(params.new)[i].match('commission_') && !Object.keys(params.new)[i].match('discount_') && !Object.keys(params.new)[i].match('u_')) {
+                        if (Object.keys(params.new)[i] === 'model_files') {
+                            sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
+                        } else if (Object.keys(params.new)[i] !== 'tmid' && !Object.keys(params.new)[i].match('commission_') && !Object.keys(params.new)[i].match('discount_') && !Object.keys(params.new)[i].match('u_')) {
                             sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
                         }
                     }
@@ -465,7 +453,7 @@ router.post('/editTalentModel', (req, res) => {
                     sql += ` WHERE tmid = '${params.new.tmid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
-                        res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                        res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                     })
                 } else if (params.operate.match('佣金提点')) {
                     let sql = `UPDATE talent_model set status = '待审批' WHERE tmid = '${params.new.tmid}'`
@@ -481,7 +469,7 @@ router.post('/editTalentModel', (req, res) => {
                                 db.query(sql, (err, results_e) => {
                                     if (err) throw err;
                                     sendRobot(ddurls.report, `${results_t[0].name} ${params.operate}`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
-                                    res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                                    res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                 })
                             })
                         })
@@ -510,7 +498,7 @@ router.post('/editTalentModel', (req, res) => {
                                     db.query(sql, (err, results_e) => {
                                         if (err) throw err;
                                         sendRobot(ddurls.report, `${results_t[0].name} ${params.operate}`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
-                                        res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                                        res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                     })
                                 })
                             })
@@ -557,7 +545,7 @@ router.post('/examTalentModel', (req, res) => {
                         db.query(sql, (err, results_u) => {
                             if (err) throw err;
                             sendRobot(ddurls.report, `${results_e[0].name} 审批 ${results_t[0].name}( ${results_t[0].operate} ) ${params.exam ? '通过' : '驳回'}`, `提点结算，按提交时间生效@${results_u[0].phone}`, `http://1.15.89.163:5173`, [results_u[0].phone], false)
-                            res.send({ code: 200, data: {}, msg: `` })
+                            res.send({ code: 200, data: [], msg: `` })
                         })
                     })
                 })
@@ -592,7 +580,7 @@ router.post('/giveTalent', (req, res) => {
                             continue
                         } else if (isAdd && key === 'u_id_1') {
                             isAdd = false
-                            s += ` '${params.newTid}',`
+                            s += ` '${params.newUid}',`
                         } else if (isAdd && key === 'u_point_1') {
                             isAdd = false
                             s += ` '0.5',`
@@ -604,7 +592,7 @@ router.post('/giveTalent', (req, res) => {
                             s += ` '${time}',`
                         } else if (isAdd && key === 'operate') {
                             isAdd = false
-                            s += ` '${params.operate}给${params.newTid}',`
+                            s += ` '${params.operate}给${params.newUid}',`
                         } else if (isAdd && key === 'need_examine') {
                             isAdd = false
                             s += ` '需要审批',`
@@ -634,36 +622,6 @@ router.post('/giveTalent', (req, res) => {
                     let sql = `UPDATE talent set status = '移交待审批' WHERE tid = '${params.tid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
-                        if (params.hasYear) {
-                            let sql = `SELECT * FROM resource`
-                            db.query(sql, (err, results_l) => {
-                                if (err) throw err;
-                                let sql = `SELECT * FROM resource WHERE SUBSTRING_INDEX(SUBSTRING_INDEX(url, '_', 3), '_', -1) = '${params.tid}'`
-                                db.query(sql, (err, results) => {
-                                    if (err) throw err;
-                                    let sql = `INSERT INTO resource VALUES`
-                                    for (let i = 0; i < results.length; i++) {
-                                        let rid = 'R' + `${results_l.length + i + 1}`.padStart(7, '0')
-                                        let s = `('${rid}',`
-                                        for (const key in results[i]) {
-                                            if (key === 'rid') {
-                                                continue
-                                            } else if (key === 'u_id') {
-                                                s += ` '${params.newTid}',`
-                                            } else if (Object.hasOwnProperty.call(results[i], key)) {
-                                                s += results[i][key] === null ? ` null,` : ` '${results[i][key]}',`
-                                            }
-                                        }
-                                        s = s.substring(0, s.length - 1)
-                                        sql += s + `),`
-                                    }
-                                    sql = sql.substring(0, sql.length - 1)
-                                    db.query(sql, (err, results) => {
-                                        if (err) throw err;
-                                    })
-                                })
-                            })
-                        }
                         let ms = []
                         if (params.hasMid) {
                             let m = ''
@@ -688,7 +646,7 @@ router.post('/giveTalent', (req, res) => {
                                             if (key === 'mid') {
                                                 continue
                                             } else if (key === 'u_id') {
-                                                s += ` '${params.newTid}',`
+                                                s += ` '${params.newUid}',`
                                             } else if (Object.hasOwnProperty.call(results[i], key)) {
                                                 s += results[i][key] === null ? ` null,` : ` '${results[i][key]}',`
                                             }
@@ -735,7 +693,7 @@ router.post('/giveTalent', (req, res) => {
                                             sql += ` '${time}',`
                                         } else if (isAdd && key === 'operate') {
                                             isAdd = false
-                                            sql += ` '${params.operate}给${params.newTid}',`
+                                            sql += ` '${params.operate}给${params.newUid}',`
                                         } else if (isAdd && key === 'need_examine') {
                                             isAdd = false
                                             sql += ` '需要审批',`
@@ -764,7 +722,7 @@ router.post('/giveTalent', (req, res) => {
                                         db.query(sql, (err, results_e) => {
                                             if (err) throw err;
                                             sendRobot(ddurls.report, `${results_t[0].name} ${params.operate}`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
-                                            res.send({ code: 200, data: {}, msg: `${params.operate}成功` })
+                                            res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                         })
                                     })
                                 })

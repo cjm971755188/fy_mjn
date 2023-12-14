@@ -9,6 +9,13 @@ function AEMiddleman(props) {
     const [canPiao, setCanPiao] = useState()
     const [piaoType, setPiaoType] = useState()
 
+    // 重置
+    const reset = () => {
+        setPayWay(false);
+        setCanPiao(false);
+        setPiaoType(false);
+    }
+
     useEffect(() => {
         setPayWay(form.getFieldValue('pay_way'))
         setCanPiao(form.getFieldValue('can_piao'))
@@ -20,9 +27,9 @@ function AEMiddleman(props) {
             open={isShow}
             maskClosable={false}
             onOk={() => { form.submit(); }}
-            onCancel={() => { props.onCancel(); setPayWay(); setCanPiao(); setPiaoType(); }}
+            onCancel={() => { props.onCancel(); reset(); }}
         >
-            <Form form={form} onFinish={(values) => { props.onOK(values) }}>
+            <Form form={form} onFinish={(values) => { props.onOK(values); reset(); }}>
                 {type === 'edit' ? <Form.Item label="编号" name="mid" rules={[{ required: true, message: '不能为空' }]}>
                     <Input disabled={true} />
                 </Form.Item> : null}
@@ -38,7 +45,7 @@ function AEMiddleman(props) {
                 <Form.Item label="联系人微信" name="liaison_v" rules={[{ required: true, message: '不能为空' }]}>
                     <Input placeholder="请输入" />
                 </Form.Item>
-                <Form.Item label="联系人电话" name="liaison_phone" rules={[{ required: true, message: '不能为空' }]}>
+                <Form.Item label="联系人手机号" name="liaison_phone" rules={[{ required: true, message: '不能为空' }, { len: 11, message: '手机号长度需11位' }, { pattern: /^1[3-9]\d{9}$/, message: '手机号错误' }]}>
                     <Input placeholder="请输入" />
                 </Form.Item>
                 <Form.Item label="付款方式" name="pay_way" rules={[{ required: true, message: '不能为空' }]}>
@@ -60,7 +67,7 @@ function AEMiddleman(props) {
                         </Radio.Group>
                     </Form.Item>
                         <Form.Item label="税点（%）" name="shui_point" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber placeholder="请输入" />
+                            <InputNumber placeholder="请输入" min={0} max={100} />
                         </Form.Item></> : null}</> : null}
                 <Form.Item label="收款姓名" name="pay_name" rules={[{ required: true, message: '不能为空' }]}>
                     <Input placeholder="请输入" />

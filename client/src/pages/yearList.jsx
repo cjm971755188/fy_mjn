@@ -21,16 +21,16 @@ function YearList() {
                 <FilePreview 
                     fileUrl={`${record.url}`} 
                     fileType={
-                        ['jpg', 'png'].indexOf(record.url.split('.')[1]) !== -1 ? 'image' : 
+                        ['jpg', 'png', 'webp'].indexOf(record.url.split('.')[1]) !== -1 ? 'image' : 
                         ['pdf'].indexOf(record.url.split('.')[1]) !== -1 ? 'pdf' : 
-                        ['xlsx', 'xls'].indexOf(record.url.split('.')[1]) !== -1 ? 'excel' : 
+                        ['xlsx', 'xls', 'csv'].indexOf(record.url.split('.')[1]) !== -1 ? 'excel' : 
                         ['doc'].indexOf(record.url.split('.')[1]) !== -1 ? 'word' : ''
                     } 
                 />
             )
         },
         { 
-            title: '文件', 
+            title: '文件类型', 
             dataIndex: 'url', 
             key: 'url',
             render: (_, record) => (
@@ -243,7 +243,6 @@ function YearList() {
                                 filterForm.resetFields();
                                 setTableParams({
                                     ...tableParams,
-                                    filtersDate: [],
                                     filters: {}
                                 })
                             }}>清空筛选</Button>

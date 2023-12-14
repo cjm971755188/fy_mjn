@@ -11,7 +11,6 @@ import LiveList from './pages/liveList.jsx'
 import KeywordList from './pages/keywordList.jsx'
 import PointList from './pages/pointList.jsx'
 import MiddlemanList from './pages/middlemanList.jsx'
-import YearList from './pages/yearList.jsx'
 
 function App() {
     return (
@@ -27,7 +26,6 @@ function App() {
                 <Route path='/point/keyword_list' element={<KeywordList />} />
                 <Route path='/point/point_list' element={<PointList />} />
                 <Route path='/middleman' element={<MiddlemanList />} />
-                <Route path='/resource/year_list' element={<YearList />} />
             </Routes>
         </MyLayout>
     )

@@ -68,7 +68,7 @@ const menuItemsTotal = [
         children: [
             {
                 key: '/admin/point/keyword_list',
-                label: '达人昵称匹配规则'
+                label: '达人昵称规则'
             },
             {
                 key: '/admin/point/point_list',
@@ -80,17 +80,6 @@ const menuItemsTotal = [
         key: '/admin/middleman',
         label: '中间人管理',
         icon: <BranchesOutlined />
-    },
-    {
-        key: '/admin/resource',
-        label: '资源管理',
-        icon: <AppstoreOutlined />,
-        children: [
-            {
-                key: '/admin/resource/year_list',
-                label: '年框资料'
-            }
-        ]
     },
     {
         key: '/admin/user',

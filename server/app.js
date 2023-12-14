@@ -61,8 +61,6 @@ const pointRouter = require('./router/point')
 app.use('/point', pointRouter)
 const middlemanRouter = require('./router/middleman')
 app.use('/middleman', middlemanRouter)
-const resourceRouter = require('./router/resource')
-app.use('/resource', resourceRouter)
 
 /* sendRobot(ddurls.report, `标题`, `![]('http://1.15.89.163:3000/public/people.jpg') \n@17764585713`, `http://1.15.89.163:5173/admin/talent/talent_list`, ["17764585713"], false) */
 

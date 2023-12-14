@@ -52,7 +52,7 @@ router.post('/addMiddleman', (req, res) => {
     db.query(sql, (err, results) => {
         if (err) throw err;
         if (results.length !== 0) {
-            res.send({ code: 201, data: {}, msg: `${params.name} 已存在` })
+            res.send({ code: 201, data: [], msg: `${params.name} 已存在` })
         } else {
             let sql = `SELECT * FROM middleman`
             db.query(sql, (err, results) => {
@@ -64,7 +64,7 @@ router.post('/addMiddleman', (req, res) => {
                 let sql = `INSERT INTO middleman values('${mid}', '${params.type}', '${params.name}', '${params.liaison_name}', '${params.liaison_v}', '${params.liaison_phone}', '${params.pay_way}', ${can_piao}, ${piao_type}, ${shui_point}, '${params.pay_name}', '${params.pay_bank}', '${params.pay_account}', '正常', '${params.userInfo.uid}', '${dayjs().valueOf()}')`
                 db.query(sql, (err, results) => {
                     if (err) throw err;
-                    res.send({ code: 200, data: {}, msg: `` })
+                    res.send({ code: 200, data: [], msg: `` })
                 })
             })
         }
@@ -78,7 +78,7 @@ router.post('/editMiddleman', (req, res) => {
     db.query(sql, (err, results) => {
         if (err) throw err;
         if (results.length > 0) {
-            res.send({ code: 201, data: {}, msg: `${params.name} 已存在` })
+            res.send({ code: 201, data: [], msg: `${params.name} 已存在` })
         } else {
             let can_piao = params.can_piao ? `'${params.can_piao}'` : null
             let piao_type = params.piao_type ? `'${params.piao_type}'` : null
@@ -86,7 +86,7 @@ router.post('/editMiddleman', (req, res) => {
             let sql = `UPDATE middleman SET type = '${params.type}', name = '${params.name}', liaison_name = '${params.liaison_name}', liaison_v = '${params.liaison_v}', liaison_phone = '${params.liaison_phone}', pay_way = '${params.pay_way}', can_piao = ${can_piao}, piao_type = ${piao_type}, shui_point = ${shui_point}, pay_name = '${params.pay_name}', pay_bank = '${params.pay_bank}', pay_account = '${params.pay_account}' WHERE mid = '${params.mid}'`
             db.query(sql, (err, results) => {
                 if (err) throw err;
-                res.send({ code: 200, data: {}, msg: `` })
+                res.send({ code: 200, data: [], msg: `` })
             })
         }
     })

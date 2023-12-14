@@ -103,7 +103,7 @@ function PointList() {
             dataIndex: 'yearbox_start_date',
             key: 'yearbox_start_date',
             render: (_, record) => (
-                record.yearbox_start_date >= record.create_time ? <Space size="small">
+                record.yearbox_start_date === null || record.yearbox_start_date >= record.create_time ? <Space size="small">
                     <StopTwoTone twoToneColor="#999999" /><span>暂无</span>
                 </Space> : <Popover title="提点备注" content={
                     <List style={{ marginLeft: '10px' }}>

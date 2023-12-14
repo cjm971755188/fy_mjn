@@ -23,7 +23,7 @@ function MiddlemanList() {
                     <List>
                         <List.Item>姓名：{record.liaison_name}</List.Item>
                         <List.Item>微信：{record.liaison_v}</List.Item>
-                        <List.Item>电话：{record.liaison_phone}</List.Item>
+                        <List.Item>手机号：{record.liaison_phone}</List.Item>
                     </List>}
                 >
                     <span>{record.liaison_name}</span>

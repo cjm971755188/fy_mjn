@@ -228,7 +228,7 @@ function TalentList() {
             url: '/talent/giveTalent',
             data: {
                 tid: clickTid,
-                newTid: formGive.getFieldValue('u_id'),
+                newUid: formGive.getFieldValue('u_id'),
                 hasYear: formGive.getFieldValue('hasYear'),
                 hasMid: formGive.getFieldValue('hasMid'),
                 mids: formGive.getFieldValue('mids'),

@@ -3,10 +3,11 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import request from '../service/request'
 import dayjs from 'dayjs';
 import { Card, Input, Timeline, Button, Tag, Modal, Form, Descriptions, Row, Col, message, Space, Select, InputNumber, Image, Popconfirm, List } from 'antd';
-import { AuditOutlined, MessageOutlined, GlobalOutlined, CrownOutlined, SettingOutlined, EditOutlined, PlusOutlined, MinusOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { AuditOutlined, MessageOutlined, GlobalOutlined, CrownOutlined, SettingOutlined, EditOutlined, PlusOutlined, MinusOutlined, UnorderedListOutlined, EyeOutlined } from '@ant-design/icons';
 import { descriptionsItems } from '../baseData/talentDetail'
 import AELiaison from '../components/modals/AELiaison'
 import AEYear from '../components/modals/AEYear'
+import AEFile from '../components/modals/AEFile'
 import AETalentModel from '../components/modals/AETalentModel'
 
 const { TextArea } = Input;
@@ -93,18 +94,18 @@ function TalentDetail() {
                     if (description.label === '生效日期') {
                         description.children = description.children === null ? null : dayjs(Number(description.children)).format('YYYY-MM-DD')
                     }
-                    if (detailData.yearbox_start_date !== null && descriptionsItems[j].key === 63) {
+                    if (detailData.yearbox_start_date !== null && descriptionsItems[j].key === 16) {
                         let items = JSON.parse(Object.values(detailData)[i])
                         description.children = <List style={{ marginLeft: '10px' }}>
                             {detailData.yearbox_lavels_base !== null ? <List.Item key={0} style={{ paddingTop: 0 }}>0：每个专场基础提点 {detailData.yearbox_lavels_base}% 【一专场一付】</List.Item> : null}
                             {items && items.map((item, index) => {
                                 return (
-                                    <List.Item key={index+1} style={{ paddingTop: 0 }}>{index+1}：每{detailData.yearbox_cycle.slice(0, 2)}成交额达到 {item[`y_lavel_${index+1}`]}万，提点 {item[`y_point_${index+1}`]}%</List.Item>
+                                    <List.Item key={index + 1} style={{ paddingTop: 0 }}>{index + 1}：每{detailData.yearbox_cycle.slice(0, 2)}成交额达到 {item[`y_lavel_${index + 1}`]}万，提点 {item[`y_point_${index + 1}`]}%</List.Item>
                                 )
                             })}
                         </List>
                     }
-                    if ([15, 16, 17, 18, 63].indexOf(descriptionsItems[j].key) !== -1) {
+                    if ([15, 16, 17, 18].indexOf(descriptionsItems[j].key) !== -1) {
                         items.push(description)
                     }
                 }
@@ -178,6 +179,9 @@ function TalentDetail() {
                                     key: res.data.data[j].key,
                                     label: descriptionsItems[i].label,
                                     children: res.data.data[j].children
+                                }
+                                if (descriptionsItems[i].label === '税点(%)') {
+                                    item.span = 2
                                 }
                                 items.push(item)
                             }
@@ -378,7 +382,7 @@ function TalentDetail() {
     // 添加、修改合作模式
     const [isShowModel, setIsShowModel] = useState(false)
     const [formModel] = Form.useForm()
-    const [typeModel, setTypeModel] = useState()
+    const [modelType, setTypeModel] = useState()
     const addTalentModelAPI = (payload) => {
         request({
             method: 'post',
@@ -435,9 +439,9 @@ function TalentDetail() {
             if (res.status == 200) {
                 if (res.data.code == 200) {
                     setIsShowModel(false);
-                    setTypeModel();
-                    getTalentDetailAPI();
                     formModel.resetFields();
+                    setTypeModel()
+                    getTalentDetailAPI()
                     message.success(res.data.msg)
                 } else {
                     message.error(res.data.msg)
@@ -449,6 +453,10 @@ function TalentDetail() {
             console.error(err)
         })
     }
+    // 新增、修改、查看文件
+    const [isShowFile, setIsShowFile] = useState(false)
+    const [fileType, setFileType] = useState('')
+    const [idSelect, setIdSelect] = useState('')
     // 审批
     const [isShowRefund, setIsShowRefund] = useState(false)
     const [formRefund] = Form.useForm()
@@ -565,9 +573,12 @@ function TalentDetail() {
                         <Tag color={detailData.yearbox_start_date === null ? "" : "green"}>{detailData.yearbox_start_date === null ? "暂无" : "生效中"}</Tag>
                     </Space>}
                         style={{ marginBottom: '20px' }}
-                        extra={detailData.status.match('待审批') ? null : 
-                            editPower && detailData.yearbox_start_date === null ? <Button type="text" icon={<PlusOutlined />} onClick={() => { formYear.setFieldValue('tid', tid); setIsShowYear(true); setYearType('detail'); }}>新增</Button> : null
-                        }
+                        extra={detailData.status.match('待审批') ? null : <>
+                            {editPower && detailData.yearbox_start_date === null ? <Button type="text" icon={<PlusOutlined />} onClick={() => { formYear.setFieldValue('tid', tid); setIsShowYear(true); setYearType('detail'); }}>新增年框</Button> : null}
+                            {detailData.yearbox_start_date === null ? null :
+                                detailData.yearbox_files === null ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowFile(true); setFileType('年框资料'); setIdSelect(tid); }}>新增年框资料</Button> :
+                                    <Button type="text" icon={<EyeOutlined />} onClick={() => { setIsShowFile(true); setFileType('年框资料'); setIdSelect(tid); }}>查看年框资料</Button>}
+                        </>}
                     >
                         <Descriptions column={5} items={getYearItems()} />
                     </Card>
@@ -610,7 +621,7 @@ function TalentDetail() {
                                     setIsShowMiddle(true);
                                     setMiddleType('修改一级中间人');
                                 }}>修改</Button> : null}
-                                {(detailData.status.match('待审批')) ? null : editPower ? 
+                                {(detailData.status.match('待审批')) ? null : editPower ?
                                     <Popconfirm
                                         title="删除一级中间人"
                                         description={`确认删除 ${detailData.m_name_1} 吗?`}
@@ -655,7 +666,7 @@ function TalentDetail() {
                                     setIsShowMiddle(true);
                                     setMiddleType('修改二级中间人');
                                 }}>修改</Button> : null}
-                                {(detailData.status.match('待审批')) ? null : editPower ? 
+                                {(detailData.status.match('待审批')) ? null : editPower ?
                                     <Popconfirm
                                         title="删除二级中间人"
                                         description={`确认删除 ${detailData.m_name_2} 吗?`}
@@ -696,7 +707,7 @@ function TalentDetail() {
                                         <Tag color={model.status === '待审批' ? "gold" : model.status === '合作中' ? "green" : model.status === '已失效' ? "red" : ""}>{model.status}</Tag>
                                     </Space>}
                                     style={{ marginBottom: '20px' }}
-                                    extra={detailData.status.match('待审批') ? null : editPower ? <Button type="text" icon={<EditOutlined />} onClick={() => {
+                                    extra={detailData.status.match('待审批') ? null : editPower ? <><Button type="text" icon={<EditOutlined />} onClick={() => {
                                         let f = { ...model, tmid: model.tmid }
                                         for (const key in model) {
                                             if (Object.hasOwnProperty.call(model, key)) {
@@ -723,7 +734,9 @@ function TalentDetail() {
                                         setEditOri(f)
                                         setIsShowModel(true);
                                         setTypeModel(`修改${model.model}`);
-                                    }}>修改</Button> : null}
+                                    }}>修改</Button>
+                                        {model.model_files === null ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowFile(true); setFileType('合作协议'); setIdSelect(model.tmid); }}>新增合作协议</Button> :
+                                            <Button type="text" icon={<EyeOutlined />} onClick={() => { setIsShowFile(true); setFileType('合作协议'); setIdSelect(model.tmid); }}>查看合作协议</Button>}</> : null}
                                 >
                                     <Descriptions column={5} items={getModelsItems(model)} />
                                 </Card>
@@ -838,7 +851,7 @@ function TalentDetail() {
             </Modal>
             <AETalentModel
                 isShow={isShowModel}
-                type={typeModel}
+                type={modelType}
                 form={formModel}
                 onOK={() => {
                     let ori = null
@@ -896,8 +909,8 @@ function TalentDetail() {
                     if (o !== null && Object.keys(o).length !== Object.keys(payload).length) {
                         type = type.match('综合信息') ? type : type.match('基础信息') ? '综合信息' : '佣金提点'
                     }
-                    let operate = typeModel + type
-                    if (typeModel.match('新增')) {
+                    let operate = modelType + type
+                    if (modelType.match('新增')) {
                         addTalentModelAPI(formModel.getFieldsValue())
                     } else if (Object.keys(z).length === 0) {
                         if (type.match('基础信息')) {
@@ -914,6 +927,13 @@ function TalentDetail() {
                     }
                 }}
                 onCancel={() => { setIsShowModel(false); formModel.resetFields(); setTypeModel(''); }}
+            />
+            <AEFile
+                id={idSelect}
+                isShow={isShowFile}
+                type={fileType}
+                onOK={() => { getTalentDetailAPI(); setIdSelect(''); setIsShowFile(false); setFileType(''); setIsShowFile(false); }}
+                onCancel={() => { getTalentDetailAPI(); setIdSelect(''); setIsShowFile(false); setFileType(''); setIsShowFile(false); }}
             />
         </Fragment>
     )
