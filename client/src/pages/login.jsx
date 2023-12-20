@@ -23,7 +23,7 @@ function Login() {
                     localStorage.setItem('position', res.data.data.position)
                     localStorage.setItem('e_id', res.data.data.e_id)
                     message.success('登录成功')
-                    navigate('/admin/workbench')
+                    navigate('/admin/talent/statistics')
                 } else if (res.data.code == 202) {
                     navigate('/login')
                     message.error(res.data.msg)

@@ -2,7 +2,8 @@ export const chanceStatus = [
     { key: 0, label: "待推进", value: "待推进" },
     { key: 1, label: "待报备", value: "待报备" },
     { key: 2, label: "待审批", value: "待审批" },
-    { key: 3, label: "报备驳回", value: "报备驳回" }
+    { key: 3, label: "报备通过", value: "报备通过" },
+    { key: 4, label: "报备驳回", value: "报备驳回" }
 ]
 
 export const talentStatus = [
@@ -28,14 +29,16 @@ export const platform = [
     { key: 4, label: "视频号", value: "视频号" },
     { key: 6, label: "淘宝", value: "淘宝" },
     { key: 7, label: "微店", value: "微店" },
-    { key: 8, label: "有赞", value: "有赞" }
+    { key: 8, label: "有赞", value: "有赞" },
+    { key: 9, label: "聚水潭", value: "聚水潭" }
 ]
 
 export const shop = [
     { key: 0, label: "普通店铺", value: "普通店铺" },
-    { key: 1, label: "视频号团长", value: "视频号团长" },
-    { key: 2, label: "抖音团长", value: "抖音团长" },
-    { key: 3, label: "独特艾琳旗舰店", value: "独特艾琳旗舰店" }
+    { key: 1, label: "独特艾琳旗舰店", value: "独特艾琳旗舰店" },
+    { key: 2, label: "视频号团长", value: "视频号团长" },
+    { key: 3, label: "抖音团长", value: "抖音团长" },
+    { key: 3, label: "快手团长", value: "快手团长" }
 ]
 
 export const liaisonType = [
@@ -126,5 +129,10 @@ export const yearType2 = [
 ]
 
 export const yearType3 = [
-    { key: 2, label: "基础型", value: "基础型" }
+    { key: 0, label: "基础型", value: "基础型" }
+]
+
+export const uPoint0= [
+    { key: 0, label: 0, value: 0 },
+    { key: 1, label: 0.5, value: 0.5 }
 ]

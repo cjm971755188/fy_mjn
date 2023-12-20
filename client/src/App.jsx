@@ -2,6 +2,7 @@ import MyLayout from './components/MyLayout.jsx'
 import { Routes, Route } from 'react-router-dom'
 
 import Workbench from './pages/workbench.jsx'
+import TalentStatistics from './pages/talentStatistics.jsx'
 import UserList from './pages/userList.jsx'
 import ChanceList from './pages/chanceList.jsx'
 import TalentList from './pages/talentList.jsx'
@@ -18,6 +19,7 @@ function App() {
             <Routes>
                 <Route path='/workbench' element={<Workbench />} />
                 <Route path='/user' element={<UserList />} />
+                <Route path='/talent/statistics' element={<TalentStatistics />} />
                 <Route path='/talent/chance_list' element={<ChanceList />} />
                 <Route path='/talent/talent_list' element={<TalentList />} />
                 <Route path='/talent/talent_list/talent_detail' element={<TalentDetail />} />

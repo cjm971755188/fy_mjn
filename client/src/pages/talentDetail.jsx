@@ -483,7 +483,7 @@ function TalentDetail() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    navigate(-1)
+                    navigate('/admin/talent/talent_list')
                 } else {
                     message.error(res.data.msg)
                 }
@@ -517,7 +517,7 @@ function TalentDetail() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    navigate(-1)
+                    navigate('/admin/talent/talent_list')
                 } else {
                     message.error(res.data.msg)
                 }
@@ -576,7 +576,7 @@ function TalentDetail() {
                         extra={detailData.status.match('待审批') ? null : <>
                             {editPower && detailData.yearbox_start_date === null ? <Button type="text" icon={<PlusOutlined />} onClick={() => { formYear.setFieldValue('tid', tid); setIsShowYear(true); setYearType('detail'); }}>新增年框</Button> : null}
                             {detailData.yearbox_start_date === null ? null :
-                                detailData.yearbox_files === null ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowFile(true); setFileType('年框资料'); setIdSelect(tid); }}>新增年框资料</Button> :
+                                editPower && detailData.yearbox_files === null ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowFile(true); setFileType('年框资料'); setIdSelect(tid); }}>新增年框资料</Button> :
                                     <Button type="text" icon={<EyeOutlined />} onClick={() => { setIsShowFile(true); setFileType('年框资料'); setIdSelect(tid); }}>查看年框资料</Button>}
                         </>}
                     >

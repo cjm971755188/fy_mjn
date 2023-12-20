@@ -251,17 +251,15 @@ function AETalentModel(props) {
                     <Form.Item label="聚水潭店铺名" name="shop" rules={[{ required: true, message: '不能为空' }]}>
                         <Input placeholder="请输入" />
                     </Form.Item>
-                    <Space size='large'>
-                        <Form.Item label="常规品佣金（%）[例：20]" name="discount_normal" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber placeholder="请输入" min={0} max={100} />
-                        </Form.Item>
-                        <Form.Item label="福利品佣金（%）[例：20]" name="discount_welfare" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber placeholder="请输入" min={0} max={100} />
-                        </Form.Item>
-                        <Form.Item label="爆品佣金（%）[例：20]" name="discount_bao" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber placeholder="请输入" min={0} max={100} />
-                        </Form.Item>
-                    </Space>
+                    <Form.Item label="常规品佣金（%）[例：20]" name="discount_normal" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber placeholder="请输入" min={0} max={100} />
+                    </Form.Item>
+                    <Form.Item label="福利品佣金（%）[例：20]" name="discount_welfare" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber placeholder="请输入" min={0} max={100} />
+                    </Form.Item>
+                    <Form.Item label="爆品佣金（%）[例：20]" name="discount_bao" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber placeholder="请输入" min={0} max={100} />
+                    </Form.Item>
                     <Form.Item label="佣金备注" name="discount_note">
                         <TextArea placeholder="请输入" />
                     </Form.Item>
@@ -315,14 +313,12 @@ function AETalentModel(props) {
                     <Form.Item label="聚水潭店铺名" name="shop" rules={[{ required: true, message: '不能为空' }]}>
                         <Input placeholder="请输入" />
                     </Form.Item>
-                    <Space size='large'>
-                        <Form.Item label="买断折扣（折）[例：7.5]" name="discount_buyout" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber placeholder="请输入" min={0} max={10} />
-                        </Form.Item>
-                        <Form.Item label="含退货率折扣（折）[例：7.5]" name="discount_back" rules={[{ required: true, message: '不能为空' }]}>
-                            <InputNumber placeholder="请输入" min={0} max={10} />
-                        </Form.Item>
-                    </Space>
+                    <Form.Item label="买断折扣（折）[例：7.5]" name="discount_buyout" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber placeholder="请输入" min={0} max={10} />
+                    </Form.Item>
+                    <Form.Item label="含退货率折扣（折）[例：7.5]" name="discount_back" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber placeholder="请输入" min={0} max={10} />
+                    </Form.Item>
                     <Form.Item label="折扣备注" name="discount_label">
                         <TextArea placeholder="请输入" />
                     </Form.Item>
@@ -374,10 +370,11 @@ function AETalentModel(props) {
                         if ((form.getFieldValue('account_name') && form.getFieldValue('account_name') !== null) || (form.getFieldValue('account_id') && form.getFieldValue('account_id') !== null) ||
                             (form.getFieldValue('group_name') && form.getFieldValue('group_name') !== null) || (form.getFieldValue('provide_name') && form.getFieldValue('provide_name') !== null)) {
                             let payload = {
+                                type: 'single',
                                 cid: type == 'add' ? '' : form.getFieldValue('cid'),
                                 talent_name: form.getFieldValue('talent_name'),
-                                account_names: form.getFieldValue('account_name'),
-                                account_ids: form.getFieldValue('account_id'),
+                                account_name: form.getFieldValue('account_name'),
+                                account_id: form.getFieldValue('account_id'),
                                 group_name: form.getFieldValue('group_name'),
                                 provide_name: form.getFieldValue('provide_name')
                             }

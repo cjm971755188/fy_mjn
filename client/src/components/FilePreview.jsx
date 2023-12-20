@@ -17,12 +17,15 @@ class FilePreview extends React.Component {
 
         if (fileType === 'excel' || fileType === 'word') {
             return (
+                <span>{fileUrl.split('_')[3]}</span>
+            )
+            /* return (
                 <iframe
                     src={`https://view.officeapps.live.com/op/embed.aspx?src=${BASE_URL}/${fileUrl}`}
                     width={50}
                     height={50}
                 />
-            )
+            ) */
         }
 
         return null

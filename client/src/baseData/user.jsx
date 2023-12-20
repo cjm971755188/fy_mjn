@@ -17,7 +17,8 @@ export const position = [
     { key: 4, label: "商务", value: "商务" },
     { key: 5, label: "主播", value: "主播" },
     { key: 6, label: "财务", value: "财务" },
-    { key: 7, label: "助理", value: "助理" }
+    { key: 7, label: "助理", value: "助理" },
+    { key: 8, label: "中控", value: "中控" }
 ]
 
 export const combine = [
@@ -90,6 +91,16 @@ export const combine = [
                         value: "商务"
                     }
                 ]
+            },
+            {
+                label: "直播部", 
+                value: "直播部",
+                children: [
+                    {
+                        label: "中控", 
+                        value: "中控"
+                    }
+                ]
             }
         ]
     },
@@ -112,6 +123,16 @@ export const combine = [
                     {
                         label: "商务", 
                         value: "商务"
+                    }
+                ]
+            },
+            {
+                label: "直播部", 
+                value: "直播部",
+                children: [
+                    {
+                        label: "中控", 
+                        value: "中控"
                     }
                 ]
             }

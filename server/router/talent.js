@@ -215,7 +215,9 @@ router.post('/editTalent', (req, res) => {
                 if (params.operate === '修改联系人' || params.operate.match('年框')) {
                     let sql = 'UPDATE talent SET'
                     for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
-                        if (Object.keys(params.new)[i] !== 'tid') {
+                        if (Object.keys(params.new)[i] === 'yearbox_files') {
+                            sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i].replace('/pubilc', '')}',` : ` ${Object.keys(params.new)[i]} = null,`
+                        } else if (Object.keys(params.new)[i] !== 'tid') {
                             sql += Object.values(params.new)[i] !== null && Object.values(params.new)[i] !== '' ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
                         }
                     }
@@ -281,7 +283,7 @@ router.post('/examTalent', (req, res) => {
                         })
                     })
                 }
-                let sql = `SELECT name, phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                let sql = `SELECT name, phone FROM user WHERE uid = '${params.userInfo.uid}'`
                 db.query(sql, (err, results_e) => {
                     if (err) throw err;
                     let sql = `SELECT name, phone FROM user WHERE uid = '${params.uid}'`
@@ -328,13 +330,13 @@ router.post('/addTalentModel', (req, res) => {
             let u_note = params.u_note ? `'${params.u_note}'` : null
             if (params.commission_note) {
                 sql_d += `('${tmid}', '${params.tid}', '线上平台', '${params.platform}', '${params.shop}', '${params.account_id}', '${params.account_name}', null, null, '${params.account_type}', '${params.account_models}', ${keyword}, '${params.people_count}', '${params.fe_proportion}', '${params.age_cuts}', '${params.main_province}', '${params.price_cut}',  ${model_files}, '待审批', '${params.userInfo.uid}', '${time}'),`
-                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', '${params.commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', '${params.commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, null, null, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
             } else if (params.discount_note) {
                 sql_d += `('${tmid}', '${params.tid}', '社群团购', '聚水潭', '${params.group_shop}', null, null, '${params.group_name}', null, null, null, null, null, null, null, null, null, ${model_files}, '待审批', '${params.userInfo.uid}', '${time}'),`
-                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, null, null, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
             } else if (params.discount_label) {
                 sql_d += `('${tmid}', '${params.tid}', '供货', '聚水潭', '${params.provide_shop}', null, null, null, '${params.provide_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批', '${params.userInfo.uid}', '${time}'),`
-                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, null, null, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
             }
             count_d += 1
             count_l += 1
@@ -444,7 +446,7 @@ router.post('/editTalentModel', (req, res) => {
                     let sql = 'UPDATE talent_model SET'
                     for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
                         if (Object.keys(params.new)[i] === 'model_files') {
-                            sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
+                            sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i].replace('/pubilc', '')}',` : ` ${Object.keys(params.new)[i]} = null,`
                         } else if (Object.keys(params.new)[i] !== 'tmid' && !Object.keys(params.new)[i].match('commission_') && !Object.keys(params.new)[i].match('discount_') && !Object.keys(params.new)[i].match('u_')) {
                             sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
                         }
@@ -538,7 +540,7 @@ router.post('/examTalentModel', (req, res) => {
                 let sql = `UPDATE talent SET status = '合作中' WHERE tid = '${params.tid}'`
                 db.query(sql, (err, results) => {
                     if (err) throw err;
-                    let sql = `SELECT name, phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                    let sql = `SELECT name, phone FROM user WHERE uid = '${params.userInfo.uid}'`
                     db.query(sql, (err, results_e) => {
                         if (err) throw err;
                         let sql = `SELECT name, phone FROM user WHERE uid = '${params.uid}'`
@@ -584,6 +586,12 @@ router.post('/giveTalent', (req, res) => {
                         } else if (isAdd && key === 'u_point_1') {
                             isAdd = false
                             s += ` '0.5',`
+                        } else if (isAdd && key === 'u_id_0') {
+                            isAdd = false
+                            s += ` '${params.userInfo.uid}',`
+                        } else if (isAdd && key === 'u_point_0') {
+                            isAdd = false
+                            s += ` '${params.uPoint0}',`
                         } else if (isAdd && key === 'create_uid') {
                             isAdd = false
                             s += ` '${params.userInfo.uid}',`
@@ -661,7 +669,6 @@ router.post('/giveTalent', (req, res) => {
                                 })
                             })
                         }
-                        console.log('ms: ', ms);
                         let sql2 = `SELECT * FROM talent_schedule`
                         db.query(sql2, (err, results) => {
                             if (err) throw err;

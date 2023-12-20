@@ -23,7 +23,7 @@ router.post('/getPointList', (req, res) => {
     // 条件筛选
     let whereFilter = `where z.status != '已失效'`
     if (params.filtersDate && params.filtersDate.length === 2) {
-        whereFilter += ` and z.create_time >= '${params.filtersDate[0]}' and z.create_time < '${params.filtersDate[1]}'`
+        whereFilter += ` and z.create_time < '${params.filtersDate[0]}'`
     }
     for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
         if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
@@ -209,10 +209,10 @@ router.post('/getExportPointList', (req, res) => {
     }
     let whereDeadline1 = `WHERE status != '已失效'`, whereDeadline2 = `WHERE tms.status != '已失效' and tm.status != '已失效'`
     if (params.filtersDate && params.filtersDate.length === 2) {
-        whereDeadline1 = ` and create_time >= '${params.filtersDate[0]}' and create_time < '${params.filtersDate[1]}'`
+        whereDeadline1 += ` and create_time < '${params.filtersDate[0]}'`
     }
     if (params.filtersDate && params.filtersDate.length === 2) {
-        whereDeadline2 = ` and tms.create_time >= '${params.filtersDate[0]}' and tms.create_time < '${params.filtersDate[1]}'`
+        whereDeadline2 += ` and tms.create_time < '${params.filtersDate[0]}'`
     }
     let sql = `SELECT z.* 
                 FROM (

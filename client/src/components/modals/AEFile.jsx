@@ -26,10 +26,10 @@ function AEFile(props) {
                 <FilePreview
                     fileUrl={`${record.split('/')[4]}`}
                     fileType={
-                        ['jpg', 'png', 'webp'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'image' :
+                        ['jpg', 'png', 'webp', 'jpeg'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'image' :
                             ['pdf'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'pdf' :
                                 ['xlsx', 'xls', 'csv'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'excel' :
-                                    ['doc'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'word' : ''
+                                    ['doc'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'word' : 'image'
                     }
                 />
             )
@@ -38,7 +38,7 @@ function AEFile(props) {
             title: '操作',
             key: 'action',
             render: (_, record) => (
-                editPower ? <Space size="middle">
+                <Space size="middle">
                     <a onClick={() => { downloadAPI(record); }}>下载</a>{/* 
                     <Popconfirm
                         title="确认要删除该文件吗"
@@ -50,7 +50,7 @@ function AEFile(props) {
                     >
                         <a>删除</a>
                     </Popconfirm> */}
-                </Space> : null
+                </Space>
             ),
         }
     ]
@@ -156,7 +156,7 @@ function AEFile(props) {
             console.error(err)
         })
     }
-    // 下载、删除
+    // 下载
     const downloadAPI = (url) => {
         request({
             method: 'get',
@@ -180,39 +180,10 @@ function AEFile(props) {
             console.error(err)
         })
     }
-    /* const deleteResourceAPI = (payload) => {
-        request({
-            method: 'post',
-            url: '/resource/deleteResource',
-            data: {
-                ...payload,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    getYearListAPI();
-                    message.success(res.data.msg)
-                } else {
-                    message.error(res.data.msg)
-                }
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    } */
 
     useEffect(() => {
         getFilesAPI();
     }, [id])
-
     return (
         <Modal
             title={`${type}列表`}

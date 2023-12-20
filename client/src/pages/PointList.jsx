@@ -285,8 +285,8 @@ function PointList() {
                         })
                     }}
                 >
-                    <Form.Item label='开始时间' name='create_time' style={{ marginBottom: '20px' }}>
-                        <MyDateSelect setDate={(value) => { setDateSelect(value); }} />
+                    <Form.Item label='截止日期' name='create_time' style={{ marginBottom: '20px' }}>
+                        <MyDateSelect selectType="date" setDate={(value) => { setDateSelect(value); }} />
                     </Form.Item>
                     <Form.Item label='达人昵称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='模式' name='model'>

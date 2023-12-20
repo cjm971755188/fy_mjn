@@ -7,7 +7,7 @@ import {
     CalendarOutlined,
     RollbackOutlined,
     UserOutlined,
-    AppstoreOutlined,
+    AreaChartOutlined,
     BranchesOutlined,
     TeamOutlined,
     DollarOutlined
@@ -31,11 +31,30 @@ const items = [
 
 // 左侧菜单 menus
 const menuItemsTotal = [
+    /* {
+        key: '/admin/analysis',
+        label: '数据统计',
+        icon: <AreaChartOutlined />,
+        children: [
+            {
+                key: '/admin/analysis/daily_statistics',
+                label: '日常操作'
+            },
+            {
+                key: '/admin/analysis/sale_statistics',
+                label: '销售数据'
+            }
+        ]
+    }, */
     {
         key: '/admin/talent',
         label: '达人管理',
         icon: <TeamOutlined />,
         children: [
+            {
+                key: '/admin/talent/statistics',
+                label: '日常统计'
+            },
             {
                 key: '/admin/talent/chance_list',
                 label: '商机列表'
@@ -100,7 +119,7 @@ const getMenuItems = (department, position) => {
         let menu = menuItemsTotal[i];
         if (menu.label === '达人详情') {
             continue
-        } else if (menu.label === '用户管理' && (position === '助理' || position === '商务' || position === '主播' || position === '财务')) {
+        } else if (menu.label === '用户管理' && position !== '管理员' && position !== '总裁' && position !== '副总' && position !== '主管') {
             continue
         } else if (menu.label === '专场管理' && position !== '管理员') {
             continue

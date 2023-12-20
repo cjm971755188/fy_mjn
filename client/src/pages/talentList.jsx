@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom'
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Alert, Modal } from 'antd';
 import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined } from '@ant-design/icons';
-import { model, yearBoxType, talentStatus } from '../baseData/talent'
+import { model, uPoint0, talentStatus } from '../baseData/talent'
 import AETalent from '../components/modals/AETalent'
 
 function TalentList() {
@@ -77,13 +77,14 @@ function TalentList() {
                 <Space size="large">
                     {examPower && record.status.match('待审批') ? <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> :
                         <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>查看详情</NavLink>}
-                    {editPower && record.status === '合作中' ? <a onClick={() => { 
+                    {editPower && record.status === '合作中' ? <><a onClick={() => { 
                         formGive.setFieldValue('hasYear', record.yearbox_start_date === null ? false : true)
                         formGive.setFieldValue('hasMid', record.m_ids === ',' ? false : true)
                         formGive.setFieldValue('mids', record.m_ids)
                         setClickTid(record.tid); 
                         setIsShowGive(true); 
-                    }}>移交</a> : null}
+                    }}>移交</a>
+                    <a onClick={() => { message.error('等待确认后开发'); }}>添加专场</a></> : null}
                 </Space>
             )
         }
@@ -229,6 +230,7 @@ function TalentList() {
             data: {
                 tid: clickTid,
                 newUid: formGive.getFieldValue('u_id'),
+                uPoint0: formGive.getFieldValue('u_point'),
                 hasYear: formGive.getFieldValue('hasYear'),
                 hasMid: formGive.getFieldValue('hasMid'),
                 mids: formGive.getFieldValue('mids'),
@@ -324,6 +326,9 @@ function TalentList() {
                 <Form form={formGive}>
                     <Form.Item label="承接商务" name="u_id" rules={[{ required: true, message: '不能为空' }]}>
                         <Select placeholder="请选择" options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
+                    </Form.Item>
+                    <Form.Item label="原商务（自己）提点（%）" name="u_point" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select placeholder="请选择" options={uPoint0} />
                     </Form.Item>
                 </Form>
             </Modal>

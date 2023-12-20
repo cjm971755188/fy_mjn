@@ -33,11 +33,11 @@ function MyDateSelect(props) {
     return (
         <Space>
             <Select value={type} onChange={(value) => { setType(value); setDateValue() }}>
-                <Option value="date">日</Option>
-                <Option value="week">周</Option>
-                <Option value="month">月</Option>
-                <Option value="quarter">季</Option>
-                <Option value="year">年</Option>
+                {props.selectType && props.selectType.match('date') ? <Option value="date">日</Option> : null}
+                {props.selectType && props.selectType.match('week') ? <Option value="week">周</Option> : null}
+                {props.selectType && props.selectType.match('month') ? <Option value="month">月</Option> : null}
+                {props.selectType && props.selectType.match('quarter') ? <Option value="quarter">季</Option> : null}
+                {props.selectType && props.selectType.match('year') ? <Option value="year">年</Option> : null}
             </Select>
             <PickerWithType
                 type={type}
