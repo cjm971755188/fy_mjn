@@ -3,8 +3,9 @@ import { NavLink } from 'react-router-dom'
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Alert, Modal } from 'antd';
 import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined } from '@ant-design/icons';
-import { model, uPoint0, talentStatus } from '../baseData/talent'
+import { model, uPoint0, talentStatus, yearboxStatus, modelStatus } from '../baseData/talent'
 import AETalent from '../components/modals/AETalent'
+import dayjs from 'dayjs'
 
 function TalentList() {
     // 操作权限
@@ -14,8 +15,7 @@ function TalentList() {
     // 表格：格式
     let columns = [
         { title: '编号', dataIndex: 'tid', key: 'tid' },
-        { title: '达人名称', dataIndex: 'name', key: 'name' },
-        { title: '合作模式', dataIndex: 'models', key: 'models' },
+        { title: '达人昵称', dataIndex: 'name', key: 'name' },
         {
             title: '商务',
             dataIndex: 'u_names',
@@ -25,6 +25,7 @@ function TalentList() {
                     <List>
                         <List.Item>主商务：{record.u_name_1}</List.Item>
                         <List.Item>副商务：{record.u_name_2}</List.Item>
+                        <List.Item>原商务：{record.u_name_0}</List.Item>
                     </List>}
                 >
                     <span>{record.u_names}</span>
@@ -47,14 +48,38 @@ function TalentList() {
             )
         },
         { title: '预估慕江南年GMV', dataIndex: 'year_deal', key: 'year_deal' },
+        { title: '合作模式', dataIndex: 'models', key: 'models' },
         {
             title: '年框状态',
-            dataIndex: 'yearbox_start_date',
-            key: 'yearbox_start_date',
+            dataIndex: 'yearbox_status',
+            key: 'yearbox_status',
+            render: (_, record) => (
+                <Popover title="提点备注" content={
+                    <List style={{ marginLeft: '10px' }}>
+                        {record.yearbox_start_date !== null ? <List.Item key={9999}>生效时间：{dayjs(Number(record.yearbox_start_date)).format('YYYY-MM-DD')}</List.Item> : null}
+                        {record.yearbox_lavels_base !== null ? <List.Item key={0}>0：每个专场基础提点 {record.yearbox_lavels_base}% 【一专场一付】</List.Item> : null}
+                        {JSON.parse(record.yearbox_lavels) && JSON.parse(record.yearbox_lavels).length > 0 && JSON.parse(record.yearbox_lavels).map((item, index) => {
+                            return (
+                                <List.Item key={index + 1}>{index + 1}：每{record.yearbox_cycle.slice(0, 2)}成交额达到 {item[`y_lavel_${index + 1}`]}万，提点 {item[`y_point_${index + 1}`]}%</List.Item>
+                            )
+                        })}
+                    </List>
+                }>
+                    <Space size="small">
+                        {record.yearbox_status === '暂无' ? <StopTwoTone twoToneColor="#999999" /> : <PauseCircleTwoTone twoToneColor="#4ec990" />}
+                        <span>{record.yearbox_status}</span>
+                    </Space>
+                </Popover>
+            )
+        },
+        {
+            title: '合作协议状态',
+            dataIndex: 'model_status',
+            key: 'model_status',
             render: (_, record) => (
                 <Space size="small">
-                    {record.yearbox_start_date === null ? <StopTwoTone twoToneColor="#999999" /> : <PauseCircleTwoTone twoToneColor="#4ec990" />}
-                    <span>{record.yearbox_start_date === null ? '暂无' : '生效中'}</span>
+                    {record.model_status === '暂无' ? <StopTwoTone twoToneColor="#999999" /> : <PauseCircleTwoTone twoToneColor="#4ec990" />}
+                    <span>{record.model_status}</span>
                 </Space>
             )
         },
@@ -77,14 +102,11 @@ function TalentList() {
                 <Space size="large">
                     {examPower && record.status.match('待审批') ? <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> :
                         <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>查看详情</NavLink>}
-                    {editPower && record.status === '合作中' ? <><a onClick={() => { 
-                        formGive.setFieldValue('hasYear', record.yearbox_start_date === null ? false : true)
-                        formGive.setFieldValue('hasMid', record.m_ids === ',' ? false : true)
-                        formGive.setFieldValue('mids', record.m_ids)
-                        setClickTid(record.tid); 
-                        setIsShowGive(true); 
+                    {editPower && record.status === '合作中' ? <><a onClick={() => {
+                        setClickTid(record.tid);
+                        setIsShowGive(true);
                     }}>移交</a>
-                    <a onClick={() => { message.error('等待确认后开发'); }}>添加专场</a></> : null}
+                        <a onClick={() => { message.error('等待确认后开发'); }}>添加专场</a></> : null}
                 </Space>
             )
         }
@@ -180,6 +202,35 @@ function TalentList() {
             console.error(err)
         })
     }
+    const [middlemansItems, setMiddlemansItems] = useState()
+    const getmiddlemansItemsAPI = () => {
+        request({
+            method: 'post',
+            url: '/middleman/getmiddlemansItems',
+            data: {
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setMiddlemansItems(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     // 添加、修改、推进、报备
     const [type, setType] = useState('')
@@ -231,9 +282,6 @@ function TalentList() {
                 tid: clickTid,
                 newUid: formGive.getFieldValue('u_id'),
                 uPoint0: formGive.getFieldValue('u_point'),
-                hasYear: formGive.getFieldValue('hasYear'),
-                hasMid: formGive.getFieldValue('hasMid'),
-                mids: formGive.getFieldValue('mids'),
                 operate: '达人移交',
                 userInfo: {
                     uid: localStorage.getItem('uid'),
@@ -287,6 +335,15 @@ function TalentList() {
                     {editPower ? null : <Form.Item label='商务' name='u_ids' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
                     </Form.Item>}
+                    <Form.Item label='中间人' name='m_ids' style={{ marginBottom: '20px' }}>
+                        <Select style={{ width: 160 }} options={middlemansItems} onFocus={() => { getmiddlemansItemsAPI(); }} />
+                    </Form.Item>
+                    <Form.Item label='年框状态' name='yearbox_status'>
+                        <Select style={{ width: 160 }} options={yearboxStatus} />
+                    </Form.Item>
+                    <Form.Item label='合作协议状态' name='model_status'>
+                        <Select style={{ width: 160 }} options={modelStatus} />
+                    </Form.Item>
                     <Form.Item label='达人状态' name='status'>
                         <Select style={{ width: 160 }} options={talentStatus} />
                     </Form.Item>

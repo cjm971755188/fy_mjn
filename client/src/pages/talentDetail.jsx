@@ -4,6 +4,7 @@ import request from '../service/request'
 import dayjs from 'dayjs';
 import { Card, Input, Timeline, Button, Tag, Modal, Form, Descriptions, Row, Col, message, Space, Select, InputNumber, Image, Popconfirm, List } from 'antd';
 import { AuditOutlined, MessageOutlined, GlobalOutlined, CrownOutlined, SettingOutlined, EditOutlined, PlusOutlined, MinusOutlined, UnorderedListOutlined, EyeOutlined } from '@ant-design/icons';
+import { middlemanPayType } from '../baseData/talent'
 import { descriptionsItems } from '../baseData/talentDetail'
 import AELiaison from '../components/modals/AELiaison'
 import AEYear from '../components/modals/AEYear'
@@ -77,7 +78,7 @@ function TalentDetail() {
         items.push({
             key: 5,
             label: "原商务",
-            children: detailData.original === null ? '无' : detailData.original + '(0.5%)'
+            children: detailData.u_id_0 === null ? '无' : `${detailData.u_name_0}(${detailData.u_point_0}%)`
         })
         return items
     }
@@ -305,13 +306,12 @@ function TalentDetail() {
     const [isShowMiddle, setIsShowMiddle] = useState(false)
     const [formMiddle] = Form.useForm()
     const [middleType, setMiddleType] = useState()
-    const [middlemans, setMiddlemans] = useState()
-    const searchMiddlemansAPI = (value) => {
+    const [middlemansItems, setMiddlemansItems] = useState()
+    const getmiddlemansItemsAPI = () => {
         request({
             method: 'post',
-            url: '/middleman/searchMiddlemans',
+            url: '/middleman/getmiddlemansItems',
             data: {
-                value,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     e_id: localStorage.getItem('e_id'),
@@ -324,7 +324,7 @@ function TalentDetail() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setMiddlemans(res.data.data)
+                    setMiddlemansItems(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -335,7 +335,6 @@ function TalentDetail() {
             console.error(err)
         })
     }
-    const filterOption = (input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
     const editTalentAPI = (operate, ori, payload) => {
         request({
             method: 'post',
@@ -609,12 +608,17 @@ function TalentDetail() {
                                 {(detailData.status.match('待审批')) ? null : editPower ? <Button type="text" icon={<EditOutlined />} onClick={() => {
                                     setEditOri({
                                         m_id_1: detailData.m_id_1,
+                                        m_type_1: detailData.m_paytype_1,
                                         m_point_1: detailData.m_point_1
                                     })
                                     formMiddle.setFieldsValue({
                                         m_id: {
                                             value: detailData.m_id_1,
                                             label: detailData.m_name_1
+                                        },
+                                        m_type: {
+                                            value: detailData.m_paytype_1,
+                                            label: detailData.m_paytype_1
                                         },
                                         m_point: detailData.m_point_1
                                     })
@@ -629,9 +633,11 @@ function TalentDetail() {
                                             editTalentAPI('删除一级中间人', JSON.stringify({
                                                 m_id_1: detailData.m_id_1,
                                                 m_name_1: detailData.m_name_1,
+                                                m_paytype_1: detailData.m_paytype_1,
                                                 m_point_1: detailData.m_point_1
                                             }), {
                                                 m_id_1: null,
+                                                m_type_1: null,
                                                 m_point_1: null
                                             });
                                         }}
@@ -654,12 +660,17 @@ function TalentDetail() {
                                 {(detailData.status.match('待审批')) ? null : editPower ? <Button type="text" icon={<EditOutlined />} onClick={() => {
                                     setEditOri({
                                         m_id_2: detailData.m_id_2,
+                                        m_type_2: detailData.m_paytype_2,
                                         m_point_2: detailData.m_point_2
                                     })
                                     formMiddle.setFieldsValue({
                                         m_id: {
                                             value: detailData.m_id_2,
                                             label: detailData.m_name_2
+                                        },
+                                        m_type: {
+                                            value: detailData.m_paytype_2,
+                                            label: detailData.m_paytype_2
                                         },
                                         m_point: detailData.m_point_2
                                     })
@@ -674,9 +685,11 @@ function TalentDetail() {
                                             editTalentAPI('删除二级中间人', JSON.stringify({
                                                 m_id_2: detailData.m_id_2,
                                                 m_name_2: detailData.m_name_2,
+                                                m_paytype_2: detailData.m_paytype_2,
                                                 m_point_2: detailData.m_point_2
                                             }), {
                                                 m_id_2: null,
+                                                m_type_2: null,
                                                 m_point_2: null
                                             });
                                         }}
@@ -736,7 +749,8 @@ function TalentDetail() {
                                         setTypeModel(`修改${model.model}`);
                                     }}>修改</Button>
                                         {model.model_files === null ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowFile(true); setFileType('合作协议'); setIdSelect(model.tmid); }}>新增合作协议</Button> :
-                                            <Button type="text" icon={<EyeOutlined />} onClick={() => { setIsShowFile(true); setFileType('合作协议'); setIdSelect(model.tmid); }}>查看合作协议</Button>}</> : null}
+                                            <Button type="text" icon={<EyeOutlined />} onClick={() => { setIsShowFile(true); setFileType('合作协议'); setIdSelect(model.tmid); }}>查看合作协议</Button>}</> :
+                                        model.model_files === null ? null : <Button type="text" icon={<EyeOutlined />} onClick={() => { setIsShowFile(true); setFileType('合作协议'); setIdSelect(model.tmid); }}>查看合作协议</Button>}
                                 >
                                     <Descriptions column={5} items={getModelsItems(model)} />
                                 </Card>
@@ -817,11 +831,13 @@ function TalentDetail() {
                     if (middleType.match('一级')) {
                         payload = {
                             m_id_1: formMiddle.getFieldValue('m_id').value ? formMiddle.getFieldValue('m_id').value : formMiddle.getFieldValue('m_id'),
+                            m_type_1: formMiddle.getFieldValue('m_type'),
                             m_point_1: formMiddle.getFieldValue('m_point')
                         }
                     } else {
                         payload = {
                             m_id_2: formMiddle.getFieldValue('m_id').value ? formMiddle.getFieldValue('m_id').value : formMiddle.getFieldValue('m_id'),
+                            m_type_1: formMiddle.getFieldValue('m_type'),
                             m_point_2: formMiddle.getFieldValue('m_point')
                         }
                     }
@@ -842,7 +858,10 @@ function TalentDetail() {
                 onCancel={() => { formMiddle.resetFields(); setIsShowMiddle(false); }}>
                 <Form form={formMiddle}>
                     <Form.Item label="昵称" name="m_id" rules={[{ required: true, message: '不能为空' }]}>
-                        <Select showSearch placeholder="请输入" options={middlemans} filterOption={filterOption} onChange={(value) => { searchMiddlemansAPI(value) }} onSearch={(value) => { searchMiddlemansAPI(value) }} />
+                        <Select options={middlemansItems} onFocus={() => { getmiddlemansItemsAPI(); }} />
+                    </Form.Item>
+                    <Form.Item label="付款类型" name="m_type" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select options={middlemanPayType} />
                     </Form.Item>
                     <Form.Item label="提点（%）" name="m_point" rules={[{ required: true, message: '不能为空' }]}>
                         <InputNumber />

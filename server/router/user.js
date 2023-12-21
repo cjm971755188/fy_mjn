@@ -172,21 +172,27 @@ router.post('/editUser', (req, res) => {
 // 修改用户状态
 router.post('/editUserStatus', (req, res) => {
     let params = req.body
-    let sql = `UPDATE user SET status = '${params.type ? '正常' : '失效'}' where uid = '${params.uid}'`
+    let sql = `UPDATE user SET status = '${params.type ? '正常' : '禁用'}' where uid = '${params.uid}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        res.send({ code: 200, data: [], msg: `${params.uid} ${params.type ? '恢复正常' : '已失效'}` })
+        res.send({ code: 200, data: [], msg: `${params.uid} ${params.type ? '恢复正常' : '已禁用'}` })
     })
 })
 
 // 删除用户
 router.post('/deleteUser', (req, res) => {
     let params = req.body
-    let sql = `SELECT * FROM talent_model_schedule where status != '已失效' and (u_id_1 = '${params.uid}' or u_id_2 = '${params.uid}')`
+    let sql = `SELECT t.tid, t.name, tms0.u_id_1, tms0.u_id_2, t.status
+                FROM talent t 
+                    LEFT JOIN talent_model tm ON tm.tid = t.tid
+                    LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule GROUP BY tmid) tms1 ON tms1.tmid = tm.tmid
+                    LEFT JOIN talent_model_schedule tms0 ON tms0.tmsid = tms1.tmsid
+                WHERE t.status != '已失效'
+                    and (tms0.u_id_1 = '${params.uid}' OR tms0.u_id_2 = '${params.uid}')`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        if (results.length != 0) {
-            res.send({ code: 201, data: [], msg: `${params.name} 仍有 ${results.length} 位达人，不可删除` })
+        if (results.length !== 0) {
+            res.send({ code: 201, data: [], msg: `${params.name} 仍有 ${results.length} 位有效达人，不可删除` })
         } else {
             let sql = `UPDATE user SET status = '失效' where uid = '${params.uid}'`
             db.query(sql, (err, results) => {

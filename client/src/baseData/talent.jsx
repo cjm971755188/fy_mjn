@@ -15,6 +15,16 @@ export const talentStatus = [
     { key: 5, label: "移交待审批", value: "移交待审批" }
 ]
 
+export const yearboxStatus = [
+    { key: 0, label: "暂无", value: "暂无" },
+    { key: 1, label: "生效中", value: "生效中" }
+]
+
+export const modelStatus = [
+    { key: 0, label: "暂无", value: "暂无" },
+    { key: 1, label: "生效中", value: "生效中" }
+]
+
 export const model = [
     { key: 0, label: "线上平台", value: "线上平台" },
     { key: 1, label: "社群团购", value: "社群团购" },
@@ -135,4 +145,9 @@ export const yearType3 = [
 export const uPoint0= [
     { key: 0, label: 0, value: 0 },
     { key: 1, label: 0.5, value: 0.5 }
+]
+
+export const middlemanPayType= [
+    { key: 0, label: "线上后台自动转款", value: "线上后台自动转款" },
+    { key: 1, label: "线下结佣", value: "线下结佣" }
 ]

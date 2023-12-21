@@ -19,11 +19,11 @@ export const descriptionsItems = [
     { key: 17, label: "付款周期", value: "yearbox_cycle" },
     { key: 18, label: "付款类型", value: "yearbox_type" },
     
-    { key: 19, label: "编码", value: "m_id_1" },
+    { key: 19, label: "付款类型", value: "m_paytype_1" },
     { key: 20, label: "类型", value: "m_type_1" },
     { key: 21, label: "昵称", value: "m_name_1" },
     { key: 22, label: "提点(%)", value: "m_point_1" },
-    { key: 23, label: "编码", value: "m_id_2" },
+    { key: 23, label: "付款类型", value: "m_paytype_2" },
     { key: 24, label: "类型", value: "m_type_2" },
     { key: 25, label: "昵称", value: "m_name_2" },
     { key: 26, label: "提点(%)", value: "m_point_2" },

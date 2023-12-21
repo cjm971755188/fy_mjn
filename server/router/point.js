@@ -45,7 +45,7 @@ router.post('/getPointList', (req, res) => {
                         discount_buyout as commission_4, 
                         discount_back as commission_5, 
                         IF(tms.commission_note IS NULL, IF(tms.discount_note IS NULL, tms.discount_label, tms.discount_note), tms.commission_note) as commission_note,
-                        tms.u_id_1, u1.name as u_name_1, tms.u_point_1, tms.u_id_2, u2.name as u_name_2, tms.u_point_2, tms.u_note, u0.u_id_0, u0.name as u_name_0, IF(u0.u_id_0 IS NULL, null, 0.5) as u_point_0, t.status
+                        tms.u_id_1, u1.name as u_name_1, tms.u_point_1, tms.u_id_2, u2.name as u_name_2, tms.u_point_2, tms.u_note, u0.u_id_0, u0.name as u_name_0, IF(u0.u_id_0 IS NULL, null, ts.u_point_0) as u_point_0, t.status
                     FROM (
                         (
                             SELECT t.tid, ts.tsid, tm.tmid, MAX(tm.tmsid) as tmsid, ts.create_time, ts.operate
@@ -91,7 +91,7 @@ router.post('/getPointList', (req, res) => {
                         INNER JOIN (SELECT * FROM user ${whereUser}) u1 ON u1.uid = tms.u_id_1
                         LEFT JOIN user u2 ON u2.uid = tms.u_id_2
                         LEFT JOIN (
-                                SELECT t.tid, ts.create_time, ts.create_uid as u_id_0, u.name
+                                SELECT t.tid, ts.create_time, ts.u_id_0, ts.u_point_0, u.name
                                 FROM talent_schedule ts
                                         LEFT JOIN talent t ON t.tid = ts.tid
                                         LEFT JOIN user u ON u.uid = ts.create_uid
@@ -108,7 +108,7 @@ router.post('/getPointList', (req, res) => {
                         discount_buyout as commission_4, 
                         discount_back as commission_5, 
                         IF(tms.commission_note IS NULL, IF(tms.discount_note IS NULL, tms.discount_label, tms.discount_note), tms.commission_note) as commission_note,
-                        tms.u_id_1, u1.name as u_name_1, tms.u_point_1, tms.u_id_2, u2.name as u_name_2, tms.u_point_2, tms.u_note, u0.u_id_0, u0.name as u_name_0, IF(u0.u_id_0 IS NULL, null, 0.5) as u_point_0, t.status
+                        tms.u_id_1, u1.name as u_name_1, tms.u_point_1, tms.u_id_2, u2.name as u_name_2, tms.u_point_2, tms.u_note, u0.u_id_0, u0.name as u_name_0, IF(u0.u_id_0 IS NULL, null, ts.u_point_0) as u_point_0, t.status
                     FROM (
                         (
                             SELECT t.tid, ts.tsid, tm.tmid, MAX(tm.tmsid) as tmsid, ts.create_time, ts.operate
@@ -154,7 +154,7 @@ router.post('/getPointList', (req, res) => {
                         LEFT JOIN user u1 ON u1.uid = tms.u_id_1
                         LEFT JOIN user u2 ON u2.uid = tms.u_id_2
                         INNER JOIN (
-                                SELECT t.tid, ts.create_time, ts.create_uid as u_id_0, u.name
+                                SELECT t.tid, ts.create_time, ts.u_id_0, ts.u_point_0, u.name
                                 FROM talent_schedule ts
                                         LEFT JOIN talent t ON t.tid = ts.tid
                                         INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = ts.create_uid

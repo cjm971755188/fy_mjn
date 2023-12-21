@@ -137,8 +137,7 @@ function ChanceList() {
                     }}>报备</a> : null}
                     {record.status === '报备驳回' ? <a onClick={() => { 
                         let payload = {
-                            cid: record.cid,
-                            type: 'ts'
+                            cid: record.cid
                         }
                         getRefundReasonAPI(payload); 
                     }}>查看驳回备注</a> : null}
@@ -420,7 +419,7 @@ function ChanceList() {
     const getRefundReasonAPI = (payload) => {
         request({
             method: 'post',
-            url: '/talent/getRefundReason',
+            url: '/chance/getRefundReason',
             data: {
                 ...payload,
                 userInfo: {

@@ -4,6 +4,7 @@ import { Card, Table, Space, Form, Input, Button, Select, Popover, List, message
 import { PlusOutlined } from '@ant-design/icons';
 import { middleType } from '../baseData/talent'
 import AEMiddleman from '../components/modals/AEMiddleman'
+import dayjs from 'dayjs'
 
 function MiddlemanList() {
     // 操作权限
@@ -57,6 +58,7 @@ function MiddlemanList() {
             render: (_, record) => (
                 editPower ? <Space size="large">
                     <a onClick={() => {
+                        setEditOri(record);
                         setType('edit');
                         setIsShow(true);
                         form.setFieldsValue(record)
@@ -193,6 +195,7 @@ function MiddlemanList() {
             console.error(err)
         })
     }
+    const [editOri, setEditOri] = useState(false)
     const editMiddlemanAPI = (payload) => {
         request({
             method: 'post',
@@ -280,7 +283,41 @@ function MiddlemanList() {
                 isShow={isShow}
                 type={type}
                 form={form}
-                onOK={(values) => { type === 'add' ? addMiddlemanAPI(values) : editMiddlemanAPI(values) }}
+                onOK={(values) => { 
+                    if (type === 'add') {
+                        addMiddlemanAPI(values);
+                    } else {
+                        let ori = editOri
+                        delete ori.create_time
+                        delete ori.status
+                        delete ori.u_id
+                        delete ori.u_name
+                        values["history_other_info"] = form.getFieldValue('history_other_info')
+                        let z = {}
+                        for (const o in ori) {
+                            if (Object.hasOwnProperty.call(ori, o)) {
+                                for (const v in values) {
+                                    if (Object.hasOwnProperty.call(values, v)) {
+                                        if (o === v && ori[o] !== values[v]) {
+                                            z[o] = ori[o]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (Object.keys(z).length !== 0) {
+                            z['userInfo'] = `${localStorage.getItem('name')}_${dayjs().valueOf()}`
+                        }
+                        if (`${ori["history_other_info"]}*${JSON.stringify(z)}`.length > 1024) {
+                            message.error('字段存储空间不足，请联系开发人员')
+                        } else {
+                            editMiddlemanAPI({
+                                ...values,
+                                history_other_info: `${ori["history_other_info"]}*${JSON.stringify(z)}`
+                            });
+                        }
+                    }
+                }}
                 onCancel={() => { setIsShow(false); form.resetFields(); }}
             />
         </div>

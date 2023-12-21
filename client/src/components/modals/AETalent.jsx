@@ -2,10 +2,11 @@ import React, { Fragment, useEffect, useState } from "react";
 import request from '../../service/request'
 import { Card, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, message, List, Image, Upload } from 'antd';
 import { PlusOutlined, MinusCircleOutlined, UploadOutlined } from '@ant-design/icons';
-import { accountType, accountModelType, ageCut, priceCut, liaisonType, shop, platform, model } from '../../baseData/talent'
+import { accountType, accountModelType, ageCut, priceCut, liaisonType, shop, platform, model, middlemanPayType } from '../../baseData/talent'
 import { province } from '../../baseData/province'
 import people from '../../assets/people.jpg'
 import AEMiddleman from './AEMiddleman'
+import UpLoadFile from '../UpLoadFile'
 import { BASE_URL } from '../../service/config';
 
 const { TextArea } = Input;
@@ -59,42 +60,7 @@ function AETalent(props) {
     const [hasSecondMiddle, setHasSecondMiddle] = useState(false)
     const [hasGroupFuSaleman, setGroupHasFuSaleman] = useState(false)
     const [hasProvideFuSaleman, setProvideHasFuSaleman] = useState(false)
-    const [middlemans1, setMiddlemans1] = useState()
-    const [middlemans2, setMiddlemans2] = useState()
     const [salemansItems, setSalemansItems] = useState()
-    const filterOption = (input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-    const searchMiddlemansAPI = (count, value) => {
-        request({
-            method: 'post',
-            url: '/middleman/searchMiddlemans',
-            data: {
-                value: value,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    if (count === 1) {
-                        setMiddlemans1(res.data.data)
-                    } else {
-                        setMiddlemans2(res.data.data)
-                    }
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
     const getSalemansItemsAPI = () => {
         request({
             method: 'post',
@@ -112,6 +78,35 @@ function AETalent(props) {
             if (res.status == 200) {
                 if (res.data.code == 200) {
                     setSalemansItems(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const [middlemansItems, setMiddlemansItems] = useState()
+    const getmiddlemansItemsAPI = () => {
+        request({
+            method: 'post',
+            url: '/middleman/getmiddlemansItems',
+            data: {
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setMiddlemansItems(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -158,23 +153,6 @@ function AETalent(props) {
             console.error(err)
         })
     }
-    // 上传文件
-    const [hasFile, setHasFile] = useState(false)
-    const [hasGroupFile, setHasGroupFile] = useState(false)
-    const [hasProvideFile, setHasProvideFile] = useState(false)
-    const [fileList, setFileList] = useState();
-    const handleChange = (info) => {
-        let newFileList = [...info.fileList];
-        /* newFileList = newFileList.slice(-2); */
-        newFileList = newFileList.map((file) => {
-            if (file.response) {
-                file.url = file.response.url;
-            }
-            return file;
-        });
-        setFileList(newFileList);
-    };
-
     // 重置
     const reset = () => {
         setIsShowPlatform(false);
@@ -194,10 +172,6 @@ function AETalent(props) {
         setTypeMid('add');
         setIsShowMid(false);
         formMid.resetFields();
-        setHasFile(false);
-        setHasGroupFile(false);
-        setHasProvideFile(false);
-        setFileList();
     }
 
     useEffect(() => {
@@ -283,22 +257,26 @@ function AETalent(props) {
                                 <Radio value={true}>有二级中间人</Radio>
                             </Radio.Group>
                         </Form.Item>
-                        {hasFirstMiddle ? <><Space size='large'>
+                        {hasFirstMiddle ? <>
                             <Form.Item label="一级中间人" name="m_id_1" rules={[{ required: true, message: '不能为空' }]}>
-                                <Select showSearch placeholder="请输入" options={middlemans1} filterOption={filterOption} onChange={(value) => { searchMiddlemansAPI(1, value) }} onSearch={(value) => { searchMiddlemansAPI(1, value) }} />
+                                <Select options={middlemansItems} onFocus={() => { getmiddlemansItemsAPI(); }} />
+                            </Form.Item>
+                            <Form.Item label="付款类型" name="m_type_1" rules={[{ required: true, message: '不能为空' }]}>
+                                <Select options={middlemanPayType} />
                             </Form.Item>
                             <Form.Item label="一级中间人提成点（%）[例：0.5]" name="m_point_1" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber min={0} max={100} />
-                            </Form.Item>
-                        </Space></> : null}
-                        {hasSecondMiddle ? <><Space size='large'>
+                            </Form.Item></> : null}
+                        {hasSecondMiddle ? <>
                             <Form.Item label="二级中间人" name="m_id_2" rules={[{ required: true, message: '不能为空' }]}>
-                                <Select showSearch placeholder="请输入" options={middlemans2} filterOption={filterOption} onChange={(value) => { searchMiddlemansAPI(2, value) }} onSearch={(value) => { searchMiddlemansAPI(2, value) }} />
+                                <Select style={{ width: 160 }} options={middlemansItems} onFocus={() => { getmiddlemansItemsAPI(); }} />
+                            </Form.Item>
+                            <Form.Item label="付款类型" name="m_type_2" rules={[{ required: true, message: '不能为空' }]}>
+                                <Select options={middlemanPayType} />
                             </Form.Item>
                             <Form.Item label="二级中间人提成点（%）[例：0.5]" name="m_point_2" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber min={0} max={100} />
-                            </Form.Item>
-                        </Space></> : null}
+                            </Form.Item></> : null}
                         {hasFirstMiddle || hasSecondMiddle ? <Form.Item label="中间人提成备注" name="m_note">
                             <TextArea />
                         </Form.Item> : null}
@@ -406,23 +384,6 @@ function AETalent(props) {
                                             <Form.Item label="商务提成备注" {...restField} name={[name, "u_note"]}>
                                                 <TextArea />
                                             </Form.Item>
-                                            <Form.Item label="是否有合作协议">
-                                                <Radio.Group onChange={(e) => { setHasFile(e.target.value); }} value={hasFile} style={{ marginLeft: '20px' }}>
-                                                    <Radio value={false}>无</Radio>
-                                                    <Radio value={true}>有</Radio>
-                                                </Radio.Group>
-                                            </Form.Item>
-                                            {hasFile ? <Form.Item label="合同文件" name="model_files" rules={[{ required: true, message: '不能为空' }]}>
-                                                <Upload
-                                                    name={`${localStorage.getItem('name')}_合作协议`}
-                                                    action={`${BASE_URL}/file/upload`}
-                                                    fileList={fileList}
-                                                    onChange={handleChange}
-                                                    multiple={true}
-                                                >
-                                                    <Button icon={<UploadOutlined />}>上传文件</Button>
-                                                </Upload>
-                                            </Form.Item> : null}
                                         </Card>
                                     ))}
                                     <Form.Item>
@@ -478,23 +439,6 @@ function AETalent(props) {
                         <Form.Item label="商务提成备注" name="group_u_note">
                             <TextArea />
                         </Form.Item>
-                        <Form.Item label="是否有合作协议">
-                            <Radio.Group onChange={(e) => { setHasGroupFile(e.target.value); }} value={hasGroupFile} style={{ marginLeft: '20px' }}>
-                                <Radio value={false}>无</Radio>
-                                <Radio value={true}>有</Radio>
-                            </Radio.Group>
-                        </Form.Item>
-                        {hasGroupFile ? <Form.Item label="合同文件" name="group_model_files" rules={[{ required: true, message: '不能为空' }]}>
-                            <Upload
-                                name={`${localStorage.getItem('name')}_合作协议`}
-                                action={`${BASE_URL}/file/upload`}
-                                fileList={fileList}
-                                onChange={handleChange}
-                                multiple={true}
-                            >
-                                <Button icon={<UploadOutlined />}>上传文件</Button>
-                            </Upload>
-                        </Form.Item> : null}
                     </Card> : null}
                     {isShowProvide ? <Card title="供货" style={{ marginBottom: "20px" }}>
                         <Form.Item label="达人名称" name="provide_name" rules={[{ required: true, message: '不能为空' }]}>
@@ -537,23 +481,6 @@ function AETalent(props) {
                         <Form.Item label="商务提成备注" name="provide_u_note">
                             <TextArea />
                         </Form.Item>
-                        <Form.Item label="是否有合作协议">
-                            <Radio.Group onChange={(e) => { setHasProvideFile(e.target.value); }} value={hasProvideFile} style={{ marginLeft: '20px' }}>
-                                <Radio value={false}>无</Radio>
-                                <Radio value={true}>有</Radio>
-                            </Radio.Group>
-                        </Form.Item>
-                        {hasProvideFile ? <Form.Item label="合同文件" name="provide_model_files" rules={[{ required: true, message: '不能为空' }]}>
-                            <Upload
-                                name={`${localStorage.getItem('name')}_合作协议`}
-                                action={`${BASE_URL}/file/upload`}
-                                fileList={fileList}
-                                onChange={handleChange}
-                                multiple={true}
-                            >
-                                <Button icon={<UploadOutlined />}>上传文件</Button>
-                            </Upload>
-                        </Form.Item> : null}
                     </Card> : null}
                     {type === 'report' ? null : <><Form.Item label="相同线上达人">
                         <Button onClick={() => {

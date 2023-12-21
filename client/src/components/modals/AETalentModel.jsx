@@ -83,23 +83,6 @@ function AETalentModel(props) {
         })
     }
 
-    // 上传文件
-    const [hasFile, setHasFile] = useState(false)
-    const [hasGroupFile, setHasGroupFile] = useState(false)
-    const [hasProvideFile, setHasProvideFile] = useState(false)
-    const [fileList, setFileList] = useState();
-    const handleChange = (info) => {
-        let newFileList = [...info.fileList];
-        /* newFileList = newFileList.slice(-2); */
-        newFileList = newFileList.map((file) => {
-            if (file.response) {
-                file.url = file.response.url;
-            }
-            return file;
-        });
-        setFileList(newFileList);
-    };
-
     // 重置
     const reset = () => {
         setIsShowPlatform(false);
@@ -110,8 +93,6 @@ function AETalentModel(props) {
         setSameList([]);
         setHasFuSaleman(false);
         setSalemansItems();
-        setHasFile(false);
-        setFileList();
     }
 
     useEffect(() => {
@@ -226,23 +207,6 @@ function AETalentModel(props) {
                     <Form.Item label="商务提成备注" name="u_note">
                         <TextArea />
                     </Form.Item>
-                    {type && type.match('修改') ? null : <><Form.Item label="是否有合作协议">
-                        <Radio.Group onChange={(e) => { setHasFile(e.target.value); }} value={hasFile} style={{ marginLeft: '20px' }}>
-                            <Radio value={false}>无</Radio>
-                            <Radio value={true}>有</Radio>
-                        </Radio.Group>
-                    </Form.Item>
-                        {hasFile ? <Form.Item label="合同文件" name="model_files" rules={[{ required: true, message: '不能为空' }]}>
-                            <Upload
-                                name={`${localStorage.getItem('name')}_合作协议`}
-                                action={`${BASE_URL}/file/upload`}
-                                fileList={fileList}
-                                onChange={handleChange}
-                                multiple={true}
-                            >
-                                <Button icon={<UploadOutlined />}>上传文件</Button>
-                            </Upload>
-                        </Form.Item> : null}</>}
                 </Card> : null}
                 {isShowGroup ? <Card title="社群团购" style={{ marginBottom: "20px" }}>
                     <Form.Item label="达人名称" name="group_name" rules={[{ required: true, message: '不能为空' }]}>
@@ -288,23 +252,6 @@ function AETalentModel(props) {
                     <Form.Item label="商务提成备注" name="u_note">
                         <TextArea />
                     </Form.Item>
-                    {type && type.match('修改') ? null : <><Form.Item label="是否有合作协议">
-                        <Radio.Group onChange={(e) => { setHasGroupFile(e.target.value); }} value={hasGroupFile} style={{ marginLeft: '20px' }}>
-                            <Radio value={false}>无</Radio>
-                            <Radio value={true}>有</Radio>
-                        </Radio.Group>
-                    </Form.Item>
-                        {hasGroupFile ? <Form.Item label="合同文件" name="model_files" rules={[{ required: true, message: '不能为空' }]}>
-                            <Upload
-                                name={`${localStorage.getItem('name')}_合作协议`}
-                                action={`${BASE_URL}/file/upload`}
-                                fileList={fileList}
-                                onChange={handleChange}
-                                multiple={true}
-                            >
-                                <Button icon={<UploadOutlined />}>上传文件</Button>
-                            </Upload>
-                        </Form.Item> : null}</>}
                 </Card> : null}
                 {isShowProvide ? <Card title="供货" style={{ marginBottom: "20px" }}>
                     <Form.Item label="达人名称" name="provide_name" rules={[{ required: true, message: '不能为空' }]}>
@@ -347,23 +294,6 @@ function AETalentModel(props) {
                     <Form.Item label="商务提成备注" name="u_note">
                         <TextArea />
                     </Form.Item>
-                    {type && type.match('修改') ? null : <><Form.Item label="是否有合作协议">
-                        <Radio.Group onChange={(e) => { setHasProvideFile(e.target.value); }} value={hasProvideFile} style={{ marginLeft: '20px' }}>
-                            <Radio value={false}>无</Radio>
-                            <Radio value={true}>有</Radio>
-                        </Radio.Group>
-                    </Form.Item>
-                        {hasProvideFile ? <Form.Item label="合同文件" name="model_files" rules={[{ required: true, message: '不能为空' }]}>
-                            <Upload
-                                name={`${localStorage.getItem('name')}_合作协议`}
-                                action={`${BASE_URL}/file/upload`}
-                                fileList={fileList}
-                                onChange={handleChange}
-                                multiple={true}
-                            >
-                                <Button icon={<UploadOutlined />}>上传文件</Button>
-                            </Upload>
-                        </Form.Item> : null}</>}
                 </Card> : null}
                 {type && type.match('修改') ? null : <><Form.Item label="相同线上达人">
                     <Button onClick={() => {

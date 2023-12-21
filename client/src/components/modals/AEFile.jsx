@@ -194,6 +194,7 @@ function AEFile(props) {
             <UpLoadFile
                 type={type}
                 setFile={(value) => {
+                    console.log('files: ', JSON.stringify(data && data.concat(value)));
                     if (value.length !== 0) {
                         if (type.match('年框')) {
                             editTalentAPI(`新增${type}`, data && data.length === 0 ? null : JSON.stringify(data), {
