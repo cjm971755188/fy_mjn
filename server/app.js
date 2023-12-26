@@ -51,8 +51,8 @@ const file = require('./router/file')
 app.use('/file', file)
 
 // 引入路由
-const userRouter = require('./router/user')
-app.use('/user', userRouter)
+const statisticsRouter = require('./router/statistics')
+app.use('/statistics', statisticsRouter)
 const chanceRouter = require('./router/chance')
 app.use('/chance', chanceRouter)
 const talentRouter = require('./router/talent')
@@ -61,6 +61,8 @@ const pointRouter = require('./router/point')
 app.use('/point', pointRouter)
 const middlemanRouter = require('./router/middleman')
 app.use('/middleman', middlemanRouter)
+const userRouter = require('./router/user')
+app.use('/user', userRouter)
 
 /* sendRobot(ddurls.report, `标题`, `![]('http://1.15.89.163:3000/public/people.jpg') \n@17764585713`, `http://1.15.89.163:5173/admin/talent/talent_list`, ["17764585713"], false) */
 

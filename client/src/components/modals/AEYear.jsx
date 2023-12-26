@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import request from '../../service/request';
-import { Button, Modal, Form, DatePicker, Select, InputNumber, Upload, Input, Card } from 'antd';
-import { UploadOutlined, PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { Button, Modal, Form, DatePicker, Select, InputNumber, message, Input, Card } from 'antd';
+import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { yearCycleType, yearType1, yearType2, yearType3 } from '../../baseData/talent'
-import { BASE_URL } from '../../service/config';
 
 function AEYear(props) {
     const { type, isShow, form } = props;
@@ -49,12 +48,23 @@ function AEYear(props) {
             onCancel={() => { props.onCancel(); setYearType(''); }}
         >
             <Form form={form} onFinish={(values) => {
-                let v = {
-                    ...values,
-                    yearbox_lavels_base: values.yearbox_lavels_base ? values.yearbox_lavels_base : null
+                console.log('values: ', values);
+                let z = 0
+                if (values.yearbox_lavels === null) {
+                    message.error('年框提点，信息缺失！')
+                    z++
+                } else if (values.yearbox_lavels.length === 0) {
+                    message.error('年框提点，信息缺失！')
+                    z++
                 }
-                props.onOK(v);
-                setYearType('');
+                if (z === 0) {
+                    let v = {
+                        ...values,
+                        yearbox_lavels_base: values.yearbox_lavels_base ? values.yearbox_lavels_base : null
+                    }
+                    props.onOK(v);
+                    setYearType('');
+                }
             }}>
                 {type === 'detail' ? null : <Form.Item label="达人昵称" name="tid" rules={[{ required: true, message: '不能为空' }]}>
                     <Select showSearch placeholder="请输入" options={talents} filterOption={filterOption} onChange={(value) => { searchtalentsAPI(value) }} onSearch={(value) => { searchtalentsAPI(value) }} />

@@ -120,6 +120,7 @@ function AETalentModel(props) {
                 } else {
                     props.onOK()
                 }
+                reset(); 
             }}>
                 {type && type.match('新增') ? null : <Form.Item label="合作模式编码" name="tmid" rules={[{ required: true, message: '不能为空' }]}>
                     <Input disabled={true} />

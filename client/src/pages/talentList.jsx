@@ -316,7 +316,7 @@ function TalentList() {
     }, [JSON.stringify(tableParams)])
     return (
         <Fragment>
-            <Card title="达人列表" extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('history'); }}>添加历史达人（限时开放到12-20）</Button> : null}>
+            <Card title="达人列表" extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('history'); }}>添加历史达人</Button> : null}>
                 <Form
                     layout="inline"
                     form={filterForm}

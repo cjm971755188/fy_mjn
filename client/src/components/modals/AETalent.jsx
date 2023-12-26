@@ -41,8 +41,28 @@ function AETalent(props) {
                         message.success(res.data.msg)
                     } else if (type === 'finish') {
                         if (res.data.data.length === 0) {
-                            props.onOK(values);
-                            reset();
+                            let z = 0
+                            if (form.getFieldValue('models').join().match('线上平台')) {
+                                if (form.getFieldValue('accounts') === undefined) {
+                                    message.error('线上平台模式，信息缺失！')
+                                    z++
+                                } else if (form.getFieldValue('accounts').length !== form.getFieldValue('accountIdList').length) {
+                                    message.error('线上平台模式，账号数量与申请数量不符！')
+                                    z++
+                                }
+                            } 
+                            if (form.getFieldValue('models').join().match('社群团购') && form.getFieldValue('group_name') === undefined) {
+                                message.error('社群团购模式，信息缺失！')
+                                z++
+                            } 
+                            if (form.getFieldValue('models').join().match('供货') && form.getFieldValue('provide_name') === undefined) {
+                                message.error('供货模式，信息缺失！')
+                                z++
+                            }
+                            if (z === 0) {
+                                props.onOK(values); 
+                                reset();
+                            }
                         }
                     } else {
                         message.error('异常type，请联系开发者')
@@ -166,8 +186,6 @@ function AETalent(props) {
         setHasSecondMiddle(false);
         setGroupHasFuSaleman(false);
         setProvideHasFuSaleman(false);
-        setMiddlemans1();
-        setMiddlemans2();
         setSalemansItems();
         setTypeMid('add');
         setIsShowMid(false);
@@ -248,11 +266,11 @@ function AETalent(props) {
                             <Button onClick={() => { setIsShowMid(true); setTypeMid('add'); }}>添加</Button>
                         </Form.Item>
                         <Form.Item label="是否有中间人">
-                            <Radio.Group onChange={(e) => { setHasFirstMiddle(e.target.value); if (!e.target.value) { setMiddlemans1([]) } }} value={hasFirstMiddle} style={{ marginLeft: '20px' }}>
+                            <Radio.Group onChange={(e) => { setHasFirstMiddle(e.target.value); }} value={hasFirstMiddle} style={{ marginLeft: '20px' }}>
                                 <Radio value={false}>无一级中间人</Radio>
                                 <Radio value={true}>有一级中间人</Radio>
                             </Radio.Group>
-                            <Radio.Group onChange={(e) => { setHasSecondMiddle(e.target.value); if (!e.target.value) { setMiddlemans2([]) } }} value={hasSecondMiddle} style={{ marginLeft: '20px' }}>
+                            <Radio.Group onChange={(e) => { setHasSecondMiddle(e.target.value); }} value={hasSecondMiddle} style={{ marginLeft: '20px' }}>
                                 <Radio value={false}>无二级中间人</Radio>
                                 <Radio value={true}>有二级中间人</Radio>
                             </Radio.Group>

@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import * as echarts from 'echarts';
+import chinaMap from '../assets/chinaMap.json'
 
 function MyECharts(props) {
     const { option, height } = props;
@@ -9,6 +10,7 @@ function MyECharts(props) {
     useLayoutEffect(() => {
         const chart = chartRef.current && echarts.init(chartRef.current);
         chart && chart.setOption(option);
+        echarts.registerMap('chinaMap', { geoJSON: chinaMap })
     }, [option]);
 
     //创建一个resize事件
@@ -27,7 +29,7 @@ function MyECharts(props) {
     }, [])
 
     return (
-        <div ref={chartRef} style={{ width: '100%', height: height }} />
+        <div ref={chartRef} style={{ padding: 0, width: '100%', height: height }} />
     )
 }
 export default MyECharts;

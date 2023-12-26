@@ -110,7 +110,7 @@ router.post('/addChance', (req, res) => {
         let account_ids = params.account_ids ? `'${params.account_ids.join()}'` : null
         let account_names = params.account_names ? `'${params.account_names.join()}'` : null
         let search_pic = params.search_pic.replace('/public', '')
-        let sql = `INSERT INTO chance VALUES('${cid}', ${models}, ${group_name}, ${provide_name}, ${platforms}, ${account_ids}, ${account_names}, '${search_pic}', null, null, null, null, null, null, '待推进', '${params.userInfo.uid}', ${dayjs().valueOf()}, null)`
+        let sql = `INSERT INTO chance VALUES('${cid}', ${models}, ${group_name}, ${provide_name}, ${platforms}, ${account_ids}, ${account_names}, '${search_pic}', null, null, null, null, null, null, '待推进', '${params.userInfo.uid}', ${dayjs().valueOf()}, null, null)`
         db.query(sql, (err, results) => {
             if (err) throw err;
             res.send({ code: 200, data: [], msg: `添加成功` })
@@ -185,6 +185,7 @@ router.post('/reportChance', (req, res) => {
         if (results.length !== 0) {
             res.send({ code: 201, data: [], msg: `重复 达人昵称` })
         } else {
+            let liaison_phone = params.liaison_phone ? `'${params.liaison_phone}'` : null
             let m_id_1 = params.m_id_1 ? `'${params.m_id_1}'` : null
             let m_type_1 = params.m_type_1 ? `'${params.m_type_1}'` : null
             let m_point_1 = params.m_point_1 ? `'${params.m_point_1}'` : null
@@ -196,7 +197,7 @@ router.post('/reportChance', (req, res) => {
             db.query(sql, (err, results) => {
                 if (err) throw err;
                 let tid = 'T' + `${results.length + 1}`.padStart(7, '0')
-                let sql = `INSERT INTO talent values('${tid}', '${params.cid}', '${params.talent_name}', '${params.province}', '${params.year_deal}', '${params.liaison_type}', '${params.liaison_name}', '${params.liaison_v}', '${params.liaison_phone}', '${params.crowd_name}', null, null, null, null, null, null, '报备待审批')`
+                let sql = `INSERT INTO talent values('${tid}', '${params.cid}', '${params.talent_name}', '${params.province}', '${params.year_deal}', '${params.liaison_type}', '${params.liaison_name}', '${params.liaison_v}', ${liaison_phone}, '${params.crowd_name}', null, null, null, null, null, null, '报备待审批')`
                 db.query(sql, (err, results) => {
                     if (err) throw err;
                     let sql = `SELECT * FROM talent_schedule`
@@ -221,12 +222,13 @@ router.post('/reportChance', (req, res) => {
                                             let tmid = 'TM' + `${count_d + i + 1}`.padStart(7, '0')
                                             let tmsid = 'TMS' + `${count_l + i + 1}`.padStart(7, '0')
                                             let keyword = params.accounts[i].keyword ? `'${params.accounts[i].keyword}'` : null
+                                            let commission_note = params.commission_note ? `'${params.commission_note}'` : null
                                             let u_id_2 = params.accounts[i].u_id_2 ? `'${params.accounts[i].u_id_2}'` : null
                                             let u_point_2 = params.accounts[i].u_point_2 ? `'${params.accounts[i].u_point_2}'` : null
                                             let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
                                             let model_files = params.accounts[i].model_files ? `'${JSON.stringify(params.accounts[i].model_files)}'` : null
                                             sql_d += `('${tmid}', '${tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].shop}', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', null, null, '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', ${model_files}, '待审批'),`
-                                            sql_l += `('${tmsid}', '${tmid}', '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', '${params.accounts[i].commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                                            sql_l += `('${tmsid}', '${tmid}', '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', ${commission_note}, null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
                                         }
                                         count_d += params.accounts.length
                                         count_l += params.accounts.length
@@ -234,24 +236,26 @@ router.post('/reportChance', (req, res) => {
                                     if (params.group_shop) {
                                         let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
                                         let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
+                                        let discount_note = params.discount_note ? `'${params.discount_note}'` : null
                                         let u_id_2 = params.group_u_id_2 ? `'${params.group_u_id_2}'` : null
                                         let u_point_2 = params.group_u_point_2 ? `'${params.group_u_point_2}'` : null
                                         let u_note = params.group_u_note ? `'${params.group_u_note}'` : null
                                         let model_files = params.group_model_files ? `'${JSON.stringify(params.model_files)}'` : null
                                         sql_d += `('${tmid}', '${tid}', '社群团购', '聚水潭', '${params.group_shop}', null, null, '${params.group_name}', null, null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
-                                        sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                                        sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', ${discount_note}, null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
                                         count_d += 1
                                         count_l += 1
                                     }
                                     if (params.provide_shop) {
                                         let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
                                         let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
+                                        let discount_label = params.discount_label ? `'${params.discount_label}'` : null
                                         let u_id_2 = params.provide_u_id_2 ? `'${params.provide_u_id_2}'` : null
                                         let u_point_2 = params.provide_u_point_2 ? `'${params.provide_u_point_2}'` : null
                                         let u_note = params.provide_u_note ? `'${params.provide_u_note}'` : null
                                         let model_files = params.provide_model_files ? `'${JSON.stringify(params.model_files)}'` : null
                                         sql_d += `('${tmid}', '${tid}', '供货', '聚水潭', '${params.provide_shop}', null, null, null, '${params.provide_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
-                                        sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                                        sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
                                         count_d += 1
                                         count_l += 1
                                     }

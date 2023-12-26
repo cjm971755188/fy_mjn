@@ -48,7 +48,7 @@ export const shop = [
     { key: 1, label: "独特艾琳旗舰店", value: "独特艾琳旗舰店" },
     { key: 2, label: "视频号团长", value: "视频号团长" },
     { key: 3, label: "抖音团长", value: "抖音团长" },
-    { key: 3, label: "快手团长", value: "快手团长" }
+    { key: 4, label: "快手团长", value: "快手团长" }
 ]
 
 export const liaisonType = [

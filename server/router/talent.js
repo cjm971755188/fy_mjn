@@ -279,7 +279,8 @@ router.post('/examTalent', (req, res) => {
                         let sql = `UPDATE talent_model SET status = '${params.exam ? '合作中' : '已失效'}' WHERE tid = '${params.tid}'`
                         db.query(sql, (err, results) => {
                             if (err) throw err;
-                            let sql = `UPDATE chance c, talent t SET c.status = '${params.exam ? '报备通过' : '报备驳回'}' WHERE c.cid = t.cid and t.tid = '${params.tid}'`
+                            let t = params.exam ? `'${time}'` : `null`
+                            let sql = `UPDATE chance c, talent t SET c.status = '${params.exam ? '报备通过' : '报备驳回'}', c.report_time = ${t} WHERE c.cid = t.cid and t.tid = '${params.tid}'`
                             db.query(sql, (err, results) => {
                                 if (err) throw err;
                             })
@@ -317,29 +318,22 @@ router.post('/addTalentModel', (req, res) => {
             let count_l = results_l.length
             let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
             let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
-            let f = []
-            if (params.model_files) {
-                for (let i = 0; i < params.model_files.fileList.length; i++) {
-                    const element = params.model_files.fileList[i].response[0].url;
-                    f.push(element)
-                    let rid = 'R' + `${count_r + i + 1}`.padStart(7, '0')
-                    sql_r += `('${rid}', '${element.replace(`${BASE_URL}/public/`, '')}', '生效中', '${params.userInfo.uid}', '${time}'),`
-                }
-            }
-            let model_files = params.model_files ? `'${JSON.stringify(f)}'` : null
             let keyword = params.keyword ? `'${params.keyword}'` : null
+            let commission_note = params.commission_note ? `'${params.commission_note}'` : null
+            let discount_note = params.discount_note ? `'${params.discount_note}'` : null
+            let discount_label = params.discount_label ? `'${params.discount_label}'` : null
             let u_id_2 = params.u_id_2 ? `'${params.u_id_2}'` : null
             let u_point_2 = params.u_point_2 ? `'${params.u_point_2}'` : null
             let u_note = params.u_note ? `'${params.u_note}'` : null
-            if (params.commission_note) {
-                sql_d += `('${tmid}', '${params.tid}', '线上平台', '${params.platform}', '${params.shop}', '${params.account_id}', '${params.account_name}', null, null, '${params.account_type}', '${params.account_models}', ${keyword}, '${params.people_count}', '${params.fe_proportion}', '${params.age_cuts}', '${params.main_province}', '${params.price_cut}',  ${model_files}, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', '${params.commission_note}', null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
-            } else if (params.discount_note) {
-                sql_d += `('${tmid}', '${params.tid}', '社群团购', '聚水潭', '${params.group_shop}', null, null, '${params.group_name}', null, null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', '${params.discount_note}', null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
-            } else if (params.discount_label) {
-                sql_d += `('${tmid}', '${params.tid}', '供货', '聚水潭', '${params.provide_shop}', null, null, null, '${params.provide_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', '${params.discount_label}', '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+            if (params.commission_normal) {
+                sql_d += `('${tmid}', '${params.tid}', '线上平台', '${params.platform}', '${params.shop}', '${params.account_id}', '${params.account_name}', null, null, '${params.account_type}', '${params.account_models}', ${keyword}, '${params.people_count}', '${params.fe_proportion}', '${params.age_cuts}', '${params.main_province}', '${params.price_cut}', null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+            } else if (params.discount_normal) {
+                sql_d += `('${tmid}', '${params.tid}', '社群团购', '聚水潭', '${params.group_shop}', null, null, '${params.group_name}', null, null, null, null, null, null, null, null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', ${discount_note}, null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+            } else if (params.discount_back) {
+                sql_d += `('${tmid}', '${params.tid}', '供货', '聚水潭', '${params.provide_shop}', null, null, null, '${params.provide_name}', null, null, null, null, null, null, null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
             }
             count_d += 1
             count_l += 1

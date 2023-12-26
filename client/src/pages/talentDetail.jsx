@@ -388,6 +388,7 @@ function TalentDetail() {
             url: '/talent/addTalentModel',
             data: {
                 tid,
+                cid: null,
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
@@ -872,7 +873,7 @@ function TalentDetail() {
                 isShow={isShowModel}
                 type={modelType}
                 form={formModel}
-                onOK={() => {
+                onOK={(values) => {
                     let ori = null
                     if (editOri) {
                         ori = editOri
@@ -930,7 +931,9 @@ function TalentDetail() {
                     }
                     let operate = modelType + type
                     if (modelType.match('新增')) {
-                        addTalentModelAPI(formModel.getFieldsValue())
+                        console.log('values: ', values);
+                        console.log('formModel: ', formModel.getFieldsValue());
+                        addTalentModelAPI(values)
                     } else if (Object.keys(z).length === 0) {
                         if (type.match('基础信息')) {
                             formModel.resetFields();

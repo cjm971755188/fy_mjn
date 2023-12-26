@@ -199,7 +199,7 @@ router.post('/getExportPointList', (req, res) => {
         }
     }
     // 条件筛选
-    let whereFilter = `where z.status != '已失效'`
+    let whereFilter = `where z.status != '失效中'`
     for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
         if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
             whereFilter += ` and z.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
@@ -207,7 +207,7 @@ router.post('/getExportPointList', (req, res) => {
             whereFilter += ` and z.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
         }
     }
-    let whereDeadline1 = `WHERE status != '已失效'`, whereDeadline2 = `WHERE tms.status != '已失效' and tm.status != '已失效'`
+    let whereDeadline1 = `WHERE status = '生效中'`, whereDeadline2 = `WHERE tms.status = '生效中' and tm.status != '失效中'`
     if (params.filtersDate && params.filtersDate.length === 2) {
         whereDeadline1 += ` and create_time < '${params.filtersDate[0]}'`
     }

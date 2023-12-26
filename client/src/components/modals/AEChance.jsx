@@ -34,7 +34,7 @@ function AEChance(props) {
                         message.success(res.data.msg)
                     } else if (type === 'finish') {
                         if (res.data.data.length === 0) {
-                            props.onOK(payload); 
+                            props.onOK(payload);
                             reset();
                         }
                     } else {
@@ -77,6 +77,7 @@ function AEChance(props) {
                 onFinish={(values) => {
                     let payload = {
                         cid: type == 'add' ? '' : form.getFieldValue('cid'),
+                        type: 'arr',
                         ...values
                     }
                     searchSameChanceAPI('finish', payload)
@@ -126,6 +127,7 @@ function AEChance(props) {
                             (form.getFieldValue('group_name') && form.getFieldValue('group_name').length > 0) || (form.getFieldValue('provide_name') && form.getFieldValue('provide_name').length > 0)) {
                             let payload = {
                                 cid: type == 'add' ? '' : form.getFieldValue('cid'),
+                                type: 'arr',
                                 account_names: form.getFieldValue('account_names'),
                                 account_ids: form.getFieldValue('account_ids'),
                                 group_name: form.getFieldValue('group_name'),
