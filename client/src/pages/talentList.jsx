@@ -5,6 +5,7 @@ import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message
 import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined } from '@ant-design/icons';
 import { model, uPoint0, talentStatus, yearboxStatus, modelStatus } from '../baseData/talent'
 import AETalent from '../components/modals/AETalent'
+import AELive from '../components/modals/AELive'
 import dayjs from 'dayjs'
 
 function TalentList() {
@@ -66,8 +67,10 @@ function TalentList() {
                     </List>
                 }>
                     <Space size="small">
-                        {record.yearbox_status === '暂无' ? <StopTwoTone twoToneColor="#999999" /> : <PauseCircleTwoTone twoToneColor="#4ec990" />}
-                        <span>{record.yearbox_status}</span>
+                        {record.yearbox_start_date === null ? <StopTwoTone twoToneColor="#999999" /> :
+                            dayjs(Number(record.yearbox_start_date)).add(1, 'year') < dayjs() ? <CloseCircleTwoTone twoToneColor="#f81d22" /> :
+                                record.status === '年框待审批' ? <ClockCircleTwoTone twoToneColor="#ee9900" /> : <PauseCircleTwoTone twoToneColor="#4ec990" />}
+                        <span>{record.yearbox_start_date === null ? '暂无' : dayjs(Number(record.yearbox_start_date)).add(1, 'year') < dayjs() ? '已失效' : record.status === '年框待审批' ? '待审批' : '生效中'}</span>
                     </Space>
                 </Popover>
             )
@@ -106,7 +109,11 @@ function TalentList() {
                         setClickTid(record.tid);
                         setIsShowGive(true);
                     }}>移交</a>
-                        <a onClick={() => { message.error('等待确认后开发'); }}>添加专场</a></> : null}
+                        <a onClick={() => {
+                            setLiveType('add');
+                            setIsShowLive(true);
+                            liveForm.setFieldValue('name', record.name)
+                        }}>添加专场</a></> : null}
                 </Space>
             )
         }
@@ -310,6 +317,10 @@ function TalentList() {
             console.error(err)
         })
     }
+    // 专场
+    const [liveType, setLiveType] = useState('')
+    const [isShowLive, setIsShowLive] = useState(false)
+    const [liveForm] = Form.useForm()
 
     useEffect(() => {
         getTalentListAPI();
@@ -389,6 +400,13 @@ function TalentList() {
                     </Form.Item>
                 </Form>
             </Modal>
+            <AELive
+                isShow={isShowLive}
+                type={liveType}
+                form={liveForm}
+                onOK={(values) => { message.error('开发中') }}
+                onCancel={() => { setIsShowLive(false); liveForm.resetFields(); setLiveType(''); }}
+            />
         </Fragment>
     )
 }

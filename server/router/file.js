@@ -46,7 +46,11 @@ router.post('/getFiles', (req, res) => {
     let params = req.body
     let sql = ''
     if (params.type.match('年框')) {
-        sql = `SELECT yearbox_files as files FROM talent WHERE tid = '${params.id}'`
+        sql = `SELECT ts1.yearbox_files as files 
+                FROM talent t
+                    LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule GROUP BY tid) ts0 ON ts0.tid = t.tid 
+                    LEFT JOIN talent_schedule ts1 ON ts1.tsid = ts0.tsid
+                WHERE t.tid = '${params.id}'`
     } else {
         sql = `SELECT model_files as files FROM talent_model WHERE tmid = '${params.id}'`
     }

@@ -118,9 +118,9 @@ function AETalentModel(props) {
                         type: 'single'
                     })
                 } else {
-                    props.onOK()
+                    props.onOK();
+                    reset();
                 }
-                reset(); 
             }}>
                 {type && type.match('新增') ? null : <Form.Item label="合作模式编码" name="tmid" rules={[{ required: true, message: '不能为空' }]}>
                     <Input disabled={true} />

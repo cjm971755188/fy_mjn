@@ -38,7 +38,7 @@ router.post('/getPointList', (req, res) => {
     let sql = `SELECT z.* 
                 FROM (
                     (SELECT	a.*, t.name, tm.model, tm.platform, tm.shop, tm.account_name, ts.m_id_1, m1.name as m_name_1, ts.m_point_1, ts.m_id_2, m2.name as m_name_2, ts.m_point_2, ts.m_note, 
-                        t.yearbox_start_date, t.yearbox_cycle, t.yearbox_lavels_base, t.yearbox_lavels, 
+                        ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, 
                         IF(tms.commission_normal IS NULL, tms.discount_normal, tms.commission_normal) as commission_1,
                         IF(tms.commission_welfare IS NULL, tms.discount_welfare, tms.commission_welfare) as commission_2,
                         IF(tms.commission_bao IS NULL, tms.discount_bao, tms.commission_bao) as commission_3, 
@@ -101,7 +101,7 @@ router.post('/getPointList', (req, res) => {
                     )
                     UNION
                     (SELECT	a.*, t.name, tm.model, tm.platform, tm.shop, tm.account_name, ts.m_id_1, m1.name as m_name_1, ts.m_point_1, ts.m_id_2, m2.name as m_name_2, ts.m_point_2, ts.m_note, 
-                        t.yearbox_start_date, t.yearbox_cycle, t.yearbox_lavels_base, t.yearbox_lavels, 
+                        ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, 
                         IF(tms.commission_normal IS NULL, tms.discount_normal, tms.commission_normal) as commission_1,
                         IF(tms.commission_welfare IS NULL, tms.discount_welfare, tms.commission_welfare) as commission_2,
                         IF(tms.commission_bao IS NULL, tms.discount_bao, tms.commission_bao) as commission_3, 
@@ -216,7 +216,7 @@ router.post('/getExportPointList', (req, res) => {
     }
     let sql = `SELECT z.* 
                 FROM (
-                    (SELECT	a.*, t.name, tm.model, tm.platform, tm.shop, tm.account_name, ts.m_id_1, m1.name as m_name_1, ts.m_point_1, ts.m_id_2, m2.name as m_name_2, ts.m_point_2, ts.m_note, t.yearbox_cycle, t.yearbox_lavels_base, t.yearbox_lavels, 
+                    (SELECT	a.*, t.name, tm.model, tm.platform, tm.shop, tm.account_name, ts.m_id_1, m1.name as m_name_1, ts.m_point_1, ts.m_id_2, m2.name as m_name_2, ts.m_point_2, ts.m_note, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, 
                         IF(tms.commission_normal IS NULL, tms.discount_normal, tms.commission_normal) as commission_1,
                         IF(tms.commission_welfare IS NULL, tms.discount_welfare, tms.commission_welfare) as commission_2,
                         IF(tms.commission_bao IS NULL, tms.discount_bao, tms.commission_bao) as commission_3, 

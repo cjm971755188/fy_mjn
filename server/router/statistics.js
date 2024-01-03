@@ -22,22 +22,26 @@ router.post('/getTalentStatistics', (req, res) => {
     let whereFilter = ``
     let start_time = params.filtersDate.length === 2 ? params.filtersDate[0] : ''
     let end_time = params.filtersDate.length === 2 ? params.filtersDate[1] : '2000000000000'
-    let sql = `SELECT SUM(IF(c.create_time >= '${start_time}' and c.create_time < '${end_time}', 1, 0)) as find, 
-                    SUM(IF(c.status != '待推进' and c.advance_time >= '${start_time}' and c.advance_time < '${end_time}', 1, 0)) as advance, 
-                    SUM(IF(c.status != '待推进' and c.status != '待报备' and c.report_time >= '${start_time}' and c.report_time < '${end_time}', 1, 0)) as report, 
-                    SUM(IF(c.status = '待审批' and c.report_time >= '${start_time}' and c.report_time < '${end_time}', 1, 0)) as wait, 
-                    SUM(IF(c.status = '报备通过' and c.report_time >= '${start_time}' and c.report_time < '${end_time}', 1, 0)) as yes, 
-                    SUM(IF(c.status = '报备驳回' and c.report_time >= '${start_time}' and c.report_time < '${end_time}', 1, 0)) as no 
+    let sql = `SELECT COUNT(DISTINCT IF(c.create_time >= '${start_time}' and c.create_time < '${end_time}', c.cid, null)) as find, 
+                    COUNT(DISTINCT IF(c.status != '待推进' and c.advance_time >= '${start_time}' and c.advance_time < '${end_time}', c.cid, null)) as advance, 
+                    COUNT(DISTINCT IF(c.status != '待推进' and c.status != '待报备' and c.report_time >= '${start_time}' and c.report_time < '${end_time}', c.cid, null)) as report, 
+                    COUNT(DISTINCT IF(c.status = '待审批' and c.report_time >= '${start_time}' and c.report_time < '${end_time}', c.cid, null)) as wait, 
+                    COUNT(DISTINCT IF(c.status = '报备通过' and c.report_time >= '${start_time}' and c.report_time < '${end_time}', c.cid, null)) as yes, 
+                    COUNT(DISTINCT IF(c.status = '报备驳回' and c.report_time >= '${start_time}' and c.report_time < '${end_time}', c.cid, null)) as no 
                 FROM chance c
-                    LEFT JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = c.u_id`
+                    INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = c.u_id`
     db.query(sql, (err, chance) => {
         if (err) throw err;
-        let sql = `SELECT SUM(IF(t.cid = 'undefined' and ts.examine_time >= '${start_time}' and ts.examine_time < '${end_time}', 1, 0)) as history, 
-                        SUM(IF(t.cid = 'undefined' and t.status != '已失效' and t.status like '%待审批' and ts.examine_time >= '${start_time}' and ts.examine_time < '${end_time}', 1, 0)) as history_wait, 
-                        SUM(IF(t.status != '已失效' and ts.examine_time >= '${start_time}' and ts.examine_time < '${end_time}', 1, 0)) as cooperate, 
-                        SUM(IF(t.status != '已失效' and t.status like '%待审批' and ts.examine_time >= '${start_time}' and ts.examine_time < '${end_time}', 1, 0)) as cooperate_wait
+        let sql = `SELECT COUNT(DISTINCT IF(t.cid = 'undefined', t.tid, null)) as history, 
+                        COUNT(DISTINCT IF(t.cid = 'undefined' and t.status != '已失效' and t.status like '%待审批', t.tid, null)) as history_wait,
+                        COUNT(DISTINCT IF(t.status != '已失效', t.tid, null)) as cooperate,
+                        COUNT(DISTINCT IF(t.status != '已失效' and t.status like '%待审批', t.tid, null)) as cooperate_wait
                     FROM talent t
-                        LEFT JOIN talent_schedule ts ON ts.tid = t.tid and ts.operate = '达人报备' and ts.examine_result = '通过'`
+                        INNER JOIN talent_schedule ts ON ts.tid = t.tid and ts.operate = '达人报备' and ts.examine_result = '通过' and ts.examine_time >= '${start_time}' and ts.examine_time < '${end_time}'
+                        LEFT JOIN talent_model tm ON tm.tid = t.tid
+                        LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
+                        LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
+                        INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = tms1.u_id_1 OR u.uid = tms1.u_id_2`
         db.query(sql, (err, talent) => {
             if (err) throw err;
             res.send({
@@ -166,16 +170,16 @@ router.post('/getAdReTimeDiff', (req, res) => {
 router.post('/getPlatformTalent', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where u.status != '失效' and u.department = '事业部' and u.position != '副总'`
+    let whereUser = `where status != '失效' and department = '事业部' and position != '副总'`
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
-            whereUser += ` and u.department = '${params.userInfo.department}'`
+            whereUser += ` and department = '${params.userInfo.department}'`
         }
         if (params.userInfo.department === '主管') {
-            whereUser += ` and u.department = '${params.userInfo.department}' and u.company = '${params.userInfo.company}'`
+            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
-            whereUser += ` and u.uid = '${params.userInfo.uid}'`
+            whereUser += ` and uid = '${params.userInfo.uid}'`
         }
     }
     let whereFilter = ``
@@ -183,13 +187,10 @@ router.post('/getPlatformTalent', (req, res) => {
     let end_time = params.filtersDate.length === 2 ? params.filtersDate[1] : '2000000000000'
     let sql = `SELECT tm.platform, COUNT(DISTINCT tm.tid) as sum
                 FROM talent_model tm
-                    LEFT JOIN talent_model_schedule tms ON tms.tmid = tm.tmid
+                    LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' and create_time >= '${start_time}' and create_time < '${end_time}' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
+                    LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
+                    INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = tms1.u_id_1 OR u.uid = tms1.u_id_2
                 WHERE tm.status != '已失效'
-                    and tms.status != '已失效'
-                    and tms.operate = '达人报备' 
-                    and tms.examine_result = '通过' 
-                    and tms.create_time >= '${start_time}'
-                    and tms.create_time < '${end_time}'
                 GROUP BY tm.platform
                 ORDER BY sum DESC`
     db.query(sql, (err, results) => {

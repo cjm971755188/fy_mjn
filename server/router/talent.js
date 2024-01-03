@@ -35,13 +35,12 @@ router.post('/getTalentList', (req, res) => {
     let current = params.pagination.current ? params.pagination.current : 0
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
     let sql = `SELECT * FROM (
-                SELECT t.*, tm.models, CONCAT(ts.m_id_1, ',', ts.m_id_2) as m_ids, ts.m_name_1, ts.m_name_2, CONCAT(ts.m_name_1, ',', ts.m_name_2) as m_names, 
-                    CONCAT(tm.u_id_1, ',', tm.u_id_2, ',', ts.u_id_0) as u_ids, CONCAT(tm.u_name_1, ',', tm.u_name_2, ',', ts.u_name_0) as u_names, tm.u_name_1, tm.u_name_2, ts.u_name_0, 
-                    IF(t.yearbox_start_date is null, '暂无', '生效中') as yearbox_status, tm.model_status
+                SELECT t.*, tm.models, CONCAT(ts.m_id_1, ',', ts.m_id_2) as m_ids, ts.m_name_1, ts.m_name_2, CONCAT(ts.m_name_1, ',', ts.m_name_2) as m_names, ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, 
+                    CONCAT(tm.u_id_1, ',', tm.u_id_2, ',', ts.u_id_0) as u_ids, CONCAT(tm.u_name_1, ',', tm.u_name_2, ',', ts.u_name_0) as u_names, tm.u_name_1, tm.u_name_2, ts.u_name_0, tm.model_status
                 FROM talent t
                     LEFT JOIN (
                         SELECT ts0.tid, IF(m1.mid IS NULL, '', m1.mid) as m_id_1, IF(m1.name IS NULL, '', m1.name) as m_name_1, IF(m2.mid IS NULL, '', m2.mid) as m_id_2, IF(m2.name IS NULL, '', m2.name) as m_name_2,
-                            IF(ts0.u_id_0 IS NULL, '', ts0.u_id_0) as u_id_0, IF(u0.name IS NULL, '', u0.name) as u_name_0
+                            IF(ts0.u_id_0 IS NULL, '', ts0.u_id_0) as u_id_0, IF(u0.name IS NULL, '', u0.name) as u_name_0, ts0.yearbox_start_date, ts0.yearbox_cycle, ts0.yearbox_lavels_base, ts0.yearbox_lavels
                         FROM talent_schedule ts0
                             INNER JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' GROUP BY tid) ts1 ON ts1.tsid = ts0.tsid
                             LEFT JOIN middleman m1 ON m1.mid = ts0.m_id_1
@@ -80,13 +79,13 @@ router.post('/getTalentDetail', (req, res) => {
     let sql = `SELECT t.*, ts.*
                 FROM talent t
                     LEFT JOIN (
-                            SELECT ts0.tid, ts0.tsid, ts0.m_id_1, m1.type as m_type_1, m1.name as m_name_1, ts0.m_type_1 as m_paytype_1, ts0.m_point_1, ts0.m_id_2, m2.type as m_type_2, m2.name as m_name_2, ts0.m_type_2 as m_paytype_2, ts0.m_point_2, 
-                                ts0.u_id_0, u0.name as u_name_0, ts0.u_point_0, ts0.m_note
-                            FROM talent_schedule ts0
-                                INNER JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' GROUP BY tid) ts1 ON ts1.tsid = ts0.tsid
-                                LEFT JOIN middleman m1 ON m1.mid = ts0.m_id_1
-                                LEFT JOIN middleman m2 ON m2.mid = ts0.m_id_2
-                                LEFT JOIN user u0 ON u0.uid = ts0.u_id_0
+                        SELECT ts0.tid, ts0.tsid, ts0.m_id_1, m1.type as m_type_1, m1.name as m_name_1, ts0.m_type_1 as m_paytype_1, ts0.m_point_1, ts0.m_id_2, m2.type as m_type_2, m2.name as m_name_2, ts0.m_type_2 as m_paytype_2, ts0.m_point_2, 
+                            ts0.u_id_0, u0.name as u_name_0, ts0.u_point_0, ts0.m_note, ts0.yearbox_start_date, ts0.yearbox_cycle, ts0.yearbox_type, ts0.yearbox_lavels_base, ts0.yearbox_lavels, ts0.yearbox_files
+                        FROM talent_schedule ts0
+                            INNER JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' GROUP BY tid) ts1 ON ts1.tsid = ts0.tsid
+                            LEFT JOIN middleman m1 ON m1.mid = ts0.m_id_1
+                            LEFT JOIN middleman m2 ON m2.mid = ts0.m_id_2
+                            LEFT JOIN user u0 ON u0.uid = ts0.u_id_0
                     ) ts ON ts.tid = t.tid
                 WHERE t.tid = '${params.tid}'`
     db.query(sql, (err, results_base) => {
@@ -171,7 +170,15 @@ router.post('/editTalent', (req, res) => {
                     } else if (isAdd && key === 'history_other_info') {
                         isAdd = false
                         sql += params.ori === null ? ` null,` : ` '${params.ori}',`
-                    } else if (params.operate.match('年框') || params.operate.match('联系人')) {
+                    } else if (params.operate.match('联系人') || params.operate === '新增年框资料') {
+                        for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
+                            if (isAdd && Object.keys(params.new)[i] === key) {
+                                isAdd = false
+                                if (key === 'yearbox_files') {
+                                    sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i].replace('/public', '')}',`
+                                }
+                            }
+                        }
                         if (isAdd && key === 'need_examine') {
                             isAdd = false
                             sql += ` '无需审批',`
@@ -182,7 +189,7 @@ router.post('/editTalent', (req, res) => {
                             isAdd = false
                             sql += results[0][key] === null ? ` null,` : ` '${results[0][key]}',`
                         }
-                    } else if (params.operate.match('中间人')) {
+                    } else if (params.operate.match('中间人') || params.operate.match('年框')) {
                         for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
                             if (isAdd && Object.keys(params.new)[i] === key) {
                                 isAdd = false
@@ -215,12 +222,10 @@ router.post('/editTalent', (req, res) => {
             sql += `)`
             db.query(sql, (err, results) => {
                 if (err) throw err;
-                if (params.operate === '修改联系人' || params.operate.match('年框')) {
+                if (params.operate === '修改联系人') {
                     let sql = 'UPDATE talent SET'
                     for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
-                        if (Object.keys(params.new)[i] === 'yearbox_files') {
-                            sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i].replace('/pubilc', '')}',` : ` ${Object.keys(params.new)[i]} = null,`
-                        } else if (Object.keys(params.new)[i] !== 'tid') {
+                        if (Object.keys(params.new)[i] !== 'tid') {
                             sql += Object.values(params.new)[i] !== null && Object.values(params.new)[i] !== '' ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
                         }
                     }
@@ -230,8 +235,10 @@ router.post('/editTalent', (req, res) => {
                         if (err) throw err;
                         res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                     })
-                } else if (params.operate.match('中间人')) {
-                    let sql = `UPDATE talent set status = '中间人待审批' WHERE tid = '${params.tid}'`
+                } else if (params.operate === '新增年框资料') {
+                    res.send({ code: 200, data: [], msg: `${params.operate}成功` })
+                } else if (params.operate.match('中间人') || params.operate.match('年框')) {
+                    let sql = `UPDATE talent set status = '${params.operate.match('中间人') ? '中间人待审批' : '年框待审批'}' WHERE tid = '${params.tid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
                         let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`

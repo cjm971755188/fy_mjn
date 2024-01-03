@@ -1,5 +1,5 @@
 import React, { useState, Fragment } from "react";
-import { Button, Space, Upload } from 'antd';
+import { Button, Upload } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { BASE_URL } from '../service/config';
 import dayjs from "dayjs";
@@ -13,7 +13,9 @@ function UpLoadFile(props) {
         newFileList = newFileList.map((file) => {
             if (file.response) {
                 file.url = file.response.url;
-                f.push(file.response[0].url)
+            }
+            if (file.status === "done" || file.status === "uploading") {
+                f.push(`${BASE_URL}/${localStorage.getItem('name')}_${dayjs().valueOf()}_${props.type}_${file.name}`)
             }
             return file;
         });

@@ -408,7 +408,7 @@ function TalentStatistics() {
             </Row>
             <Row gutter={24} style={{ marginTop: '20px' }}>
                 <Col span={6}>
-                    <Card title="各平台达人占比">
+                    <Card title="达人合作平台比例">
                         {!platformTalentLoading ? platformTalentOption.length !== 0 ? <MyECharts height={250} option={{
                             tooltip: {
                                 trigger: 'item'
@@ -420,7 +420,7 @@ function TalentStatistics() {
                             },
                             series: [
                                 {
-                                    name: '达人合作数量',
+                                    name: '达人合作模式',
                                     type: 'pie',
                                     radius: ['40%', '70%'],
                                     avoidLabelOverlap: false,

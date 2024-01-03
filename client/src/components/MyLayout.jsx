@@ -31,21 +31,6 @@ const items = [
 
 // 左侧菜单 menus
 const menuItemsTotal = [
-    /* {
-        key: '/admin/analysis',
-        label: '数据统计',
-        icon: <AreaChartOutlined />,
-        children: [
-            {
-                key: '/admin/analysis/daily_statistics',
-                label: '日常操作'
-            },
-            {
-                key: '/admin/analysis/sale_statistics',
-                label: '销售数据'
-            }
-        ]
-    }, */
     {
         key: '/admin/talent',
         label: '达人管理',
@@ -62,21 +47,6 @@ const menuItemsTotal = [
             {
                 key: '/admin/talent/talent_list',
                 label: '达人列表'
-            }
-        ]
-    },
-    {
-        key: '/admin/live',
-        label: '专场管理',
-        icon: <CalendarOutlined />,
-        children: [
-            {
-                key: '/admin/live/live_calendar',
-                label: '总排班日历'
-            },
-            {
-                key: '/admin/live/live_list',
-                label: '我的专场列表'
             }
         ]
     },

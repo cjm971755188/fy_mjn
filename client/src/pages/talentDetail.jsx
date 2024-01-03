@@ -570,11 +570,39 @@ function TalentDetail() {
                         <Descriptions column={5} items={getBaseItems()} />
                     </Card>
                     <Card title={<Space><AuditOutlined /><span>年框信息</span>
-                        <Tag color={detailData.yearbox_start_date === null ? "" : "green"}>{detailData.yearbox_start_date === null ? "暂无" : "生效中"}</Tag>
+                        <Tag color={detailData.yearbox_start_date === null ? '' : dayjs(Number(detailData.yearbox_start_date)).add(1, 'year') < dayjs() ? 'red' : detailData.status === '年框待审批' ? 'gold' : 'green'}>
+                            {detailData.yearbox_start_date === null ? '暂无' : dayjs(Number(detailData.yearbox_start_date)).add(1, 'year') < dayjs() ? '已失效' : detailData.status === '年框待审批' ? '待审批' : '生效中'}
+                        </Tag>
                     </Space>}
                         style={{ marginBottom: '20px' }}
                         extra={detailData.status.match('待审批') ? null : <>
-                            {editPower && detailData.yearbox_start_date === null ? <Button type="text" icon={<PlusOutlined />} onClick={() => { formYear.setFieldValue('tid', tid); setIsShowYear(true); setYearType('detail'); }}>新增年框</Button> : null}
+                            {editPower && (detailData.yearbox_start_date === null ? <Button type="text" icon={<PlusOutlined />} onClick={() => { formYear.setFieldValue('tid', tid); setIsShowYear(true); setYearType('新增年框'); }}>新增年框</Button> :
+                                dayjs(Number(detailData.yearbox_start_date)).add(1, 'year') < dayjs() ?
+                                    <Button type="text" icon={<PlusOutlined />} onClick={() => { formYear.setFieldValue('tid', tid); setIsShowYear(true); setYearType('新增年框'); }}>新增年框</Button> :
+                                    <Button type="text" icon={<EditOutlined />} onClick={() => {
+                                        formYear.setFieldValue('tid', tid);
+                                        formYear.setFieldValue('yearbox_start_date', dayjs(Number(detailData.yearbox_start_date)));
+                                        formYear.setFieldValue('yearbox_cycle', {
+                                            label: detailData.yearbox_cycle,
+                                            value: detailData.yearbox_cycle
+                                        });
+                                        formYear.setFieldValue('yearbox_type', {
+                                            label: detailData.yearbox_type,
+                                            value: detailData.yearbox_type
+                                        });
+                                        formYear.setFieldValue('yearbox_lavels_base', detailData.yearbox_lavels_base);
+                                        formYear.setFieldValue('yearbox_lavels', JSON.parse(detailData.yearbox_lavels));
+                                        setEditOri({
+                                            yearbox_start_date: detailData.yearbox_start_date,
+                                            yearbox_cycle: detailData.yearbox_cycle,
+                                            yearbox_type: detailData.yearbox_type,
+                                            yearbox_lavels_base: detailData.yearbox_lavels_base,
+                                            yearbox_lavels: detailData.yearbox_lavels,
+                                        })
+                                        setIsShowYear(true);
+                                        setYearType('修改年框');
+                                    }}
+                                    >修改年框</Button>)}
                             {detailData.yearbox_start_date === null ? null :
                                 editPower && detailData.yearbox_files === null ? <Button type="text" icon={<PlusOutlined />} onClick={() => { setIsShowFile(true); setFileType('年框资料'); setIdSelect(tid); }}>新增年框资料</Button> :
                                     <Button type="text" icon={<EyeOutlined />} onClick={() => { setIsShowFile(true); setFileType('年框资料'); setIdSelect(tid); }}>查看年框资料</Button>}
@@ -794,11 +822,35 @@ function TalentDetail() {
                 type={yearType}
                 form={formYear}
                 onOK={(values) => {
-                    editTalentAPI('新增年框', null, {
+                    let ori = editOri
+                    let payload = {
                         ...values,
-                        yearbox_lavels: JSON.stringify(values.yearbox_lavels),
-                        yearbox_start_date: dayjs(values.yearbox_start_date).valueOf()
-                    });
+                        yearbox_type: values.yearbox_type.value ? values.yearbox_type.value : values.yearbox_type,
+                        yearbox_cycle: values.yearbox_cycle.value ? values.yearbox_cycle.value : values.yearbox_cycle,
+                        yearbox_lavels: values.yearbox_lavels ? JSON.stringify(values.yearbox_lavels) : null,
+                        yearbox_start_date: `${dayjs(values.yearbox_start_date).valueOf()}`
+                    }
+                    let z = {}
+                    for (const key in ori) {
+                        if (Object.hasOwnProperty.call(ori, key)) {
+                            for (const k in payload) {
+                                if (Object.hasOwnProperty.call(payload, k)) {
+                                    if (key === k && ori[key] !== payload[k]) {
+                                        if (key === 'yearbox_lavels' && JSON.parse(ori[key]) !== null) {
+                                            let x = ''
+                                            for (let i = 0; i < JSON.parse(ori[key]).length; i++) {
+                                                x += `(${Object.values(JSON.parse(ori[key])[i]).join('w, ')}%)`
+                                            }
+                                            z[key] = x
+                                        } else {
+                                            z[key] = ori[key]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    editTalentAPI(yearType, Object.keys(z).length === 0 ? null : JSON.stringify(z), payload);
                 }}
                 onCancel={() => { formYear.resetFields(); setIsShowYear(false); }}
             />
@@ -909,7 +961,6 @@ function TalentDetail() {
                         payload.age_cuts = formModel.getFieldValue('age_cuts').join()
                     }
                     let z = {}, type = ''
-
                     for (const key in o) {
                         if (Object.hasOwnProperty.call(o, key)) {
                             for (const k in payload) {
@@ -931,8 +982,6 @@ function TalentDetail() {
                     }
                     let operate = modelType + type
                     if (modelType.match('新增')) {
-                        console.log('values: ', values);
-                        console.log('formModel: ', formModel.getFieldsValue());
                         addTalentModelAPI(values)
                     } else if (Object.keys(z).length === 0) {
                         if (type.match('基础信息')) {

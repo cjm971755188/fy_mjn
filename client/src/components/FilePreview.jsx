@@ -8,16 +8,16 @@ class FilePreview extends React.Component {
         const { fileUrl, fileType } = this.props;
         
         if (fileType === 'image') {
-            return <Image width={50} src={`${BASE_URL}/${fileUrl}`} />
+            return <Image width={50} src={`${fileUrl}`} />
         }
 
         if (fileType === 'pdf') {
-            return <embed src={`${BASE_URL}/${fileUrl}`} type="application/pdf" width={50} height={50} />
+            return <embed src={`${fileUrl}`} type="application/pdf" width={50} height={50} />
         }
 
         if (fileType === 'excel' || fileType === 'word') {
             return (
-                <span>{fileUrl.split('_')[3]}</span>
+                <span>{fileUrl.split('_')[3].split('.')[0]}</span>
             )
             /* return (
                 <iframe

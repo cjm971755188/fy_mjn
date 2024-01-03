@@ -1,60 +1,36 @@
-import React, { useState } from "react";
-import request from '../../service/request';
+import React, { useState, useEffect } from "react";
 import { Button, Modal, Form, DatePicker, Select, InputNumber, message, Input, Card } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { yearCycleType, yearType1, yearType2, yearType3 } from '../../baseData/talent'
+import dayjs from 'dayjs';
 
 function AEYear(props) {
     const { type, isShow, form } = props;
 
-    const [talents, setTalents] = useState(false)
-    const filterOption = (input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-    const searchtalentsAPI = (value) => {
-        request({
-            method: 'post',
-            url: '/talent/searchtalents',
-            data: {
-                value: value,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setTalents(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
     const [cycleType, setCycleType] = useState();
     const [yearType, setYearType] = useState('');
 
+    useEffect(() => {
+        setYearType(form.getFieldValue('yearbox_type') && form.getFieldValue('yearbox_type').value || '')
+        setCycleType(form.getFieldValue('yearbox_cycle') && form.getFieldValue('yearbox_cycle').value || '')
+    }, [isShow])
     return (
         <Modal
-            title="新增年框"
+            title={type}
             open={isShow}
             onOk={() => { form.submit(); }}
             onCancel={() => { props.onCancel(); setYearType(''); }}
         >
             <Form form={form} onFinish={(values) => {
-                console.log('values: ', values);
                 let z = 0
                 if (values.yearbox_lavels === null) {
                     message.error('年框提点，信息缺失！')
                     z++
-                } else if (values.yearbox_lavels.length === 0) {
+                } else if (values.yearbox_lavels && values.yearbox_lavels.length === 0) {
                     message.error('年框提点，信息缺失！')
+                    z++
+                } else if (dayjs(values.yearbox_start_date).add(1, "year") < dayjs()) {
+                    message.error('年框开始生效时间超过一年，添加失败！')
                     z++
                 }
                 if (z === 0) {
@@ -66,9 +42,6 @@ function AEYear(props) {
                     setYearType('');
                 }
             }}>
-                {type === 'detail' ? null : <Form.Item label="达人昵称" name="tid" rules={[{ required: true, message: '不能为空' }]}>
-                    <Select showSearch placeholder="请输入" options={talents} filterOption={filterOption} onChange={(value) => { searchtalentsAPI(value) }} onSearch={(value) => { searchtalentsAPI(value) }} />
-                </Form.Item>}
                 <Form.Item label="生效日期" name="yearbox_start_date" rules={[{ required: true, message: '不能为空' }]}>
                     <DatePicker onChange={(value) => { form.setFieldValue('yearbox_start_date', value) }} />
                 </Form.Item>

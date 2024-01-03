@@ -232,4 +232,91 @@ router.post('/getSalemanItems', (req, res) => {
     })
 })
 
+// 获取主播下拉框
+router.post('/getAnthorItems', (req, res) => {
+    let params = req.body
+    // 去除 已删除 + 自己 + 管理员
+    let where = `where status != '失效' and (position = '主播' or (position = '主管' and department = '直播部'))`
+    // 权限筛选
+    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
+        if (params.userInfo.position === '副总') {
+            where += ` and department = '${params.userInfo.department}'`
+        }
+        if (params.userInfo.department === '主管') {
+            where += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+        }
+    }
+    let sql = `SELECT * FROM user ${where}`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        let salemans = []
+        for (let i = 0; i < results.length; i++) {
+            const element = results[i];
+            salemans.push({
+                label: element.name,
+                value: element.uid
+            })
+        }
+        res.send({ code: 200, data: salemans, msg: `` })
+    })
+})
+
+// 获取中控下拉框
+router.post('/getControlItems', (req, res) => {
+    let params = req.body
+    // 去除 已删除 + 自己 + 管理员
+    let where = `where status != '失效' and position = '中控'`
+    // 权限筛选
+    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
+        if (params.userInfo.position === '副总') {
+            where += ` and department = '${params.userInfo.department}'`
+        }
+        if (params.userInfo.department === '主管') {
+            where += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+        }
+    }
+    let sql = `SELECT * FROM user ${where}`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        let salemans = []
+        for (let i = 0; i < results.length; i++) {
+            const element = results[i];
+            salemans.push({
+                label: element.name,
+                value: element.uid
+            })
+        }
+        res.send({ code: 200, data: salemans, msg: `` })
+    })
+})
+
+// 获取中控下拉框
+router.post('/getServiceItems', (req, res) => {
+    let params = req.body
+    // 去除 已删除 + 自己 + 管理员
+    let where = `where status != '失效' and position = '客服'`
+    // 权限筛选
+    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
+        if (params.userInfo.position === '副总') {
+            where += ` and department = '${params.userInfo.department}'`
+        }
+        if (params.userInfo.department === '主管') {
+            where += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+        }
+    }
+    let sql = `SELECT * FROM user ${where}`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        let salemans = []
+        for (let i = 0; i < results.length; i++) {
+            const element = results[i];
+            salemans.push({
+                label: element.name,
+                value: element.uid
+            })
+        }
+        res.send({ code: 200, data: salemans, msg: `` })
+    })
+})
+
 module.exports = router

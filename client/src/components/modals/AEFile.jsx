@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import request from '../../service/request';
-import { Table, Modal, message, Space } from 'antd';
+import { Table, Modal, message, Space, Image } from 'antd';
 import UpLoadFile from '../UpLoadFile';
 import FilePreview from '../FilePreview';
 
@@ -23,15 +23,17 @@ function AEFile(props) {
             dataIndex: 'url',
             key: 'url',
             render: (_, record) => (
-                <FilePreview
-                    fileUrl={`${record.split('/')[4]}`}
-                    fileType={
-                        ['jpg', 'png', 'webp', 'jpeg'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'image' :
-                            ['pdf'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'pdf' :
-                                ['xlsx', 'xls', 'csv'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'excel' :
-                                    ['doc'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'word' : 'image'
-                    }
-                />
+                <>
+                    <FilePreview
+                        fileUrl={record}
+                        fileType={
+                            ['jpg', 'png', 'webp', 'jpeg'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'image' :
+                                ['pdf'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'pdf' :
+                                    ['xlsx', 'xls', 'csv'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'excel' :
+                                        ['doc'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'word' : 'image'
+                        }
+                    />
+                </>
             )
         },
         {
@@ -191,13 +193,12 @@ function AEFile(props) {
             onOk={() => { props.onOK(); }}
             onCancel={() => { props.onCancel(); }}
         >
-            <UpLoadFile
+            {editPower ? <UpLoadFile
                 type={type}
                 setFile={(value) => {
-                    console.log('files: ', JSON.stringify(data && data.concat(value)));
                     if (value.length !== 0) {
                         if (type.match('年框')) {
-                            editTalentAPI(`新增${type}`, data && data.length === 0 ? null : JSON.stringify(data), {
+                            editTalentAPI(`新增${type}`, null, {
                                 yearbox_files: JSON.stringify(data && data.concat(value))
                             });
                         } else {
@@ -208,7 +209,7 @@ function AEFile(props) {
                         }
                     }
                 }}
-            />
+            /> : null}
             <Table
                 style={{ margin: '20px auto' }}
                 rowKey={(data) => data}

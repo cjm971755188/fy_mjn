@@ -57,16 +57,17 @@ router.post('/searchSameChance', (req, res) => {
     let params = req.body
     let names = []
     if (params.type === 'arr') {
-        names = Array.from(new Set([].concat(params.talent_name ? params.talent_name : []).concat(params.account_ids ? params.account_ids : []).concat(params.account_names ? params.account_names : []).concat(params.group_name ? params.group_name : []).concat(params.provide_name ? params.provide_name : [])))
+        names = Array.from(new Set([].concat(params.account_ids ? params.account_ids : []).concat(params.group_name ? params.group_name : []).concat(params.provide_name ? params.provide_name : [])))
     } else {
-        names = Array.from(new Set([].concat(params.account_id ? params.account_id : []).concat(params.account_name ? params.account_name : []).concat(params.group_name ? params.group_name : []).concat(params.provide_name ? params.provide_name : [])))
+        names = Array.from(new Set([].concat(params.account_id ? params.account_id : []).concat(params.group_name ? params.group_name : []).concat(params.provide_name ? params.provide_name : [])))
     }
     let r = [], r_name = ''
+    console.log('names: ', names);
     for (let i = 0; i < names.length; i++) {
         let sql = `(SELECT	c.cid, '' as name, c.models, c.platforms, c.account_ids, c.account_names, c.group_name, c.provide_name, u.name as u_name, c.status
                     FROM	chance c
                         LEFT JOIN user u ON u.uid = c.u_id
-                    WHERE	(c.account_ids LIKE '%${names[i]}%' OR c.account_names LIKE '%${names[i]}%' OR c.group_name LIKE '%${names[i]}%' OR c.provide_name LIKE '%${names[i]}%')
+                    WHERE	(c.account_ids LIKE '%${names[i]}%' OR c.group_name LIKE '%${names[i]}%' OR c.provide_name LIKE '%${names[i]}%')
                         and c.status != '报备通过' and c.status != '报备驳回' and c.cid != '${params.cid}')
                     UNION
                     (SELECT tm.tmid, t.name, tm.model, tm.platform, tm.account_id, tm.account_name, tm.group_name, tm.provide_name, u.name as u_name, tm.status
@@ -75,8 +76,9 @@ router.post('/searchSameChance', (req, res) => {
                         LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                         LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                         LEFT JOIN user u ON u.uid = tms1.u_id_1
-                    WHERE   (t.name = '${names[i]}' OR tm.account_id = '${names[i]}' OR tm.account_name = '${names[i]}' OR tm.group_name = '${names[i]}' OR tm.provide_name = '${names[i]}')
+                    WHERE   (t.name = '${names[i]}' OR tm.account_id = '${names[i]}' OR tm.group_name = '${names[i]}' OR tm.provide_name = '${names[i]}')
                         and tm.status != '已失效')`
+        console.log('sql: ', sql);
         db.query(sql, (err, results) => {
             if (err) throw err;
             if (results.length !== 0) {
@@ -118,7 +120,7 @@ router.post('/addChance', (req, res) => {
     })
 })
 
-// 修改
+// 修改商机
 router.post('/editChance', (req, res) => {
     let params = req.body
     params.models = params.models ? params.models.join() : null
@@ -129,7 +131,7 @@ router.post('/editChance', (req, res) => {
     params.provide_name = params.provide_name ? params.provide_name : null
     let sql = 'UPDATE chance SET'
     for (let i = 0; i < Object.getOwnPropertyNames(params).length; i++) {
-        if (Object.keys(params)[i] !== 'userInfo' && Object.keys(params)[i] !== 'cid') {
+        if (Object.keys(params)[i] !== 'userInfo' && Object.keys(params)[i] !== 'cid' && Object.keys(params)[i] !== 'type') {
             sql += Object.values(params)[i] !== null ? ` ${Object.keys(params)[i]} = '${Object.values(params)[i]}',` : ` ${Object.keys(params)[i]} = null,`
         }
     }
@@ -197,14 +199,14 @@ router.post('/reportChance', (req, res) => {
             db.query(sql, (err, results) => {
                 if (err) throw err;
                 let tid = 'T' + `${results.length + 1}`.padStart(7, '0')
-                let sql = `INSERT INTO talent values('${tid}', '${params.cid}', '${params.talent_name}', '${params.province}', '${params.year_deal}', '${params.liaison_type}', '${params.liaison_name}', '${params.liaison_v}', ${liaison_phone}, '${params.crowd_name}', null, null, null, null, null, null, '报备待审批')`
+                let sql = `INSERT INTO talent values('${tid}', '${params.cid}', '${params.talent_name}', '${params.province}', '${params.year_deal}', '${params.liaison_type}', '${params.liaison_name}', '${params.liaison_v}', ${liaison_phone}, '${params.crowd_name}', '报备待审批')`
                 db.query(sql, (err, results) => {
                     if (err) throw err;
                     let sql = `SELECT * FROM talent_schedule`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
                         let tsid = 'TS' + `${results.length + 1}`.padStart(7, '0')
-                        let sql = `INSERT INTO talent_schedule values('${tsid}', '${tid}', ${m_id_1}, ${m_type_1}, ${m_point_1}, ${m_id_2}, ${m_type_2}, ${m_point_2}, ${m_note}, null, null, null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批')`
+                        let sql = `INSERT INTO talent_schedule values('${tsid}', '${tid}', ${m_id_1}, ${m_type_1}, ${m_point_1}, ${m_id_2}, ${m_type_2}, ${m_point_2}, ${m_note}, null, null, null, null, null, null, null, null, null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批')`
                         db.query(sql, (err, results) => {
                             if (err) throw err;
                             let sql = `SELECT * FROM talent_model`
