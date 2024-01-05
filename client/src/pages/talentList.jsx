@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom'
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Alert, Modal } from 'antd';
 import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined } from '@ant-design/icons';
-import { model, uPoint0, talentStatus, yearboxStatus, modelStatus } from '../baseData/talent'
+import { model, uPoint0, talentStatus, yearboxStatus, modelStatus, talentType } from '../baseData/talent'
 import AETalent from '../components/modals/AETalent'
 import AELive from '../components/modals/AELive'
 import dayjs from 'dayjs'
@@ -17,6 +17,16 @@ function TalentList() {
     let columns = [
         { title: '编号', dataIndex: 'tid', key: 'tid' },
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
+        { title: '合作模式', dataIndex: 'models', key: 'models' },
+        { title: '预估慕江南年GMV', dataIndex: 'year_deal', key: 'year_deal' },
+        {
+            title: '层级',
+            dataIndex: 'type',
+            key: 'type',
+            render: (_, record) => (
+                <span>{record.type} 类</span>
+            )
+        },
         {
             title: '商务',
             dataIndex: 'u_names',
@@ -48,8 +58,6 @@ function TalentList() {
                 </Popover>
             )
         },
-        { title: '预估慕江南年GMV', dataIndex: 'year_deal', key: 'year_deal' },
-        { title: '合作模式', dataIndex: 'models', key: 'models' },
         {
             title: '年框状态',
             dataIndex: 'yearbox_status',
@@ -99,6 +107,14 @@ function TalentList() {
             )
         },
         {
+            title: '合作专场',
+            dataIndex: 'live',
+            key: 'live',
+            render: (_, record) => (
+                <span>{record.live_count} 场（{record.live_sum ? record.live_sum : 0} 万）</span>
+            )
+        },
+        {
             title: '操作',
             key: 'action',
             render: (_, record) => (
@@ -112,7 +128,8 @@ function TalentList() {
                         <a onClick={() => {
                             setLiveType('add');
                             setIsShowLive(true);
-                            liveForm.setFieldValue('name', record.name)
+                            liveForm.setFieldValue('name', record.name);
+                            liveForm.setFieldValue('tid', record.tid);
                         }}>添加专场</a></> : null}
                 </Space>
             )
@@ -321,6 +338,39 @@ function TalentList() {
     const [liveType, setLiveType] = useState('')
     const [isShowLive, setIsShowLive] = useState(false)
     const [liveForm] = Form.useForm()
+    const addLiveAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/live/addLive',
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShowLive(false);
+                    setLiveType('');
+                    getTalentListAPI();
+                    liveForm.resetFields();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     useEffect(() => {
         getTalentListAPI();
@@ -342,6 +392,9 @@ function TalentList() {
                     <Form.Item label='达人名称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='合作模式' name='models'>
                         <Select style={{ width: 160 }} options={model} />
+                    </Form.Item>
+                    <Form.Item label='达人层级' name='type'>
+                        <Select style={{ width: 160 }} options={talentType} />
                     </Form.Item>
                     {editPower ? null : <Form.Item label='商务' name='u_ids' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
@@ -404,7 +457,18 @@ function TalentList() {
                 isShow={isShowLive}
                 type={liveType}
                 form={liveForm}
-                onOK={(values) => { message.error('开发中') }}
+                onOK={(values) => { 
+                    let payload = {
+                        ...values,
+                        tid: liveForm.getFieldValue('tid'),
+                        start_time: dayjs(values.start_time).valueOf(),
+                        end_time: dayjs(values.end_time).valueOf(),
+                        tmids: values.tmids.join(),
+                        u_id_1: values.u_id_1.value || values.u_id_1.value === null ? values.u_id_1.value : values.u_id_1,
+                        u_id_2: values.u_id_2.value || values.u_id_2.value === null ? values.u_id_2.value : values.u_id_2
+                    }
+                    addLiveAPI(payload)
+                }}
                 onCancel={() => { setIsShowLive(false); liveForm.resetFields(); setLiveType(''); }}
             />
         </Fragment>

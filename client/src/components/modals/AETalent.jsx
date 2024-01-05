@@ -1,13 +1,11 @@
 import React, { Fragment, useEffect, useState } from "react";
 import request from '../../service/request'
 import { Card, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, message, List, Image, Upload } from 'antd';
-import { PlusOutlined, MinusCircleOutlined, UploadOutlined } from '@ant-design/icons';
-import { accountType, accountModelType, ageCut, priceCut, liaisonType, shop, platform, model, middlemanPayType } from '../../baseData/talent'
+import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { accountType, accountModelType, ageCut, priceCut, liaisonType, shop, platform, model, middlemanPayType, talentType } from '../../baseData/talent'
 import { province } from '../../baseData/province'
 import people from '../../assets/people.jpg'
 import AEMiddleman from './AEMiddleman'
-import UpLoadFile from '../UpLoadFile'
-import { BASE_URL } from '../../service/config';
 
 const { TextArea } = Input;
 
@@ -241,6 +239,9 @@ function AETalent(props) {
                         <Form.Item label="预估慕江南年销售额（万）" name="year_deal" rules={[{ required: true, message: '不能为空' }]}>
                             <Input placeholder="请输入" />
                         </Form.Item>
+                        <Form.Item label="达人层级" name="talent_type" rules={[{ required: true, message: '不能为空' }]}>
+                            <Select placeholder="请选择" options={talentType} />
+                        </Form.Item>
                         {type == 'history' ? <><Form.Item label="联系人类型" name="liaison_type" rules={[{ required: true, message: '不能为空' }]}>
                             <Select
                                 allowClear
@@ -420,16 +421,16 @@ function AETalent(props) {
                         <Form.Item label="聚水潭店铺名" name="group_shop" rules={[{ required: true, message: '不能为空' }]}>
                             <Input placeholder="请输入" />
                         </Form.Item>
-                        <Form.Item label="常规品佣金（%）[例：20]" name="discount_normal" rules={[{ required: true, message: '不能为空' }]}>
+                        <Form.Item label="常规品佣金（%）[例：20]" name="commission_normal" rules={[{ required: true, message: '不能为空' }]}>
                             <InputNumber placeholder="请输入" min={0} max={100} />
                         </Form.Item>
-                        <Form.Item label="福利品佣金（%）[例：20]" name="discount_welfare" rules={[{ required: true, message: '不能为空' }]}>
+                        <Form.Item label="福利品佣金（%）[例：20]" name="commission_welfare" rules={[{ required: true, message: '不能为空' }]}>
                             <InputNumber placeholder="请输入" min={0} max={100} />
                         </Form.Item>
-                        <Form.Item label="爆品佣金（%）[例：20]" name="discount_bao" rules={[{ required: true, message: '不能为空' }]}>
+                        <Form.Item label="爆品佣金（%）[例：20]" name="commission_bao" rules={[{ required: true, message: '不能为空' }]}>
                             <InputNumber placeholder="请输入" min={0} max={100} />
                         </Form.Item>
-                        <Form.Item label="佣金备注" name="discount_note">
+                        <Form.Item label="佣金备注" name="commission_note">
                             <TextArea placeholder="请输入" />
                         </Form.Item>
                         <Space size='large'>

@@ -151,3 +151,9 @@ export const middlemanPayType= [
     { key: 0, label: "线上后台自动转款", value: "线上后台自动转款" },
     { key: 1, label: "线下结佣", value: "线下结佣" }
 ]
+
+export const talentType= [
+    { key: 0, label: "A", value: "A" },
+    { key: 1, label: "B", value: "B" },
+    { key: 2, label: "C", value: "C" }
+]

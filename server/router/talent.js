@@ -36,7 +36,7 @@ router.post('/getTalentList', (req, res) => {
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
     let sql = `SELECT * FROM (
                 SELECT t.*, tm.models, CONCAT(ts.m_id_1, ',', ts.m_id_2) as m_ids, ts.m_name_1, ts.m_name_2, CONCAT(ts.m_name_1, ',', ts.m_name_2) as m_names, ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, 
-                    CONCAT(tm.u_id_1, ',', tm.u_id_2, ',', ts.u_id_0) as u_ids, CONCAT(tm.u_name_1, ',', tm.u_name_2, ',', ts.u_name_0) as u_names, tm.u_name_1, tm.u_name_2, ts.u_name_0, tm.model_status
+                    CONCAT(tm.u_id_1, ',', tm.u_id_2, ',', ts.u_id_0) as u_ids, CONCAT(tm.u_name_1, ',', tm.u_name_2, ',', ts.u_name_0) as u_names, tm.u_name_1, tm.u_name_2, ts.u_name_0, tm.model_status, COUNT(l.lid) as live_count, SUM(l.sales) as live_sum
                 FROM talent t
                     LEFT JOIN (
                         SELECT ts0.tid, IF(m1.mid IS NULL, '', m1.mid) as m_id_1, IF(m1.name IS NULL, '', m1.name) as m_name_1, IF(m2.mid IS NULL, '', m2.mid) as m_id_2, IF(m2.name IS NULL, '', m2.name) as m_name_2,
@@ -61,6 +61,9 @@ router.post('/getTalentList', (req, res) => {
                         WHERE tm.status != '已失效'
                         GROUP BY tm.tid
                     ) tm ON tm.tid = t.tid
+                        LEFT JOIN live l ON l.tid = t.tid
+                GROUP BY t.cid, t.crowd_name, t.liaison_name, t.liaison_phone, t.liaison_type, t.liaison_v, m_ids, ts.m_name_1, ts.m_name_2, m_names, tm.model_status, tm.models, t.name, t.province, t.status, t.tid, t.type, u_ids, ts.u_name_0, tm.u_name_1, 
+                    tm.u_name_2, u_names, t.year_deal, ts.yearbox_cycle, ts.yearbox_lavels, ts.yearbox_lavels_base, ts.yearbox_start_date
                 ) z 
                 ${whereFilter}`
     db.query(sql, (err, results) => {
@@ -90,7 +93,7 @@ router.post('/getTalentDetail', (req, res) => {
                 WHERE t.tid = '${params.tid}'`
     db.query(sql, (err, results_base) => {
         if (err) throw err;
-        let sql = `SELECT tm.*, tms0.commission_normal, tms0.commission_welfare, tms0.commission_bao, tms0.commission_note, tms0.discount_normal, tms0.discount_welfare, tms0.discount_bao, tms0.discount_note, tms0.discount_buyout, tms0.discount_back, tms0.discount_label, 
+        let sql = `SELECT tm.*, tms0.commission_normal, tms0.commission_welfare, tms0.commission_bao, tms0.commission_note, tms0.discount_buyout, tms0.discount_back, tms0.discount_label, 
                         tms0.u_id_1, u1.name as u_name_1, tms0.u_point_1, tms0.u_id_2, u2.name as u_name_2, tms0.u_point_2, tms0.u_note
                     FROM talent_model tm
                         LEFT JOIN talent_model_schedule tms0 ON tms0.tmid = tm.tmid
@@ -151,11 +154,14 @@ router.post('/editTalent', (req, res) => {
                         WHERE ts0.tid = '${params.tid}'`
         db.query(sql, (err, results) => {
             if (err) throw err;
-            let sql = `INSERT INTO talent_schedule VALUES('${tsid}',`
+            let sql = `INSERT INTO talent_schedule VALUES('${tsid}', '${params.tid}',`
             for (const key in results[0]) {
                 let isAdd = true
                 if (Object.hasOwnProperty.call(results[0], key)) {
                     if (isAdd && key === 'tsid') {
+                        isAdd = false
+                        continue
+                    } else if (isAdd && key === 'tid') {
                         isAdd = false
                         continue
                     } else if (isAdd && key === 'create_uid') {
@@ -327,20 +333,19 @@ router.post('/addTalentModel', (req, res) => {
             let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
             let keyword = params.keyword ? `'${params.keyword}'` : null
             let commission_note = params.commission_note ? `'${params.commission_note}'` : null
-            let discount_note = params.discount_note ? `'${params.discount_note}'` : null
             let discount_label = params.discount_label ? `'${params.discount_label}'` : null
             let u_id_2 = params.u_id_2 ? `'${params.u_id_2}'` : null
             let u_point_2 = params.u_point_2 ? `'${params.u_point_2}'` : null
             let u_note = params.u_note ? `'${params.u_note}'` : null
             if (params.commission_normal) {
                 sql_d += `('${tmid}', '${params.tid}', '线上平台', '${params.platform}', '${params.shop}', '${params.account_id}', '${params.account_name}', null, null, '${params.account_type}', '${params.account_models}', ${keyword}, '${params.people_count}', '${params.fe_proportion}', '${params.age_cuts}', '${params.main_province}', '${params.price_cut}', null, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, null, null, null, null, '${params.userInfo.uid}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.userInfo.uid}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
             } else if (params.discount_normal) {
                 sql_d += `('${tmid}', '${params.tid}', '社群团购', '聚水潭', '${params.group_shop}', null, null, '${params.group_name}', null, null, null, null, null, null, null, null, null, null, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_normal}', '${params.discount_welfare}', '${params.discount_bao}', ${discount_note}, null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
             } else if (params.discount_back) {
                 sql_d += `('${tmid}', '${params.tid}', '供货', '聚水潭', '${params.provide_shop}', null, null, null, '${params.provide_name}', null, null, null, null, null, null, null, null, null, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
             }
             count_d += 1
             count_l += 1
@@ -708,18 +713,34 @@ router.post('/giveTalent', (req, res) => {
 // 搜索达人
 router.post('/searchTalents', (req, res) => {
     let params = req.body
-    let sql = `SELECT t.tid, t.name
-                FROM talent t 
-                    LEFT JOIN (
-                        SELECT tm.tid, GROUP_CONCAT(DISTINCT u1.uid) as u_id_1, GROUP_CONCAT(DISTINCT u2.uid) as u_id_2 
+    // 权限筛选
+    let whereUser = `where status != '失效'`
+    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
+        if (params.userInfo.position === '副总') {
+            whereUser += ` and department = '${params.userInfo.department}'`
+        }
+        if (params.userInfo.department === '主管') {
+            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+        }
+        if (params.userInfo.position === '商务') {
+            whereUser += ` and uid = '${params.userInfo.uid}'`
+        }
+    }
+    let sql = `SELECT DISTINCT t.tid, t.name
+                FROM talent t
+                    INNER JOIN (
+                        SELECT tm.tid
                         FROM talent_model tm
-                            LEFT JOIN talent_model_schedule tms ON tms.tmid = tm.tmid
-                            LEFT JOIN user u1 ON u1.uid = tms.u_id_1
-                            LEFT JOIN user u2 ON u2.uid = tms.u_id_2
-                        WHERE '${params.userInfo.uid}' LIKE CONCAT("'%", tms.u_id_1, "%'") OR '${params.userInfo.uid}' LIKE CONCAT("'%", tms.u_id_2, "%'")
-                        GROUP BY tm.tid
+                            INNER JOIN (
+                                SELECT tms0.tmid, IF(u1.uid IS NULL, '', u1.uid) as u_id_1, IF(u1.name IS NULL, '', u1.name) as u_name_1, IF(u2.uid IS NULL, '', u2.uid) as u_id_2, IF(u2.name IS NULL, '', u2.name) as u_name_2
+                                FROM talent_model_schedule tms0
+                                    INNER JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms1 ON tms1.tmsid = tms0.tmsid
+                                    INNER JOIN (SELECT * FROM user ${whereUser}) u1 ON u1.uid = tms0.u_id_1
+                                    LEFT JOIN user u2 ON u2.uid = tms0.u_id_2
+                            ) tms ON tms.tmid = tm.tmid
+                        WHERE tm.status != '已失效'
                     ) tm ON tm.tid = t.tid
-                WHERE t.name like '%${params.value}%' and t.status = '合作中'`
+                WHERE t.name LIKE '%${params.value}%'`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let talents = []
@@ -731,6 +752,40 @@ router.post('/searchTalents', (req, res) => {
             })
         }
         res.send({ code: 200, data: talents, msg: `` })
+    })
+})
+
+// 获取合作模式下拉框
+router.post('/getModelItems', (req, res) => {
+    let params = req.body
+    let sql = `SELECT tmid, CONCAT(model, '_', platform, '_', shop, '_', IF(account_name IS NULL, IF(group_name IS NULL, provide_name, group_name), account_name)) as model FROM talent_model WHERE tid = '${params.tid}' and model != '供货'`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        let models = []
+        for (let i = 0; i < results.length; i++) {
+            const element = results[i];
+            models.push({
+                label: element.model,
+                value: element.tmid
+            })
+        }
+        res.send({ code: 200, data: models, msg: `` })
+    })
+})
+
+// 获取合作模式默认佣金下拉框
+router.post('/getCommissions', (req, res) => {
+    let params = req.body
+    let sql = `SELECT tms0.*, u1.name as u_name_1, u2.name as u_name_2
+                FROM talent_model tm
+                    INNER JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms1 ON tms1.tmid = tm.tmid
+                    LEFT JOIN talent_model_schedule tms0 ON tms0.tmsid = tms1.tmsid
+                    LEFT JOIN user u1 ON u1.uid = tms0.u_id_1
+                    LEFT JOIN user u2 ON u2.uid = tms0.u_id_2
+                WHERE tm.tmid = '${params.tmid}'`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        res.send({ code: 200, data: results[0], msg: `` })
     })
 })
 

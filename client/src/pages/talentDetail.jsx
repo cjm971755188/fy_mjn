@@ -884,13 +884,13 @@ function TalentDetail() {
                     if (middleType.match('一级')) {
                         payload = {
                             m_id_1: formMiddle.getFieldValue('m_id').value ? formMiddle.getFieldValue('m_id').value : formMiddle.getFieldValue('m_id'),
-                            m_type_1: formMiddle.getFieldValue('m_type'),
+                            m_type_1: formMiddle.getFieldValue('m_type').value ? formMiddle.getFieldValue('m_type').value : formMiddle.getFieldValue('m_type'),
                             m_point_1: formMiddle.getFieldValue('m_point')
                         }
                     } else {
                         payload = {
                             m_id_2: formMiddle.getFieldValue('m_id').value ? formMiddle.getFieldValue('m_id').value : formMiddle.getFieldValue('m_id'),
-                            m_type_1: formMiddle.getFieldValue('m_type'),
+                            m_type_2: formMiddle.getFieldValue('m_type').value ? formMiddle.getFieldValue('m_type').value : formMiddle.getFieldValue('m_type'),
                             m_point_2: formMiddle.getFieldValue('m_point')
                         }
                     }
@@ -976,6 +976,12 @@ function TalentDetail() {
                                 }
                             }
                         }
+                    }
+                    if (payload.commission_note === null) {
+                        delete payload.commission_note
+                    }
+                    if (payload.u_note === null) {
+                        delete payload.u_note
                     }
                     if (o !== null && Object.keys(o).length !== Object.keys(payload).length) {
                         type = type.match('综合信息') ? type : type.match('基础信息') ? '综合信息' : '佣金提点'

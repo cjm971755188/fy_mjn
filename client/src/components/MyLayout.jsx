@@ -33,7 +33,7 @@ const items = [
 const menuItemsTotal = [
     {
         key: '/admin/talent',
-        label: '达人管理',
+        label: '业务管理',
         icon: <TeamOutlined />,
         children: [
             {
@@ -47,7 +47,16 @@ const menuItemsTotal = [
             {
                 key: '/admin/talent/talent_list',
                 label: '达人列表'
-            }
+            },
+            {
+                key: '/admin/talent/live_list',
+                label: '专场列表'
+            },
+            {
+                key: '/admin/talent/middleman_list',
+                label: '中间人列表',
+                icon: <BranchesOutlined />
+            },
         ]
     },
     {
@@ -65,11 +74,7 @@ const menuItemsTotal = [
             }
         ]
     },
-    {
-        key: '/admin/middleman',
-        label: '中间人管理',
-        icon: <BranchesOutlined />
-    },
+    
     {
         key: '/admin/user',
         icon: <UserOutlined />,
@@ -92,6 +97,8 @@ const getMenuItems = (department, position) => {
         } else if (menu.label === '用户管理' && position !== '管理员' && position !== '总裁' && position !== '副总' && position !== '主管') {
             continue
         } else if (menu.label === '专场管理' && position !== '管理员') {
+            continue
+        } else if (menu.label === '结算管理' && position !== '管理员' && department !== '财务部') {
             continue
         } else {
             arrObj.push(menu)
