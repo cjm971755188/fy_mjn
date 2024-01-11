@@ -54,8 +54,7 @@ const menuItemsTotal = [
             },
             {
                 key: '/admin/talent/middleman_list',
-                label: '中间人列表',
-                icon: <BranchesOutlined />
+                label: '中间人列表'
             },
         ]
     },

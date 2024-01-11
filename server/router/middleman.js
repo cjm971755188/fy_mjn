@@ -7,16 +7,16 @@ const db = require('../config/db')
 router.post('/getMiddlemanList', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = ``
+    let whereUser = `WHERE status != '已失效'`
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
-            whereUser += ` and u.department = '${params.userInfo.department}'`
+            whereUser += ` and department = '${params.userInfo.department}'`
         }
         if (params.userInfo.department === '主管') {
-            whereUser += ` and u.department = '${params.userInfo.department}' and u.company = '${params.userInfo.company}'`
+            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
-            whereUser += ` and u.uid = '${params.userInfo.uid}'`
+            whereUser += ` and uid = '${params.userInfo.uid}'`
         }
     }
     // 条件筛选
@@ -32,8 +32,8 @@ router.post('/getMiddlemanList', (req, res) => {
     let current = params.pagination.current ? params.pagination.current : 0
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
     let sql = `SELECT z.* FROM (
-                SELECT m.*, b.u_name FROM (
-                    SELECT a.mid, GROUP_CONCAT(u.name) as u_name FROM (
+                SELECT m.* FROM (
+                    SELECT a.mid FROM (
                         (SELECT m.mid , m.u_id as u_id_1, null as u_id_2 FROM middleman m)
                         UNION
                         (SELECT m1.mid, tms0.u_id_1, tms0.u_id_2
@@ -53,9 +53,9 @@ router.post('/getMiddlemanList', (req, res) => {
                                 LEFT JOIN talent_model tm ON tm.tid = t.tid
                                 LEFT JOIN (SELECT tmid, MAX(tmsid) tmsid FROM talent_model_schedule tms GROUP BY tmid) tms1 ON tms1.tmid = tm.tmid
                                 LEFT JOIN talent_model_schedule tms0 ON tms0.tmsid = tms1.tmsid)
-                    ) a, user u
-                    WHERE (a.u_id_1 = u.uid or a.u_id_2 = u.uid)
-                        ${whereUser}
+                    ) a
+                        LEFT JOIN (SELECT * FROM user ${whereUser}) u1 ON u1.uid = a.u_id_1
+                        LEFT JOIN (SELECT * FROM user ${whereUser}) u2 ON u2.uid = a.u_id_2
                     GROUP BY a.mid
                     ) b
                         LEFT JOIN middleman m ON m.mid = b.mid

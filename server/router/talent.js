@@ -337,15 +337,15 @@ router.post('/addTalentModel', (req, res) => {
             let u_id_2 = params.u_id_2 ? `'${params.u_id_2}'` : null
             let u_point_2 = params.u_point_2 ? `'${params.u_point_2}'` : null
             let u_note = params.u_note ? `'${params.u_note}'` : null
-            if (params.commission_normal) {
+            if (params.type === 'model_1') {
                 sql_d += `('${tmid}', '${params.tid}', '线上平台', '${params.platform}', '${params.shop}', '${params.account_id}', '${params.account_name}', null, null, '${params.account_type}', '${params.account_models}', ${keyword}, '${params.people_count}', '${params.fe_proportion}', '${params.age_cuts}', '${params.main_province}', '${params.price_cut}', null, '待审批'),`
                 sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.userInfo.uid}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
-            } else if (params.discount_normal) {
-                sql_d += `('${tmid}', '${params.tid}', '社群团购', '聚水潭', '${params.group_shop}', null, null, '${params.group_name}', null, null, null, null, null, null, null, null, null, null, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
-            } else if (params.discount_back) {
-                sql_d += `('${tmid}', '${params.tid}', '供货', '聚水潭', '${params.provide_shop}', null, null, null, '${params.provide_name}', null, null, null, null, null, null, null, null, null, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+            } else if (params.type === 'model_2') {
+                sql_d += `('${tmid}', '${params.tid}', '社群团购', '聚水潭', '${params.shop}', null, null, '${params.group_name}', null, null, null, null, null, null, null, null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.userInfo.uid}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+            } else if (params.type === 'model_3') {
+                sql_d += `('${tmid}', '${params.tid}', '供货', '聚水潭', '${params.shop}', null, null, null, '${params.provide_name}', null, null, null, null, null, null, null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, '${params.userInfo.uid}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
             }
             count_d += 1
             count_l += 1
@@ -758,7 +758,7 @@ router.post('/searchTalents', (req, res) => {
 // 获取合作模式下拉框
 router.post('/getModelItems', (req, res) => {
     let params = req.body
-    let sql = `SELECT tmid, CONCAT(model, '_', platform, '_', shop, '_', IF(account_name IS NULL, IF(group_name IS NULL, provide_name, group_name), account_name)) as model FROM talent_model WHERE tid = '${params.tid}' and model != '供货'`
+    let sql = `SELECT tmid, CONCAT(model, '_', platform, '_', shop, '_', IF(account_name IS NULL, IF(group_name IS NULL, provide_name, group_name), account_name)) as model FROM talent_model WHERE tid = '${params.tid}' and model != '供货' and status = '合作中'`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let models = []

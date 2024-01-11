@@ -15,7 +15,7 @@ function LiveList() {
     let columns = [
         { title: '编号', dataIndex: 'lid', key: 'lid' },
         {
-            title: '开始时间',
+            title: '上播时间',
             dataIndex: 'start_time',
             key: 'start_time',
             render: (_, record) => (
@@ -23,11 +23,11 @@ function LiveList() {
             )
         },
         {
-            title: '结束时间',
-            dataIndex: 'end_time',
-            key: 'end_time',
+            title: '下播时间',
+            dataIndex: 'end_time_0',
+            key: 'end_time_0',
             render: (_, record) => (
-                <span>{dayjs(Number(record.end_time)).format('YYYY-MM-DD HH:mm:ss')}</span>
+                <span>{dayjs(Number(record.end_time_0)).format('YYYY-MM-DD HH:mm:ss')}</span>
             )
         },
         { title: '省份', dataIndex: 'place', key: 'place' },
@@ -98,6 +98,7 @@ function LiveList() {
                             tmids,
                             start_time: dayjs(Number(record.start_time)),
                             start_time_2: dayjs(Number(record.start_time_2)),
+                            end_time_0: dayjs(Number(record.end_time_0)),
                             end_time: dayjs(Number(record.end_time)),
                             a_id_1: {
                                 value: record.a_id_1,
@@ -305,11 +306,11 @@ function LiveList() {
             console.error(err)
         })
     }
-    const [salemansItems, setSalemansItems] = useState()
-    const getSalemanItemsAPI = () => {
+    const [salemanAssistantsItems, setSalemanAssistantsItems] = useState()
+    const getSalemanAssistantsItemsAPI = () => {
         request({
             method: 'post',
-            url: '/user/getSalemanItems',
+            url: '/user/getSalemanAssistantItems',
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
@@ -323,7 +324,7 @@ function LiveList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setSalemansItems(res.data.data)
+                    setSalemanAssistantsItems(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -444,7 +445,7 @@ function LiveList() {
                         <Select style={{ width: 160 }} options={controlsItems} onFocus={() => { getControlsItemsAPI(true); }} />
                     </Form.Item>
                     <Form.Item label='服务商务' name='u_id_3' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemanItemsAPI(); }} />
+                        <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                     </Form.Item>
                     <Form.Item label='达人昵称' name='tid'>
                         <Select
@@ -459,10 +460,10 @@ function LiveList() {
                         />
                     </Form.Item>
                     {editPower ? null : <Form.Item label='主商务' name='u_id_1' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemanItemsAPI(); }} />
+                        <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                     </Form.Item>}
                     {editPower ? null : <Form.Item label='副商务' name='u_id_2' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemanItemsAPI(); }} />
+                        <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                     </Form.Item>}
                     <Form.Item style={{ marginBottom: '20px' }}>
                         <Space size={'large'}>
@@ -503,6 +504,7 @@ function LiveList() {
                         tid: values.tid ? values.tid.value || values.tid.value === null ? values.tid.value : values.tid : null,
                         start_time: dayjs(values.start_time).valueOf(),
                         start_time_2: dayjs(values.start_time_2).valueOf(),
+                        end_time_0: dayjs(values.end_time_0).valueOf(),
                         end_time: dayjs(values.end_time).valueOf(),
                         tmids: tmids.join(),
                         a_id_1: values.a_id_1 ? values.a_id_1.value || values.a_id_1.value === null ? values.a_id_1.value : values.a_id_1 : null,

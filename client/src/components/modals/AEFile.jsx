@@ -24,6 +24,7 @@ function AEFile(props) {
             key: 'url',
             render: (_, record) => (
                 <>
+                    {/* <Image width={50} src={`${record}`} /> */}
                     <FilePreview
                         fileUrl={record}
                         fileType={
@@ -163,7 +164,7 @@ function AEFile(props) {
         request({
             method: 'get',
             url: '/file/download',
-            params: { url: url.split('/')[4] },
+            params: { url: url.split('/')[3] },
             responseType: 'blob'
         }).then((res) => {
             if (res.status == 200) {

@@ -33,8 +33,8 @@ function ChanceList() {
             render: (_, record) => (
                 <Popover title="联系人信息" content={
                     <List>
-                        <List.Item>姓名：{record.liaison_type}</List.Item>
-                        <List.Item>微信：{record.liaison_name}</List.Item>
+                        <List.Item>类型：{record.liaison_type}</List.Item>
+                        <List.Item>姓名：{record.liaison_name}</List.Item>
                         <List.Item>微信：{record.liaison_v}</List.Item>
                         <List.Item>手机号：{record.liaison_phone}</List.Item>
                         <List.Item>沟通群：{record.crowd_name}</List.Item>
@@ -211,11 +211,11 @@ function ChanceList() {
     // 查询、清空筛选
     const [filterForm] = Form.useForm()
     const [dateSelect, setDateSelect] = useState()
-    const [salemansItems, setSalemansItems] = useState()
-    const getSalemanItemsAPI = () => {
+    const [salemanAssistantsItems, setSalemanAssistantsItems] = useState()
+    const getSalemanAssistantsItemsAPI = () => {
         request({
             method: 'post',
-            url: '/user/getSalemanItems',
+            url: '/user/getSalemanAssistantItems',
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
@@ -229,7 +229,7 @@ function ChanceList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setSalemansItems(res.data.data)
+                    setSalemanAssistantsItems(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -476,7 +476,7 @@ function ChanceList() {
                     <Form.Item label='供货名' name='provide_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='联系人' name='liaison_name'><Input /></Form.Item>
                     {userShowPower ? null : <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemanItemsAPI(); }} />
+                        <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                     </Form.Item>}
                     <Form.Item label='状态' name='status' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={chanceStatus} />

@@ -15,7 +15,6 @@ function AETalent(props) {
     const [isShowPlatform, setIsShowPlatform] = useState(false)
     const [isShowGroup, setIsShowGroup] = useState(false)
     const [isShowProvide, setIsShowProvide] = useState(false)
-    const [isShowKeyword, setIsShowKeyword] = useState(false)
     const [isShowSearch, setIsShowSearch] = useState(false)
     const [sameList, setSameList] = useState([])
     const [samename, setSameName] = useState('')
@@ -78,11 +77,11 @@ function AETalent(props) {
     const [hasSecondMiddle, setHasSecondMiddle] = useState(false)
     const [hasGroupFuSaleman, setGroupHasFuSaleman] = useState(false)
     const [hasProvideFuSaleman, setProvideHasFuSaleman] = useState(false)
-    const [salemansItems, setSalemansItems] = useState()
-    const getSalemansItemsAPI = () => {
+    const [salemanAssistantsItems, setSalemanAssistantsItems] = useState()
+    const getSalemanAssistantsItemsAPI = () => {
         request({
             method: 'post',
-            url: '/user/getSalemanItems',
+            url: '/user/getSalemanAssistantItems',
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
@@ -95,7 +94,7 @@ function AETalent(props) {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setSalemansItems(res.data.data)
+                    setSalemanAssistantsItems(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -176,7 +175,6 @@ function AETalent(props) {
         setIsShowPlatform(false);
         setIsShowGroup(false);
         setIsShowProvide(false);
-        setIsShowKeyword(false);
         setIsShowSearch(false);
         setSameList([]);
         setHasFuSaleman(false);
@@ -184,7 +182,7 @@ function AETalent(props) {
         setHasSecondMiddle(false);
         setGroupHasFuSaleman(false);
         setProvideHasFuSaleman(false);
-        setSalemansItems();
+        setSalemanAssistantsItems();
         setTypeMid('add');
         setIsShowMid(false);
         formMid.resetFields();
@@ -216,12 +214,12 @@ function AETalent(props) {
                             liaison_v: form.getFieldValue('liaison_v'),
                             liaison_phone: form.getFieldValue('liaison_phone'),
                             crowd_name: form.getFieldValue('crowd_name'),
-                            type: 'arr'
+                            type: 'talent'
                         }
                     } else {
                         payload = {
                             ...values,
-                            type: 'arr'
+                            type: 'talent'
                         }
                     }
                     searchSameChanceAPI('finish', null, payload)
@@ -311,6 +309,15 @@ function AETalent(props) {
                                 setIsShowPlatform(value.join(',').match('线上平台') ? true : false)
                                 setIsShowGroup(value.join(',').match('社群团购') ? true : false)
                                 setIsShowProvide(value.join(',').match('供货') ? true : false)
+                                if (!value.join(',').match('线上平台')) {
+                                    form.setFieldValue('accounts', null)
+                                }
+                                if (!value.join(',').match('社群团购')) {
+                                    form.setFieldValue('group_name', null)
+                                }
+                                if (!value.join(',').match('供货')) {
+                                    form.setFieldValue('provide_name', null)
+                                }
                             }}
                         />
                     </Form.Item> : null}
@@ -324,12 +331,7 @@ function AETalent(props) {
                                                 <Select
                                                     placeholder="请选择"
                                                     options={type === 'report' ? form.getFieldValue('platformList') : platform}
-                                                    onChange={(value) => {
-                                                        form.setFieldValue('platform', value)
-                                                        if (value !== '闯货' && value !== '抖音' && value !== '快手' && value !== '视频号' && value !== '视频号服务商') {
-                                                            setIsShowKeyword(true)
-                                                        }
-                                                    }}
+                                                    onChange={(value) => { form.setFieldValue('platform', value) }}
                                                 />
                                             </Form.Item>
                                             <Form.Item label="店铺" {...restField} name={[name, "shop"]} rules={[{ required: true, message: '不能为空' }]}>
@@ -348,9 +350,9 @@ function AETalent(props) {
                                             <Form.Item label="合作方式" {...restField} name={[name, "account_models"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select mode="multiple" allowClear placeholder="请选择" onChange={(value) => { form.setFieldValue('account_models', value) }} options={accountModelType} />
                                             </Form.Item>
-                                            {isShowKeyword ? <Form.Item label="关键字（前后缀）（以英文逗号“,”区分多个关键字）" {...restField} name={[name, "keyword"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Input placeholder="请输入" />
-                                            </Form.Item> : null}
+                                            <Form.Item label="关键字（前后缀）" {...restField} name={[name, "keyword"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                <Select mode="tags" allowClear placeholder="请输入" onChange={(value) => { form.setFieldValue('keyword', value) }} options={[]} />
+                                            </Form.Item>
                                             <Form.Item label="平时带货在线（人）[例：1000]" {...restField} name={[name, "people_count"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <InputNumber min={0} />
                                             </Form.Item>
@@ -358,7 +360,7 @@ function AETalent(props) {
                                                 <InputNumber min={0} max={100} />
                                             </Form.Item>
                                             <Form.Item label="粉丝地域分布（省份）" {...restField} name={[name, "main_province"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Input />
+                                                <Select mode="multiple" allowClear placeholder="请选择" onChange={(value) => { form.setFieldValue('main_province', value) }} options={province} />
                                             </Form.Item>
                                             <Form.Item label="粉丝购买主力年龄段（岁）" {...restField} name={[name, "age_cuts"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select mode="multiple" allowClear options={ageCut} />
@@ -394,7 +396,7 @@ function AETalent(props) {
                                             </Form.Item>
                                             {hasFuSaleman ? <Space size='large'>
                                                 <Form.Item label="副商务" {...restField} name={[name, "u_id_2"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
+                                                    <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                                                 </Form.Item>
                                                 <Form.Item label="副商务提成点（%）[例：0.5]" {...restField} name={[name, "u_point_2"]} rules={[{ required: true, message: '不能为空' }]}>
                                                     <InputNumber min={0} max={100} />
@@ -416,7 +418,7 @@ function AETalent(props) {
                     </Card> : null}
                     {isShowGroup ? <Card title="社群团购" style={{ marginBottom: "20px" }}>
                         <Form.Item label="达人名称" name="group_name" rules={[{ required: true, message: '不能为空' }]}>
-                            <Input disabled={type === 'history' ? false : true} />
+                            <Input placeholder="请输入" />
                         </Form.Item>
                         <Form.Item label="聚水潭店铺名" name="group_shop" rules={[{ required: true, message: '不能为空' }]}>
                             <Input placeholder="请输入" />
@@ -449,7 +451,7 @@ function AETalent(props) {
                         </Form.Item>
                         {hasGroupFuSaleman ? <Space size='large'>
                             <Form.Item label="副商务" name={"group_u_id_2"} rules={[{ required: true, message: '不能为空' }]} >
-                                <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
+                                <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                             </Form.Item>
                             <Form.Item label="副商务提成点（%）[例：0.5]" name={"group_u_point_2"} rules={[{ required: true, message: '不能为空' }]} >
                                 <InputNumber min={0} max={100} />
@@ -461,7 +463,7 @@ function AETalent(props) {
                     </Card> : null}
                     {isShowProvide ? <Card title="供货" style={{ marginBottom: "20px" }}>
                         <Form.Item label="达人名称" name="provide_name" rules={[{ required: true, message: '不能为空' }]}>
-                            <Input disabled={type === 'history' ? false : true} />
+                            <Input placeholder="请输入" />
                         </Form.Item>
                         <Form.Item label="聚水潭店铺名" name="provide_shop" rules={[{ required: true, message: '不能为空' }]}>
                             <Input placeholder="请输入" />
@@ -491,7 +493,7 @@ function AETalent(props) {
                         </Form.Item>
                         {hasProvideFuSaleman ? <Space size='large'>
                             <Form.Item label="副商务" name={"provide_u_id_2"} rules={[{ required: true, message: '不能为空' }]} >
-                                <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
+                                <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                             </Form.Item>
                             <Form.Item label="副商务提成点（%）[例：0.5]" name={"provide_u_point_2"} rules={[{ required: true, message: '不能为空' }]} >
                                 <InputNumber min={0} max={100} />
@@ -503,13 +505,19 @@ function AETalent(props) {
                     </Card> : null}
                     {type === 'report' ? null : <><Form.Item label="相同线上达人">
                         <Button onClick={() => {
-                            if ((form.getFieldValue('account_names') && form.getFieldValue('account_names').length > 0) || (form.getFieldValue('account_ids') && form.getFieldValue('account_ids').length > 0) ||
+                            let ids = []
+                            if (form.getFieldValue('accounts')) {
+                                for (let i = 0; i < form.getFieldValue('accounts').length; i++) {
+                                    ids.push(form.getFieldValue('accounts')[i].account_id)
+                                }
+                            }
+                            if ((form.getFieldValue('talent_name') && form.getFieldValue('talent_name') !== null) || (ids.length > 0) ||
                                 (form.getFieldValue('group_name') && form.getFieldValue('group_name') !== null) || (form.getFieldValue('provide_name') && form.getFieldValue('provide_name') !== null)) {
                                 let payload = {
                                     cid: type == 'add' ? '' : form.getFieldValue('cid'),
+                                    type: 'talent',
                                     talent_name: form.getFieldValue('talent_name'),
-                                    account_names: form.getFieldValue('account_names'),
-                                    account_ids: form.getFieldValue('account_ids'),
+                                    account_ids: ids,
                                     group_name: form.getFieldValue('group_name'),
                                     provide_name: form.getFieldValue('provide_name')
                                 }
@@ -531,8 +539,8 @@ function AETalent(props) {
                                     <List.Item key={index}>
                                         <List.Item.Meta
                                             avatar={<Image width={50} src={people} preview={false} />}
-                                            title={<Space size={'large'}><span>{`编号: ${item.cid}`}</span><span>{`状态: ${item.status}`}</span><span>{`商务: ${item.u_name}`}</span></Space>}
-                                            description={<Space size={'large'}><span>{`模式: ${item.models}`}</span>{item.models === '线上平台' ? <span>{`平台: ${item.platforms}`}</span> : null}<span>{`重复名称/ID: ${samename}`}</span></Space>}
+                                            title={<Space size={'large'}><span>{`合作模式编号: ${item.tmid}`}</span><span>{`状态: ${item.status}`}</span><span>{`商务: ${item.u_name}`}</span></Space>}
+                                            description={<Space size={'large'}><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}<span>{`重复名称/ID: ${samename}`}</span></Space>}
                                         />
                                     </List.Item>
                                 )}

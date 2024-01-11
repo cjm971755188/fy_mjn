@@ -239,16 +239,13 @@ function TalentDetail() {
                             items.push(description)
                         }
                     } else if (data.model === '社群团购') {
-                        if (descriptionsItems[j].key >= 42 && descriptionsItems[j].key <= 45) {
-                            if (descriptionsItems[j].key === 45) {
-                                description.span = 2
-                            }
+                        if ((descriptionsItems[j].key >= 42 && descriptionsItems[j].key <= 45) || descriptionsItems[j].key === 64) {
                             items.push(description)
                         }
                     } else if (data.model === '供货') {
-                        if (descriptionsItems[j].key >= 46 && descriptionsItems[j].key <= 48) {
+                        if ((descriptionsItems[j].key >= 46 && descriptionsItems[j].key <= 48) || descriptionsItems[j].key === 65) {
                             if (descriptionsItems[j].key === 48) {
-                                description.span = 3
+                                description.span = 2
                             }
                             items.push(description)
                         }
@@ -389,6 +386,7 @@ function TalentDetail() {
             data: {
                 tid,
                 cid: null,
+                modelType,
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
@@ -732,14 +730,32 @@ function TalentDetail() {
                         {isShowM2PayItems ? <Descriptions column={5} items={m2PayItems}></Descriptions> : null}
                     </Card>
                     <Card title={<Space><GlobalOutlined /><span>合作模式 ----- {detailData.models && detailData.models.length} 个</span></Space>}
-                        extra={detailData.status.match('待审批') ? null : editPower ? <Button type="text" icon={<PlusOutlined />} onClick={() => {
-                            formModel.setFieldValue('u_id_1', {
-                                label: localStorage.getItem('name'),
-                                value: localStorage.getItem('uid')
-                            })
-                            setIsShowModel(true);
-                            setTypeModel('新增线上平台');
-                        }}>新增线上平台</Button> : null}
+                        extra={detailData.status.match('待审批') ? null : editPower ? <Space>
+                            <Button type="text" icon={<PlusOutlined />} onClick={() => {
+                                formModel.setFieldValue('u_id_1', {
+                                    label: localStorage.getItem('name'),
+                                    value: localStorage.getItem('uid')
+                                })
+                                setIsShowModel(true);
+                                setTypeModel('新增线上平台');
+                            }}>新增线上平台</Button>
+                            <Button type="text" icon={<PlusOutlined />} onClick={() => {
+                                formModel.setFieldValue('u_id_1', {
+                                    label: localStorage.getItem('name'),
+                                    value: localStorage.getItem('uid')
+                                })
+                                setIsShowModel(true);
+                                setTypeModel('新增社群团购');
+                            }}>新增社群团购</Button>
+                            <Button type="text" icon={<PlusOutlined />} onClick={() => {
+                                formModel.setFieldValue('u_id_1', {
+                                    label: localStorage.getItem('name'),
+                                    value: localStorage.getItem('uid')
+                                })
+                                setIsShowModel(true);
+                                setTypeModel('新增供货');
+                            }}>新增供货</Button>
+                        </Space> : null}
                     >
                         {detailData.models && detailData.models.map((model, index) => {
                             return (
@@ -763,11 +779,13 @@ function TalentDetail() {
                                                         label: model.u_name_2,
                                                         value: model[key]
                                                     }
-                                                } else if (model[key] !== null && (key === 'account_models' || key === 'age_cuts')) {
+                                                } else if (model[key] !== null && (key === 'account_models' || key === 'age_cuts' || key === 'keyword' || key === 'main_province')) {
                                                     f[key] = model[key].split(',')
-                                                } else if (model.model !== '线上平台' && model[key] !== null && (key.match('discount') || key.match('u_') || key.match('shop'))) {
+                                                } else if ((key.match('discount') || key.match('commission') || key.match('u_') || key.match('shop'))) {
                                                     f[key] = model[key]
-                                                } else if (model.model === '线上平台' && model[key] !== null && ['create_time', 'create_uid', 'model', 'platform', 'shop', 'status', 'tid'].indexOf(key) !== -1) {
+                                                } else if (model[key] !== null && ['create_time', 'create_uid', 'model', 'platform', 'shop', 'status', 'tid'].indexOf(key) !== -1) {
+                                                    delete f[key]
+                                                } else if (key === 'model_files') {
                                                     delete f[key]
                                                 }
                                             }
@@ -929,15 +947,21 @@ function TalentDetail() {
                     let ori = null
                     if (editOri) {
                         ori = editOri
-                        ori.u_id_1 = editOri.u_id_1.value
-                        if (ori.u_id_2) {
-                            ori.u_id_2 = editOri.u_id_2.value
-                        }
+                        ori.u_id_1 = editOri.u_id_1 ? editOri.u_id_1.value || editOri.u_id_1.value === null ? editOri.u_id_1.value : editOri.u_id_1 : null
+                        ori.u_id_2 = editOri.u_id_2 ? editOri.u_id_2.value || editOri.u_id_2.value === null ? editOri.u_id_2.value : editOri.u_id_2 : null
+                        ori.u_point_1 = editOri.u_point_1 ? editOri.u_point_1.value || editOri.u_point_1.value === null ? editOri.u_point_1.value : editOri.u_point_1 : null
+                        ori.u_point_2 = editOri.u_point_2 ? editOri.u_point_2.value || editOri.u_point_2.value === null ? editOri.u_point_2.value : editOri.u_point_2 : null
                         if (ori.account_models) {
                             ori.account_models = editOri.account_models.join()
                         }
                         if (ori.age_cuts) {
                             ori.age_cuts = editOri.age_cuts.join()
+                        }
+                        if (ori.keyword) {
+                            ori.keyword = editOri.keyword.join()
+                        }
+                        if (ori.main_province) {
+                            ori.main_province = editOri.main_province.join()
                         }
                         delete ori.u_name_1
                         delete ori.u_name_2
@@ -945,20 +969,29 @@ function TalentDetail() {
                     let o = {}
                     for (const key in ori) {
                         if (Object.hasOwnProperty.call(ori, key)) {
-                            if (ori[key] === null) {
+                            if (ori[key] === null && key !== 'u_id_2' && key !== 'u_point_2' && key !== 'u_note' && key !== 'commission_note' && key !== 'discount_note') {
                                 continue
                             } else {
                                 o[key] = ori[key]
                             }
                         }
                     }
-                    let payload = formModel.getFieldsValue()
-                    payload.u_id_1 = formModel.getFieldValue('u_id_1').value
+                    let payload = values
+                    payload.u_id_1 = values.u_id_1 ? values.u_id_1.value || values.u_id_1.value === null ? values.u_id_1.value : values.u_id_1 : null
+                    payload.u_id_2 = values.u_id_2 ? values.u_id_2.value || values.u_id_2.value === null ? values.u_id_2.value : values.u_id_2 : null
+                    payload.u_point_1 = values.u_point_1 ? values.u_point_1.value || values.u_point_1.value === null ? values.u_point_1.value : values.u_point_1 : null
+                    payload.u_point_2 = values.u_point_2 ? values.u_point_2.value || values.u_point_2.value === null ? values.u_point_2.value : values.u_point_2 : null
                     if (payload.account_models) {
-                        payload.account_models = formModel.getFieldValue('account_models').join()
+                        payload.account_models = values.account_models.join()
                     }
                     if (payload.age_cuts) {
-                        payload.age_cuts = formModel.getFieldValue('age_cuts').join()
+                        payload.age_cuts = values.age_cuts.join()
+                    }
+                    if (payload.keyword) {
+                        payload.keyword = values.keyword.join()
+                    }
+                    if (payload.main_province) {
+                        payload.main_province = values.main_province.join()
                     }
                     let z = {}, type = ''
                     for (const key in o) {
@@ -976,12 +1009,6 @@ function TalentDetail() {
                                 }
                             }
                         }
-                    }
-                    if (payload.commission_note === null) {
-                        delete payload.commission_note
-                    }
-                    if (payload.u_note === null) {
-                        delete payload.u_note
                     }
                     if (o !== null && Object.keys(o).length !== Object.keys(payload).length) {
                         type = type.match('综合信息') ? type : type.match('基础信息') ? '综合信息' : '佣金提点'

@@ -54,29 +54,59 @@ router.post('/getChanceList', (req, res) => {
 
 // 查询重复商机
 router.post('/searchSameChance', (req, res) => {
-    let params = req.body
-    let names = []
-    if (params.type === 'arr') {
+    let params = req.body, names = [], sql = ''
+    if (params.type === 'chance') {
         names = Array.from(new Set([].concat(params.account_ids ? params.account_ids : []).concat(params.group_name ? params.group_name : []).concat(params.provide_name ? params.provide_name : [])))
-    } else {
+    } else if (params.type === 'talent') {
+        names = Array.from(new Set([].concat(params.account_ids ? params.account_ids : []).concat(params.talent_name ? params.talent_name : []).concat(params.group_name ? params.group_name : []).concat(params.provide_name ? params.provide_name : [])))
+    } else if (params.type.match('model')) {
         names = Array.from(new Set([].concat(params.account_id ? params.account_id : []).concat(params.group_name ? params.group_name : []).concat(params.provide_name ? params.provide_name : [])))
     }
     let r = [], r_name = ''
     for (let i = 0; i < names.length; i++) {
-        let sql = `(SELECT	c.cid, '' as name, c.models, c.platforms, c.account_ids, c.account_names, c.group_name, c.provide_name, u.name as u_name, c.status
+        if (params.type === 'chance') {
+            filter = params.account_ids ? params.group_name ? params.provide_name ? `c.account_ids = '${names[i]}' OR c.group_name = '${names[i]}' OR c.provide_name = '${names[i]}'` : `c.account_ids = '${names[i]}' OR c.group_name = '${names[i]}'` :
+                `c.account_ids = '${names[i]}'` : params.group_name ? params.provide_name ? `c.group_name = '${names[i]}' OR c.provide_name = '${names[i]}'` : `c.group_name = '${names[i]}'` : `c.provide_name = '${names[i]}'`
+            sql = `(SELECT	c.cid, '' as name, c.models, c.platforms, c.account_ids, c.account_names, c.group_name, c.provide_name, u.name as u_name, c.status
                     FROM	chance c
                         LEFT JOIN user u ON u.uid = c.u_id
-                    WHERE	(c.account_ids LIKE '%${names[i]}%' OR c.group_name LIKE '%${names[i]}%' OR c.provide_name LIKE '%${names[i]}%')
+                    WHERE	(${filter})
                         and c.status != '报备通过' and c.status != '报备驳回' and c.cid != '${params.cid}')
                     UNION
                     (SELECT tm.tmid, t.name, tm.model, tm.platform, tm.account_id, tm.account_name, tm.group_name, tm.provide_name, u.name as u_name, tm.status
+                        FROM talent_model tm
+                            LEFT JOIN talent t ON t.tid = tm.tid
+                            LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
+                            LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
+                            LEFT JOIN user u ON u.uid = tms1.u_id_1
+                        WHERE	(tm.account_id = '${names[i]}' OR tm.group_name = '${names[i]}' OR tm.provide_name = '${names[i]}')
+                            and tm.status != '已失效')`
+        } else if (params.type === 'talent') {
+            filter = params.talent_name ? params.accounts ? params.group_name ? params.provide_name ? `t.name = '${names[i]}' OR tm.account_id = '${names[i]}' OR tm.group_name = '${names[i]}' OR tm.provide_name = '${names[i]}'` :
+                `t.name = '${names[i]}' OR tm.account_id = '${names[i]}' OR tm.group_name = '${names[i]}'` : `t.name = '${names[i]}' OR tm.account_id = '${names[i]}'` : `t.name = '${names[i]}'` :
+                params.accounts ? params.group_name ? params.provide_name ? `OR tm.account_id = '${names[i]}' OR tm.group_name = '${names[i]}' OR tm.provide_name = '${names[i]}'` :
+                    `tm.account_id = '${names[i]}' OR tm.group_name = '${names[i]}'` : `tm.account_id = '${names[i]}'` :
+                    params.group_name ? params.provide_name ? `tm.group_name = '${names[i]}' OR tm.provide_name = '${names[i]}'` : `tm.group_name = '${names[i]}'` : `tm.provide_name = '${names[i]}'`
+            sql = `SELECT tm.tmid, t.name, tm.model, tm.platform, tm.account_id, tm.account_name, tm.group_name, tm.provide_name, u.name as u_name, tm.status
                     FROM talent_model tm
                         LEFT JOIN talent t ON t.tid = tm.tid
                         LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                         LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                         LEFT JOIN user u ON u.uid = tms1.u_id_1
-                    WHERE   (t.name = '${names[i]}' OR tm.account_id = '${names[i]}' OR tm.group_name = '${names[i]}' OR tm.provide_name = '${names[i]}')
-                        and tm.status != '已失效')`
+                    WHERE	(${filter})
+                        and tm.status != '已失效'`
+        } else if (params.type.match('model')) {
+            filter = params.account_id ? params.group_name ? params.provide_name ? `tm.account_id = '${names[i]}' OR tm.group_name = '${names[i]}' OR tm.provide_name = '${names[i]}'` : `tm.account_id = '${names[i]}' OR tm.group_name = '${names[i]}'` :
+                `tm.account_id = '${names[i]}'` : params.group_name ? params.provide_name ? `tm.group_name = '${names[i]}' OR tm.provide_name = '${names[i]}'` : `tm.group_name = '${names[i]}'` : `tm.provide_name = '${names[i]}'`
+            sql = `SELECT tm.tmid, t.name, tm.model, tm.platform, tm.account_id, tm.account_name, tm.group_name, tm.provide_name, u.name as u_name, tm.status
+                    FROM talent_model tm
+                        LEFT JOIN talent t ON t.tid = tm.tid
+                        LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
+                        LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
+                        LEFT JOIN user u ON u.uid = tms1.u_id_1
+                    WHERE	(${filter})
+                        and tm.status != '已失效'`
+        }
         db.query(sql, (err, results) => {
             if (err) throw err;
             if (results.length !== 0) {
@@ -109,8 +139,7 @@ router.post('/addChance', (req, res) => {
         let platforms = params.platforms ? `'${params.platforms.join()}'` : null
         let account_ids = params.account_ids ? `'${params.account_ids.join()}'` : null
         let account_names = params.account_names ? `'${params.account_names.join()}'` : null
-        let search_pic = params.search_pic.replace('/public', '')
-        let sql = `INSERT INTO chance VALUES('${cid}', ${models}, ${group_name}, ${provide_name}, ${platforms}, ${account_ids}, ${account_names}, '${search_pic}', null, null, null, null, null, null, '待推进', '${params.userInfo.uid}', ${dayjs().valueOf()}, null, null)`
+        let sql = `INSERT INTO chance VALUES('${cid}', ${models}, ${group_name}, ${provide_name}, ${platforms}, ${account_ids}, ${account_names}, '${params.search_pic}', null, null, null, null, null, null, '待推进', '${params.userInfo.uid}', ${dayjs().valueOf()}, null, null)`
         db.query(sql, (err, results) => {
             if (err) throw err;
             res.send({ code: 200, data: [], msg: `添加成功` })

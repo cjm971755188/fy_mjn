@@ -11,7 +11,7 @@ router.post('/upload', (req, res) => {
     for (let i = 0; i < req.files.length; i++) {
         let oldName = Buffer.from(req.files[i].filename, "latin1").toString("utf8");
         let originalname = Buffer.from(req.files[i].fieldname + '_' + req.files[i].originalname, "latin1").toString("utf8");
-        fs.renameSync(`./public/` + oldName, `./public/` + originalname, function (err) {
+        fs.renameSync('./public/' + oldName, './public/' + originalname, function (err) {
             if (err) console.log('改名失败', err)
         })
         r.push({
@@ -25,7 +25,7 @@ router.post('/upload', (req, res) => {
 // 下载文件
 router.get('/download', (req, res) => {
     //获取文件路径e
-    let filePath = path.join(__dirname, '/../public/' + req.query.url)
+    let filePath = path.join(__dirname, './public/' + req.query.url)
     res.download(filePath)
 })
 

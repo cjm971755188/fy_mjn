@@ -44,13 +44,18 @@ export const descriptionsItems = [
     { key: 39, label: "福利品佣金(%)", value: "commission_welfare" },
     { key: 40, label: "爆品佣金(%)", value: "commission_bao" },
     { key: 41, label: "佣金备注", value: "commission_note" },
-    { key: 42, label: "常规品佣金(%)", value: "discount_normal" },
-    { key: 43, label: "福利品佣金(%)", value: "discount_welfare" },
-    { key: 44, label: "爆品佣金(%)", value: "discount_bao" },
-    { key: 45, label: "佣金备注", value: "discount_note" },
+
+    { key: 64, label: "达人名称", value: "group_name" },
+    { key: 42, label: "常规品佣金(%)", value: "commission_normal" },
+    { key: 43, label: "福利品佣金(%)", value: "commission_welfare" },
+    { key: 44, label: "爆品佣金(%)", value: "commission_bao" },
+    { key: 45, label: "佣金备注", value: "commission_note" },
+
+    { key: 65, label: "达人名称", value: "provide_name" },
     { key: 46, label: "买断折扣(折)", value: "discount_buyout" },
     { key: 47, label: "含退货折扣(折)", value: "discount_back" },
     { key: 48, label: "折扣备注", value: "discount_label" },
+
     { key: 49, label: "主商务ID", value: "u_id_1" },
     { key: 50, label: "主商务", value: "u_name_1" },
     { key: 51, label: "提点(%)", value: "u_point_1" },

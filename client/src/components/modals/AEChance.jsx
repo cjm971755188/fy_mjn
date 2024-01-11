@@ -59,6 +59,7 @@ function AEChance(props) {
     }
 
     useEffect(() => {
+        console.log(form.getFieldsValue());
         setIsShowPlatform(type !== 'advance' && form.getFieldValue('models') && form.getFieldValue('models').join(',').match('线上平台') ? true : false)
         setIsShowGroup(type !== 'advance' && form.getFieldValue('models') && form.getFieldValue('models').join(',').match('社群团购') ? true : false)
         setIsShowProvide(type !== 'advance' && form.getFieldValue('models') && form.getFieldValue('models').join(',').match('供货') ? true : false)
@@ -77,8 +78,9 @@ function AEChance(props) {
                 onFinish={(values) => {
                     let payload = {
                         cid: type == 'add' ? '' : form.getFieldValue('cid'),
-                        type: 'arr',
-                        ...values
+                        type: 'chance',
+                        ...values,
+                        search_pic: values.search_pic.replace('/public', '')
                     }
                     searchSameChanceAPI('finish', payload)
                 }}
@@ -123,12 +125,11 @@ function AEChance(props) {
                 </Card> : null}
                 <Form.Item label="相同线上达人">
                     <Button onClick={() => {
-                        if ((form.getFieldValue('account_names') && form.getFieldValue('account_names').length > 0) || (form.getFieldValue('account_ids') && form.getFieldValue('account_ids').length > 0) ||
+                        if ((form.getFieldValue('account_ids') && form.getFieldValue('account_ids').length > 0) ||
                             (form.getFieldValue('group_name') && form.getFieldValue('group_name').length > 0) || (form.getFieldValue('provide_name') && form.getFieldValue('provide_name').length > 0)) {
                             let payload = {
                                 cid: type == 'add' ? '' : form.getFieldValue('cid'),
-                                type: 'arr',
-                                account_names: form.getFieldValue('account_names'),
+                                type: 'chance',
                                 account_ids: form.getFieldValue('account_ids'),
                                 group_name: form.getFieldValue('group_name'),
                                 provide_name: form.getFieldValue('provide_name')
@@ -158,9 +159,9 @@ function AEChance(props) {
                         )}
                     /> : null}
                 </Form.Item>}
-                {type == 'add' ? <Form.Item label="寻找证明" name="search_pic" rules={[{ required: true, message: '不能为空' }]} >
-                    <UpLoadImg title="上传寻找证明" name="寻找商机" setPicUrl={(value) => { form.setFieldValue('search_pic', value) }} />
-                </Form.Item> : null}
+                <Form.Item label="寻找证明" name="search_pic" rules={[{ required: true, message: '不能为空' }]} >
+                    <UpLoadImg title="上传寻找证明" name="寻找商机" defaultUrl={form.getFieldValue('search_pic')} setPicUrl={(value) => { form.setFieldValue('search_pic', value) }} />
+                </Form.Item>
             </Form>
         </Modal>
     )

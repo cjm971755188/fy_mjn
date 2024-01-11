@@ -51,7 +51,7 @@ function MiddlemanList() {
                 </Popover>
             )
         },
-        { title: '商务', dataIndex: 'u_name', key: 'u_name' },
+        /* { title: '商务', dataIndex: 'u_name', key: 'u_name' }, */
         {
             title: '操作',
             key: 'action',
@@ -130,11 +130,11 @@ function MiddlemanList() {
     }
     // 查询、清空筛选
     const [filterForm] = Form.useForm()
-    const [salemansItems, setSalemansItems] = useState()
-    const getSalemanItemsAPI = () => {
+    const [salemanAssistantsItems, setSalemanAssistantsItems] = useState()
+    const getSalemanAssistantsItemsAPI = () => {
         request({
             method: 'post',
-            url: '/user/getSalemanItems',
+            url: '/user/getSalemanAssistantItems',
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
@@ -148,7 +148,7 @@ function MiddlemanList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setSalemansItems(res.data.data)
+                    setSalemanAssistantsItems(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -252,7 +252,7 @@ function MiddlemanList() {
                     <Form.Item label='联系人姓名' name='liaison_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='付款姓名' name='pay_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     {editPower ? null : <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemanItemsAPI(); }} />
+                        <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                     </Form.Item>}
                     <Form.Item style={{ marginBottom: '20px' }}>
                         <Space size={'large'}>

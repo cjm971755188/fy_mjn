@@ -180,6 +180,42 @@ function AELive(props) {
             console.error(err)
         })
     }
+    const [salemanAssistantsItems, setSalemanAssistantsItems] = useState()
+    const getSalemanAssistantsItemsAPI = (type) => {
+        request({
+            method: 'post',
+            url: '/user/getSalemanAssistantItems',
+            data: {
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    if (type) {
+                        setSalemanAssistantsItems(res.data.data)
+                    } else {
+                        let items = [
+                            { label: null, value: null },
+                            ...res.data.data
+                        ]
+                        setSalemansItems(items)
+                    }
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
     const getCommissionsAPI = (value) => {
         if (value.length === 0) {
             form.setFieldValue('commission_normal_on', null);
@@ -301,7 +337,10 @@ function AELive(props) {
                         }
                     }} />
                 </Form.Item>}
-                <Popover title="下播时间结算规则" content={
+                <Form.Item label="最终下播时间" name="end_time_0" rules={[{ required: true, message: '不能为空' }]}>
+                    <DatePicker showTime onChange={(value) => { form.setFieldValue('end_time_0', value) }} />
+                </Form.Item>
+                <Popover title="核算规则" content={
                     <List style={{ marginLeft: '10px' }}>
                         <List.Item>{`前提： 若有多场，则取最后一场的上播时间`}</List.Item>
                         <List.Item>{`1. 上播时间早于 09:00 ----> 下播时间为 后天的凌晨3点`}</List.Item>
@@ -309,7 +348,7 @@ function AELive(props) {
                         <List.Item>{`3. 上播时间晚于 15:00 ----> 下播时间为 大后天的凌晨3点`}</List.Item>
                     </List>}
                 >
-                    <Form.Item label="下播时间" name="end_time" rules={[{ required: true, message: '不能为空' }]}>
+                    <Form.Item label="核算结束时间" name="end_time" rules={[{ required: true, message: '不能为空' }]}>
                         <DatePicker showTime disabled={true} onChange={(value) => { form.setFieldValue('end_time', value) }} />
                     </Form.Item>
                 </Popover>
@@ -363,7 +402,7 @@ function AELive(props) {
                 </Form.Item>
                 <Space size='large'>
                     <Form.Item label="主商务" name="u_id_1" rules={[{ required: true, message: '不能为空' }]} >
-                        <Select style={{ width: 160 }} placeholder="请选择" options={salemansItems} onFocus={() => { getSalemansItemsAPI(true); }} />
+                        <Select style={{ width: 160 }} placeholder="请选择" options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(true); }} />
                     </Form.Item>
                     <Form.Item label="主商务提成点（%）[例：0.5]" name="u_point_1" rules={[{ required: true, message: '不能为空' }]}>
                         <InputNumber min={0} max={100} />
@@ -371,7 +410,7 @@ function AELive(props) {
                 </Space>
                 <Space size='large'>
                     <Form.Item label="副商务" name="u_id_2" >
-                        <Select style={{ width: 160 }} placeholder="请选择" options={salemansItems} onFocus={() => { getSalemansItemsAPI(false); }} />
+                        <Select style={{ width: 160 }} placeholder="请选择" options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(false); }} />
                     </Form.Item>
                     <Form.Item label="副商务提成点（%）[例：0.5]" name="u_point_2" >
                         <InputNumber min={0} max={100} />

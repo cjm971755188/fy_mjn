@@ -78,7 +78,7 @@ router.post('/addLive', (req, res) => {
         let u_id_2 = params.u_id_2 ? `'${params.u_id_2}'` : null
         let u_point_2 = params.u_point_2 ? `'${params.u_point_2}'` : null
         let u_note = params.u_note ? `'${params.u_note}'` : null
-        let sql = `INSERT INTO live VALUES('${lid}', '${params.tid}', '${params.tmids}', '${params.count_type}', '${params.start_time}', ${start_time_2}, '${params.end_time}', '${params.place}', '${params.room}', '${params.a_id_1}', ${a_id_2}, '${params.c_id_1}', ${u_id_3}, 
+        let sql = `INSERT INTO live VALUES('${lid}', '${params.tid}', '${params.tmids}', '${params.count_type}', '${params.start_time}', ${start_time_2}, '${params.end_time_0}', '${params.end_time}', '${params.place}', '${params.room}', '${params.a_id_1}', ${a_id_2}, '${params.c_id_1}', ${u_id_3}, 
                     '${params.goal}', '${params.sales}', '${params.commission_normal_on}', '${params.commission_welfare_on}', '${params.commission_bao_on}', ${commission_note_on}, '${params.commission_normal_down}', '${params.commission_welfare_down}', 
                     '${params.commission_bao_down}', ${commission_note_down}, '${params.u_id_1}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '生效中', '${params.userInfo.uid}', '${time}')`
         db.query(sql, (err, results) => {
