@@ -25,7 +25,7 @@ router.post('/upload', (req, res) => {
 // 下载文件
 router.get('/download', (req, res) => {
     //获取文件路径e
-    let filePath = path.join(__dirname, './public/' + req.query.url)
+    let filePath = path.join(__dirname, '../public/' + req.query.url)
     res.download(filePath)
 })
 

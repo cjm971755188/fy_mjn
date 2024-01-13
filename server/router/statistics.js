@@ -58,7 +58,7 @@ router.post('/getTalentStatistics', (req, res) => {
 router.post('/getSalemansChanceOprate', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where u.status != '失效' and u.department = '事业部' and u.position != '副总'`
+    let whereUser = `where u.status != '失效' and u.department = '事业部' and u.position != '副总' and u.position != '副总助理' and u.position != '助理'`
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and u.department = '${params.userInfo.department}'`
@@ -110,7 +110,7 @@ router.post('/getSalemansChanceOprate', (req, res) => {
 router.post('/getAdReTimeDiff', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where u.status != '失效' and u.department = '事业部' and u.position != '副总'`
+    let whereUser = `where u.status != '失效' and u.department = '事业部' and u.position != '副总' and u.position != '副总助理' and u.position != '助理'`
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and u.department = '${params.userInfo.department}'`

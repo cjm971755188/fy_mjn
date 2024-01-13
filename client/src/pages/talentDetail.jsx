@@ -1034,10 +1034,10 @@ function TalentDetail() {
             />
             <AEFile
                 id={idSelect}
-                isShow={isShowFile}
                 type={fileType}
-                onOK={() => { getTalentDetailAPI(); setIdSelect(''); setIsShowFile(false); setFileType(''); setIsShowFile(false); }}
-                onCancel={() => { getTalentDetailAPI(); setIdSelect(''); setIsShowFile(false); setFileType(''); setIsShowFile(false); }}
+                isShow={isShowFile}
+                onOK={() => { getTalentDetailAPI(); setIsShowFile(false); }}
+                onCancel={() => { getTalentDetailAPI(); setIsShowFile(false); }}
             />
         </Fragment>
     )

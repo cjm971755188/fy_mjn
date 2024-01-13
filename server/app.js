@@ -2,9 +2,7 @@ const express = require('express');
 const cors = require('cors')
 const multer = require("multer");
 const app = express();
-const jst = require('./api/jst')
-const ddurls = require('./config/commentDD')
-const sendRobot = require('./api/ddrobot')
+const path = require('path');
 
 app.use(cors())
 // 监听端口
@@ -41,11 +39,11 @@ app.all('*', function (req, res, next) {
 });
 
 // 上传图片
-let objMulter = multer({ dest: "./public" });
+let objMulter = multer({ dest: path.join(__dirname, './public/') });
 //实例化multer，传递的参数对象，dest表示上传文件的存储路径
 app.use(objMulter.any());//any表示任意类型的文件
 // app.use(objMulter.image())//仅允许上传图片类型
-app.use(express.static("./public"));//将静态资源托管，这样才能在浏览器上直接访问预览图片或则html页面
+app.use(express.static(path.join(__dirname, './public/')));//将静态资源托管，这样才能在浏览器上直接访问预览图片或则html页面
 //此处我写了模块化，你们也可以不用模块化，直接在这里写get,post请求也可以
 const file = require('./router/file')
 app.use('/file', file)

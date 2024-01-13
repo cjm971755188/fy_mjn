@@ -458,14 +458,25 @@ function TalentList() {
                 type={liveType}
                 form={liveForm}
                 onOK={(values) => { 
-                    let payload = {
+                    let tmids = []
+                    for (let i = 0; i < values.tmids.length; i++) {
+                        tmids.push(values.tmids[i] ? values.tmids[i].value || values.tmids[i].value === null ? values.tmids[i].value : values.tmids[i] : null)
+                    }
+                    let payload = { 
                         ...values,
-                        tid: liveForm.getFieldValue('tid'),
+                        tid: values.tid ? values.tid.value || values.tid.value === null ? values.tid.value : values.tid : null,
                         start_time: dayjs(values.start_time).valueOf(),
+                        start_time_2: dayjs(values.start_time_2).valueOf(),
+                        end_time_0: dayjs(values.end_time_0).valueOf(),
                         end_time: dayjs(values.end_time).valueOf(),
-                        tmids: values.tmids.join(),
-                        u_id_1: values.u_id_1.value || values.u_id_1.value === null ? values.u_id_1.value : values.u_id_1,
-                        u_id_2: values.u_id_2.value || values.u_id_2.value === null ? values.u_id_2.value : values.u_id_2
+                        tmids: tmids.join(),
+                        a_id_1: values.a_id_1 ? values.a_id_1.value || values.a_id_1.value === null ? values.a_id_1.value : values.a_id_1 : null,
+                        a_id_2: values.a_id_2 ? values.a_id_2.value || values.a_id_2.value === null ? values.a_id_2.value : values.a_id_2 : null,
+                        c_id_1: values.c_id_1 ? values.c_id_1.value || values.c_id_1.value === null ? values.c_id_1.value : values.c_id_1 : null,
+                        s_id_1: values.s_id_1 ? values.s_id_1.value || values.s_id_1.value === null ? values.s_id_1.value : values.s_id_1 : null,
+                        u_id_3: values.u_id_3 ? values.u_id_3.value || values.u_id_3.value === null ? values.u_id_3.value : values.u_id_3 : null,
+                        u_id_1: values.u_id_1 ? values.u_id_1.value || values.u_id_1.value === null ? values.u_id_1.value : values.u_id_1 : null,
+                        u_id_2: values.u_id_2 ? values.u_id_2.value || values.u_id_2.value === null ? values.u_id_2.value : values.u_id_2 : null
                     }
                     addLiveAPI(payload)
                 }}

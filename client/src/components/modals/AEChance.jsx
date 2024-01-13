@@ -59,7 +59,6 @@ function AEChance(props) {
     }
 
     useEffect(() => {
-        console.log(form.getFieldsValue());
         setIsShowPlatform(type !== 'advance' && form.getFieldValue('models') && form.getFieldValue('models').join(',').match('线上平台') ? true : false)
         setIsShowGroup(type !== 'advance' && form.getFieldValue('models') && form.getFieldValue('models').join(',').match('社群团购') ? true : false)
         setIsShowProvide(type !== 'advance' && form.getFieldValue('models') && form.getFieldValue('models').join(',').match('供货') ? true : false)

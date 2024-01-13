@@ -13,16 +13,14 @@ function UpLoadFile(props) {
         newFileList = newFileList.map((file) => {
             if (file.response) {
                 file.url = file.response.url;
-            }
-            if (file.status === "done" || file.status === "uploading") {
-                f.push(`${BASE_URL}/${localStorage.getItem('name')}_${dayjs().valueOf()}_${props.type}_${file.name}`)
+                f.push(file.response[0].url.replace('/public', ''));
             }
             return file;
         });
         setFileList(newFileList);
-        if (info.file.status === "done") {
-            props.setFile(f)
-            setFileList()
+        if (f.length === info.fileList.length) {
+            props.setFile(f);
+            setFileList([]);
         }
     };
 

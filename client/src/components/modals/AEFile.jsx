@@ -23,18 +23,15 @@ function AEFile(props) {
             dataIndex: 'url',
             key: 'url',
             render: (_, record) => (
-                <>
-                    {/* <Image width={50} src={`${record}`} /> */}
-                    <FilePreview
-                        fileUrl={record}
-                        fileType={
-                            ['jpg', 'png', 'webp', 'jpeg'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'image' :
-                                ['pdf'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'pdf' :
-                                    ['xlsx', 'xls', 'csv'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'excel' :
-                                        ['doc'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'word' : 'image'
-                        }
-                    />
-                </>
+                <FilePreview
+                    fileUrl={record}
+                    fileType={
+                        ['jpg', 'png', 'webp', 'jpeg'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'image' :
+                            ['pdf'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'pdf' :
+                                ['xlsx', 'xls', 'csv'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'excel' :
+                                    ['doc'].indexOf(record.split('_')[3].split('.')[1]) !== -1 ? 'word' : 'image'
+                    }
+                />
             )
         },
         {
@@ -57,9 +54,8 @@ function AEFile(props) {
             ),
         }
     ]
-    // 表格：获取数据
-    const [data, setData] = useState();
-    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState()
+    const [loading, setLoading] = useState(false)
     const getFilesAPI = () => {
         setLoading(true)
         request({
@@ -92,7 +88,6 @@ function AEFile(props) {
             console.error(err)
         })
     }
-    // 上传新增
     const editTalentAPI = (operate, ori, payload) => {
         request({
             method: 'post',
@@ -114,7 +109,7 @@ function AEFile(props) {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    getFilesAPI()
+                    getFilesAPI();
                     message.success(res.data.msg)
                 } else {
                     message.error(res.data.msg)
@@ -131,7 +126,7 @@ function AEFile(props) {
             method: 'post',
             url: '/talent/editTalentModel',
             data: {
-                id,
+                tid: id,
                 operate,
                 ori,
                 new: payload,
@@ -147,7 +142,7 @@ function AEFile(props) {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    getFilesAPI()
+                    getFilesAPI();
                     message.success(res.data.msg)
                 } else {
                     message.error(res.data.msg)
@@ -186,7 +181,8 @@ function AEFile(props) {
 
     useEffect(() => {
         getFilesAPI();
-    }, [id])
+    }, [id]);
+
     return (
         <Modal
             title={`${type}列表`}
@@ -197,11 +193,12 @@ function AEFile(props) {
             {editPower ? <UpLoadFile
                 type={type}
                 setFile={(value) => {
+                    console.log('value: ', value);
                     if (value.length !== 0) {
                         if (type.match('年框')) {
                             editTalentAPI(`新增${type}`, null, {
                                 yearbox_files: JSON.stringify(data && data.concat(value))
-                            });
+                            })
                         } else {
                             editTalentModelAPI(`新增${type}`, data && data.length === 0 ? null : JSON.stringify(data), {
                                 tmid: id,
