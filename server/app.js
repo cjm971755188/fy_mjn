@@ -3,6 +3,9 @@ const cors = require('cors')
 const multer = require("multer");
 const app = express();
 const path = require('path');
+const CallJSTAPI = require('./api/jst')
+const ddurls = require('./config/commentDD')
+const sendRobot = require('./api/ddrobot')
 
 app.use(cors())
 // 监听端口
@@ -61,6 +64,8 @@ const pointRouter = require('./router/point')
 app.use('/point', pointRouter)
 const middlemanRouter = require('./router/middleman')
 app.use('/middleman', middlemanRouter)
+const extraRouter = require('./router/extra')
+app.use('/extra', extraRouter)
 const userRouter = require('./router/user')
 app.use('/user', userRouter)
 

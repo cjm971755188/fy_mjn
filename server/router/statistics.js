@@ -7,7 +7,7 @@ const dayjs = require('dayjs');
 router.post('/getTalentStatistics', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where status != '失效'`
+    let whereUser = `where status != '失效' and status != '测试'`
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
@@ -32,16 +32,16 @@ router.post('/getTalentStatistics', (req, res) => {
                     INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = c.u_id`
     db.query(sql, (err, chance) => {
         if (err) throw err;
-        let sql = `SELECT COUNT(DISTINCT IF(t.cid = 'undefined', t.tid, null)) as history, 
-                        COUNT(DISTINCT IF(t.cid = 'undefined' and t.status != '已失效' and t.status like '%待审批', t.tid, null)) as history_wait,
-                        COUNT(DISTINCT IF(t.status != '已失效', t.tid, null)) as cooperate,
-                        COUNT(DISTINCT IF(t.status != '已失效' and t.status like '%待审批', t.tid, null)) as cooperate_wait
+        let sql = `SELECT COUNT(DISTINCT IF(t.status != '已失效' and ts.examine_result = '通过' and ts.examine_time >= '${start_time}' and ts.examine_time < '${end_time}', t.tid, null)) as cooperate,
+                        COUNT(DISTINCT IF(t.status != '已失效' and t.status = '报备待审批', t.tid, null)) as cooperate_wait,
+                        COUNT(DISTINCT IF(t.cid = 'undefined' and ts.examine_result = '通过' and ts.examine_time >= '${start_time}' and ts.examine_time < '${end_time}', t.tid, null)) as history, 
+                        COUNT(DISTINCT IF(t.cid = 'undefined' and t.status = '报备待审批', t.tid, null)) as history_wait
                     FROM talent t
-                        INNER JOIN talent_schedule ts ON ts.tid = t.tid and ts.operate = '达人报备' and ts.examine_result = '通过' and ts.examine_time >= '${start_time}' and ts.examine_time < '${end_time}'
+                        INNER JOIN talent_schedule ts ON ts.tid = t.tid and ts.operate = '达人报备'
                         LEFT JOIN talent_model tm ON tm.tid = t.tid
                         LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                         LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
-                        INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = tms1.u_id_1 OR u.uid = tms1.u_id_2`
+                        INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid in (tms1.u_id_1, tms1.u_id_2)`
         db.query(sql, (err, talent) => {
             if (err) throw err;
             res.send({
@@ -58,7 +58,7 @@ router.post('/getTalentStatistics', (req, res) => {
 router.post('/getSalemansChanceOprate', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where u.status != '失效' and u.department = '事业部' and u.position != '副总' and u.position != '副总助理' and u.position != '助理'`
+    let whereUser = `where u.status != '失效' and u.status != '测试' and u.department = '事业部' and u.position != '副总' and u.position != '副总助理' and u.position != '助理'`
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and u.department = '${params.userInfo.department}'`
@@ -110,7 +110,7 @@ router.post('/getSalemansChanceOprate', (req, res) => {
 router.post('/getAdReTimeDiff', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where u.status != '失效' and u.department = '事业部' and u.position != '副总' and u.position != '副总助理' and u.position != '助理'`
+    let whereUser = `where u.status != '失效' and u.status != '测试' and u.department = '事业部' and u.position != '副总' and u.position != '副总助理' and u.position != '助理'`
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and u.department = '${params.userInfo.department}'`
@@ -170,7 +170,7 @@ router.post('/getAdReTimeDiff', (req, res) => {
 router.post('/getPlatformTalent', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where status != '失效' and department = '事业部' and position != '副总'`
+    let whereUser = `where status != '失效' and status != '测试' and department = '事业部' and position != '副总'`
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
@@ -210,7 +210,7 @@ router.post('/getPlatformTalent', (req, res) => {
 router.post('/getProvinceTalent', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where u.status != '失效' and u.department = '事业部' and u.position != '副总'`
+    let whereUser = `where u.status != '失效' and u.status != '测试' and u.department = '事业部' and u.position != '副总'`
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and u.department = '${params.userInfo.department}'`

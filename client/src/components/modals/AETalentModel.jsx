@@ -148,7 +148,7 @@ function AETalentModel(props) {
                     <Form.Item label="合作方式" name="account_models" rules={[{ required: true, message: '不能为空' }]}>
                         <Select mode="multiple" allowClear placeholder="请选择" onChange={(value) => { form.setFieldValue('account_models', value) }} options={accountModelType} />
                     </Form.Item>
-                    <Form.Item label="关键字（前后缀）（以英文逗号“,”区分多个关键字）" name="keyword" rules={[{ required: true, message: '不能为空' }]}>
+                    <Form.Item label="关键字（前后缀）" name="keyword" rules={[{ required: true, message: '不能为空' }]}>
                         <Select mode="tags" allowClear placeholder="请输入" onChange={(value) => { form.setFieldValue('keyword', value) }} options={[]} />
                     </Form.Item>
                     <Form.Item label="平时带货在线（人）[例：1000]" name="people_count" rules={[{ required: true, message: '不能为空' }]}>

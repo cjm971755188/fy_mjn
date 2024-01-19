@@ -8,7 +8,7 @@ const dayjs = require('dayjs');
 router.post('/getPointList', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where status != '失效'`
+    let whereUser = `where status != '失效' and status != '测试'`
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
@@ -186,7 +186,7 @@ router.post('/getPointList', (req, res) => {
 router.post('/getExportPointList', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where status != '失效'`
+    let whereUser = `where status != '失效' and status != '测试'`
     if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
@@ -199,7 +199,7 @@ router.post('/getExportPointList', (req, res) => {
         }
     }
     // 条件筛选
-    let whereFilter = `where z.status != '失效中'`
+    let whereFilter = `where z.status != '已失效'`
     for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
         if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
             whereFilter += ` and z.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
@@ -207,7 +207,7 @@ router.post('/getExportPointList', (req, res) => {
             whereFilter += ` and z.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
         }
     }
-    let whereDeadline1 = `WHERE status = '生效中'`, whereDeadline2 = `WHERE tms.status = '生效中' and tm.status != '失效中'`
+    let whereDeadline1 = `WHERE status = '生效中'`, whereDeadline2 = `WHERE tms.status = '生效中' and tm.status != '已失效'`
     if (params.filtersDate && params.filtersDate.length === 2) {
         whereDeadline1 += ` and create_time < '${params.filtersDate[0]}'`
     }
@@ -270,7 +270,7 @@ router.post('/getExportPointList', (req, res) => {
 router.post('/getKeywordList', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where status != '失效'`
+    let whereUser = `where status != '失效' and status != '测试'`
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
@@ -329,7 +329,7 @@ router.post('/getKeywordList', (req, res) => {
 router.post('/getExportKeywordList', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where status != '失效'`
+    let whereUser = `where status != '失效' and status != '测试'`
     if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`

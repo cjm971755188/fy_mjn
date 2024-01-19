@@ -55,7 +55,11 @@ const menuItemsTotal = [
             {
                 key: '/admin/talent/middleman_list',
                 label: '中间人列表'
-            },
+            }/* ,
+            {
+                key: '/admin/talent/extra_list',
+                label: '额外结佣列表'
+            } */
         ]
     },
     {
@@ -94,8 +98,6 @@ const getMenuItems = (department, position) => {
         if (menu.label === '达人详情') {
             continue
         } else if (menu.label === '用户管理' && position !== '管理员' && position !== '总裁' && position !== '副总' && position !== '主管') {
-            continue
-        } else if (menu.label === '专场管理' && position !== '管理员') {
             continue
         } else if (menu.label === '结算管理' && position !== '管理员' && department !== '财务部') {
             continue
@@ -240,7 +242,7 @@ const MyLayout = ({ children }) => {
                             onClick={() => setCollapsed(!collapsed)}
                             style={{ fontSize: '16px', width: 64, height: 64 }}
                         />
-                        <span>慕江南销售管理系统</span>
+                        <span>慕江南客户管理系统</span>
                         <Dropdown menu={{ items, onClick }}>
                             <img src={people} style={{ width: '30px', borderRadius: '100%', float: 'right', margin: '20px 20px 0 0' }} />
                         </Dropdown>

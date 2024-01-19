@@ -265,7 +265,7 @@ function PointList() {
             // type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet’, // xlsx
             type: 'application/vnd.ms-excel;charset=utf-8', // xls
         });
-        FileSaver.saveAs(blob, `提点规则导出-${+new Date()}.xls`);
+        FileSaver.saveAs(blob, `CRM系统提点规则导出-${+new Date()}.xls`);
     }
 
     useEffect(() => {

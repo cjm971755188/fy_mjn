@@ -12,7 +12,8 @@ export const talentStatus = [
     { key: 2, label: "年框待审批", value: "年框待审批" },
     { key: 3, label: "新合作待审批", value: "新合作待审批" },
     { key: 4, label: "合作变更待审批", value: "合作变更待审批" },
-    { key: 5, label: "移交待审批", value: "移交待审批" }
+    { key: 5, label: "移交待审批", value: "移交待审批" },
+    { key: 6, label: "报备驳回", value: "报备驳回" }
 ]
 
 export const yearboxStatus = [
@@ -54,7 +55,9 @@ export const shop = [
 export const liaisonType = [
     { key: 0, label: "达人本人", value: "达人本人" },
     { key: 1, label: "达人商务", value: "达人商务" },
-    { key: 2, label: "中间机构商务", value: "中间机构商务" }
+    { key: 2, label: "中间机构商务", value: "中间机构商务" },
+    { key: 3, label: "机构老板", value: "机构老板" },
+    { key: 4, label: "机构商务", value: "机构商务" }
 ]
 
 export const accountType = [
@@ -156,4 +159,16 @@ export const talentType= [
     { key: 0, label: "A", value: "A" },
     { key: 1, label: "B", value: "B" },
     { key: 2, label: "C", value: "C" }
+]
+
+export const extraPayType= [
+    { key: 0, label: "日播", value: "日播" },
+    { key: 1, label: "专场", value: "专场" },
+    { key: 2, label: "专场 + 日播", value: "专场 + 日播" }
+]
+
+export const productType= [
+    { key: 0, label: "常规品", value: "常规品" },
+    { key: 1, label: "福利品", value: "福利品" },
+    { key: 2, label: "爆品", value: "爆品" }
 ]

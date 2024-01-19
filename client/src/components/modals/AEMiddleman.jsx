@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Modal, Select, Radio, InputNumber } from 'antd';
+import { Form, Input, Modal, Select, Radio, InputNumber, message } from 'antd';
 import { middleType } from '../../baseData/talent'
 
 function AEMiddleman(props) {
@@ -29,7 +29,16 @@ function AEMiddleman(props) {
             onOk={() => { form.submit(); }}
             onCancel={() => { props.onCancel(); reset(); }}
         >
-            <Form form={form} onFinish={(values) => { props.onOK(values); reset(); }}>
+            <Form form={form} onFinish={(values) => {
+                if (!values.pay_bank.match('银行')) {
+                    message.error('请填写正确的银行名称')
+                } else if (values.pay_bank.split('银行')[1] === '') {
+                    message.error('请填写到xx银行xx支行')
+                } else {
+                    props.onOK(values);
+                    reset();
+                }
+            }}>
                 {type === 'edit' ? <Form.Item label="编号" name="mid" rules={[{ required: true, message: '不能为空' }]}>
                     <Input disabled={true} />
                 </Form.Item> : null}

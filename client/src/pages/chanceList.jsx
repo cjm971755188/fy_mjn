@@ -2,30 +2,33 @@ import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, message, Alert } from 'antd';
 import { PlusOutlined, CloseCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone, CheckCircleTwoTone } from '@ant-design/icons';
-import { chanceStatus, model } from '../baseData/talent'
+import { chanceStatus, model, platform } from '../baseData/talent'
 import MyDateSelect from '../components/MyDateSelect'
 import AEChance from '../components/modals/AEChance'
 import AELiaison from '../components/modals/AELiaison'
 import AETalent from '../components/modals/AETalent'
+import dayjs from 'dayjs'
 
 const { TextArea } = Input;
 
 function ChanceList() {
     // 操作权限
-    const userShowPower = localStorage.getItem('position') === '商务' ? true : false
-    const addPower = localStorage.getItem('position') === '商务' ? true : false
-    const editPower = localStorage.getItem('position') === '商务' ? true : false
-    const advancePower = localStorage.getItem('position') === '商务' ? true : false
-    const reportPower = localStorage.getItem('position') === '商务' ? true : false
+    const userShowPower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
+    const addPower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
+    const editPower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
+    const advancePower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
+    const reportPower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
     let columns = [
         { title: '商机编号', dataIndex: 'cid', key: 'cid' },
         { title: '模式', dataIndex: 'models', key: 'models' },
+        { title: '关联平台', dataIndex: 'platforms', key: 'platforms' },
         { title: '线上名', dataIndex: 'account_names', key: 'account_names' },
         { title: '团购名', dataIndex: 'group_name', key: 'group_name' },
         { title: '供货名', dataIndex: 'provide_name', key: 'provide_name' },
-        { title: '寻找证明', dataIndex: 'search_pic', key: 'search_pic', render: (_, record) => (<Image width={50} src={record.search_pic} />) },
+        { title: '寻找时间', dataIndex: 'create_time', key: 'create_time', render: (_, record) => (<span>{dayjs(Number(record.create_time)).format('YYYY-MM-DD')}</span>) },
+        { title: '寻找证明', dataIndex: 'search_pic', key: 'search_pic', render: (_, record) => (<Image width={50} height={50} src={record.search_pic} />) },
         {
             title: '联系人',
             dataIndex: 'liaison_name',
@@ -44,8 +47,10 @@ function ChanceList() {
                 </Popover>
             )
         },
-        { title: '推进证明', dataIndex: 'advance_pic', key: 'advance_pic', render: (_, record) => (<Image width={50} src={record.advance_pic} />) },
+        { title: '推进时间', dataIndex: 'advance_time', key: 'advance_time', render: (_, record) => (<span>{record.advance_time === null ? null : dayjs(Number(record.advance_time)).format('YYYY-MM-DD')}</span>) },
+        { title: '推进证明', dataIndex: 'advance_pic', key: 'advance_pic', render: (_, record) => (record.advance_pic ? <Image width={50} height={50} src={record.advance_pic} /> : null) },
         { title: '商务', dataIndex: 'name', key: 'name' },
+        { title: '备注', dataIndex: 'note', key: 'note' },
         {
             title: '状态',
             dataIndex: 'status',
@@ -55,7 +60,7 @@ function ChanceList() {
                     {record.status === '待推进' ? <PlayCircleTwoTone twoToneColor="#ee9900" /> :
                         record.status === '待报备' ? <RightCircleTwoTone twoToneColor="#ee9900" /> :
                             record.status === '待审批' ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
-                                record.status === '报备驳回' ? <CloseCircleTwoTone twoToneColor="#f81d22" /> : 
+                                record.status === '报备驳回' ? <CloseCircleTwoTone twoToneColor="#f81d22" /> :
                                     record.status === '报备通过' ? <CheckCircleTwoTone twoToneColor="#4ec9b0" /> : null}
                     <span>{record.status}</span>
                 </Space>
@@ -66,6 +71,11 @@ function ChanceList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
+                    {record.status !== '报备通过' ? <a onClick={() => {
+                        setIsShowNote(true);
+                        setNote(record.note);
+                        setSelectNoteID(record.cid);
+                    }}>修改备注</a> : null}
                     {editPower && record.status === '待推进' ? <a onClick={() => {
                         let models = record.models.split(',')
                         form.setFieldsValue({
@@ -75,13 +85,11 @@ function ChanceList() {
                         if (record.models.match('线上平台')) {
                             let platforms = record.platforms === null ? null : record.platforms.split(',')
                             let account_names = record.account_names === null ? null : record.account_names.split(',')
-                            let account_ids = record.account_ids === null ? null : record.account_ids.split(',')
                             form.setFieldsValue({
                                 ...record,
                                 models,
                                 platforms,
-                                account_names,
-                                account_ids
+                                account_names
                             })
                         }
                         setType('edit');
@@ -104,16 +112,11 @@ function ChanceList() {
                     {reportPower && (record.status === '待报备' || record.status === '报备驳回') ? <a onClick={() => {
                         let models = record.models.split(',')
                         let platformList = []
-                        let accountIdList = []
                         let accountNameList = []
                         if (record.models.match('线上平台')) {
                             for (let i = 0; i < record.platforms.split(',').length; i++) {
                                 const element = record.platforms.split(',')[i];
                                 platformList.push({ label: element, value: element })
-                            }
-                            for (let i = 0; i < record.account_ids.split(',').length; i++) {
-                                const element = record.account_ids.split(',')[i];
-                                accountIdList.push({ label: element, value: element })
                             }
                             for (let i = 0; i < record.account_names.split(',').length; i++) {
                                 const element = record.account_names.split(',')[i];
@@ -124,7 +127,6 @@ function ChanceList() {
                             ...record,
                             models,
                             platformList,
-                            accountIdList,
                             accountNameList,
                             liaison_type: record.liaison_type,
                             liaison_name: record.liaison_name,
@@ -135,11 +137,10 @@ function ChanceList() {
                         setType('report');
                         setIsShowReport(true);
                     }}>报备</a> : null}
-                    {record.status === '报备驳回' ? <a onClick={() => { 
-                        let payload = {
+                    {record.status === '报备驳回' ? <a onClick={() => {
+                        getRefundReasonAPI({
                             cid: record.cid
-                        }
-                        getRefundReasonAPI(payload); 
+                        });
                     }}>查看驳回备注</a> : null}
                 </Space>
             )
@@ -446,6 +447,43 @@ function ChanceList() {
             console.error(err)
         })
     }
+    // 修改备注
+    const [selectNoteID, setSelectNoteID] = useState('')
+    const [isShowNote, setIsShowNote] = useState(false)
+    const [note, setNote] = useState('')
+    const editNoteAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/chance/editNote',
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShowNote(false);
+                    setNote('');
+                    setSelectNoteID('');
+                    getChanceListAPI();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     useEffect(() => {
         getChanceListAPI();
@@ -470,6 +508,9 @@ function ChanceList() {
                     <Form.Item label='商机编号' name='cid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='模式' name='models' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={model} />
+                    </Form.Item>
+                    <Form.Item label='平台' name='platforms' style={{ marginBottom: '20px' }}>
+                        <Select style={{ width: 160 }} options={platform} />
                     </Form.Item>
                     <Form.Item label='线上名' name='account_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='团购名' name='group_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
@@ -530,6 +571,14 @@ function ChanceList() {
             />
             <Modal title="报备驳回备注" open={isShowCheckNo} onOk={() => { setIsShowCheckNo(false); }} onCancel={() => { setIsShowCheckNo(false); }}>
                 <TextArea placeholder="请输入" value={checkNoReason} disabled={true} />
+            </Modal>
+            <Modal title="备注" open={isShowNote} onOk={() => {
+                editNoteAPI({
+                    cid: selectNoteID,
+                    note
+                });
+            }} onCancel={() => { setIsShowNote(false); }}>
+                <TextArea placeholder="请输入" value={note} onChange={(e) => { setNote(e.target.value); }} maxLength={255} />
             </Modal>
         </Fragment >
     )

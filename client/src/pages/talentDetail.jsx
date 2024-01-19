@@ -19,10 +19,7 @@ function TalentDetail() {
     const navigate = useNavigate();
     const { tid } = location.state;
 
-    // 操作权限
-    const editPower = localStorage.getItem('position') === '商务' ? true : false
-    const examPower = localStorage.getItem('position') === '副总' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '管理员' ? true : false
-
+    
     // 获取详情
     const [detailData, setDetailData] = useState({
         status: '',
@@ -31,6 +28,10 @@ function TalentDetail() {
         models: [],
         original: ''
     })
+    // 操作权限
+    const editPower = (localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员') && detailData.status !== '报备驳回' ? true : false
+    const examPower = localStorage.getItem('position') === '副总' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '管理员' ? true : false
+
     const getTalentDetailAPI = () => {
         request({
             method: 'post',

@@ -8,9 +8,10 @@ import ChanceList from './pages/chanceList.jsx'
 import TalentList from './pages/talentList.jsx'
 import TalentDetail from './pages/talentDetail.jsx'
 import LiveList from './pages/liveList.jsx'
+import MiddlemanList from './pages/middlemanList.jsx'
+import ExtraList from './pages/extraList.jsx'
 import KeywordList from './pages/keywordList.jsx'
 import PointList from './pages/pointList.jsx'
-import MiddlemanList from './pages/middlemanList.jsx'
 
 function App() {
     return (
@@ -24,6 +25,7 @@ function App() {
                 <Route path='/talent/talent_list/talent_detail' element={<TalentDetail />} />
                 <Route path='/talent/live_list' element={<LiveList />} />
                 <Route path='/talent/middleman_list' element={<MiddlemanList />} />
+                <Route path='/talent/extra_list' element={<ExtraList />} />
                 <Route path='/point/keyword_list' element={<KeywordList />} />
                 <Route path='/point/point_list' element={<PointList />} />
             </Routes>

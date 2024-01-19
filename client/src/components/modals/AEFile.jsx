@@ -181,7 +181,7 @@ function AEFile(props) {
 
     useEffect(() => {
         getFilesAPI();
-    }, [id]);
+    }, [isShow]);
 
     return (
         <Modal

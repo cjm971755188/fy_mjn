@@ -73,7 +73,7 @@ function UpLoadImg(props) {
                         src={imageUrl}
                         alt="avatar"
                         style={{
-                            width: '100%',
+                            width: '40px',
                         }}
                     />
                 ) : (

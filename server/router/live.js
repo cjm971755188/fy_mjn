@@ -7,20 +7,20 @@ const dayjs = require('dayjs');
 router.post('/getLiveList', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = ``
+    let whereUser = `WHERE status != '失效' and status != '测试'`
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
-            whereUser += ` and u.department = '${params.userInfo.department}'`
+            whereUser += ` and department = '${params.userInfo.department}'`
         }
         if (params.userInfo.department === '主管') {
-            whereUser += ` and u.department = '${params.userInfo.department}' and u.company = '${params.userInfo.company}'`
+            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
-            whereUser += ` and u.uid = '${params.userInfo.uid}'`
+            whereUser += ` and uid = '${params.userInfo.uid}'`
         }
     }
     // 条件筛选
-    let whereFilter = `where z.status != '失效'`
+    let whereFilter = `where z.status != '已失效'`
     if (params.filtersDate && params.filtersDate.length === 2) {
         whereFilter += ` and z.start_time >= '${params.filtersDate[0]}' and z.start_time < '${params.filtersDate[1]}'`
     }
@@ -44,7 +44,7 @@ router.post('/getLiveList', (req, res) => {
                         LEFT JOIN user u2 ON u2.uid = l.a_id_2
                         LEFT JOIN user u3 ON u3.uid = l.c_id_1
                         LEFT JOIN user u4 ON u4.uid = l.u_id_3
-                        LEFT JOIN user u5 ON u5.uid = l.u_id_1
+                        INNER JOIN (SELECT * FROM user ${whereUser}) u5 ON u5.uid = l.u_id_1
                         LEFT JOIN user u6 ON u6.uid = l.u_id_2
                     GROUP BY l.lid, l.tid, l.tmids, l.count_type, l.start_time, l.end_time, l.place, l.room, l.a_id_1, l.a_id_2, l.c_id_1, l.u_id_3, l.goal, l.sales, l.commission_normal_on, l.commission_welfare_on, l.commission_bao_on, 
                         l.commission_note_on, l.commission_normal_down, l.commission_welfare_down, l.commission_bao_down, l.commission_note_down, l.u_id_1, l.u_point_1, l.u_id_2, l.u_point_2, l.u_note, t.name, 

@@ -1,6 +1,6 @@
 import React from "react";
 import { Form, Input, List, Modal, Select, Popover } from 'antd';
-import { InfoCircleOutlined, CloseCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone, CheckCircleTwoTone } from '@ant-design/icons';
+import { InfoCircleOutlined } from '@ant-design/icons';
 import { liaisonType } from '../../baseData/talent'
 import UpLoadImg from '../UpLoadImg'
 
@@ -48,7 +48,7 @@ function AELiaison(props) {
                 <Form.Item label="沟通群名称" name="crowd_name" rules={[{ required: true, message: '不能为空' }]}>
                     <Input placeholder="请输入" />
                 </Form.Item>
-                <Form.Item label={<Popover title="图片举例" content={
+                {type === 'edit_talent' ? null : <Form.Item label={<Popover title="图片举例" content={
                     <List>
                         <List.Item>1. 专场排期证明</List.Item>
                         <List.Item>2. 日播做链接证明</List.Item>
@@ -57,9 +57,12 @@ function AELiaison(props) {
                     </List>}
                 >
                     <span><InfoCircleOutlined /> 证明</span>
-                </Popover>} name="advance_pic" rules={[{ required: true, message: '不能为空' }]} >
+                </Popover>}
+                    name="advance_pic"
+                    rules={[{ required: true, message: '不能为空' }]}
+                >
                     <UpLoadImg title="上传证明" name="推进商机" defaultUrl={form.getFieldValue('advance_pic')} setPicUrl={(value) => { form.setFieldValue('advance_pic', value) }} />
-                </Form.Item>
+                </Form.Item>}
             </Form>
         </Modal>
     )

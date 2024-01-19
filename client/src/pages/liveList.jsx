@@ -9,7 +9,7 @@ import dayjs from 'dayjs'
 
 function LiveList() {
     // 操作权限
-    const editPower = localStorage.getItem('position') === '商务' ? true : false
+    const editPower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
     let columns = [
@@ -306,6 +306,42 @@ function LiveList() {
             console.error(err)
         })
     }
+    const [salemansItems, setSalemansItems] = useState()
+    const getSalemansItemsAPI = (type) => {
+        request({
+            method: 'post',
+            url: '/user/getSalemanItems',
+            data: {
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    if (type) {
+                        setSalemansItems(res.data.data)
+                    } else {
+                        let items = [
+                            { label: null, value: null },
+                            ...res.data.data
+                        ]
+                        setSalemansItems(items)
+                    }
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
     const [salemanAssistantsItems, setSalemanAssistantsItems] = useState()
     const getSalemanAssistantsItemsAPI = () => {
         request({
@@ -445,7 +481,7 @@ function LiveList() {
                         <Select style={{ width: 160 }} options={controlsItems} onFocus={() => { getControlsItemsAPI(true); }} />
                     </Form.Item>
                     <Form.Item label='服务商务' name='u_id_3' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                        <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(true); }} />
                     </Form.Item>
                     <Form.Item label='达人昵称' name='tid'>
                         <Select

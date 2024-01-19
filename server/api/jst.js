@@ -141,7 +141,6 @@ async function CallJSTAPI(apiPath, bizParam) {
     } catch (error) {
         console.info(error.message, error.stack);
     }
-
 }
 
 exports.CallJSTAPI = CallJSTAPI;

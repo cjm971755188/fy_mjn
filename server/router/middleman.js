@@ -7,7 +7,7 @@ const db = require('../config/db')
 router.post('/getMiddlemanList', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `WHERE status != '已失效'`
+    let whereUser = `WHERE status != '失效' and status != '测试'`
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
@@ -54,7 +54,7 @@ router.post('/getMiddlemanList', (req, res) => {
                                 LEFT JOIN (SELECT tmid, MAX(tmsid) tmsid FROM talent_model_schedule tms GROUP BY tmid) tms1 ON tms1.tmid = tm.tmid
                                 LEFT JOIN talent_model_schedule tms0 ON tms0.tmsid = tms1.tmsid)
                     ) a
-                        LEFT JOIN (SELECT * FROM user ${whereUser}) u1 ON u1.uid = a.u_id_1
+                        INNER JOIN (SELECT * FROM user ${whereUser}) u1 ON u1.uid = a.u_id_1
                         LEFT JOIN (SELECT * FROM user ${whereUser}) u2 ON u2.uid = a.u_id_2
                     GROUP BY a.mid
                     ) b
@@ -122,7 +122,7 @@ router.post('/editMiddleman', (req, res) => {
 router.post('/getmiddlemansItems', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where status != '失效'`
+    let whereUser = `where status != '失效' and status != '测试'`
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`

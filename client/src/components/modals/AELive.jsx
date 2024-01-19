@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import request from '../../service/request'
 import { Form, Input, Modal, DatePicker, Radio, Popover, Select, List, InputNumber, Space } from 'antd';
 import { placeType, roomType } from '../../baseData/live'
@@ -204,7 +204,7 @@ function AELive(props) {
                             { label: null, value: null },
                             ...res.data.data
                         ]
-                        setSalemansItems(items)
+                        setSalemanAssistantsItems(items)
                     }
                 } else {
                     message.error(res.data.msg)

@@ -105,9 +105,6 @@ function AEChance(props) {
                     <Form.Item label="平台" name="platforms" rules={[{ required: true, message: '不能为空' }]}>
                         <Select mode="multiple" allowClear style={{ width: '100%' }} placeholder="请选择" options={platform} />
                     </Form.Item>
-                    <Form.Item label="账号ID" name="account_ids" rules={[{ required: true, message: '不能为空' }]}>
-                        <Select mode="tags" allowClear placeholder="请输入" onChange={(value) => { form.setFieldValue('account_ids', value) }} options={[]} />
-                    </Form.Item>
                     <Form.Item label="达人账号" name="account_names" rules={[{ required: true, message: '不能为空' }]}>
                         <Select mode="tags" allowClear placeholder="请输入" onChange={(value) => { form.setFieldValue('account_names', value) }} options={[]} />
                     </Form.Item>
@@ -124,12 +121,12 @@ function AEChance(props) {
                 </Card> : null}
                 <Form.Item label="相同线上达人">
                     <Button onClick={() => {
-                        if ((form.getFieldValue('account_ids') && form.getFieldValue('account_ids').length > 0) ||
+                        if ((form.getFieldValue('account_names') && form.getFieldValue('account_names').length > 0) ||
                             (form.getFieldValue('group_name') && form.getFieldValue('group_name').length > 0) || (form.getFieldValue('provide_name') && form.getFieldValue('provide_name').length > 0)) {
                             let payload = {
                                 cid: type == 'add' ? '' : form.getFieldValue('cid'),
                                 type: 'chance',
-                                account_ids: form.getFieldValue('account_ids'),
+                                account_names: form.getFieldValue('account_names'),
                                 group_name: form.getFieldValue('group_name'),
                                 provide_name: form.getFieldValue('provide_name')
                             }

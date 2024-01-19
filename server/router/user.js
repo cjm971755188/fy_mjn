@@ -47,7 +47,7 @@ router.post('/editPassword', (req, res) => {
         } else if (params.password == params.password2) {
             res.send({ code: 201, data: [], msg: '新密码与原密码不能相同' })
         } else {
-            let sql = `UPDATE user SET password = ${params.password2} where uid = '${params.uid}'`
+            let sql = `UPDATE user SET password = '${params.password2}' where uid = '${params.uid}'`
             db.query(sql, (err, results) => {
                 if (err) throw err;
                 res.send({ code: 200, data: [], msg: '修改成功' })
@@ -60,7 +60,7 @@ router.post('/editPassword', (req, res) => {
 router.post('/getUserList', (req, res) => {
     let params = req.body
     // 去除 已删除 + 自己 + 管理员
-    let where = `where status != '失效' and position != '管理员' and uid != '${params.userInfo.uid}'`
+    let where = `where status != '失效' and status != '测试' and position != '管理员' and uid != '${params.userInfo.uid}'`
     // 权限筛选
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
@@ -99,7 +99,7 @@ router.post('/getUserList', (req, res) => {
 router.post('/addUser', (req, res) => {
     let time = dayjs().valueOf()
     let params = req.body
-    let sql = `SELECT * FROM user where status != '失效' and company = '${params.combine[0]}' and department = '${params.combine[1]}' and position = '${params.combine[2]}' and position in ('总裁', '副总', '主管')`
+    let sql = `SELECT * FROM user where status != '失效' and status != '测试' and company = '${params.combine[0]}' and department = '${params.combine[1]}' and position = '${params.combine[2]}' and position in ('总裁', '副总', '主管')`
     db.query(sql, (err, results) => {
         if (err) throw err;
         if (results.length != 0) {
@@ -117,7 +117,7 @@ router.post('/addUser', (req, res) => {
             db.query(sql, (err, results) => {
                 if (err) throw err;
                 if (results.length != 0) {
-                    if (results[0].status != '失效') {
+                    if (results[0].status != '失效' && results[0].status != '测试') {
                         res.send({ code: 201, data: [], msg: `${params.phone} 手机号已存在，添加失败` })
                     } else {
                         let sql = `UPDATE user SET status = '正常', create_uid = '${params.userInfo.uid}', create_time = '${dayjs().valueOf()}' where phone = '${params.phone}'`
@@ -207,7 +207,7 @@ router.post('/deleteUser', (req, res) => {
 router.post('/getSalemanAssistantItems', (req, res) => {
     let params = req.body
     // 去除 已删除 + 自己 + 管理员
-    let where = `where status != '失效' and department = '事业部' and position != '副总' and position != '副总助理'`
+    let where = `where status != '失效' and status != '测试' and department = '事业部' and position != '副总' and position != '副总助理'`
     // 权限筛选
     if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
         if (params.userInfo.position === '副总') {
@@ -236,7 +236,7 @@ router.post('/getSalemanAssistantItems', (req, res) => {
 router.post('/getSalemanItems', (req, res) => {
     let params = req.body
     // 去除 已删除 + 自己 + 管理员
-    let where = `where status != '失效' and (position = '商务' or (position = '主管' and department = '事业部'))`
+    let where = `where status != '失效' and status != '测试' and (position = '商务' or (position = '主管' and department = '事业部'))`
     // 权限筛选
     if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
         if (params.userInfo.position === '副总') {
@@ -265,7 +265,7 @@ router.post('/getSalemanItems', (req, res) => {
 router.post('/getAnthorItems', (req, res) => {
     let params = req.body
     // 去除 已删除 + 自己 + 管理员
-    let where = `where status != '失效' and (position = '主播' or (position = '主管' and department = '直播部'))`
+    let where = `where status != '失效' and status != '测试' and (position = '主播' or (position = '主管' and department = '直播部'))`
     // 权限筛选
     if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
         if (params.userInfo.position === '副总') {
@@ -294,7 +294,7 @@ router.post('/getAnthorItems', (req, res) => {
 router.post('/getControlItems', (req, res) => {
     let params = req.body
     // 去除 已删除 + 自己 + 管理员
-    let where = `where status != '失效' and position = '中控'`
+    let where = `where status != '失效' and status != '测试' and position = '中控'`
     // 权限筛选
     if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
         if (params.userInfo.position === '副总') {

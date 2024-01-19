@@ -1,16 +1,19 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { NavLink } from 'react-router-dom'
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Alert, Modal } from 'antd';
-import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined } from '@ant-design/icons';
+import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Alert, Modal, Popconfirm } from 'antd';
+import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined, CloseCircleTwoTone, VerticalAlignBottomOutlined } from '@ant-design/icons';
 import { model, uPoint0, talentStatus, yearboxStatus, modelStatus, talentType } from '../baseData/talent'
 import AETalent from '../components/modals/AETalent'
 import AELive from '../components/modals/AELive'
 import dayjs from 'dayjs'
+import FileSaver from 'file-saver'
+
+const { TextArea } = Input;
 
 function TalentList() {
     // 操作权限
-    const editPower = localStorage.getItem('position') === '商务' ? true : false
+    const editPower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
     const examPower = localStorage.getItem('position') === '副总' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
@@ -101,7 +104,9 @@ function TalentList() {
             render: (_, record) => (
                 <Space size="small">
                     {record.status.match('待审批') ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
-                        record.status === '合作中' ? <PauseCircleTwoTone twoToneColor="#4ec990" /> : null}
+                        record.status.match('报备驳回') ? <CloseCircleTwoTone twoToneColor="#f81d22" /> :
+                            record.status.match('已撤销') ? <CloseCircleTwoTone twoToneColor="#f81d22" /> :
+                                record.status === '合作中' ? <PauseCircleTwoTone twoToneColor="#4ec990" /> : null}
                     <span>{record.status}</span>
                 </Space>
             )
@@ -120,7 +125,17 @@ function TalentList() {
             render: (_, record) => (
                 <Space size="large">
                     {examPower && record.status.match('待审批') ? <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> :
-                        <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>查看详情</NavLink>}
+                        record.status === '报备驳回' || record.status === '已撤销' ? null : <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>查看详情</NavLink>}
+                    {editPower && record.status === '报备待审批' ? <Popconfirm
+                        title="确认要撤销该申请吗"
+                        okText="撤销"
+                        cancelText="取消"
+                        onConfirm={() => {
+                            revokeReportAPI({ tid: record.tid });
+                        }}
+                    >
+                        <a>撤销</a>
+                    </Popconfirm> : null}
                     {editPower && record.status === '合作中' ? <><a onClick={() => {
                         setClickTid(record.tid);
                         setIsShowGive(true);
@@ -131,6 +146,8 @@ function TalentList() {
                             liveForm.setFieldValue('name', record.name);
                             liveForm.setFieldValue('tid', record.tid);
                         }}>添加专场</a></> : null}
+                    {record.status === '报备驳回' ? <><a onClick={() => { getRefundReasonAPI({ tid: record.tid }); }}>查看驳回备注</a>
+                        {/* <a onClick={() => { getReportInfoAPI({ tid: record.tid }); }}>重新报备</a> */}</> : null}
                 </Space>
             )
         }
@@ -371,13 +388,172 @@ function TalentList() {
             console.error(err)
         })
     }
+    // 查看驳回理由
+    const [checkNoReason, setCheckNoReason] = useState('')
+    const [isShowCheckNo, setIsShowCheckNo] = useState(false)
+    const getRefundReasonAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/talent/getRefundReasonT',
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setCheckNoReason(res.data.data)
+                    setIsShowCheckNo(true);
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    // 撤销报备
+    const revokeReportAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/talent/revokeReport',
+            data: {
+                tid: payload.tid,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    getTalentListAPI();
+                } else {
+                    message.error(res.data.msg)
+                }
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    };
+    // 重新报备
+    const getReportInfoAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/talent/getReportInfo',
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    console.log(res.data.data);
+                    form.setFieldsValue({
+                        ...res.data.data,
+                        talent_name: res.data.data.name,
+                        talent_type: {
+                            label: res.data.data.type,
+                            value: res.data.data.type
+                        }
+                    });
+                    setIsShow(true);
+                    setType('history');
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    // 导出
+    let exportColumns = [
+        { title: '达人昵称', dataIndex: 'name', key: 'name' },
+        { title: '层级', dataIndex: 'type', key: 'type' },
+        { title: '专场销售额(万)', dataIndex: 'live_sum', key: 'live_sum' },
+        { title: '商务', dataIndex: 'u_names', key: 'u_names' }
+    ]
+    const getExportTalentListAPI = () => {
+        request({
+            method: 'post',
+            url: '/talent/getExportTalentList',
+            data: {
+                filters: tableParams.filters,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    exportTabel(res.data.data);
+                } else {
+                    message.error(res.data.msg)
+                }
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    };
+    const exportTabel = (exportData) => {
+        let blobData = '\uFEFF' // 字节顺序标记 使用了BOM或者utf-16？
+        blobData += `${exportColumns.map(item => item.title).join(',')} \n`
+        exportData.forEach(item => {
+            const itemData = []
+            exportColumns.forEach(ele => {
+                let val = item[ele.dataIndex] || null
+                if ((+val).toString() === val) { // 判断当前值是否为纯数字
+                    val = `\t${val.toString()}` // 纯数字加一个制表符，正常文件中不显示，但是会让excel不再特殊处理纯数字字符串
+                }
+                if (ele.dataIndex === 'create_time') { // 判断当前值是否为日期
+                    val = `\t${dayjs(Number(val)).format('YYYY-MM-DD HH:mm:ss')}`
+                }
+                itemData.push(val)
+            })
+            blobData += `${itemData}\n`
+        })
+        const blob = new Blob([blobData], {
+            // type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet’, // xlsx
+            type: 'application/vnd.ms-excel;charset=utf-8', // xls
+        });
+        FileSaver.saveAs(blob, `CRM系统达人导出-${+new Date()}.xls`);
+    }
 
     useEffect(() => {
         getTalentListAPI();
     }, [JSON.stringify(tableParams)])
     return (
         <Fragment>
-            <Card title="达人列表" extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('history'); }}>添加历史达人</Button> : null}>
+            <Card title="达人列表" extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('history'); }}>添加历史达人</Button> :
+                <Button type="primary" icon={<VerticalAlignBottomOutlined />} onClick={() => { getExportTalentListAPI(); }}>导出（层级专场）</Button>}>
                 <Form
                     layout="inline"
                     form={filterForm}
@@ -457,12 +633,12 @@ function TalentList() {
                 isShow={isShowLive}
                 type={liveType}
                 form={liveForm}
-                onOK={(values) => { 
+                onOK={(values) => {
                     let tmids = []
                     for (let i = 0; i < values.tmids.length; i++) {
                         tmids.push(values.tmids[i] ? values.tmids[i].value || values.tmids[i].value === null ? values.tmids[i].value : values.tmids[i] : null)
                     }
-                    let payload = { 
+                    let payload = {
                         ...values,
                         tid: values.tid ? values.tid.value || values.tid.value === null ? values.tid.value : values.tid : null,
                         start_time: dayjs(values.start_time).valueOf(),
@@ -482,6 +658,9 @@ function TalentList() {
                 }}
                 onCancel={() => { setIsShowLive(false); liveForm.resetFields(); setLiveType(''); }}
             />
+            <Modal title="报备驳回备注" open={isShowCheckNo} onOk={() => { setIsShowCheckNo(false); }} onCancel={() => { setIsShowCheckNo(false); }}>
+                <TextArea placeholder="请输入" value={checkNoReason} disabled={true} />
+            </Modal>
         </Fragment>
     )
 }
