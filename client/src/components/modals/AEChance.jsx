@@ -149,7 +149,8 @@ function AEChance(props) {
                                 <List.Item.Meta
                                     avatar={<Image width={50} src={people} preview={false} />}
                                     title={<Space size={'large'}><span>{`编号: ${item.cid}`}</span><span>{`状态: ${item.status}`}</span><span>{`商务: ${item.u_name}`}</span></Space>}
-                                    description={<Space size={'large'}><span>{`模式: ${item.models}`}</span>{item.models === '线上平台' ? <span>{`平台: ${item.platforms}`}</span> : null}<span>{`重复名称/ID: ${samename}`}</span></Space>}
+                                    description={<Space size={'large'}><span>{`模式: ${item.models}`}</span>{item.models === '线上平台' ? <span>{`平台: ${item.platforms}`}</span> : null}
+                                        <span>{`重复名称/ID: ${item.account_names || item.group_name || item.provide_name}`}</span></Space>}
                                 />
                             </List.Item>
                         )}

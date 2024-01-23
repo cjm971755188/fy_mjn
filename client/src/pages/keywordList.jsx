@@ -138,6 +138,10 @@ function KeywordList() {
     }
 
     useEffect(() => {
+        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
+            navigate('/login')
+            message.error('账号错误，请重新登录')
+        }
         getKeywordListAPI();
     }, [JSON.stringify(tableParams)])
     return (
@@ -148,6 +152,7 @@ function KeywordList() {
                 onFinish={(values) => {
                     setTableParams({
                         ...tableParams,
+                        pagination: {current: 1, pageSize: 10},
                         filters: values
                     })
                 }}

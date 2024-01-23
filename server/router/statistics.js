@@ -206,6 +206,48 @@ router.post('/getPlatformTalent', (req, res) => {
     })
 })
 
+// 达人管理-各个层级达人占比
+router.post('/getTypeTalent', (req, res) => {
+    let params = req.body
+    // 权限筛选
+    let whereUser = `where status != '失效' and status != '测试' and department = '事业部' and position != '副总'`
+    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
+        if (params.userInfo.position === '副总') {
+            whereUser += ` and department = '${params.userInfo.department}'`
+        }
+        if (params.userInfo.department === '主管') {
+            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+        }
+        if (params.userInfo.position === '商务') {
+            whereUser += ` and uid = '${params.userInfo.uid}'`
+        }
+    }
+    let whereFilter = ``
+    let start_time = params.filtersDate.length === 2 ? params.filtersDate[0] : ''
+    let end_time = params.filtersDate.length === 2 ? params.filtersDate[1] : '2000000000000'
+    let sql = `SELECT t.type, COUNT(DISTINCT t.tid) as sum
+                FROM talent t
+                    LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' and create_time >= '${start_time}' and create_time < '${end_time}' GROUP BY tid) ts0 ON ts0.tid = t.tid
+                    LEFT JOIN talent_schedule ts1 ON ts1.tsid = ts0.tsid
+                    LEFT JOIN talent_model tm ON tm.tid = t.tid
+                    LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' and create_time >= '${start_time}' and create_time < '${end_time}' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
+                    LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
+                    INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = tms1.u_id_1 OR u.uid = tms1.u_id_2
+                WHERE t.status != '已失效'
+                GROUP BY t.type`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        let r = []
+        for (let i = 0; i < results.length; i++) {
+            r.push({
+                value: results[i].sum,
+                name: results[i].type
+            })
+        }
+        res.send({ code: 200, data: r, msg: '' })
+    })
+})
+
 // 达人管理-各省份达人占比
 router.post('/getProvinceTalent', (req, res) => {
     let params = req.body

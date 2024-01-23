@@ -445,6 +445,10 @@ function LiveList() {
     }
 
     useEffect(() => {
+        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
+            navigate('/login')
+            message.error('账号错误，请重新登录')
+        }
         getLiveListAPI();
     }, [JSON.stringify(tableParams)])
     return (
@@ -456,6 +460,7 @@ function LiveList() {
                     onFinish={(values) => {
                         setTableParams({
                             ...tableParams,
+                            pagination: {current: 1, pageSize: 10},
                             filtersDate: dateSelect,
                             filters: values
                         })

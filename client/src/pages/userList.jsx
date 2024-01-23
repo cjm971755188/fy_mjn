@@ -262,6 +262,10 @@ function UserList() {
     }
 
     useEffect(() => {
+        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
+            navigate('/login')
+            message.error('账号错误，请重新登录')
+        }
         getUserListAPI();
     }, [JSON.stringify(tableParams)])
     return (
@@ -273,6 +277,7 @@ function UserList() {
                     onFinish={(values) => {
                         setTableParams({
                             ...tableParams,
+                            pagination: {current: 1, pageSize: 10},
                             filters: values
                         })
                     }}

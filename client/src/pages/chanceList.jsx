@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, message, Alert } from 'antd';
+import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, message, Alert, Tooltip } from 'antd';
 import { PlusOutlined, CloseCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone, CheckCircleTwoTone } from '@ant-design/icons';
 import { chanceStatus, model, platform } from '../baseData/talent'
 import MyDateSelect from '../components/MyDateSelect'
@@ -50,7 +50,26 @@ function ChanceList() {
         { title: '推进时间', dataIndex: 'advance_time', key: 'advance_time', render: (_, record) => (<span>{record.advance_time === null ? null : dayjs(Number(record.advance_time)).format('YYYY-MM-DD')}</span>) },
         { title: '推进证明', dataIndex: 'advance_pic', key: 'advance_pic', render: (_, record) => (record.advance_pic ? <Image width={50} height={50} src={record.advance_pic} /> : null) },
         { title: '商务', dataIndex: 'name', key: 'name' },
-        { title: '备注', dataIndex: 'note', key: 'note' },
+        {
+            title: '备注',
+            dataIndex: 'note',
+            key: 'note',
+            width: 150,
+            render: (_, record) => (
+                <Tooltip title={record.note}>
+                    <div style={{
+                        width: '150px',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer'
+                    }}
+                    >
+                        {record.note}
+                    </div>
+                </Tooltip>
+            )
+        },
         {
             title: '状态',
             dataIndex: 'status',
@@ -486,6 +505,10 @@ function ChanceList() {
     }
 
     useEffect(() => {
+        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
+            navigate('/login')
+            message.error('账号错误，请重新登录')
+        }
         getChanceListAPI();
     }, [JSON.stringify(tableParams)])
     return (
@@ -497,6 +520,7 @@ function ChanceList() {
                     onFinish={(values) => {
                         setTableParams({
                             ...tableParams,
+                            pagination: { current: 1, pageSize: 10 },
                             filtersDate: dateSelect,
                             filters: values
                         })

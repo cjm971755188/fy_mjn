@@ -138,6 +138,38 @@ function TalentStatistics() {
             console.error(err)
         })
     };
+    const [typeTalentOption, setTypeTalentOption] = useState([]);
+    const [typeTalentLoading, setTypeTalentLoading] = useState(false);
+    const getTypeTalentAPI = () => {
+        setTypeTalentLoading(true)
+        request({
+            method: 'post',
+            url: '/statistics/getTypeTalent',
+            data: {
+                filtersDate: tableParams.filtersDate,
+                filters: tableParams.filters,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setTypeTalentOption(res.data.data)
+                    setTypeTalentLoading(false)
+                } else {
+                    message.error(res.data.msg)
+                }
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    };
     const [provinceTalentOption, setProvinceTalentOption] = useState({ data: [], max: 0 });
     const [provinceTalentLoading, setProvinceTalentLoading] = useState(false);
     const getProvinceTalentAPI = () => {
@@ -176,10 +208,15 @@ function TalentStatistics() {
     const [dateSelect, setDateSelect] = useState()
 
     useEffect(() => {
+        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
+            navigate('/login')
+            message.error('账号错误，请重新登录')
+        }
         getTalentStatisticsAPI();
         getSalemansChanceOprateAPI();
         getAdReTimeDiffAPI();
         getPlatformTalentAPI();
+        getTypeTalentAPI();
         getProvinceTalentAPI();
     }, [JSON.stringify(tableParams)])
     return (
@@ -239,19 +276,19 @@ function TalentStatistics() {
                             <Col span={12}>
                                 <Popover content={
                                     <Row gutter={24} style={{ width: '200px', textAlign: 'center' }}>
-                                        <Col span={24}><Statistic title="待审批" value={countData.talent.cooperate_wait || 0} suffix="个" /></Col>
+                                        <Col span={24}><Statistic title="待审批" value={countData.talent.history_wait || 0} suffix="个" /></Col>
                                     </Row>}
                                 >
-                                    <Statistic title="合作中" value={countData.talent.cooperate || 0} suffix="个" />
+                                    <Statistic title="历史达人登记" value={countData.talent.history || 0} suffix="个" />
                                 </Popover>
                             </Col>
                             <Col span={12}>
                                 <Popover content={
                                     <Row gutter={24} style={{ width: '200px', textAlign: 'center' }}>
-                                        <Col span={24}><Statistic title="待审批" value={countData.talent.history_wait || 0} suffix="个" /></Col>
+                                        <Col span={24}><Statistic title="待审批" value={countData.talent.cooperate_wait || 0} suffix="个" /></Col>
                                     </Row>}
                                 >
-                                    <Statistic title="历史达人登记" value={countData.talent.history || 0} suffix="个" />
+                                    <Statistic title="合作中" value={countData.talent.cooperate || 0} suffix="个" />
                                 </Popover>
                             </Col>
                         </Row>
@@ -334,7 +371,7 @@ function TalentStatistics() {
                     </Card>
                 </Col>
                 <Col span={6}>
-                    <Card title="商机跟进 - 推进">
+                    <Card title="商机跟进平均用时">
                         {!adReTimeDiffLoading ? adReTimeDiffOption.advance.length !== 0 ? <MyECharts height={250} option={{
                             tooltip: {
                                 trigger: 'item'
@@ -369,7 +406,7 @@ function TalentStatistics() {
                             ]
                         }} /> : <Empty imageStyle={{ height: '220px' }} /> : null}
                     </Card>
-                    <Card title="商机跟进 - 报备" style={{ marginTop: '20px' }}>
+                    <Card title="商机跟进平均用时" style={{ marginTop: '20px' }}>
                         {!adReTimeDiffLoading ? adReTimeDiffOption.report.length !== 0 ? <MyECharts height={250} option={{
                             tooltip: {
                                 trigger: 'item'
@@ -445,7 +482,41 @@ function TalentStatistics() {
                     </Card>
                 </Col>
                 <Col span={6}>
-                    <Card title="等待需求"></Card>
+                    <Card title="达人层级比例">
+                        {!typeTalentLoading ? typeTalentOption.length !== 0 ? <MyECharts height={250} option={{
+                            tooltip: {
+                                trigger: 'item'
+                            },
+                            legend: {},
+                            grid: {
+                                left: '5%',
+                                right: '5%'
+                            },
+                            series: [
+                                {
+                                    name: '达人合作模式',
+                                    type: 'pie',
+                                    radius: ['40%', '70%'],
+                                    avoidLabelOverlap: false,
+                                    label: {
+                                        show: false,
+                                        position: 'center'
+                                    },
+                                    emphasis: {
+                                        label: {
+                                            show: true,
+                                            fontSize: 28,
+                                            fontWeight: 'bold'
+                                        }
+                                    },
+                                    labelLine: {
+                                        show: false
+                                    },
+                                    data: typeTalentOption
+                                }
+                            ]
+                        }} /> : <Empty imageStyle={{ height: '250px' }} /> : null}
+                    </Card>
                 </Col>
                 <Col span={12}>
                     <Card title="各省份达人数量地图">

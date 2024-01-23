@@ -21,14 +21,17 @@ function TalentList() {
         { title: '编号', dataIndex: 'tid', key: 'tid' },
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
         { title: '合作模式', dataIndex: 'models', key: 'models' },
-        { title: '预估慕江南年GMV', dataIndex: 'year_deal', key: 'year_deal' },
+        {
+            title: '年度预估GMV',
+            dataIndex: 'year_deal',
+            key: 'year_deal',
+            render: (_, record) => (<span>{record.year_deal} 万</span>)
+        },
         {
             title: '层级',
             dataIndex: 'type',
             key: 'type',
-            render: (_, record) => (
-                <span>{record.type} 类</span>
-            )
+            render: (_, record) => (<span>{record.type} 类</span>)
         },
         {
             title: '商务',
@@ -147,7 +150,8 @@ function TalentList() {
                             liveForm.setFieldValue('tid', record.tid);
                         }}>添加专场</a></> : null}
                     {record.status === '报备驳回' ? <><a onClick={() => { getRefundReasonAPI({ tid: record.tid }); }}>查看驳回备注</a>
-                        {/* <a onClick={() => { getReportInfoAPI({ tid: record.tid }); }}>重新报备</a> */}</> : null}
+                        <a onClick={() => { setClickTid(record.tid); getReportInfoAPI({ tid: record.tid }); }}>重新报备</a></> : null}
+                    {record.status === '已撤销' ? <a onClick={() => { setClickTid(record.tid); getReportInfoAPI({ tid: record.tid }); }}>重新报备</a> : null}
                 </Space>
             )
         }
@@ -284,6 +288,7 @@ function TalentList() {
             data: {
                 ...payload,
                 operate: '达人报备',
+                clickTid,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     e_id: localStorage.getItem('e_id'),
@@ -298,6 +303,7 @@ function TalentList() {
                 if (res.data.code == 200) {
                     setIsShow(false);
                     setType('');
+                    setClickTid('');
                     getTalentListAPI();
                     form.resetFields();
                     message.success(res.data.msg)
@@ -314,7 +320,7 @@ function TalentList() {
     // 移交
     const [isShowGive, setIsShowGive] = useState()
     const [formGive] = Form.useForm()
-    const [clickTid, setClickTid] = useState()
+    const [clickTid, setClickTid] = useState('')
     const giveTalentAPI = () => {
         request({
             method: 'post',
@@ -338,7 +344,7 @@ function TalentList() {
                 if (res.data.code == 200) {
                     setIsShowGive(false);
                     formGive.resetFields();
-                    setClickTid();
+                    setClickTid('');
                     getTalentListAPI();
                     message.success(res.data.msg)
                 } else {
@@ -449,7 +455,7 @@ function TalentList() {
             console.error(err)
         })
     };
-    // 重新报备
+    // 获取上次报备信息
     const getReportInfoAPI = (payload) => {
         request({
             method: 'post',
@@ -468,17 +474,89 @@ function TalentList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    console.log(res.data.data);
-                    form.setFieldsValue({
-                        ...res.data.data,
-                        talent_name: res.data.data.name,
-                        talent_type: {
-                            label: res.data.data.type,
-                            value: res.data.data.type
+                    let models = [], accounts = [], group_name = null, group_shop = null, group_u_point_1 = null, group_u_id_2 = null, group_u_point_2 = null,
+                        provide_name = null, provide_shop = null, provide_u_point_1 = null, provide_u_id_2 = null, provide_u_point_2 = null,
+                        commission_normal = null, commission_welfare = null, commission_bao = null, commission_note = null, discount_buyout = null, discount_back = null, discount_label = null
+                    for (let i = 0; i < res.data.data.length; i++) {
+                        models.push(res.data.data[i].model)
+                        if (res.data.data[i].model === '线上平台') {
+                            accounts.push({
+                                ...res.data.data[i],
+                                account_models: res.data.data[i].account_models.split(','),
+                                keyword: res.data.data[i].keyword.split(','),
+                                main_province: res.data.data[i].main_province.split(','),
+                                age_cuts: res.data.data[i].age_cuts.split(','),
+                                u_id_1: res.data.data[i].u_name_1,
+                                u_id_2: res.data.data[i].u_id_2 === null ? null : {
+                                    value: res.data.data[i].u_id_2,
+                                    label: res.data.data[i].u_name_2,
+                                },
+                            })
+                        } else if (res.data.data[i].model === '社群团购') {
+                            group_name = res.data.data[i].name
+                            group_shop = res.data.data[i].shop
+                            commission_normal = res.data.data[i].commission_normal
+                            commission_welfare = res.data.data[i].commission_welfare
+                            commission_bao = res.data.data[i].commission_bao
+                            commission_note = res.data.data[i].commission_note
+                            group_u_point_1 = res.data.data[i].u_point_1
+                            group_u_id_2 = {
+                                value: res.data.data[i].u_id_2,
+                                label: res.data.data[i].u_name_2,
+                            }
+                            group_u_point_2 = res.data.data[i].u_point_2
+                        } else if (res.data.data[i].model === '供货') {
+                            provide_name = res.data.data[i].name
+                            provide_shop = res.data.data[i].shop
+                            discount_buyout = res.data.data[i].discount_buyout
+                            discount_back = res.data.data[i].discount_back
+                            discount_label = res.data.data[i].discount_label
+                            provide_u_point_1 = res.data.data[i].u_point_1
+                            provide_u_id_2 = {
+                                value: res.data.data[i].u_id_2,
+                                label: res.data.data[i].u_name_2,
+                            }
+                            provide_u_point_2 = res.data.data[i].u_point_2
                         }
+                    }
+                    form.setFieldsValue({
+                        ...res.data.data[0],
+                        talent_name: res.data.data[0].name,
+                        talent_type: res.data.data[0].type,
+                        m_id_1: {
+                            value: res.data.data[0].m_id_1,
+                            label: res.data.data[0].m_name_1,
+                        },
+                        m_id_2: {
+                            value: res.data.data[0].m_id_2,
+                            label: res.data.data[0].m_name_2,
+                        },
+                        u_id_0: {
+                            value: res.data.data[0].u_id_0,
+                            label: res.data.data[0].u_name_0,
+                        },
+                        group_name,
+                        group_shop,
+                        group_u_point_1,
+                        group_u_id_2,
+                        group_u_point_2,
+                        commission_normal,
+                        commission_welfare,
+                        commission_bao,
+                        commission_note,
+                        provide_name,
+                        provide_shop,
+                        provide_u_point_1,
+                        provide_u_id_2,
+                        provide_u_point_2,
+                        discount_buyout,
+                        discount_back,
+                        discount_label,
+                        models,
+                        accounts
                     });
                     setIsShow(true);
-                    setType('history');
+                    setType('reReport');
                 } else {
                     message.error(res.data.msg)
                 }
@@ -548,6 +626,10 @@ function TalentList() {
     }
 
     useEffect(() => {
+        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
+            navigate('/login')
+            message.error('账号错误，请重新登录')
+        }
         getTalentListAPI();
     }, [JSON.stringify(tableParams)])
     return (
@@ -560,6 +642,7 @@ function TalentList() {
                     onFinish={(values) => {
                         setTableParams({
                             ...tableParams,
+                            pagination: {current: 1, pageSize: 10},
                             filters: values
                         })
                     }}
@@ -617,7 +700,7 @@ function TalentList() {
                 type={type}
                 form={form}
                 onOK={(values) => { addHistoryTalentAPI(values); }}
-                onCancel={() => { setIsShow(false); form.resetFields(); setType(''); }}
+                onCancel={() => { setIsShow(false); form.resetFields(); setType(''); setClickTid(''); }}
             />
             <Modal title="移交达人" open={isShowGive} onOk={() => { giveTalentAPI(); }} onCancel={() => { setIsShowGive(false); }}>
                 <Form form={formGive}>

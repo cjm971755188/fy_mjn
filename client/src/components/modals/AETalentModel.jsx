@@ -15,7 +15,6 @@ function AETalentModel(props) {
     const [isShowProvide, setIsShowProvide] = useState(false)
     const [isShowSearch, setIsShowSearch] = useState(false)
     const [sameList, setSameList] = useState([])
-    const [samename, setSameName] = useState('')
     const searchSameChanceAPI = (type, payload, values) => {
         request({
             method: 'post',
@@ -26,13 +25,11 @@ function AETalentModel(props) {
                 if (res.data.code !== 200) {
                     setIsShowSearch(true)
                     setSameList(res.data.data)
-                    setSameName(res.data.samename)
                     message.error(res.data.msg)
                 } else {
                     if (type === 'search') {
                         setIsShowSearch(false)
                         setSameList([])
-                        setSameName('')
                         message.success(res.data.msg)
                     } else if (type === 'finish') {
                         if (res.data.data.length === 0) {
@@ -307,7 +304,6 @@ function AETalentModel(props) {
                         } else {
                             setIsShowSearch(false)
                             setSameList([])
-                            setSameName('')
                             message.error('未填写达人账号名/ID, 无法查询')
                         }
                     }}>查询</Button>
@@ -322,7 +318,8 @@ function AETalentModel(props) {
                                     <List.Item.Meta
                                         avatar={<Image width={50} src={people} preview={false} />}
                                         title={<Space size={'large'}><span>{`编号: ${item.tmid}`}</span><span>{`状态: ${item.status}`}</span><span>{`商务: ${item.u_name}`}</span></Space>}
-                                        description={<Space size={'large'}><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}<span>{`重复名称/ID: ${samename}`}</span></Space>}
+                                        description={<Space size={'large'}><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}
+                                            <span>{`重复名称/ID: ${item.account_name || item.group_name || item.provide_name}`}</span></Space>}
                                     />
                                 </List.Item>
                             )}

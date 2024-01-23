@@ -82,7 +82,8 @@ export const accountType = [
     { key: 18, label: "百科类达人", value: "百科类达人" },
     { key: 19, label: "作家类", value: "作家类" },
     { key: 20, label: "网红类达人", value: "网红类达人" },
-    { key: 21, label: "明星类达人", value: "明星类达人" }
+    { key: 21, label: "明星类达人", value: "明星类达人" },
+    { key: 22, label: "知识类达人", value: "知识类达人" }
 ]
 
 export const accountModelType = [

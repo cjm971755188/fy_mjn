@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db')
 const dayjs = require('dayjs');
-const ddurls = require('../config/commentDD')
 const sendRobot = require('../api/ddrobot')
 
 // 获取额外结佣列表
@@ -73,7 +72,7 @@ router.post('/addExtra', (req, res) => {
                 let sql = `SELECT phone FROM user WHERE uid = '${params.userInfo.e_id}'`
                 db.query(sql, (err, results_e) => {
                     if (err) throw err;
-                    sendRobot(params.userInfo.position === '管理员' ? ddurls.finance : ddurls.report, `申请额外结佣`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：额外结佣 \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                    sendRobot(params.userInfo.secret, params.userInfo.url,  `申请额外结佣`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：额外结佣 \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
                     res.send({ code: 200, data: [], msg: `添加成功` })
                 })
             })

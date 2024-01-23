@@ -1,9 +1,9 @@
 const request = require('request');//加载此模块失败请使用在本目录下使用nmp i request控制台命令
 const crypto = require('crypto');
 
-const sendRobot = (ddurl, title, msg, link, at, isAtAll) => {
-    let secret = "SEC45e67354216ae3d5229271cb34b26f7274132075550b973a67f67f36599427f9"//签名，如果有的话
-    let url = ddurl//钉钉机器人的链接，当你创建是便会看到
+const sendRobot = (_secret, _url, title, msg, link, at, isAtAll) => {
+    let secret = _secret//签名，如果有的话
+    let url = `https://oapi.dingtalk.com/robot/send?access_token=${_url}`//钉钉机器人的链接，当你创建是便会看到
     let data = {
         "msgtype": "markdown",
         "markdown": {

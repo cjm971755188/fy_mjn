@@ -4,8 +4,8 @@ const multer = require("multer");
 const app = express();
 const path = require('path');
 const CallJSTAPI = require('./api/jst')
-const ddurls = require('./config/commentDD')
 const sendRobot = require('./api/ddrobot')
+let schedule = require('node-schedule');
 
 app.use(cors())
 // 监听端口
@@ -68,6 +68,24 @@ const extraRouter = require('./router/extra')
 app.use('/extra', extraRouter)
 const userRouter = require('./router/user')
 app.use('/user', userRouter)
+
+// 定义规则
+let rule = new schedule.RecurrenceRule();
+// rule.date = [1]; // 每月1号 
+// rule.dayOfWeek = [1,3,5]; // 每周一、周三、周五 
+rule.hour = 0; rule.minute = 0; rule.second = 0; // 每天0点执行
+// rule.second = [0,10,20,30,40,50]; // 隔十秒
+// rule.minute = [0,20,40]; // 每小时的0分钟，20分钟，40分钟执行
+// 启动任务
+let job = schedule.scheduleJob(rule, () => {
+    /* let sql = `UPDATE chance SET status = '已过期' where `
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        res.send({ code: 200, data: [], msg: '修改成功' })
+    }) */
+});
+// 取消任务
+job.cancel();
 
 /* sendRobot(ddurls.report, `标题`, `![]('http://1.15.89.163:3000/public/people.jpg') \n@17764585713`, `http://1.15.89.163:5173/admin/talent/talent_list`, ["17764585713"], false) */
 

@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db')
-const BASE_URL = require('../config/config')
 const dayjs = require('dayjs');
-const ddurls = require('../config/commentDD')
 const sendRobot = require('../api/ddrobot')
 
 // 获取达人列表
@@ -176,7 +174,7 @@ router.post('/editTalent', (req, res) => {
                     } else if (isAdd && key === 'history_other_info') {
                         isAdd = false
                         sql += params.ori === null ? ` null,` : ` '${params.ori}',`
-                    } else if (params.operate.match('联系人') || params.operate === '新增年框资料') {
+                    } else if (params.operate.match('联系人') || params.operate.match('基础信息') || params.operate === '新增年框资料') {
                         for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
                             if (isAdd && Object.keys(params.new)[i] === key) {
                                 isAdd = false
@@ -228,7 +226,7 @@ router.post('/editTalent', (req, res) => {
             sql += `)`
             db.query(sql, (err, results) => {
                 if (err) throw err;
-                if (params.operate === '修改联系人') {
+                if (params.operate === '修改联系人' || params.operate === '修改基础信息') {
                     let sql = 'UPDATE talent SET'
                     for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
                         if (Object.keys(params.new)[i] !== 'tid') {
@@ -250,10 +248,10 @@ router.post('/editTalent', (req, res) => {
                         let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
                         db.query(sql, (err, results_t) => {
                             if (err) throw err;
-                            let sql = `SELECT phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                            let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                             db.query(sql, (err, results_e) => {
                                 if (err) throw err;
-                                sendRobot(params.userInfo.position === '管理员' ? ddurls.finance : ddurls.report, `${results_t[0].name} ${params.operate}`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                sendRobot(results_e[0].secret, results_e[0].url, `${results_t[0].name} ${params.operate}`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
                                 res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                             })
                         })
@@ -300,15 +298,11 @@ router.post('/examTalent', (req, res) => {
                         })
                     })
                 }
-                let sql = `SELECT name, phone FROM user WHERE uid = '${params.userInfo.uid}'`
-                db.query(sql, (err, results_e) => {
+                let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
+                db.query(sql, (err, results_u) => {
                     if (err) throw err;
-                    let sql = `SELECT name, phone FROM user WHERE uid = '${params.uid}'`
-                    db.query(sql, (err, results_u) => {
-                        if (err) throw err;
-                        sendRobot(params.userInfo.position === '管理员' ? ddurls.finance : ddurls.report, `${results_t[0].name} ${params.operate} 审批${results_e[0].name}`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${results_e[0].name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'}`, `http://1.15.89.163:5173`, [results_u[0].phone], false)
-                        res.send({ code: 200, data: [], msg: `` })
-                    })
+                    sendRobot(results_u[0].secret, results_u[0].url, `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`, `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} \n\n ### 审批备注：${note}`, `http://1.15.89.163:5173`, [results_u[0].phone], false)
+                    res.send({ code: 200, data: [], msg: `` })
                 })
             })
         })
@@ -361,10 +355,10 @@ router.post('/addTalentModel', (req, res) => {
                         let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
                         db.query(sql, (err, results_t) => {
                             if (err) throw err;
-                            let sql = `SELECT phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                            let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                             db.query(sql, (err, results_e) => {
                                 if (err) throw err;
-                                sendRobot(params.userInfo.position === '管理员' ? ddurls.finance : ddurls.report, `${results_t[0].name} 新合作报备`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                sendRobot(results_e[0].secret, results_e[0].url, `${results_t[0].name} 新合作报备`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：新合作报备 \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
                                 res.send({ code: 200, data: [], msg: `添加成功` })
                             })
                         })
@@ -476,10 +470,10 @@ router.post('/editTalentModel', (req, res) => {
                             let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
                             db.query(sql, (err, results_t) => {
                                 if (err) throw err;
-                                let sql = `SELECT phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                                let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                                 db.query(sql, (err, results_e) => {
                                     if (err) throw err;
-                                    sendRobot(params.userInfo.position === '管理员' ? ddurls.finance : ddurls.report, `${results_t[0].name} ${params.operate}`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                    sendRobot(results_e[0].secret, results_e[0].url, `${results_t[0].name} ${params.operate}`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
                                     res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                 })
                             })
@@ -505,10 +499,10 @@ router.post('/editTalentModel', (req, res) => {
                                 let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
                                 db.query(sql, (err, results_t) => {
                                     if (err) throw err;
-                                    let sql = `SELECT phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                                    let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                                     db.query(sql, (err, results_e) => {
                                         if (err) throw err;
-                                        sendRobot(params.userInfo.position === '管理员' ? ddurls.finance : ddurls.report, `${results_t[0].name} ${params.operate}`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                        sendRobot(results_e[0].secret, results_e[0].url, `${results_t[0].name} ${params.operate}`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
                                         res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                     })
                                 })
@@ -549,15 +543,11 @@ router.post('/examTalentModel', (req, res) => {
                 let sql = `UPDATE talent SET status = '合作中' WHERE tid = '${params.tid}'`
                 db.query(sql, (err, results) => {
                     if (err) throw err;
-                    let sql = `SELECT name, phone FROM user WHERE uid = '${params.userInfo.uid}'`
-                    db.query(sql, (err, results_e) => {
+                    let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
+                    db.query(sql, (err, results_u) => {
                         if (err) throw err;
-                        let sql = `SELECT name, phone FROM user WHERE uid = '${params.uid}'`
-                        db.query(sql, (err, results_u) => {
-                            if (err) throw err;
-                            sendRobot(params.userInfo.position === '管理员' ? ddurls.finance : ddurls.report, `${results_t[0].name} ${params.operate} 审批${results_e[0].name}`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${results_e[0].name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'}`, `http://1.15.89.163:5173`, [results_u[0].phone], false)
-                            res.send({ code: 200, data: [], msg: `` })
-                        })
+                        sendRobot(results_u[0].secret, results_u[0].url, `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`, `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} \n\n ### 审批备注：${note}`, `http://1.15.89.163:5173`, [results_u[0].phone], false)
+                        res.send({ code: 200, data: [], msg: `` })
                     })
                 })
             })
@@ -692,10 +682,10 @@ router.post('/giveTalent', (req, res) => {
                                         let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
                                         db.query(sql, (err, results_t) => {
                                             if (err) throw err;
-                                            let sql = `SELECT phone FROM user WHERE uid = '${params.userInfo.e_id}'`
+                                            let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                                             db.query(sql, (err, results_e) => {
                                                 if (err) throw err;
-                                                sendRobot(params.userInfo.position === '管理员' ? ddurls.finance : ddurls.report, `${results_t[0].name} ${params.operate}给${results_u[0].name}`, `请尽快审批~ @${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                                sendRobot(results_e[0].secret, results_e[0].url, `${results_t[0].name} ${params.operate}`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
                                                 res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                             })
                                         })
@@ -806,17 +796,22 @@ router.post('/getRefundReasonT', (req, res) => {
 // 获取被驳回达人的信息
 router.post('/getReportInfo', (req, res) => {
     let params = req.body
-    let sql = `SELECT t.*, tm.*
+    let sql = `SELECT t.*, ts1.*, tm.*, tms1.*, u1.name as u_name_1, u2.name as u_name_2, u0.name as u_name_0, m1.name as m_name_1, m2.name as m_name_2
                 FROM talent t
-                    LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE operate = '达人报备' and examine_result = '驳回' GROUP BY tid) ts0 ON ts0.tid = t.tid
+                    LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE operate = '达人报备' and (examine_result = '驳回' or examine_result IS NULL) GROUP BY tid) ts0 ON ts0.tid = t.tid
                     LEFT JOIN talent_schedule ts1 ON ts1.tsid = ts0.tsid
                     LEFT JOIN talent_model tm ON tm.tid = t.tid
-                    LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE operate = '达人报备' and examine_result = '驳回' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
+                    LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE operate = '达人报备' and (examine_result = '驳回' or examine_result IS NULL) GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                     LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
+                    LEFT JOIN user u1 ON u1.uid = tms1.u_id_1
+                    LEFT JOIN user u2 ON u2.uid = tms1.u_id_2
+                    LEFT JOIN middleman m1 ON m1.mid = ts1.m_id_1
+                    LEFT JOIN middleman m2 ON m2.mid = ts1.m_id_2
+                    LEFT JOIN user u0 ON u0.uid = ts1.u_id_0
                 WHERE t.tid = '${params.tid}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        res.send({ code: 200, data: results[0], msg: `` })
+        res.send({ code: 200, data: results, msg: `` })
     })
 })
 
@@ -883,7 +878,7 @@ router.post('/getExportTalentList', (req, res) => {
     })
 })
 
-// 获取被驳回达人的信息
+// 撤销报备
 router.post('/revokeReport', (req, res) => {
     let params = req.body
     let sql = `UPDATE talent SET status = '已撤销' WHERE tid = '${params.tid}'`

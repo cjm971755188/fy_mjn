@@ -4,8 +4,9 @@ import request from '../service/request'
 import dayjs from 'dayjs';
 import { Card, Input, Timeline, Button, Tag, Modal, Form, Descriptions, Row, Col, message, Space, Select, InputNumber, Image, Popconfirm, List } from 'antd';
 import { AuditOutlined, MessageOutlined, GlobalOutlined, CrownOutlined, SettingOutlined, EditOutlined, PlusOutlined, MinusOutlined, UnorderedListOutlined, EyeOutlined } from '@ant-design/icons';
-import { middlemanPayType } from '../baseData/talent'
+import { middlemanPayType, talentType } from '../baseData/talent'
 import { descriptionsItems } from '../baseData/talentDetail'
+import { province } from '../baseData/province'
 import AELiaison from '../components/modals/AELiaison'
 import AEYear from '../components/modals/AEYear'
 import AEFile from '../components/modals/AEFile'
@@ -19,7 +20,6 @@ function TalentDetail() {
     const navigate = useNavigate();
     const { tid } = location.state;
 
-    
     // 获取详情
     const [detailData, setDetailData] = useState({
         status: '',
@@ -70,7 +70,7 @@ function TalentDetail() {
                         label: descriptionsItems[j].label,
                         children: Object.values(detailData)[i]
                     }
-                    if ([0, 2, 3, 4].indexOf(descriptionsItems[j].key) !== -1) {
+                    if ([0, 2, 3, 4, 66].indexOf(descriptionsItems[j].key) !== -1) {
                         items.push(description)
                     }
                 }
@@ -292,6 +292,11 @@ function TalentDetail() {
         return items
     }
 
+    // 修改基础信息
+    const [isShowBase, setIsShowBase] = useState(false)
+    const [formBase] = Form.useForm()
+    const filterOption = (input, option) =>
+        (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
     // 新增、续约年框
     const [isShowYear, setIsShowYear] = useState(false)
     const [yearType, setYearType] = useState()
@@ -363,6 +368,9 @@ function TalentDetail() {
                     } else if (operate.match('中间人')) {
                         setIsShowMiddle(false);
                         formMiddle.resetFields();
+                    } else if (operate.match('基础信息')) {
+                        setIsShowBase(false);
+                        formBase.resetFields();
                     }
                     getTalentDetailAPI()
                     message.success(res.data.msg)
@@ -529,8 +537,13 @@ function TalentDetail() {
     }
 
     useEffect(() => {
+        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
+            navigate('/login')
+            message.error('账号错误，请重新登录')
+        }
         getTalentDetailAPI();
     }, [tid])
+    console.log(editPower);
     return (
         <Fragment>
             <Row gutter={24}>
@@ -539,7 +552,7 @@ function TalentDetail() {
                         <Tag color={detailData.status.match('待审批') ? 'gold' : detailData.status.match('合作中') ? 'green' : 'grey'}>{detailData.status}</Tag>
                     </Space>}
                         style={{ marginBottom: '20px' }}
-                        extra={examPower && detailData.status.match('待审批') ?
+                        extra={(detailData.status.match('待审批')) ? (examPower ?
                             <Space>
                                 <Button type="primary" onClick={() => {
                                     if (detailData.status.match('移交')) {
@@ -564,7 +577,22 @@ function TalentDetail() {
                                     }
                                 }}>通过</Button>
                                 <Button type="primary" danger onClick={() => { setIsShowRefund(true); }}>驳回</Button>
-                            </Space> : null}
+                            </Space> : null) : (editPower ? <Button type="text" icon={<EditOutlined />} onClick={() => {
+                                let ori = {}
+                                for (const key in detailData) {
+                                    if (Object.hasOwnProperty.call(detailData, key)) {
+                                        if (key === 'province' || key === 'year_deal' || key === 'type') {
+                                            ori[key] = detailData[key]
+                                        }
+                                    }
+                                }
+                                setEditOri(ori)
+                                formBase.setFieldsValue({
+                                    tid: tid,
+                                    ...ori
+                                })
+                                setIsShowBase(true);
+                            }}>修改</Button> : null)}
                     >
                         <Descriptions column={5} items={getBaseItems()} />
                     </Card>
@@ -836,6 +864,37 @@ function TalentDetail() {
                     </Form.Item>
                 </Form>
             </Modal>
+            <Modal title="修改基础信息" open={isShowBase}
+                onOk={() => {
+                    let ori = editOri
+                    let payload = formBase.getFieldsValue()
+                    let z = {}
+                    for (const key in ori) {
+                        if (Object.hasOwnProperty.call(ori, key)) {
+                            for (const k in payload) {
+                                if (Object.hasOwnProperty.call(payload, k)) {
+                                    if (key === k && ori[key] !== payload[k]) {
+                                        z[key] = ori[key]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    editTalentAPI("修改基础信息", Object.keys(z).length === 0 ? null : JSON.stringify(z), payload);
+                }}
+                onCancel={() => { formBase.resetFields(); setIsShowBase(false); }}>
+                <Form form={formBase}>
+                    <Form.Item label="达人所在省份" name="province" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select placeholder="请选择" options={province} showSearch filterOption={filterOption} />
+                    </Form.Item>
+                    <Form.Item label="预估慕江南年销售额（万）" name="year_deal" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber placeholder="请输入" min={0} />
+                    </Form.Item>
+                    <Form.Item label="达人层级" name="type" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select placeholder="请选择" options={talentType} />
+                    </Form.Item>
+                </Form>
+            </Modal>
             <AEYear
                 isShow={isShowYear}
                 type={yearType}
@@ -1040,7 +1099,7 @@ function TalentDetail() {
                 onOK={() => { getTalentDetailAPI(); setIsShowFile(false); }}
                 onCancel={() => { getTalentDetailAPI(); setIsShowFile(false); }}
             />
-        </Fragment>
+        </Fragment >
     )
 }
 
