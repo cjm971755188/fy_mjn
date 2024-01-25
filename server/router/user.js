@@ -66,7 +66,7 @@ router.post('/getUserList', (req, res) => {
         if (params.userInfo.position === '副总') {
             where += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             where += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
@@ -208,15 +208,6 @@ router.post('/getSalemanAssistantItems', (req, res) => {
     let params = req.body
     // 去除 已删除 + 自己 + 管理员
     let where = `where status != '失效' and status != '测试' and department = '事业部' and position != '副总' and position != '副总助理'`
-    // 权限筛选
-    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
-        if (params.userInfo.position === '副总') {
-            where += ` and department = '${params.userInfo.department}'`
-        }
-        if (params.userInfo.department === '主管') {
-            where += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
-        }
-    }
     let sql = `SELECT * FROM user ${where}`
     db.query(sql, (err, results) => {
         if (err) throw err;
@@ -237,15 +228,6 @@ router.post('/getSalemanItems', (req, res) => {
     let params = req.body
     // 去除 已删除 + 自己 + 管理员
     let where = `where status != '失效' and status != '测试' and (position = '商务' or (position = '主管' and department = '事业部'))`
-    // 权限筛选
-    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
-        if (params.userInfo.position === '副总') {
-            where += ` and department = '${params.userInfo.department}'`
-        }
-        if (params.userInfo.department === '主管') {
-            where += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
-        }
-    }
     let sql = `SELECT * FROM user ${where}`
     db.query(sql, (err, results) => {
         if (err) throw err;
@@ -266,15 +248,6 @@ router.post('/getAnthorItems', (req, res) => {
     let params = req.body
     // 去除 已删除 + 自己 + 管理员
     let where = `where status != '失效' and status != '测试' and (position = '主播' or (position = '主管' and department = '直播部'))`
-    // 权限筛选
-    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
-        if (params.userInfo.position === '副总') {
-            where += ` and department = '${params.userInfo.department}'`
-        }
-        if (params.userInfo.department === '主管') {
-            where += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
-        }
-    }
     let sql = `SELECT * FROM user ${where}`
     db.query(sql, (err, results) => {
         if (err) throw err;
@@ -295,15 +268,6 @@ router.post('/getControlItems', (req, res) => {
     let params = req.body
     // 去除 已删除 + 自己 + 管理员
     let where = `where status != '失效' and status != '测试' and position = '中控'`
-    // 权限筛选
-    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
-        if (params.userInfo.position === '副总') {
-            where += ` and department = '${params.userInfo.department}'`
-        }
-        if (params.userInfo.department === '主管') {
-            where += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
-        }
-    }
     let sql = `SELECT * FROM user ${where}`
     db.query(sql, (err, results) => {
         if (err) throw err;

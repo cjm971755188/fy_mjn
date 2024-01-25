@@ -127,11 +127,14 @@ function PointList() {
     const [data, setData] = useState();
     const [loading, setLoading] = useState(false);
     const [tableParams, setTableParams] = useState({
-        filters: {},
         filtersDate: [],
+        filters: {},
         pagination: {
             current: 1,
-            pageSize: 10
+            pageSize: 10,
+            showTotal: ((total) => {
+                return `共 ${total} 条`;
+            }),
         }
     });
     const getPointListAPI = () => {
@@ -177,8 +180,12 @@ function PointList() {
     };
     const handleTableChange = (pagination, filters, sorter) => {
         setTableParams({
-            pagination,
-            filters,
+            pagination: {
+                ...tableParams.pagination,
+                ...pagination
+            },
+            filters: tableParams.filters,
+            filtersDate: tableParams.filtersDate,
             ...sorter,
         });
         if (pagination.pageSize !== tableParams.pagination?.pageSize) {
@@ -284,7 +291,10 @@ function PointList() {
                     onFinish={(values) => {
                         setTableParams({
                             ...tableParams,
-                            pagination: {current: 1, pageSize: 10},
+                            pagination: {
+                                ...tableParams.pagination,
+                                current: 1
+                            },
                             filtersDate: dateSelect,
                             filters: values
                         })
@@ -323,7 +333,6 @@ function PointList() {
                         </Space>
                     </Form.Item>
                 </Form>
-                <Alert message={`总计：${tableParams.pagination.total} 条数据`} type="info" showIcon />
                 <Table
                     style={{ margin: '20px auto' }}
                     rowKey={(data) => data.key}

@@ -5,7 +5,7 @@ const dayjs = require('dayjs');
 const sendRobot = require('../api/ddrobot')
 
 // 获取额外结佣列表
-router.post('/getExtraList', (req, res) => {
+router.post('/getTalentBlackList', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `WHERE status != '失效' and status != '测试'`

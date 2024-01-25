@@ -6,7 +6,7 @@ import { middleType } from '../baseData/talent'
 import AEMiddleman from '../components/modals/AEMiddleman'
 import dayjs from 'dayjs'
 
-function MiddlemanList() {
+function TalentBlackList() {
     // 操作权限
     const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理') || localStorage.getItem('position') === '管理员' ? true : false
     const userShowPower = localStorage.getItem('position') === '商务' ? true : false
@@ -82,11 +82,11 @@ function MiddlemanList() {
             }),
         }
     });
-    const getMiddlemanListAPI = () => {
+    const getTalentBlackListAPI = () => {
         setLoading(true)
         request({
             method: 'post',
-            url: '/middleman/getMiddlemanList',
+            url: '/black/getTalentBlackList',
             data: {
                 filters: tableParams.filters,
                 pagination: {
@@ -191,7 +191,7 @@ function MiddlemanList() {
             if (res.status == 200) {
                 if (res.data.code == 200) {
                     setIsShow(false)
-                    getMiddlemanListAPI()
+                    getTalentBlackListAPI()
                     form.resetFields()
                 } else {
                     message.error(res.data.msg)
@@ -223,7 +223,7 @@ function MiddlemanList() {
             if (res.status == 200) {
                 if (res.data.code == 200) {
                     setIsShow(false)
-                    getMiddlemanListAPI()
+                    getTalentBlackListAPI()
                     form.resetFields()
                 } else {
                     message.error(res.data.msg)
@@ -241,7 +241,7 @@ function MiddlemanList() {
             navigate('/login')
             message.error('账号错误，请重新登录')
         }
-        getMiddlemanListAPI();
+        getTalentBlackListAPI();
     }, [JSON.stringify(tableParams)])
     return (
         <div>
@@ -339,4 +339,4 @@ function MiddlemanList() {
     )
 }
 
-export default MiddlemanList
+export default TalentBlackList

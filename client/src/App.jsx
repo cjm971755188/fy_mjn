@@ -7,6 +7,7 @@ import UserList from './pages/userList.jsx'
 import ChanceList from './pages/chanceList.jsx'
 import TalentList from './pages/talentList.jsx'
 import TalentDetail from './pages/talentDetail.jsx'
+import TalentBlackList from './pages/talentBlackList.jsx'
 import LiveList from './pages/liveList.jsx'
 import MiddlemanList from './pages/middlemanList.jsx'
 import ExtraList from './pages/extraList.jsx'
@@ -23,6 +24,7 @@ function App() {
                 <Route path='/talent/chance_list' element={<ChanceList />} />
                 <Route path='/talent/talent_list' element={<TalentList />} />
                 <Route path='/talent/talent_list/talent_detail' element={<TalentDetail />} />
+                <Route path='/talent/talent_black_list' element={<TalentBlackList />} />
                 <Route path='/talent/live_list' element={<LiveList />} />
                 <Route path='/talent/middleman_list' element={<MiddlemanList />} />
                 <Route path='/talent/extra_list' element={<ExtraList />} />

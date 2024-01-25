@@ -12,7 +12,7 @@ router.post('/getLiveList', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {

@@ -30,7 +30,10 @@ function AEMiddleman(props) {
             onCancel={() => { props.onCancel(); reset(); }}
         >
             <Form form={form} onFinish={(values) => {
-                if (!values.pay_bank.match('银行')) {
+                if (values.pay_bank === '支付宝') {
+                    props.onOK(values);
+                    reset();
+                } else if (!values.pay_bank.match('银行')) {
                     message.error('请填写正确的银行名称')
                 } else if (values.pay_bank.split('银行')[1] === '') {
                     message.error('请填写到xx银行xx支行')
@@ -81,7 +84,7 @@ function AEMiddleman(props) {
                 <Form.Item label="收款姓名" name="pay_name" rules={[{ required: true, message: '不能为空' }]}>
                     <Input placeholder="请输入" />
                 </Form.Item>
-                <Form.Item label="开户行" name="pay_bank" rules={[{ required: true, message: '不能为空' }]}>
+                <Form.Item label="开户行/“支付宝”" name="pay_bank" rules={[{ required: true, message: '不能为空' }]}>
                     <Input placeholder="请输入" />
                 </Form.Item>
                 <Form.Item label="收款账号" name="pay_account" rules={[{ required: true, message: '不能为空' }]}>

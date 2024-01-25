@@ -9,11 +9,13 @@ import dayjs from 'dayjs'
 
 function LiveList() {
     // 操作权限
-    const editPower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
+    const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理') || localStorage.getItem('position') === '管理员' ? true : false
+    const userShowPower = localStorage.getItem('position') === '商务' ? true : false
 
     // 表格：格式
     let columns = [
         { title: '编号', dataIndex: 'lid', key: 'lid' },
+        { title: '达人昵称', dataIndex: 'name', key: 'name' },
         {
             title: '上播时间',
             dataIndex: 'start_time',
@@ -36,7 +38,6 @@ function LiveList() {
         { title: '副播', dataIndex: 'a_name_2', key: 'a_name_2' },
         { title: '中控', dataIndex: 'c_name_1', key: 'c_name_1' },
         { title: '服务商务', dataIndex: 'u_name_3', key: 'u_name_3' },
-        { title: '达人昵称', dataIndex: 'name', key: 'name' },
         {
             title: '商务归属',
             dataIndex: 'u_name',
@@ -135,7 +136,7 @@ function LiveList() {
             )
         }
     ]
-    columns = editPower ? columns.filter(item => item.title !== '商务') : columns
+    columns = userShowPower ? columns.filter(item => item.title !== '商务') : columns
     // 表格：获取数据、分页
     const [data, setData] = useState();
     const [loading, setLoading] = useState(false);
@@ -144,7 +145,10 @@ function LiveList() {
         filters: {},
         pagination: {
             current: 1,
-            pageSize: 10
+            pageSize: 10,
+            showTotal: ((total) => {
+                return `共 ${total} 条`;
+            }),
         }
     });
     const getLiveListAPI = () => {
@@ -190,8 +194,12 @@ function LiveList() {
     };
     const handleTableChange = (pagination, filters, sorter) => {
         setTableParams({
-            pagination,
-            filters,
+            pagination: {
+                ...tableParams.pagination,
+                ...pagination
+            },
+            filters: tableParams.filters,
+            filtersDate: tableParams.filtersDate,
             ...sorter,
         });
         if (pagination.pageSize !== tableParams.pagination?.pageSize) {
@@ -460,7 +468,10 @@ function LiveList() {
                     onFinish={(values) => {
                         setTableParams({
                             ...tableParams,
-                            pagination: {current: 1, pageSize: 10},
+                            pagination: {
+                                ...tableParams.pagination,
+                                current: 1
+                            },
                             filtersDate: dateSelect,
                             filters: values
                         })
@@ -470,6 +481,18 @@ function LiveList() {
                         <MyDateSelect selectType="date,week,month,quarter.year" setDate={(value) => { setDateSelect(value); }} />
                     </Form.Item>
                     <Form.Item label='编号' name='lid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='达人昵称' name='tid'>
+                        <Select
+                            style={{ width: 160 }}
+                            showSearch
+                            placeholder="请输入"
+                            disabled={type === 'add' ? true : false}
+                            onSearch={(value) => { searchTalentAPI(value); }}
+                            filterOption={filterOption}
+                            options={talentsItmes}
+                            optionFilterProp="children"
+                        />
+                    </Form.Item>
                     <Form.Item label='省份' name='place' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={placeType} />
                     </Form.Item>
@@ -488,22 +511,10 @@ function LiveList() {
                     <Form.Item label='服务商务' name='u_id_3' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(true); }} />
                     </Form.Item>
-                    <Form.Item label='达人昵称' name='tid'>
-                        <Select
-                            style={{ width: 160 }}
-                            showSearch
-                            placeholder="请输入"
-                            disabled={type === 'add' ? true : false}
-                            onSearch={(value) => { searchTalentAPI(value); }}
-                            filterOption={filterOption}
-                            options={talentsItmes}
-                            optionFilterProp="children"
-                        />
-                    </Form.Item>
-                    {editPower ? null : <Form.Item label='主商务' name='u_id_1' style={{ marginBottom: '20px' }}>
+                    {userShowPower ? null : <Form.Item label='主商务' name='u_id_1' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                     </Form.Item>}
-                    {editPower ? null : <Form.Item label='副商务' name='u_id_2' style={{ marginBottom: '20px' }}>
+                    {userShowPower ? null : <Form.Item label='副商务' name='u_id_2' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                     </Form.Item>}
                     <Form.Item style={{ marginBottom: '20px' }}>
@@ -520,7 +531,6 @@ function LiveList() {
                         </Space>
                     </Form.Item>
                 </Form>
-                <Alert message={`总计：${tableParams.pagination.total} 条数据`} type="info" showIcon />
                 <Table
                     style={{ margin: '20px auto' }}
                     rowKey={(data) => data.lid}

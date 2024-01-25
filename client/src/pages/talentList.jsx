@@ -13,8 +13,9 @@ const { TextArea } = Input;
 
 function TalentList() {
     // 操作权限
-    const editPower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
+    const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理') || localStorage.getItem('position') === '管理员' ? true : false
     const examPower = localStorage.getItem('position') === '副总' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '管理员' ? true : false
+    const userShowPower = localStorage.getItem('position') === '商务' ? true : false
 
     // 表格：格式
     let columns = [
@@ -160,10 +161,14 @@ function TalentList() {
     const [data, setData] = useState();
     const [loading, setLoading] = useState(false);
     const [tableParams, setTableParams] = useState({
+        filtersDate: [],
         filters: {},
         pagination: {
             current: 1,
-            pageSize: 10
+            pageSize: 10,
+            showTotal: ((total) => {
+                return `共 ${total} 条`;
+            }),
         }
     });
     const getTalentListAPI = () => {
@@ -207,9 +212,14 @@ function TalentList() {
         })
     };
     const handleTableChange = (pagination, filters, sorter) => {
+        console.log('pagination: ', pagination);
         setTableParams({
-            pagination,
-            filters,
+            pagination: {
+                ...tableParams.pagination,
+                ...pagination
+            },
+            filters: tableParams.filters,
+            filtersDate: tableParams.filtersDate,
             ...sorter,
         });
         if (pagination.pageSize !== tableParams.pagination?.pageSize) {
@@ -632,6 +642,7 @@ function TalentList() {
         }
         getTalentListAPI();
     }, [JSON.stringify(tableParams)])
+    console.log(tableParams.pagination);
     return (
         <Fragment>
             <Card title="达人列表" extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('history'); }}>添加历史达人</Button> :
@@ -642,7 +653,10 @@ function TalentList() {
                     onFinish={(values) => {
                         setTableParams({
                             ...tableParams,
-                            pagination: {current: 1, pageSize: 10},
+                            pagination: {
+                                ...tableParams.pagination,
+                                current: 1
+                            },
                             filters: values
                         })
                     }}
@@ -684,7 +698,6 @@ function TalentList() {
                         </Space>
                     </Form.Item>
                 </Form>
-                <Alert message={`总计：${tableParams.pagination.total} 条数据`} type="info" showIcon />
                 <Table
                     style={{ margin: '20px auto' }}
                     rowKey={(data) => data.tid}

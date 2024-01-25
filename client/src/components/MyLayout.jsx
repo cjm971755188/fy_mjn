@@ -48,6 +48,10 @@ const menuItemsTotal = [
                 key: '/admin/talent/talent_list',
                 label: '达人列表'
             },
+            /* {
+                key: '/admin/talent/talent_black_list',
+                label: '达人黑名单'
+            }, */
             {
                 key: '/admin/talent/live_list',
                 label: '专场列表'

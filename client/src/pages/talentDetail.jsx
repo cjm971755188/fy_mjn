@@ -19,6 +19,10 @@ function TalentDetail() {
     let location = useLocation();
     const navigate = useNavigate();
     const { tid } = location.state;
+    
+    // 操作权限
+    const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理') || localStorage.getItem('position') === '管理员' ? true : false
+    const examPower = localStorage.getItem('position') === '副总' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 获取详情
     const [detailData, setDetailData] = useState({
@@ -28,10 +32,6 @@ function TalentDetail() {
         models: [],
         original: ''
     })
-    // 操作权限
-    const editPower = (localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员') && detailData.status !== '报备驳回' ? true : false
-    const examPower = localStorage.getItem('position') === '副总' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '管理员' ? true : false
-
     const getTalentDetailAPI = () => {
         request({
             method: 'post',
@@ -68,9 +68,12 @@ function TalentDetail() {
                     const description = {
                         key: i,
                         label: descriptionsItems[j].label,
-                        children: Object.values(detailData)[i]
+                        children: Object.keys(detailData)[i].match('pic') ? Object.values(detailData)[i] ?
+                            Object.values(detailData)[i].split(',').map((pic, index) => {
+                                return <Image key={index} width={50} height={50} src={pic} />
+                            }) : '暂无' : Object.values(detailData)[i]
                     }
-                    if ([0, 2, 3, 4, 66].indexOf(descriptionsItems[j].key) !== -1) {
+                    if ([0, 2, 3, 4, 66, 67, 68].indexOf(descriptionsItems[j].key) !== -1) {
                         items.push(description)
                     }
                 }
@@ -543,14 +546,11 @@ function TalentDetail() {
         }
         getTalentDetailAPI();
     }, [tid])
-    console.log(editPower);
     return (
         <Fragment>
             <Row gutter={24}>
                 <Col span={18}>
-                    <Card title={<Space><CrownOutlined /><span>基础信息</span>
-                        <Tag color={detailData.status.match('待审批') ? 'gold' : detailData.status.match('合作中') ? 'green' : 'grey'}>{detailData.status}</Tag>
-                    </Space>}
+                    <Card title={<Space><CrownOutlined /><span>基础信息</span><Tag color={detailData.status.match('待审批') ? 'gold' : detailData.status.match('合作中') ? 'green' : 'grey'}>{detailData.status}</Tag></Space>}
                         style={{ marginBottom: '20px' }}
                         extra={(detailData.status.match('待审批')) ? (examPower ?
                             <Space>

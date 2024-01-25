@@ -138,6 +138,38 @@ function TalentStatistics() {
             console.error(err)
         })
     };
+    const [classTalentOption, setClassTalentOption] = useState([]);
+    const [classTalentLoading, setClassTalentLoading] = useState(false);
+    const getClassTalentAPI = () => {
+        setClassTalentLoading(true)
+        request({
+            method: 'post',
+            url: '/statistics/getClassTalent',
+            data: {
+                filtersDate: tableParams.filtersDate,
+                filters: tableParams.filters,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setClassTalentOption(res.data.data)
+                    setClassTalentLoading(false)
+                } else {
+                    message.error(res.data.msg)
+                }
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    };
     const [typeTalentOption, setTypeTalentOption] = useState([]);
     const [typeTalentLoading, setTypeTalentLoading] = useState(false);
     const getTypeTalentAPI = () => {
@@ -216,6 +248,7 @@ function TalentStatistics() {
         getSalemansChanceOprateAPI();
         getAdReTimeDiffAPI();
         getPlatformTalentAPI();
+        getClassTalentAPI();
         getTypeTalentAPI();
         getProvinceTalentAPI();
     }, [JSON.stringify(tableParams)])
@@ -371,7 +404,7 @@ function TalentStatistics() {
                     </Card>
                 </Col>
                 <Col span={6}>
-                    <Card title="商机跟进平均用时">
+                    <Card title="商机推进平均用时">
                         {!adReTimeDiffLoading ? adReTimeDiffOption.advance.length !== 0 ? <MyECharts height={250} option={{
                             tooltip: {
                                 trigger: 'item'
@@ -406,7 +439,7 @@ function TalentStatistics() {
                             ]
                         }} /> : <Empty imageStyle={{ height: '220px' }} /> : null}
                     </Card>
-                    <Card title="商机跟进平均用时" style={{ marginTop: '20px' }}>
+                    <Card title="商机报备平均用时" style={{ marginTop: '20px' }}>
                         {!adReTimeDiffLoading ? adReTimeDiffOption.report.length !== 0 ? <MyECharts height={250} option={{
                             tooltip: {
                                 trigger: 'item'
@@ -480,10 +513,45 @@ function TalentStatistics() {
                             ]
                         }} /> : <Empty imageStyle={{ height: '250px' }} /> : null}
                     </Card>
+                    <Card title="达人层级比例" style={{ marginTop: '20px' }}>
+                        {!classTalentLoading ? classTalentOption.length !== 0 ? <MyECharts height={250} option={{
+                            tooltip: {
+                                trigger: 'item'
+                            },
+                            legend: {},
+                            grid: {
+                                left: '5%',
+                                right: '5%'
+                            },
+                            series: [
+                                {
+                                    name: '达人合作模式',
+                                    type: 'pie',
+                                    radius: ['40%', '70%'],
+                                    avoidLabelOverlap: false,
+                                    label: {
+                                        show: false,
+                                        position: 'center'
+                                    },
+                                    emphasis: {
+                                        label: {
+                                            show: true,
+                                            fontSize: 28,
+                                            fontWeight: 'bold'
+                                        }
+                                    },
+                                    labelLine: {
+                                        show: false
+                                    },
+                                    data: classTalentOption
+                                }
+                            ]
+                        }} /> : <Empty imageStyle={{ height: '250px' }} /> : null}
+                    </Card>
                 </Col>
                 <Col span={6}>
-                    <Card title="达人层级比例">
-                        {!typeTalentLoading ? typeTalentOption.length !== 0 ? <MyECharts height={250} option={{
+                    <Card title="线上达人类型比例">
+                        {!typeTalentLoading ? typeTalentOption.length !== 0 ? <MyECharts height={625} option={{
                             tooltip: {
                                 trigger: 'item'
                             },
@@ -515,7 +583,7 @@ function TalentStatistics() {
                                     data: typeTalentOption
                                 }
                             ]
-                        }} /> : <Empty imageStyle={{ height: '250px' }} /> : null}
+                        }} /> : <Empty imageStyle={{ height: '500px' }} /> : null}
                     </Card>
                 </Col>
                 <Col span={12}>

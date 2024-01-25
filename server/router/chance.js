@@ -13,7 +13,7 @@ router.post('/getChanceList', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
@@ -64,13 +64,13 @@ router.post('/searchSameChance', (req, res) => {
     for (let i = 0; i < names.length; i++) {
         if (params.type === 'chance') {
             filter = `c.account_names LIKE '%${names[i]}%' OR c.group_name LIKE '%${names[i]}%' OR c.provide_name LIKE '%${names[i]}%'`
-            sql = `(SELECT	c.cid, '' as name, c.models, c.platforms, null as account_ids, c.account_names, c.group_name, c.provide_name, u.name as u_name, c.status
-                    FROM	chance c
-                        LEFT JOIN user u ON u.uid = c.u_id
-                    WHERE	(${filter})
-                        and c.status != '报备通过' and c.status != '报备驳回' and c.cid != '${params.cid}')
-                    UNION
-                    (SELECT tm.tmid, t.name, tm.model, tm.platform, tm.account_id, tm.account_name, tm.group_name, tm.provide_name, u.name as u_name, tm.status
+            /* (SELECT	c.cid, '' as name, c.models, c.platforms, null as account_ids, c.account_names, c.group_name, c.provide_name, u.name as u_name, c.status
+            FROM	chance c
+                LEFT JOIN user u ON u.uid = c.u_id
+            WHERE	(${filter})
+                and c.status != '报备通过' and c.status != '报备驳回' and c.cid != '${params.cid}')
+            UNION */
+            sql = `(SELECT tm.tmid, t.name, tm.model, tm.platform, tm.account_id, tm.account_name, tm.group_name, tm.provide_name, u.name as u_name, tm.status
                         FROM talent_model tm
                             LEFT JOIN talent t ON t.tid = tm.tid and t.status != '报备驳回' and t.status != '已撤销'
                             LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
@@ -303,7 +303,15 @@ router.post('/reportChance', (req, res) => {
                                                     let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                                                     db.query(sql, (err, results_e) => {
                                                         if (err) throw err;
-                                                        sendRobot(results_e[0].secret, results_e[0].url, `${params.talent_name} ${params.operate}`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.talent_name} \n\n ### 审批人员：@${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                                        sendRobot(
+                                                            results_e[0].secret,
+                                                            results_e[0].url,
+                                                            `${params.talent_name} ${params.operate}`,
+                                                            `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.talent_name} \n\n ### 审批人员：@${results_e[0].phone}`,
+                                                            `http://1.15.89.163:5173`,
+                                                            [results_e[0].phone],
+                                                            false
+                                                        )
                                                         res.send({ code: 200, data: [], msg: `报备成功` })
                                                     })
                                                 })

@@ -5,6 +5,8 @@ export const descriptionsItems = [
     { key: 3, label: "达人所在省份", value: "province" },
     { key: 4, label: "年度预估GMV（万）", value: "year_deal" },
     { key: 66, label: "层级", value: "type" },
+    { key: 67, label: "寻找证明", value: "search_pic" },
+    { key: 68, label: "推进证明", value: "advance_pic" },
     { key: 5, label: "类型", value: "liaison_type" },
     { key: 6, label: "姓名", value: "liaison_name" },
     { key: 7, label: "微信", value: "liaison_v" },

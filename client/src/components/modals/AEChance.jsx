@@ -79,9 +79,11 @@ function AEChance(props) {
                         cid: type == 'add' ? '' : form.getFieldValue('cid'),
                         type: 'chance',
                         ...values,
-                        search_pic: values.search_pic.replace('/public', '')
+                        search_pic: values.search_pic.join()
                     }
-                    searchSameChanceAPI('finish', payload)
+                    searchSameChanceAPI('finish', payload) // 寻找商机时判断是否重复
+                    /* props.onOK(payload);
+                    reset(); */
                 }}
             >
                 {type == 'add' ? null : <Form.Item label="商机编号" name="cid" rules={[{ required: true, message: '不能为空' }]}>
@@ -148,16 +150,16 @@ function AEChance(props) {
                             <List.Item key={index}>
                                 <List.Item.Meta
                                     avatar={<Image width={50} src={people} preview={false} />}
-                                    title={<Space size={'large'}><span>{`编号: ${item.cid}`}</span><span>{`状态: ${item.status}`}</span><span>{`商务: ${item.u_name}`}</span></Space>}
-                                    description={<Space size={'large'}><span>{`模式: ${item.models}`}</span>{item.models === '线上平台' ? <span>{`平台: ${item.platforms}`}</span> : null}
-                                        <span>{`重复名称/ID: ${item.account_names || item.group_name || item.provide_name}`}</span></Space>}
+                                    title={<Space size={'large'}><span>{`合作模式编号: ${item.tmid}`}</span><span>{`状态: ${item.status}`}</span><span>{`商务: ${item.u_name}`}</span></Space>}
+                                    description={<Space size={'large'}><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}
+                                        <span>{`重复名称/ID: ${item.account_name || item.group_name || item.provide_name}`}</span></Space>}
                                 />
                             </List.Item>
                         )}
                     /> : null}
                 </Form.Item>}
                 <Form.Item label="寻找证明" name="search_pic" rules={[{ required: true, message: '不能为空' }]} >
-                    <UpLoadImg title="上传寻找证明" name="寻找商机" defaultUrl={form.getFieldValue('search_pic')} setPicUrl={(value) => { form.setFieldValue('search_pic', value) }} />
+                    <UpLoadImg title="上传寻找证明" name="寻找商机" setPicUrl={(value) => { form.setFieldValue('search_pic', value) }} />
                 </Form.Item>
             </Form>
         </Modal>

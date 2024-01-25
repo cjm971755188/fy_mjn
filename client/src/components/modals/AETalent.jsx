@@ -198,7 +198,7 @@ function AETalent(props) {
         setHasFirstMiddle(form.getFieldValue('m_id_1') && form.getFieldValue('m_id_1').value !== null ? true : false)
         setHasSecondMiddle(form.getFieldValue('m_id_2') && form.getFieldValue('m_id_2').value !== null ? true : false)
         setHasYuanSaleman(form.getFieldValue('u_id_0') && form.getFieldValue('u_id_0').value !== null ? true : false)
-        setHasFuSaleman(form.getFieldValue('accounts') && form.getFieldValue('accounts')[0].u_id_2 && form.getFieldValue('accounts')[0].u_id_2.value !== null ? true : false)
+        setHasFuSaleman(form.getFieldValue('accounts') && form.getFieldValue('accounts')[0] && form.getFieldValue('accounts')[0].u_id_2 && form.getFieldValue('accounts')[0].u_id_2.value !== null ? true : false)
     }, [isShow])
     return (
         <Fragment>

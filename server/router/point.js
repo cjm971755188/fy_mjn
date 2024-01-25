@@ -13,7 +13,7 @@ router.post('/getPointList', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
@@ -191,7 +191,7 @@ router.post('/getExportPointList', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
@@ -222,7 +222,7 @@ router.post('/getExportPointList', (req, res) => {
                         tms.commission_bao as commission_3, 
                         discount_buyout as commission_4, 
                         discount_back as commission_5, 
-                        IF(tms.commission_note IS NULL, IF(tms.discount_note IS NULL, tms.discount_label, tms.discount_note, tms.commission_note) as commission_note,
+                        IF(tms.commission_note IS NULL, tms.discount_label, tms.commission_note) as commission_note,
                         tms.u_id_1, u1.name as u_name_1, tms.u_point_1, tms.u_id_2, u2.name as u_name_2, tms.u_point_2, tms.u_note, u0.u_id_0, u0.name as u_name_0, IF(u0.u_id_0 IS NULL, null, 0.5) as u_point_0, t.status
                     FROM (
                         SELECT c.tid, c.tsid, b.tmsid, IF(c.create_time > b.create_time, c.create_time, b.create_time) as create_time
@@ -275,7 +275,7 @@ router.post('/getKeywordList', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
@@ -334,7 +334,7 @@ router.post('/getExportKeywordList', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {

@@ -193,7 +193,6 @@ function AEFile(props) {
             {editPower ? <UpLoadFile
                 type={type}
                 setFile={(value) => {
-                    console.log('value: ', value);
                     if (value.length !== 0) {
                         if (type.match('年框')) {
                             editTalentAPI(`新增${type}`, null, {

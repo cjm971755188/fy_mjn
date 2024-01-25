@@ -13,11 +13,8 @@ const { TextArea } = Input;
 
 function ChanceList() {
     // 操作权限
-    const userShowPower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
-    const addPower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
-    const editPower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
-    const advancePower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
-    const reportPower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
+    const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理') || localStorage.getItem('position') === '管理员' ? true : false
+    const userShowPower = localStorage.getItem('position') === '商务' ? true : false
 
     // 表格：格式
     let columns = [
@@ -28,7 +25,16 @@ function ChanceList() {
         { title: '团购名', dataIndex: 'group_name', key: 'group_name' },
         { title: '供货名', dataIndex: 'provide_name', key: 'provide_name' },
         { title: '寻找时间', dataIndex: 'create_time', key: 'create_time', render: (_, record) => (<span>{dayjs(Number(record.create_time)).format('YYYY-MM-DD')}</span>) },
-        { title: '寻找证明', dataIndex: 'search_pic', key: 'search_pic', render: (_, record) => (<Image width={50} height={50} src={record.search_pic} />) },
+        {
+            title: '寻找证明',
+            dataIndex: 'search_pic',
+            key: 'search_pic',
+            render: (_, record) => (
+                record.search_pic && record.search_pic.split(',').map((pic, index) => {
+                    return <Image key={index} width={50} height={50} src={pic} />
+                }) 
+            )
+        },
         {
             title: '联系人',
             dataIndex: 'liaison_name',
@@ -48,8 +54,16 @@ function ChanceList() {
             )
         },
         { title: '推进时间', dataIndex: 'advance_time', key: 'advance_time', render: (_, record) => (<span>{record.advance_time === null ? null : dayjs(Number(record.advance_time)).format('YYYY-MM-DD')}</span>) },
-        { title: '推进证明', dataIndex: 'advance_pic', key: 'advance_pic', render: (_, record) => (record.advance_pic ? <Image width={50} height={50} src={record.advance_pic} /> : null) },
-        { title: '商务', dataIndex: 'name', key: 'name' },
+        {
+            title: '推进证明',
+            dataIndex: 'advance_pic',
+            key: 'advance_pic',
+            render: (_, record) => (
+                record.advance_pic && record.advance_pic.split(',').map((pic, index) => {
+                    return <Image key={index} width={50} height={50} src={pic} />
+                }) 
+            )
+        },
         {
             title: '备注',
             dataIndex: 'note',
@@ -70,6 +84,7 @@ function ChanceList() {
                 </Tooltip>
             )
         },
+        { title: '商务', dataIndex: 'name', key: 'name' },
         {
             title: '状态',
             dataIndex: 'status',
@@ -95,26 +110,25 @@ function ChanceList() {
                         setNote(record.note);
                         setSelectNoteID(record.cid);
                     }}>修改备注</a> : null}
-                    {editPower && record.status === '待推进' ? <a onClick={() => {
+                    {editPower && (record.status === '待推进' || record.status === '待报备' || record.status === '报备驳回') ? <a onClick={() => {
                         let models = record.models.split(',')
                         form.setFieldsValue({
                             ...record,
-                            models
+                            models,
+                            search_pic: record.search_pic.split(',')
                         })
                         if (record.models.match('线上平台')) {
-                            let platforms = record.platforms === null ? null : record.platforms.split(',')
-                            let account_names = record.account_names === null ? null : record.account_names.split(',')
                             form.setFieldsValue({
                                 ...record,
                                 models,
-                                platforms,
-                                account_names
+                                platforms: record.platforms === null ? null : record.platforms.split(','),
+                                account_names: record.account_names === null ? null : record.account_names.split(',')
                             })
                         }
                         setType('edit');
                         setIsShow(true)
                     }}>修改模式</a> : null}
-                    {advancePower && record.status === '待推进' ? <a onClick={() => {
+                    {editPower && record.status === '待推进' ? <a onClick={() => {
                         let models = record.models.split(',')
                         setType('advance');
                         form.setFieldsValue({
@@ -123,12 +137,15 @@ function ChanceList() {
                         })
                         setIsShowLiaison(true)
                     }}>推进</a> : null}
-                    {editPower && record.status === '待报备' ? <a onClick={() => {
-                        form.setFieldsValue(record)
+                    {editPower && (record.status === '待报备' || record.status === '报备驳回') ? <a onClick={() => {
+                        form.setFieldsValue({
+                            ...record,
+                            advance_pic: record.advance_pic.split(',')
+                        })
                         setType('edit_chance');
                         setIsShowLiaison(true)
                     }}>修改联系人</a> : null}
-                    {reportPower && (record.status === '待报备' || record.status === '报备驳回') ? <a onClick={() => {
+                    {editPower && record.status === '待报备' ? <a onClick={() => {
                         let models = record.models.split(',')
                         let platformList = []
                         let accountNameList = []
@@ -156,11 +173,11 @@ function ChanceList() {
                         setType('report');
                         setIsShowReport(true);
                     }}>报备</a> : null}
-                    {record.status === '报备驳回' ? <a onClick={() => {
+                    {record.status === '报备驳回' ? <><a onClick={() => {
                         getRefundReasonAPI({
                             cid: record.cid
                         });
-                    }}>查看驳回备注</a> : null}
+                    }}>查看驳回备注</a><a onClick={() => { setClickCid(record.cid); getReportInfoAPI({ cid: record.cid }); }}>重新报备</a></> : null}
                 </Space>
             )
         }
@@ -174,7 +191,10 @@ function ChanceList() {
         filters: {},
         pagination: {
             current: 1,
-            pageSize: 10
+            pageSize: 10,
+            showTotal: ((total) => {
+                return `共 ${total} 条`;
+            }),
         }
     });
     const getChanceListAPI = () => {
@@ -220,8 +240,12 @@ function ChanceList() {
     };
     const handleTableChange = (pagination, filters, sorter) => {
         setTableParams({
-            pagination,
-            filters,
+            pagination: {
+                ...tableParams.pagination,
+                ...pagination
+            },
+            filters: tableParams.filters,
+            filtersDate: tableParams.filtersDate,
             ...sorter,
         });
         if (pagination.pageSize !== tableParams.pagination?.pageSize) {
@@ -503,6 +527,119 @@ function ChanceList() {
             console.error(err)
         })
     }
+    // 获取上次报备信息
+    const [clickCid, setClickCid] = useState('')
+    const getReportInfoAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/talent/getReportInfo',
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    let models = [], accounts = [], group_name = null, group_shop = null, group_u_point_1 = null, group_u_id_2 = null, group_u_point_2 = null,
+                        provide_name = null, provide_shop = null, provide_u_point_1 = null, provide_u_id_2 = null, provide_u_point_2 = null,
+                        commission_normal = null, commission_welfare = null, commission_bao = null, commission_note = null, discount_buyout = null, discount_back = null, discount_label = null
+                    for (let i = 0; i < res.data.data.length; i++) {
+                        models.push(res.data.data[i].model)
+                        if (res.data.data[i].model === '线上平台') {
+                            accounts.push({
+                                ...res.data.data[i],
+                                account_models: res.data.data[i].account_models.split(','),
+                                keyword: res.data.data[i].keyword.split(','),
+                                main_province: res.data.data[i].main_province.split(','),
+                                age_cuts: res.data.data[i].age_cuts.split(','),
+                                u_id_1: res.data.data[i].u_name_1,
+                                u_id_2: res.data.data[i].u_id_2 === null ? null : {
+                                    value: res.data.data[i].u_id_2,
+                                    label: res.data.data[i].u_name_2,
+                                },
+                            })
+                        } else if (res.data.data[i].model === '社群团购') {
+                            group_name = res.data.data[i].name
+                            group_shop = res.data.data[i].shop
+                            commission_normal = res.data.data[i].commission_normal
+                            commission_welfare = res.data.data[i].commission_welfare
+                            commission_bao = res.data.data[i].commission_bao
+                            commission_note = res.data.data[i].commission_note
+                            group_u_point_1 = res.data.data[i].u_point_1
+                            group_u_id_2 = {
+                                value: res.data.data[i].u_id_2,
+                                label: res.data.data[i].u_name_2,
+                            }
+                            group_u_point_2 = res.data.data[i].u_point_2
+                        } else if (res.data.data[i].model === '供货') {
+                            provide_name = res.data.data[i].name
+                            provide_shop = res.data.data[i].shop
+                            discount_buyout = res.data.data[i].discount_buyout
+                            discount_back = res.data.data[i].discount_back
+                            discount_label = res.data.data[i].discount_label
+                            provide_u_point_1 = res.data.data[i].u_point_1
+                            provide_u_id_2 = {
+                                value: res.data.data[i].u_id_2,
+                                label: res.data.data[i].u_name_2,
+                            }
+                            provide_u_point_2 = res.data.data[i].u_point_2
+                        }
+                    }
+                    form.setFieldsValue({
+                        ...res.data.data[0],
+                        talent_name: res.data.data[0].name,
+                        talent_type: res.data.data[0].type,
+                        m_id_1: {
+                            value: res.data.data[0].m_id_1,
+                            label: res.data.data[0].m_name_1,
+                        },
+                        m_id_2: {
+                            value: res.data.data[0].m_id_2,
+                            label: res.data.data[0].m_name_2,
+                        },
+                        u_id_0: {
+                            value: res.data.data[0].u_id_0,
+                            label: res.data.data[0].u_name_0,
+                        },
+                        group_name,
+                        group_shop,
+                        group_u_point_1,
+                        group_u_id_2,
+                        group_u_point_2,
+                        commission_normal,
+                        commission_welfare,
+                        commission_bao,
+                        commission_note,
+                        provide_name,
+                        provide_shop,
+                        provide_u_point_1,
+                        provide_u_id_2,
+                        provide_u_point_2,
+                        discount_buyout,
+                        discount_back,
+                        discount_label,
+                        models,
+                        accounts
+                    });
+                    setIsShowReport(true);
+                    setType('reReport');
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     useEffect(() => {
         if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
@@ -513,14 +650,17 @@ function ChanceList() {
     }, [JSON.stringify(tableParams)])
     return (
         <Fragment>
-            <Card title="商机列表" extra={addPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('add'); }}>添加新商机</Button> : null}>
+            <Card title="商机列表" extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('add'); }}>添加新商机</Button> : null}>
                 <Form
                     layout="inline"
                     form={filterForm}
                     onFinish={(values) => {
                         setTableParams({
                             ...tableParams,
-                            pagination: { current: 1, pageSize: 10 },
+                            pagination: {
+                                ...tableParams.pagination,
+                                current: 1
+                            },
                             filtersDate: dateSelect,
                             filters: values
                         })
@@ -561,7 +701,6 @@ function ChanceList() {
                         </Space>
                     </Form.Item>
                 </Form>
-                <Alert message={`总计：${tableParams.pagination.total} 条数据`} type="info" showIcon />
                 <Table
                     style={{ margin: '20px auto' }}
                     rowKey={(data) => data.cid}
@@ -590,7 +729,7 @@ function ChanceList() {
                 isShow={isShowReport}
                 type={type}
                 form={form}
-                onOK={(values) => { reportChanceAPI(values); }}
+                onOK={(values) => { reportChanceAPI({ cid: clickCid, ...values }); }}
                 onCancel={() => { setIsShowReport(false); form.resetFields(); setType(''); }}
             />
             <Modal title="报备驳回备注" open={isShowCheckNo} onOk={() => { setIsShowCheckNo(false); }} onCancel={() => { setIsShowCheckNo(false); }}>

@@ -13,7 +13,7 @@ router.post('/getTalentList', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
@@ -33,7 +33,8 @@ router.post('/getTalentList', (req, res) => {
     let current = params.pagination.current ? params.pagination.current : 0
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
     let sql = `SELECT * FROM (
-                SELECT t.*, tm.models, CONCAT(ts.m_id_1, ',', ts.m_id_2) as m_ids, ts.m_name_1, ts.m_name_2, CONCAT(ts.m_name_1, ',', ts.m_name_2) as m_names, ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, 
+                SELECT t.*, tm.models, CONCAT(ts.m_id_1, ',', ts.m_id_2) as m_ids, ts.m_name_1, ts.m_name_2, CONCAT(ts.m_name_1, ',', ts.m_name_2) as m_names, 
+                    IF(ts.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, 
                     CONCAT(tm.u_id_1, ',', tm.u_id_2, ',', ts.u_id_0) as u_ids, CONCAT(tm.u_name_1, ',', tm.u_name_2, ',', ts.u_name_0) as u_names, tm.u_name_1, tm.u_name_2, ts.u_name_0, tm.model_status, COUNT(l.lid) as live_count, SUM(l.sales) as live_sum
                 FROM talent t
                     LEFT JOIN (
@@ -77,7 +78,7 @@ router.post('/getTalentList', (req, res) => {
 // 达人详情
 router.post('/getTalentDetail', (req, res) => {
     let params = req.body
-    let sql = `SELECT t.*, ts.*
+    let sql = `SELECT t.*, ts.*, c.search_pic, c.advance_pic
                 FROM talent t
                     LEFT JOIN (
                         SELECT ts0.tid, ts0.tsid, ts0.m_id_1, m1.type as m_type_1, m1.name as m_name_1, ts0.m_type_1 as m_paytype_1, ts0.m_point_1, ts0.m_id_2, m2.type as m_type_2, m2.name as m_name_2, ts0.m_type_2 as m_paytype_2, ts0.m_point_2, 
@@ -88,6 +89,7 @@ router.post('/getTalentDetail', (req, res) => {
                             LEFT JOIN middleman m2 ON m2.mid = ts0.m_id_2
                             LEFT JOIN user u0 ON u0.uid = ts0.u_id_0
                     ) ts ON ts.tid = t.tid
+                    LEFT JOIN chance c ON c.cid = t.cid
                 WHERE t.tid = '${params.tid}'`
     db.query(sql, (err, results_base) => {
         if (err) throw err;
@@ -251,7 +253,15 @@ router.post('/editTalent', (req, res) => {
                             let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                             db.query(sql, (err, results_e) => {
                                 if (err) throw err;
-                                sendRobot(results_e[0].secret, results_e[0].url, `${results_t[0].name} ${params.operate}`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                sendRobot(
+                                    results_e[0].secret,
+                                    results_e[0].url,
+                                    `${results_t[0].name} ${params.operate}`,
+                                    `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`,
+                                    `http://1.15.89.163:5173`,
+                                    [results_e[0].phone],
+                                    false
+                                )
                                 res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                             })
                         })
@@ -301,7 +311,15 @@ router.post('/examTalent', (req, res) => {
                 let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
                 db.query(sql, (err, results_u) => {
                     if (err) throw err;
-                    sendRobot(results_u[0].secret, results_u[0].url, `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`, `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} \n\n ### 审批备注：${note}`, `http://1.15.89.163:5173`, [results_u[0].phone], false)
+                    sendRobot(
+                        results_u[0].secret,
+                        results_u[0].url,
+                        `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
+                        `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${note}`}`,
+                        `http://1.15.89.163:5173`,
+                        [results_u[0].phone],
+                        false
+                    )
                     res.send({ code: 200, data: [], msg: `` })
                 })
             })
@@ -358,7 +376,15 @@ router.post('/addTalentModel', (req, res) => {
                             let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                             db.query(sql, (err, results_e) => {
                                 if (err) throw err;
-                                sendRobot(results_e[0].secret, results_e[0].url, `${results_t[0].name} 新合作报备`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：新合作报备 \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                sendRobot(
+                                    results_e[0].secret,
+                                    results_e[0].url,
+                                    `${results_t[0].name} 新合作报备`,
+                                    `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：新合作报备 \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`,
+                                    `http://1.15.89.163:5173`,
+                                    [results_e[0].phone],
+                                    false
+                                )
                                 res.send({ code: 200, data: [], msg: `添加成功` })
                             })
                         })
@@ -473,7 +499,15 @@ router.post('/editTalentModel', (req, res) => {
                                 let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                                 db.query(sql, (err, results_e) => {
                                     if (err) throw err;
-                                    sendRobot(results_e[0].secret, results_e[0].url, `${results_t[0].name} ${params.operate}`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                    sendRobot(
+                                        results_e[0].secret,
+                                        results_e[0].url,
+                                        `${results_t[0].name} ${params.operate}`,
+                                        `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`,
+                                        `http://1.15.89.163:5173`,
+                                        [results_e[0].phone],
+                                        false
+                                    )
                                     res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                 })
                             })
@@ -502,7 +536,15 @@ router.post('/editTalentModel', (req, res) => {
                                     let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                                     db.query(sql, (err, results_e) => {
                                         if (err) throw err;
-                                        sendRobot(results_e[0].secret, results_e[0].url, `${results_t[0].name} ${params.operate}`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                        sendRobot(
+                                            results_e[0].secret,
+                                            results_e[0].url,
+                                            `${results_t[0].name} ${params.operate}`,
+                                            `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`,
+                                            `http://1.15.89.163:5173`,
+                                            [results_e[0].phone],
+                                            false
+                                        )
                                         res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                     })
                                 })
@@ -546,7 +588,15 @@ router.post('/examTalentModel', (req, res) => {
                     let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
                     db.query(sql, (err, results_u) => {
                         if (err) throw err;
-                        sendRobot(results_u[0].secret, results_u[0].url, `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`, `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} \n\n ### 审批备注：${note}`, `http://1.15.89.163:5173`, [results_u[0].phone], false)
+                        sendRobot(
+                            results_u[0].secret,
+                            results_u[0].url,
+                            `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
+                            `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${note}`}`,
+                            `http://1.15.89.163:5173`,
+                            [results_u[0].phone],
+                            false
+                        )
                         res.send({ code: 200, data: [], msg: `` })
                     })
                 })
@@ -685,7 +735,15 @@ router.post('/giveTalent', (req, res) => {
                                             let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                                             db.query(sql, (err, results_e) => {
                                                 if (err) throw err;
-                                                sendRobot(results_e[0].secret, results_e[0].url, `${results_t[0].name} ${params.operate}`, `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`, `http://1.15.89.163:5173`, [results_e[0].phone], false)
+                                                sendRobot(
+                                                    results_e[0].secret,
+                                                    results_e[0].url,
+                                                    `${results_t[0].name} ${params.operate}`,
+                                                    `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`,
+                                                    `http://1.15.89.163:5173`,
+                                                    [results_e[0].phone],
+                                                    false
+                                                )
                                                 res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                             })
                                         })
@@ -709,7 +767,7 @@ router.post('/searchTalents', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
@@ -796,6 +854,12 @@ router.post('/getRefundReasonT', (req, res) => {
 // 获取被驳回达人的信息
 router.post('/getReportInfo', (req, res) => {
     let params = req.body
+    let where = ``
+    if (params.tid) {
+        where = `WHERE t.tid = '${params.tid}'`
+    } else {
+        where = `WHERE c.cid = '${params.cid}'`
+    }
     let sql = `SELECT t.*, ts1.*, tm.*, tms1.*, u1.name as u_name_1, u2.name as u_name_2, u0.name as u_name_0, m1.name as m_name_1, m2.name as m_name_2
                 FROM talent t
                     LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE operate = '达人报备' and (examine_result = '驳回' or examine_result IS NULL) GROUP BY tid) ts0 ON ts0.tid = t.tid
@@ -808,7 +872,8 @@ router.post('/getReportInfo', (req, res) => {
                     LEFT JOIN middleman m1 ON m1.mid = ts1.m_id_1
                     LEFT JOIN middleman m2 ON m2.mid = ts1.m_id_2
                     LEFT JOIN user u0 ON u0.uid = ts1.u_id_0
-                WHERE t.tid = '${params.tid}'`
+                    LEFT JOIN chance c ON c.cid = t.cid
+                ${where}`
     db.query(sql, (err, results) => {
         if (err) throw err;
         res.send({ code: 200, data: results, msg: `` })
@@ -824,7 +889,7 @@ router.post('/getExportTalentList', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {

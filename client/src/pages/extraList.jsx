@@ -8,7 +8,8 @@ import dayjs from 'dayjs'
 
 function ExtraList() {
     // 操作权限
-    const editPower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : falsetrue
+    const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理') || localStorage.getItem('position') === '管理员' ? true : false
+    const userShowPower = localStorage.getItem('position') === '商务' ? true : false
 
     // 表格：格式
     let columns = [
@@ -107,7 +108,7 @@ function ExtraList() {
             )
         }
     ]
-    columns = editPower ? columns.filter(item => item.title !== '商务') : columns
+    columns = userShowPower ? columns.filter(item => item.title !== '商务') : columns
     // 表格：获取数据、分页
     const [data, setData] = useState();
     const [loading, setLoading] = useState(false);
@@ -116,7 +117,10 @@ function ExtraList() {
         filters: {},
         pagination: {
             current: 1,
-            pageSize: 10
+            pageSize: 10,
+            showTotal: ((total) => {
+                return `共 ${total} 条`;
+            }),
         }
     });
     const getExtraListAPI = () => {
@@ -162,8 +166,12 @@ function ExtraList() {
     };
     const handleTableChange = (pagination, filters, sorter) => {
         setTableParams({
-            pagination,
-            filters,
+            pagination: {
+                ...tableParams.pagination,
+                ...pagination
+            },
+            filters: tableParams.filters,
+            filtersDate: tableParams.filtersDate,
             ...sorter,
         });
         if (pagination.pageSize !== tableParams.pagination?.pageSize) {
@@ -287,7 +295,10 @@ function ExtraList() {
                     onFinish={(values) => {
                         setTableParams({
                             ...tableParams,
-                            pagination: {current: 1, pageSize: 10},
+                            pagination: {
+                                ...tableParams.pagination,
+                                current: 1
+                            },
                             filtersDate: dateSelect,
                             filters: values
                         })
@@ -298,7 +309,7 @@ function ExtraList() {
                     </Form.Item>
                     <Form.Item label='编号' name='mid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='达人昵称' name='talent_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    {editPower ? null : <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
+                    {userShowPower ? null : <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                     </Form.Item>}
                     <Form.Item style={{ marginBottom: '20px' }}>
@@ -315,7 +326,6 @@ function ExtraList() {
                         </Space>
                     </Form.Item>
                 </Form>
-                <Alert message={`总计：${tableParams.pagination.total} 条数据`} type="info" showIcon />
                 <Table
                     style={{ margin: '20px auto' }}
                     rowKey={(data) => data.eid}

@@ -12,7 +12,7 @@ router.post('/getTalentStatistics', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
@@ -63,7 +63,7 @@ router.post('/getSalemansChanceOprate', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and u.department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and u.department = '${params.userInfo.department}' and u.company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
@@ -73,9 +73,9 @@ router.post('/getSalemansChanceOprate', (req, res) => {
     let whereFilter = ``
     let start_time = params.filtersDate.length === 2 ? params.filtersDate[0] : ''
     let end_time = params.filtersDate.length === 2 ? params.filtersDate[1] : '2000000000000'
-    let sql = `SELECT a.uid, a.name, a.find, a.advance, b.c_report, b.t_report
+    let sql = `SELECT a.uid, a.company, a.name, a.find, a.advance, b.c_report, b.t_report
                 FROM (
-                    SELECT u.uid, u.name, SUM(IF(c.create_time >= '${start_time}' and c.create_time < '${end_time}', 1, 0)) as find, 
+                    SELECT u.uid, u.company, u.name, SUM(IF(c.create_time >= '${start_time}' and c.create_time < '${end_time}', 1, 0)) as find, 
                         SUM(IF(c.advance_time >= '${start_time}' and c.advance_time < '${end_time}', 1, 0)) as advance
                     FROM user u
                         LEFT JOIN chance c ON u.uid = c.u_id
@@ -91,7 +91,7 @@ router.post('/getSalemansChanceOprate', (req, res) => {
                     GROUP BY u.uid, u.name
                 ) b
                 WHERE a.uid = b.uid
-                ORDER BY uid`
+                ORDER BY (b.c_report + b.t_report) DESC`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let name = [], find = [], advance = [], c_report = [], t_report = []
@@ -115,7 +115,7 @@ router.post('/getAdReTimeDiff', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and u.department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and u.department = '${params.userInfo.department}' and u.company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
@@ -175,7 +175,7 @@ router.post('/getPlatformTalent', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
@@ -207,7 +207,7 @@ router.post('/getPlatformTalent', (req, res) => {
 })
 
 // 达人管理-各个层级达人占比
-router.post('/getTypeTalent', (req, res) => {
+router.post('/getClassTalent', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试' and department = '事业部' and position != '副总'`
@@ -215,7 +215,7 @@ router.post('/getTypeTalent', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
@@ -233,8 +233,9 @@ router.post('/getTypeTalent', (req, res) => {
                     LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' and create_time >= '${start_time}' and create_time < '${end_time}' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                     LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                     INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = tms1.u_id_1 OR u.uid = tms1.u_id_2
-                WHERE t.status != '已失效'
-                GROUP BY t.type`
+                WHERE t.status = '合作中'
+                GROUP BY t.type
+                ORDER BY sum DESC`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let r = []
@@ -242,6 +243,48 @@ router.post('/getTypeTalent', (req, res) => {
             r.push({
                 value: results[i].sum,
                 name: results[i].type
+            })
+        }
+        res.send({ code: 200, data: r, msg: '' })
+    })
+})
+
+
+// 达人管理-线上达人类型占比
+router.post('/getTypeTalent', (req, res) => {
+    let params = req.body
+    // 权限筛选
+    let whereUser = `where status != '失效' and status != '测试' and department = '事业部' and position != '副总'`
+    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
+        if (params.userInfo.position === '副总') {
+            whereUser += ` and department = '${params.userInfo.department}'`
+        }
+        if (params.userInfo.position === '主管') {
+            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+        }
+        if (params.userInfo.position === '商务') {
+            whereUser += ` and uid = '${params.userInfo.uid}'`
+        }
+    }
+    let whereFilter = ``
+    let start_time = params.filtersDate.length === 2 ? params.filtersDate[0] : ''
+    let end_time = params.filtersDate.length === 2 ? params.filtersDate[1] : '2000000000000'
+    let sql = `SELECT tm.account_type, COUNT(DISTINCT t.tid) as sum
+                FROM talent_model tm 
+                    LEFT JOIN talent t ON t.tid = tm.tid and t.status = '合作中'
+                    LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' and create_time >= '${start_time}' and create_time < '${end_time}' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
+                    LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
+                    INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = tms1.u_id_1 OR u.uid = tms1.u_id_2
+                WHERE tm.model = '线上平台'
+                GROUP BY tm.account_type
+                ORDER BY sum DESC`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        let r = []
+        for (let i = 0; i < results.length; i++) {
+            r.push({
+                value: results[i].sum,
+                name: results[i].account_type
             })
         }
         res.send({ code: 200, data: r, msg: '' })
@@ -257,7 +300,7 @@ router.post('/getProvinceTalent', (req, res) => {
         if (params.userInfo.position === '副总') {
             whereUser += ` and u.department = '${params.userInfo.department}'`
         }
-        if (params.userInfo.department === '主管') {
+        if (params.userInfo.position === '主管') {
             whereUser += ` and u.department = '${params.userInfo.department}' and u.company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
@@ -270,7 +313,7 @@ router.post('/getProvinceTalent', (req, res) => {
     let sql = `SELECT t.province, COUNT(DISTINCT t.tid) as sum
                 FROM talent t
                     LEFT JOIN talent_schedule ts ON ts.tid = t.tid
-                WHERE t.status != '已失效'
+                WHERE t.status = '合作中'
                     and ts.status != '已失效'
                     and ts.operate = '达人报备' 
                     and ts.examine_result = '通过' 
@@ -290,7 +333,7 @@ router.post('/getProvinceTalent', (req, res) => {
         let sql = `SELECT t.province, COUNT(DISTINCT t.tid) as sum
                     FROM talent t
                         LEFT JOIN talent_schedule ts ON ts.tid = t.tid
-                    WHERE t.status != '已失效'
+                    WHERE t.status = '合作中'
                         and ts.status != '已失效'
                         and ts.operate = '达人报备' 
                         and ts.examine_result = '通过' 

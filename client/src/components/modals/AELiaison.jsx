@@ -18,7 +18,7 @@ function AELiaison(props) {
             <Form form={form} onFinish={(values) => {
                 props.onOK({
                     ...values,
-                    advance_pic: values.advance_pic.replace('/public', '')
+                    advance_pic: values.advance_pic.join()
                 });
             }}>
                 {type !== 'edit_talent' ? <Form.Item label="商机编号" name="cid" rules={[{ required: true, message: '不能为空' }]}>
@@ -61,7 +61,7 @@ function AELiaison(props) {
                     name="advance_pic"
                     rules={[{ required: true, message: '不能为空' }]}
                 >
-                    <UpLoadImg title="上传证明" name="推进商机" defaultUrl={form.getFieldValue('advance_pic')} setPicUrl={(value) => { form.setFieldValue('advance_pic', value) }} />
+                    <UpLoadImg title="上传证明" name="推进商机" setPicUrl={(value) => { form.setFieldValue('advance_pic', value) }} />
                 </Form.Item>}
             </Form>
         </Modal>
