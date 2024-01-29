@@ -32,8 +32,8 @@ router.post('/getTalentStatistics', (req, res) => {
                     INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = c.u_id`
     db.query(sql, (err, chance) => {
         if (err) throw err;
-        let sql = `SELECT COUNT(DISTINCT IF(t.status != '已失效' and ts.examine_result = '通过' and ts.examine_time >= '${start_time}' and ts.examine_time < '${end_time}', t.tid, null)) as cooperate,
-                        COUNT(DISTINCT IF(t.status != '已失效' and t.status = '报备待审批', t.tid, null)) as cooperate_wait,
+        let sql = `SELECT COUNT(DISTINCT IF(ts.examine_result = '通过' and ts.examine_time >= '${start_time}' and ts.examine_time < '${end_time}', t.tid, null)) as cooperate,
+                        COUNT(DISTINCT IF(t.status = '报备待审批', t.tid, null)) as cooperate_wait,
                         COUNT(DISTINCT IF(t.cid = 'undefined' and ts.examine_result = '通过' and ts.examine_time >= '${start_time}' and ts.examine_time < '${end_time}', t.tid, null)) as history, 
                         COUNT(DISTINCT IF(t.cid = 'undefined' and t.status = '报备待审批', t.tid, null)) as history_wait
                     FROM talent t
@@ -41,7 +41,8 @@ router.post('/getTalentStatistics', (req, res) => {
                         LEFT JOIN talent_model tm ON tm.tid = t.tid
                         LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                         LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
-                        INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid in (tms1.u_id_1, tms1.u_id_2)`
+                        INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid in (tms1.u_id_1, tms1.u_id_2)
+                    WHERE t.status != '已失效' and t.status != '报备驳回' and t.status != '已撤回' and t.status != '已拉黑'`
         db.query(sql, (err, talent) => {
             if (err) throw err;
             res.send({
@@ -85,8 +86,8 @@ router.post('/getSalemansChanceOprate', (req, res) => {
                     SELECT u.uid, u.name, SUM(IF(ts.create_time >= '${start_time}' and ts.create_time < '${end_time}' and t.cid != 'undefined', 1, 0)) as c_report, 
                         SUM(IF(ts.create_time >= '${start_time}' and ts.create_time < '${end_time}' and t.cid = 'undefined', 1, 0)) as t_report
                     FROM user u
-                        LEFT JOIN talent_schedule ts ON ts.create_uid = u.uid and ts.operate = '达人报备' and ts.examine_result = '通过'
-                        LEFT JOIN talent t ON t.tid = ts.tid 
+                        LEFT JOIN talent_schedule ts ON ts.create_uid = u.uid and ts.operate = '达人报备' and ts.examine_result = '通过' and ts.status != '已失效'
+                        LEFT JOIN talent t ON t.tid = ts.tid and t.status != '已失效' and t.status != '报备驳回' and t.status != '已撤回' and t.status != '已拉黑'
                     ${whereUser}
                     GROUP BY u.uid, u.name
                 ) b
@@ -187,6 +188,7 @@ router.post('/getPlatformTalent', (req, res) => {
     let end_time = params.filtersDate.length === 2 ? params.filtersDate[1] : '2000000000000'
     let sql = `SELECT tm.platform, COUNT(DISTINCT tm.tid) as sum
                 FROM talent_model tm
+                    LEFT JOIN talent t ON t.tid = tm.tid and t.status != '已失效' and t.status != '报备驳回' and t.status != '已撤回' and t.status != '已拉黑'
                     LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' and create_time >= '${start_time}' and create_time < '${end_time}' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                     LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                     INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = tms1.u_id_1 OR u.uid = tms1.u_id_2
@@ -233,7 +235,7 @@ router.post('/getClassTalent', (req, res) => {
                     LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' and create_time >= '${start_time}' and create_time < '${end_time}' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                     LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                     INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = tms1.u_id_1 OR u.uid = tms1.u_id_2
-                WHERE t.status = '合作中'
+                WHERE t.status != '已失效' and t.status != '报备驳回' and t.status != '已撤回' and t.status != '已拉黑'
                 GROUP BY t.type
                 ORDER BY sum DESC`
     db.query(sql, (err, results) => {
@@ -271,7 +273,7 @@ router.post('/getTypeTalent', (req, res) => {
     let end_time = params.filtersDate.length === 2 ? params.filtersDate[1] : '2000000000000'
     let sql = `SELECT tm.account_type, COUNT(DISTINCT t.tid) as sum
                 FROM talent_model tm 
-                    LEFT JOIN talent t ON t.tid = tm.tid and t.status = '合作中'
+                    LEFT JOIN talent t ON t.tid = tm.tid and t.status != '已失效' and t.status != '报备驳回' and t.status != '已撤回' and t.status != '已拉黑'
                     LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' and create_time >= '${start_time}' and create_time < '${end_time}' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                     LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                     INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = tms1.u_id_1 OR u.uid = tms1.u_id_2
@@ -313,7 +315,7 @@ router.post('/getProvinceTalent', (req, res) => {
     let sql = `SELECT t.province, COUNT(DISTINCT t.tid) as sum
                 FROM talent t
                     LEFT JOIN talent_schedule ts ON ts.tid = t.tid
-                WHERE t.status = '合作中'
+                WHERE t.status != '已失效' and t.status != '报备驳回' and t.status != '已撤回' and t.status != '已拉黑'
                     and ts.status != '已失效'
                     and ts.operate = '达人报备' 
                     and ts.examine_result = '通过' 

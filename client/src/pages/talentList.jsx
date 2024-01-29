@@ -153,6 +153,7 @@ function TalentList() {
                     {record.status === '报备驳回' ? <><a onClick={() => { getRefundReasonAPI({ tid: record.tid }); }}>查看驳回备注</a>
                         <a onClick={() => { setClickTid(record.tid); getReportInfoAPI({ tid: record.tid }); }}>重新报备</a></> : null}
                     {record.status === '已撤销' ? <a onClick={() => { setClickTid(record.tid); getReportInfoAPI({ tid: record.tid }); }}>重新报备</a> : null}
+                    {editPower && record.status === '合作中' ? <a style={{ color: 'red' }} onClick={() => { setClickTid(record.tid); setIsShowBlock(true); }}>拉黑</a> : null}
                 </Space>
             )
         }
@@ -212,7 +213,6 @@ function TalentList() {
         })
     };
     const handleTableChange = (pagination, filters, sorter) => {
-        console.log('pagination: ', pagination);
         setTableParams({
             pagination: {
                 ...tableParams.pagination,
@@ -634,6 +634,43 @@ function TalentList() {
         });
         FileSaver.saveAs(blob, `CRM系统达人导出-${+new Date()}.xls`);
     }
+    // 拉黑达人
+    const [isShowBlock, setIsShowBlock] = useState(false)
+    const [blockReason, setBlockReason] = useState()
+    const editTalentAPI = (operate, ori, payload) => {
+        request({
+            method: 'post',
+            url: '/talent/editTalent',
+            data: {
+                tid: clickTid,
+                operate,
+                ori,
+                new: payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShowBlock(false);
+                    getTalentListAPI();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     useEffect(() => {
         if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
@@ -642,7 +679,6 @@ function TalentList() {
         }
         getTalentListAPI();
     }, [JSON.stringify(tableParams)])
-    console.log(tableParams.pagination);
     return (
         <Fragment>
             <Card title="达人列表" extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('history'); }}>添加历史达人</Button> :
@@ -712,7 +748,7 @@ function TalentList() {
                 isShow={isShow}
                 type={type}
                 form={form}
-                onOK={(values) => { addHistoryTalentAPI(values); }}
+                onOK={(values) => { console.log('values: ', values); addHistoryTalentAPI(values); }}
                 onCancel={() => { setIsShow(false); form.resetFields(); setType(''); setClickTid(''); }}
             />
             <Modal title="移交达人" open={isShowGive} onOk={() => { giveTalentAPI(); }} onCancel={() => { setIsShowGive(false); }}>
@@ -756,6 +792,9 @@ function TalentList() {
             />
             <Modal title="报备驳回备注" open={isShowCheckNo} onOk={() => { setIsShowCheckNo(false); }} onCancel={() => { setIsShowCheckNo(false); }}>
                 <TextArea placeholder="请输入" value={checkNoReason} disabled={true} />
+            </Modal>
+            <Modal title="拉黑原因" open={isShowBlock} onOk={() => { editTalentAPI('拉黑达人', null, { block_note: blockReason }); setBlockReason(); }} onCancel={() => { setIsShowBlock(false); setBlockReason(); }}>
+                <TextArea placeholder="请输入" value={blockReason} onChange={(e) => { setBlockReason(e.target.value); }} />
             </Modal>
         </Fragment>
     )

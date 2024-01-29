@@ -211,6 +211,38 @@ function AETalent(props) {
                 onCancel={() => { props.onCancel(); reset(); }}
             >
                 <Form form={form} onFinish={(values) => {
+                    if (!hasFirstMiddle) {
+                        values.m_id_1 = null
+                        values.m_type_1 = null
+                        values.m_point_1 = null
+                    }
+                    if (!hasSecondMiddle) {
+                        values.m_id_2 = null
+                        values.m_type_2 = null
+                        values.m_point_2 = null
+                    }
+                    if (!hasYuanSaleman) {
+                        values.u_id_0 = null
+                        values.u_type_0 = null
+                        values.u_point_0 = null
+                    }
+                    if (!hasFuSaleman && values.accounts) {
+                        for (let i = 0; i < values.accounts.length; i++) {
+                            values.accounts[i].u_id_2 = null
+                            values.accounts[i].u_type_2 = null
+                            values.accounts[i].u_point_2 = null
+                        }
+                    }
+                    if (!hasGroupFuSaleman) {
+                        values.group_u_id_2 = null
+                        values.group_u_type_2 = null
+                        values.group_u_point_2 = null
+                    }
+                    if (!hasProvideFuSaleman) {
+                        values.provide_u_id_2 = null
+                        values.provide_u_type_2 = null
+                        values.provide_u_point_2 = null
+                    }
                     let payload = {}
                     if (type === 'report') {
                         payload = {
@@ -576,9 +608,10 @@ function AETalent(props) {
                                     <List.Item key={index}>
                                         <List.Item.Meta
                                             avatar={<Image width={50} src={people} preview={false} />}
-                                            title={<Space size={'large'}><span>{`合作模式编号: ${item.tmid}`}</span><span>{`状态: ${item.status}`}</span><span>{`商务: ${item.u_name}`}</span></Space>}
-                                            description={<Space size={'large'}><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}
-                                                <span>{`重复名称/ID: ${item.account_name || item.group_name || item.provide_name}`}</span></Space>}
+                                            title={<Space size={'large'}><span>{`编号: ${item.tmid}`}</span><span>{`状态: ${item.status}`}</span><span>{`${item.status === '已拉黑' ? '拉黑人' : '商务'}: ${item.u_name}`}</span></Space>}
+                                            description={<Space size={'large'} style={{ color: `${item.status === '已拉黑' ? 'red' : ''}`}}>{item.status === '已拉黑' ? <><span>{`原因: ${item.note}`}</span><span>{`重复名称/ID: ${item.name}`}</span></> :
+                                                <><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}
+                                                    <span>{`重复名称/ID: ${item.account_name || item.group_name || item.provide_name}`}</span></>}</Space>}
                                         />
                                     </List.Item>
                                 )}

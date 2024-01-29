@@ -21,7 +21,7 @@ router.post('/getTalentList', (req, res) => {
         }
     }
     // 条件筛选
-    let whereFilter = `where z.status != '已失效'`
+    let whereFilter = `where z.status != '已失效' and z.status != '已拉黑' and z.status != '拉黑待审批'`
     for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
         if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
             whereFilter += ` and z.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
@@ -195,7 +195,7 @@ router.post('/editTalent', (req, res) => {
                             isAdd = false
                             sql += results[0][key] === null ? ` null,` : ` '${results[0][key]}',`
                         }
-                    } else if (params.operate.match('中间人') || params.operate.match('年框')) {
+                    } else if (params.operate.match('中间人') || params.operate.match('年框') || params.operate === '拉黑达人') {
                         for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
                             if (isAdd && Object.keys(params.new)[i] === key) {
                                 isAdd = false
@@ -243,8 +243,8 @@ router.post('/editTalent', (req, res) => {
                     })
                 } else if (params.operate === '新增年框资料') {
                     res.send({ code: 200, data: [], msg: `${params.operate}成功` })
-                } else if (params.operate.match('中间人') || params.operate.match('年框')) {
-                    let sql = `UPDATE talent set status = '${params.operate.match('中间人') ? '中间人待审批' : '年框待审批'}' WHERE tid = '${params.tid}'`
+                } else if (params.operate.match('中间人') || params.operate.match('年框') || params.operate === '拉黑达人') {
+                    let sql = `UPDATE talent set status = '${params.operate.match('中间人') ? '中间人待审批' : params.operate === '拉黑达人' ? '拉黑待审批' : '年框待审批'}' WHERE tid = '${params.tid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
                         let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
@@ -277,7 +277,7 @@ router.post('/examTalent', (req, res) => {
     let time = dayjs().valueOf()
     let params = req.body
     let note = params.note === null ? null : `'${params.note}'`
-    let sql = `SELECT t.name, ts.operate
+    let sql = `SELECT t.name, ts.operate, t.cid
                 FROM talent t
                     INNER JOIN (SELECT tid, operate FROM talent_schedule WHERE status = '待审批') ts ON ts.tid = t.tid 
                 WHERE t.tid = '${params.tid}'`
@@ -288,7 +288,9 @@ router.post('/examTalent', (req, res) => {
                     WHERE tsid = '${params.tsid}' and status = '待审批'`
         db.query(sql, (err, results) => {
             if (err) throw err;
-            let sql = `UPDATE talent SET status = IF(cid = 'undefined', '${params.exam || params.status !== '报备待审批' ? '合作中' : '报备驳回'}', '${params.exam || params.status !== '报备待审批' ? '合作中' : '已失效'}') WHERE tid = '${params.tid}'`
+            let sql = `UPDATE talent SET status = IF(status = '拉黑待审批', '${params.exam ? '已拉黑' : '合作中'}', 
+                            IF(cid = 'undefined', '${params.exam || params.status !== '报备待审批' ? '合作中' : '报备驳回'}', '${params.exam || params.status !== '报备待审批' ? '合作中' : '已失效'}'))
+                        WHERE tid = '${params.tid}'`
             db.query(sql, (err, results) => {
                 if (err) throw err;
                 if (params.status === '报备待审批') {
@@ -304,24 +306,58 @@ router.post('/examTalent', (req, res) => {
                             let sql = `UPDATE chance c, talent t SET c.status = '${params.exam ? '报备通过' : '报备驳回'}', c.report_time = ${t} WHERE c.cid = t.cid and t.tid = '${params.tid}'`
                             db.query(sql, (err, results) => {
                                 if (err) throw err;
+                                let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
+                                db.query(sql, (err, results_u) => {
+                                    if (err) throw err;
+                                    sendRobot(
+                                        results_u[0].secret,
+                                        results_u[0].url,
+                                        `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
+                                        `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${note}`}`,
+                                        `http://1.15.89.163:5173`,
+                                        [results_u[0].phone],
+                                        false
+                                    )
+                                    res.send({ code: 200, data: [], msg: `` })
+                                })
                             })
                         })
                     })
+                } else if (params.status === '拉黑待审批' && results_t[0].cid !== 'undefined' && params.exam) {
+                    let sql = `UPDATE chance c, talent t SET c.status = '已拉黑' WHERE c.cid = t.cid and t.tid = '${params.tid}'`
+                    db.query(sql, (err, results) => {
+                        if (err) throw err;
+                        let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
+                        db.query(sql, (err, results_u) => {
+                            if (err) throw err;
+                            sendRobot(
+                                results_u[0].secret,
+                                results_u[0].url,
+                                `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
+                                `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${note}`}`,
+                                `http://1.15.89.163:5173`,
+                                [results_u[0].phone],
+                                false
+                            )
+                            res.send({ code: 200, data: [], msg: `` })
+                        })
+                    })
+                } else {
+                    let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
+                    db.query(sql, (err, results_u) => {
+                        if (err) throw err;
+                        sendRobot(
+                            results_u[0].secret,
+                            results_u[0].url,
+                            `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
+                            `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${note}`}`,
+                            `http://1.15.89.163:5173`,
+                            [results_u[0].phone],
+                            false
+                        )
+                        res.send({ code: 200, data: [], msg: `` })
+                    })
                 }
-                let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
-                db.query(sql, (err, results_u) => {
-                    if (err) throw err;
-                    sendRobot(
-                        results_u[0].secret,
-                        results_u[0].url,
-                        `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
-                        `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${note}`}`,
-                        `http://1.15.89.163:5173`,
-                        [results_u[0].phone],
-                        false
-                    )
-                    res.send({ code: 200, data: [], msg: `` })
-                })
             })
         })
     })
@@ -759,7 +795,7 @@ router.post('/giveTalent', (req, res) => {
 })
 
 // 搜索达人
-router.post('/searchTalents', (req, res) => {
+router.post('/getTalentItems', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试'`
@@ -788,7 +824,7 @@ router.post('/searchTalents', (req, res) => {
                             ) tms ON tms.tmid = tm.tmid
                         WHERE tm.status != '已失效'
                     ) tm ON tm.tid = t.tid
-                WHERE t.name LIKE '%${params.value}%'`
+                WHERE t.status != '已失效' and t.status != '报备驳回' and t.status != '已撤销' and t.status != '已拉黑'`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let talents = []

@@ -20,7 +20,7 @@ router.post('/getLiveList', (req, res) => {
         }
     }
     // 条件筛选
-    let whereFilter = `where z.status != '已失效'`
+    let whereFilter = `where z.status != '已失效' and z.status != '已拉黑'`
     if (params.filtersDate && params.filtersDate.length === 2) {
         whereFilter += ` and z.start_time >= '${params.filtersDate[0]}' and z.start_time < '${params.filtersDate[1]}'`
     }

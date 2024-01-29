@@ -10,12 +10,11 @@ function AELive(props) {
     const { type, isShow, form } = props;
 
     const [talentsItmes, setTalentsItmes] = useState([]);
-    const searchTalentAPI = (value) => {
+    const getTalentItemsAPI = () => {
         request({
             method: 'post',
-            url: '/talent/searchTalents',
+            url: '/talent/getTalentItems',
             data: {
-                value,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     name: localStorage.getItem('name'),
@@ -297,7 +296,7 @@ function AELive(props) {
                         showSearch
                         placeholder="请输入"
                         disabled={type === 'add_0' ? false : true}
-                        onSearch={(value) => { searchTalentAPI(value); }}
+                        onFocus={() => { getTalentItemsAPI(); }}
                         filterOption={filterOption}
                         options={talentsItmes}
                         optionFilterProp="children"

@@ -121,6 +121,7 @@ function ChanceList() {
                             form.setFieldsValue({
                                 ...record,
                                 models,
+                                search_pic: record.search_pic.split(','),
                                 platforms: record.platforms === null ? null : record.platforms.split(','),
                                 account_names: record.account_names === null ? null : record.account_names.split(',')
                             })

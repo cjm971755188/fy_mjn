@@ -8,12 +8,11 @@ function AEExtra(props) {
     const { isShow, type, form } = props;
 
     const [talentsItmes, setTalentsItmes] = useState([]);
-    const searchTalentAPI = (value) => {
+    const getTalentItemsAPI = () => {
         request({
             method: 'post',
-            url: '/talent/searchTalents',
+            url: '/talent/getTalentItems',
             data: {
-                value,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     name: localStorage.getItem('name'),
@@ -97,7 +96,7 @@ function AEExtra(props) {
                         showSearch
                         placeholder="请输入"
                         disabled={type === 'add' ? false : true}
-                        onSearch={(value) => { searchTalentAPI(value); }}
+                        onFocus={() => { getTalentItemsAPI(); }}
                         filterOption={filterOption}
                         options={talentsItmes}
                         optionFilterProp="children"

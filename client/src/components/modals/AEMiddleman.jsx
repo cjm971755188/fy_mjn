@@ -57,7 +57,7 @@ function AEMiddleman(props) {
                 <Form.Item label="联系人微信" name="liaison_v" rules={[{ required: true, message: '不能为空' }]}>
                     <Input placeholder="请输入" />
                 </Form.Item>
-                <Form.Item label="联系人手机号" name="liaison_phone" rules={[{ required: true, message: '不能为空' }, { len: 11, message: '手机号长度需11位' }, { pattern: /^1[3-9]\d{9}$/, message: '手机号错误' }]}>
+                <Form.Item label="联系人手机号" name="liaison_phone" rules={[{ len: 11, message: '手机号长度需11位' }, { pattern: /^1[3-9]\d{9}$/, message: '手机号错误' }]}>
                     <Input placeholder="请输入" />
                 </Form.Item>
                 <Form.Item label="付款方式" name="pay_way" rules={[{ required: true, message: '不能为空' }]}>

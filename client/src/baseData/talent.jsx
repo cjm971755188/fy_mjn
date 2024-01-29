@@ -8,12 +8,13 @@ export const chanceStatus = [
 
 export const talentStatus = [
     { key: 0, label: "报备待审批", value: "报备待审批" },
-    { key: 1, label: "合作中", value: "合作中" },
-    { key: 2, label: "年框待审批", value: "年框待审批" },
-    { key: 3, label: "新合作待审批", value: "新合作待审批" },
-    { key: 4, label: "合作变更待审批", value: "合作变更待审批" },
-    { key: 5, label: "移交待审批", value: "移交待审批" },
-    { key: 6, label: "报备驳回", value: "报备驳回" }
+    { key: 1, label: "报备驳回", value: "报备驳回" },
+    { key: 2, label: "已撤回", value: "已撤回" },
+    { key: 3, label: "合作中", value: "合作中" },
+    { key: 4, label: "年框待审批", value: "年框待审批" },
+    { key: 5, label: "新合作待审批", value: "新合作待审批" },
+    { key: 6, label: "合作变更待审批", value: "合作变更待审批" },
+    { key: 7, label: "移交待审批", value: "移交待审批" }
 ]
 
 export const yearboxStatus = [
@@ -83,7 +84,8 @@ export const accountType = [
     { key: 19, label: "作家类", value: "作家类" },
     { key: 20, label: "网红类达人", value: "网红类达人" },
     { key: 21, label: "明星类达人", value: "明星类达人" },
-    { key: 22, label: "知识类达人", value: "知识类达人" }
+    { key: 22, label: "知识类达人", value: "知识类达人" },
+    { key: 23, label: "剧情类达人", value: "剧情类达人" }
 ]
 
 export const accountModelType = [

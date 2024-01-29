@@ -18,6 +18,8 @@ const sendRobot = (_secret, _url, title, msg, link, at, isAtAll) => {
     }
     let time = Date.now();//当前时间
     let stringToSign = time + "\n" + secret;
+    console.log('secret: ', secret);
+    console.log('stringToSign: ', stringToSign);
     let base = crypto.createHmac('sha256', secret).update(stringToSign).digest('base64');
     let sign = encodeURIComponent(base)//签名
     url = url + `&timestamp=${time}&sign=${sign}`;

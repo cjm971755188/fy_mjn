@@ -317,9 +317,10 @@ function AETalentModel(props) {
                                 <List.Item key={index}>
                                     <List.Item.Meta
                                         avatar={<Image width={50} src={people} preview={false} />}
-                                        title={<Space size={'large'}><span>{`编号: ${item.tmid}`}</span><span>{`状态: ${item.status}`}</span><span>{`商务: ${item.u_name}`}</span></Space>}
-                                        description={<Space size={'large'}><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}
-                                            <span>{`重复名称/ID: ${item.account_name || item.group_name || item.provide_name}`}</span></Space>}
+                                        title={<Space size={'large'}><span>{`编号: ${item.tmid}`}</span><span>{`状态: ${item.status}`}</span><span>{`${item.status === '已拉黑' ? '拉黑人' : '商务'}: ${item.u_name}`}</span></Space>}
+                                        description={<Space size={'large'} style={{ color: `${item.status === '已拉黑' ? 'red' : ''}`}}>{item.status === '已拉黑' ? <><span>{`原因: ${item.note}`}</span><span>{`重复名称/ID: ${item.name}`}</span></> :
+                                            <><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}
+                                                <span>{`重复名称/ID: ${item.account_name || item.group_name || item.provide_name}`}</span></>}</Space>}
                                     />
                                 </List.Item>
                             )}

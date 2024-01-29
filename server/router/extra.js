@@ -21,7 +21,7 @@ router.post('/getExtraList', (req, res) => {
         }
     }
     // 条件筛选
-    let whereFilter = `where z.status != '已失效'`
+    let whereFilter = `where z.status != '已失效'z.status != '已拉黑'`
     if (params.filtersDate && params.filtersDate.length === 2) {
         whereFilter += ` and z.month >= '${params.filtersDate[0]}' and z.month < '${params.filtersDate[1]}'`
     }

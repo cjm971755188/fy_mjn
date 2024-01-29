@@ -21,7 +21,7 @@ router.post('/getChanceList', (req, res) => {
         }
     }
     // 条件筛选
-    let whereFilter = `where c.status != '已失效'`
+    let whereFilter = `where c.status != '已失效' and c.status != '已拉黑'`
     if (params.filtersDate && params.filtersDate.length === 2) {
         whereFilter += ` and c.create_time >= '${params.filtersDate[0]}' and c.create_time < '${params.filtersDate[1]}'`
     }
@@ -70,39 +70,57 @@ router.post('/searchSameChance', (req, res) => {
             WHERE	(${filter})
                 and c.status != '报备通过' and c.status != '报备驳回' and c.cid != '${params.cid}')
             UNION */
-            sql = `(SELECT tm.tmid, t.name, tm.model, tm.platform, tm.account_id, tm.account_name, tm.group_name, tm.provide_name, u.name as u_name, tm.status
+            sql = `(SELECT tm.tmid, t.name, tm.model, tm.platform, tm.account_id, tm.account_name, tm.group_name, tm.provide_name, u.name as u_name, t.status, '' as note
                         FROM talent_model tm
                             LEFT JOIN talent t ON t.tid = tm.tid and t.status != '报备驳回' and t.status != '已撤销'
                             LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                             LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                             LEFT JOIN user u ON u.uid = tms1.u_id_1
                         WHERE	(tm.account_name LIKE '%${names[i]}%' OR tm.group_name LIKE '%${names[i]}%' OR tm.provide_name LIKE '%${names[i]}%')
-                            and tm.status != '已失效')`
+                            and tm.status != '已失效')
+                    UNION
+                    (SELECT	b.bid, b.name, '', '', '', '', '', '', u.name as u_name, b.status, note
+                        FROM block b
+                            LEFT JOIN user u ON u.uid = b.create_uid
+                        WHERE b.name LIKE '%${names[i]}%'
+                            and b.status = '已拉黑')`
         } else if (params.type === 'talent') {
             filter = params.talent_name ? params.accounts ? params.group_name ? params.provide_name ? `t.name LIKE '%${names[i]}%' OR tm.account_id LIKE '%${names[i]}%' OR tm.group_name LIKE '%${names[i]}%' OR tm.provide_name LIKE '%${names[i]}%'` :
                 `t.name LIKE '%${names[i]}%' OR tm.account_id LIKE '%${names[i]}%' OR tm.group_name LIKE '%${names[i]}%'` : `t.name LIKE '%${names[i]}%' OR tm.account_id LIKE '%${names[i]}%'` : `t.name LIKE '%${names[i]}%'` :
                 params.accounts ? params.group_name ? params.provide_name ? `OR tm.account_id LIKE '%${names[i]}%' OR tm.group_name LIKE '%${names[i]}%' OR tm.provide_name LIKE '%${names[i]}%'` :
                     `tm.account_id LIKE '%${names[i]}%' OR tm.group_name LIKE '%${names[i]}%'` : `tm.account_id LIKE '%${names[i]}%'` :
                     params.group_name ? params.provide_name ? `tm.group_name LIKE '%${names[i]}%' OR tm.provide_name LIKE '%${names[i]}%'` : `tm.group_name LIKE '%${names[i]}%'` : `tm.provide_name LIKE '%${names[i]}%'`
-            sql = `SELECT tm.tmid, t.name, tm.model, tm.platform, tm.account_id, tm.account_name, tm.group_name, tm.provide_name, u.name as u_name, tm.status
+            sql = `(SELECT tm.tmid, t.name, tm.model, tm.platform, tm.account_id, tm.account_name, tm.group_name, tm.provide_name, u.name as u_name, t.status, '' as note
                     FROM talent_model tm
                         LEFT JOIN talent t ON t.tid = tm.tid and t.status != '报备驳回' and t.status != '已撤销'
                         LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                         LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                         LEFT JOIN user u ON u.uid = tms1.u_id_1
                     WHERE	(${filter})
-                        and tm.status != '已失效'`
+                        and tm.status != '已失效')
+                    UNION
+                    (SELECT	b.bid, b.name, '', '', '', '', '', '', u.name as u_name, b.status, note
+                        FROM block b
+                            LEFT JOIN user u ON u.uid = b.create_uid
+                        WHERE b.name LIKE '%${names[i]}%'
+                            and b.status = '已拉黑')`
         } else if (params.type.match('model')) {
             filter = params.account_id ? params.group_name ? params.provide_name ? `tm.account_id LIKE '%${names[i]}%' OR tm.group_name LIKE '%${names[i]}%' OR tm.provide_name LIKE '%${names[i]}%'` : `tm.account_id LIKE '%${names[i]}%' OR tm.group_name LIKE '%${names[i]}%'` :
                 `tm.account_id LIKE '%${names[i]}%'` : params.group_name ? params.provide_name ? `tm.group_name LIKE '%${names[i]}%' OR tm.provide_name LIKE '%${names[i]}%'` : `tm.group_name LIKE '%${names[i]}%'` : `tm.provide_name LIKE '%${names[i]}%'`
-            sql = `SELECT tm.tmid, t.name, tm.model, tm.platform, tm.account_id, tm.account_name, tm.group_name, tm.provide_name, u.name as u_name, tm.status
+            sql = `(SELECT tm.tmid, t.name, tm.model, tm.platform, tm.account_id, tm.account_name, tm.group_name, tm.provide_name, u.name as u_name, t.status, '' as note
                     FROM talent_model tm
                         LEFT JOIN talent t ON t.tid = tm.tid and t.status != '报备驳回' and t.status != '已撤销'
                         LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                         LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                         LEFT JOIN user u ON u.uid = tms1.u_id_1
                     WHERE	(${filter})
-                        and tm.status != '已失效'`
+                        and tm.status != '已失效')
+                    UNION
+                    (SELECT	b.bid, b.name, '', '', '', '', '', '', u.name as u_name, b.status, note
+                        FROM block b
+                            LEFT JOIN user u ON u.uid = b.create_uid
+                        WHERE b.name LIKE '%${names[i]}%'
+                            and b.status = '已拉黑')`
         }
         db.query(sql, (err, results) => {
             if (err) throw err;
@@ -236,7 +254,7 @@ router.post('/reportChance', (req, res) => {
                         db.query(sql, (err, results) => {
                             if (err) throw err;
                             let tsid = 'TS' + `${results.length + 1}`.padStart(7, '0')
-                            let sql = `INSERT INTO talent_schedule values('${tsid}', '${tid}', ${m_id_1}, ${m_type_1}, ${m_point_1}, ${m_id_2}, ${m_type_2}, ${m_point_2}, ${m_note}, null, null, null, null, null, null, null, ${u_id_0}, ${u_point_0}, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批')`
+                            let sql = `INSERT INTO talent_schedule values('${tsid}', '${tid}', ${m_id_1}, ${m_type_1}, ${m_point_1}, ${m_id_2}, ${m_type_2}, ${m_point_2}, ${m_note}, null, null, null, null, null, null, null, null, ${u_id_0}, ${u_point_0}, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批')`
                             db.query(sql, (err, results) => {
                                 if (err) throw err;
                                 let sql = `SELECT * FROM talent_model`
@@ -254,7 +272,7 @@ router.post('/reportChance', (req, res) => {
                                                 let tmid = 'TM' + `${count_d + i + 1}`.padStart(7, '0')
                                                 let tmsid = 'TMS' + `${count_l + i + 1}`.padStart(7, '0')
                                                 let keyword = params.accounts[i].keyword ? `'${params.accounts[i].keyword}'` : null
-                                                let commission_note = params.commission_note ? `'${params.commission_note}'` : null
+                                                let commission_note = params.accounts[i].commission_note ? `'${params.accounts[i].commission_note}'` : null
                                                 let u_id_2 = params.accounts[i].u_id_2 ? params.accounts[i].u_id_2.value ? `'${params.accounts[i].u_id_2.value}'` : `'${params.accounts[i].u_id_2}'` : null
                                                 let u_point_2 = params.accounts[i].u_point_2 ? params.accounts[i].u_point_2.value ? `'${params.accounts[i].u_point_2.value}'` : `'${params.accounts[i].u_point_2}'` : null
                                                 let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
@@ -290,6 +308,9 @@ router.post('/reportChance', (req, res) => {
                                             sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
                                             count_d += 1
                                             count_l += 1
+                                        }
+                                        if (sql_d === 'INSERT INTO talent_model values') {
+                                            res.send({ code: 201, data: [], msg: `请输入正确的合作模式信息` })
                                         }
                                         sql_d = sql_d.substring(0, sql_d.length - 1)
                                         sql_l = sql_l.substring(0, sql_l.length - 1)
