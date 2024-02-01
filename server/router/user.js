@@ -14,7 +14,7 @@ router.post('/login', (req, res) => {
         } else if (params.password != results[0].password) {
             res.send({ code: 201, data: [], msg: '密码错误' })
         } else if (results[0].status == '失效') {
-            res.send({ code: 201, data: [], msg: '该用户已被失效' })
+            res.send({ code: 201, data: [], msg: '该用户已失效' })
         } else {
             let sql = ''
             if (results[0].department === '事业部' && results[0].position !== '副总') {
@@ -39,7 +39,7 @@ router.post('/editPassword', (req, res) => {
         if (results.length == 0) {
             res.send({ code: 201, data: [], msg: '无该用户' })
         } else if (results[0].status == '失效') {
-            res.send({ code: 201, data: [], msg: '该用户已被失效' })
+            res.send({ code: 201, data: [], msg: '该用户已失效' })
         } else if (params.password != results[0].password) {
             res.send({ code: 201, data: [], msg: '原密码错误' })
         } else if (params.password2 != params.password3) {

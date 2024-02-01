@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Button, Modal, message, Tooltip } from 'antd';
-import { PlusOutlined, ClockCircleTwoTone, CloseCircleTwoTone, PauseCircleTwoTone } from '@ant-design/icons';
+import { PlusOutlined, ClockCircleTwoTone, PauseCircleTwoTone } from '@ant-design/icons';
 import AEBlock from '../components/modals/AEBlock'
 import dayjs from 'dayjs'
 
@@ -11,6 +11,7 @@ function TalentBlockList() {
     // 操作权限
     const editPower = (localStorage.getItem('company') === '总公司' && localStorage.getItem('department') === '事业部') || localStorage.getItem('position') === '管理员' ? true : false
     const examPower = (localStorage.getItem('position') === '副总' && localStorage.getItem('department') === '事业部') || localStorage.getItem('position') === '管理员' ? true : false
+    const releasePower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
     let columns = [
@@ -18,10 +19,10 @@ function TalentBlockList() {
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
         {
             title: '拉黑原因',
-            dataIndex: 'note',
-            key: 'note',
+            dataIndex: 'reason_b',
+            key: 'reason_b',
             render: (_, record) => (
-                <Tooltip title={record.note}>
+                <Tooltip title={record.reason_b}>
                     <div style={{
                         textOverflow: 'ellipsis',
                         overflow: 'hidden',
@@ -29,12 +30,31 @@ function TalentBlockList() {
                         cursor: 'pointer'
                     }}
                     >
-                        {record.note}
+                        {record.reason_b}
                     </div>
                 </Tooltip>
             )
         },
-        { title: '拉黑人', dataIndex: 'u_name', key: 'u_name' },
+        { title: '拉黑人', dataIndex: 'u_name_b', key: 'u_name_b' },
+        {
+            title: '释放原因',
+            dataIndex: 'reason_r',
+            key: 'reason_r',
+            render: (_, record) => (
+                <Tooltip title={record.reason_r}>
+                    <div style={{
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer'
+                    }}
+                    >
+                        {record.reason_r}
+                    </div>
+                </Tooltip>
+            )
+        },
+        { title: '释放人', dataIndex: 'u_name_r', key: 'u_name_r' },
         {
             title: '状态',
             dataIndex: 'status',
@@ -51,28 +71,47 @@ function TalentBlockList() {
             title: '操作',
             key: 'action',
             render: (_, record) => (
-                examPower && record.status.match('待审批') ? <Space size="large">
-                    <a onClick={() => {
-                        if (record.bid[0] === 'B') {
-                            examBlockAPI(record.bid, record.name, record.create_uid, true, null);
-                        } else {
-                            examTalentAPI(record.bid, record.create_uid, true, null);
-                        }
-                    }}>通过</a>
-                    <a onClick={() => {
+                record.status && <Space size="large">
+                    {examPower && record.status.match('待审批') ? <Space size="large">
+                        <a onClick={() => {
+                            if (record.status.match('拉黑')) {
+                                if (record.bid[0] === 'B') {
+                                    examBlockAPI(record.bid, record.u_id_b, record.status, true, null);
+                                } else {
+                                    examTalentAPI(record.bid, record.u_id_b, record.status, true, null);
+                                }
+                            } else {
+                                if (record.bid[0] === 'B') {
+                                    examBlockAPI(record.bid, record.u_id_r, record.status, true, null);
+                                } else {
+
+                                }
+                            }
+                        }}>通过</a>
+                        <a onClick={() => {
+                            setClickBid(record.bid);
+                            setClickUid(record.status === '拉黑待审批' ? record.u_id_b : record.u_id_r);
+                            setClickStatus(record.status);
+                            setReasonType('refund');
+                            setIsShowReason(true);
+                        }}>驳回</a>
+                    </Space> : null}
+                    {editPower && !record.status.match('待审批') && record.bid[0] === 'B' ? <a onClick={() => {
                         setClickBid(record.bid);
-                        setClickName(record.name);
-                        setClickUid(record.create_uid);
-                        setIsShowRefund(true);
-                    }}>驳回</a>
-                </Space> : editPower ? <Space size="large">
-                    <a onClick={() => {
-                        setEditOri(record);
+                        setEditOri({
+                            bid: record.bid,
+                            name: record.name,
+                            reason: record.reason_b
+                        });
                         setType('edit');
                         setIsShow(true);
-                        form.setFieldsValue(record)
-                    }}>修改信息</a>
-                </Space> : null
+                        form.setFieldsValue({
+                            ...record,
+                            reason: record.reason_b
+                        })
+                    }}>修改信息</a> : null}
+                    {releasePower && !record.status.match('待审批') ? <a onClick={() => { setClickBid(record.bid); setReasonType('release'); setIsShowReason(true); }}>申请释放</a> : null}
+                </Space>
             )
         }
     ]
@@ -183,12 +222,15 @@ function TalentBlockList() {
         })
     }
     const [editOri, setEditOri] = useState(false)
-    const editBlockAPI = (payload) => {
+    const editBlockAPI = (operate, ori, payload) => {
         request({
             method: 'post',
             url: '/block/editBlock',
             data: {
-                ...payload,
+                bid: clickBid,
+                operate,
+                ori,
+                new: payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     e_id: localStorage.getItem('e_id'),
@@ -214,22 +256,14 @@ function TalentBlockList() {
             console.error(err)
         })
     }
-    // 审批
-    const [isShowRefund, setIsShowRefund] = useState(false)
-    const [refundReason, setRefundReason] = useState()
-    const [clickBid, setClickBid] = useState()
-    const [clickName, setClickName] = useState()
-    const [clickUid, setClickUid] = useState()
-    const examBlockAPI = (bid, name, uid, exam, note) => {
+    // 释放
+    const releaseTalentAPI = (bid, reason) => {
         request({
             method: 'post',
-            url: '/block/examBlock',
+            url: '/block/releaseTalent',
             data: {
                 bid,
-                name,
-                exam,
-                note,
-                uid,
+                reason,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     e_id: localStorage.getItem('e_id'),
@@ -242,10 +276,9 @@ function TalentBlockList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setIsShowRefund(false);
-                    setRefundReason();
+                    setIsShowReason(false);
+                    setReason();
                     setClickBid();
-                    setClickName();
                     setClickUid();
                     getTalentBlockListAPI();
                     message.success(res.data.msg)
@@ -259,12 +292,95 @@ function TalentBlockList() {
             console.error(err)
         })
     }
-    const examTalentAPI = (tid, uid, exam, note) => {
+    const editTalentAPI = (operate, ori, payload) => {
+        request({
+            method: 'post',
+            url: '/talent/editTalent',
+            data: {
+                tid: clickBid,
+                operate,
+                ori,
+                new: payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShowReason(false);
+                    setReason();
+                    setClickBid();
+                    setClickUid();
+                    getTalentBlockListAPI();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    // 审批
+    const [isShowReason, setIsShowReason] = useState(false)
+    const [reasonType, setReasonType] = useState()
+    const [reason, setReason] = useState()
+    const [clickBid, setClickBid] = useState()
+    const [clickUid, setClickUid] = useState()
+    const [clickStatus, setClickStatus] = useState()
+    const examBlockAPI = (bid, uid, type, exam, reason) => {
+        request({
+            method: 'post',
+            url: '/block/examBlock',
+            data: {
+                bid,
+                exam,
+                reason,
+                uid,
+                type,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShowReason(false);
+                    setReason();
+                    setClickBid();
+                    setClickUid();
+                    getTalentBlockListAPI();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const examTalentAPI = (tid, uid, status, exam, note) => {
         request({
             method: 'post',
             url: '/talent/examTalent',
             data: {
                 tid,
+                status,
                 exam,
                 note: exam ? null : note,
                 uid,
@@ -280,10 +396,9 @@ function TalentBlockList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setIsShowRefund(false);
-                    setRefundReason();
+                    setIsShowReason(false);
+                    setReason();
                     setClickBid();
-                    setClickName();
                     setClickUid();
                     getTalentBlockListAPI();
                     message.success(res.data.msg)
@@ -358,46 +473,44 @@ function TalentBlockList() {
                         addBlockAPI(values);
                     } else {
                         let ori = editOri
-                        delete ori.create_time
-                        delete ori.status
-                        delete ori.u_id
-                        delete ori.u_name
-                        values["history_other_info"] = form.getFieldValue('history_other_info')
-                        let z = {}
+                        let z = {}, y = {}
                         for (const o in ori) {
                             if (Object.hasOwnProperty.call(ori, o)) {
                                 for (const v in values) {
                                     if (Object.hasOwnProperty.call(values, v)) {
                                         if (o === v && ori[o] !== values[v]) {
                                             z[o] = ori[o]
+                                            y[o] = values[o]
                                         }
                                     }
                                 }
                             }
                         }
-                        if (Object.keys(z).length !== 0) {
-                            z['userInfo'] = `${localStorage.getItem('name')}_${dayjs().valueOf()}`
-                        }
-                        if (`${ori["history_other_info"]}*${JSON.stringify(z)}`.length > 1024) {
-                            message.error('字段存储空间不足，请联系开发人员')
-                        } else {
-                            editBlockAPI({
-                                ...values,
-                                history_other_info: `${ori["history_other_info"]}*${JSON.stringify(z)}`
-                            });
-                        }
+                        editBlockAPI('修改信息', JSON.stringify(z), y);
                     }
                 }}
                 onCancel={() => { setIsShow(false); form.resetFields(); }}
             />
-            <Modal title="驳回原因" open={isShowRefund} onOk={() => {
-                if (clickBid[0] === 'B') {
-                    examBlockAPI(clickBid, clickName, clickUid, false, refundReason);
-                } else {
-                    examTalentAPI(clickBid, clickUid, false, refundReason);
+            <Modal title={reasonType && reasonType === 'refund' ? "驳回原因" : "释放原因"} open={isShowReason} onOk={() => {
+                if (reasonType === 'refund') {
+                    if (clickBid[0] === 'B') {
+                        examBlockAPI(clickBid, clickUid, clickStatus, false, reason);
+                    } else {
+                        examTalentAPI(clickBid, clickUid, clickStatus, false, reason);
+                    }
+                } else if (reasonType === 'release') {
+                    if (!reason || reason === '') {
+                        message.error('请输入释放原因')
+                    } else {
+                        if (clickBid[0] === 'B') {
+                            releaseTalentAPI(clickBid, reason);
+                        } else {
+                            editTalentAPI('拉黑释放', null, { block_note: reason });
+                        }
+                    }
                 }
-            }} onCancel={() => { setIsShowRefund(false); setRefundReason(''); }}>
-                <TextArea placeholder="请输入" value={refundReason} onChange={(e) => { setRefundReason(e.target.value); }} />
+            }} onCancel={() => { setIsShowReason(false); setReason(''); }}>
+                <TextArea placeholder="请输入" maxLength={255} value={reason} onChange={(e) => { setReason(e.target.value); }} />
             </Modal>
         </Fragment>
     )

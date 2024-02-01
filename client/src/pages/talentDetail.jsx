@@ -476,7 +476,6 @@ function TalentDetail() {
             url: '/talent/examTalent',
             data: {
                 tid,
-                tsid: detailData.tsid,
                 status: detailData.status,
                 exam,
                 note: exam ? null : note,

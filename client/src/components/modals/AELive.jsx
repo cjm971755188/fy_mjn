@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import request from '../../service/request'
-import { Form, Input, Modal, DatePicker, Radio, Popover, Select, List, InputNumber, Space } from 'antd';
+import { Form, Input, Modal, DatePicker, Radio, Popover, Select, List, InputNumber, Space, Card } from 'antd';
 import { placeType, roomType } from '../../baseData/live'
 import dayjs from 'dayjs'
 
@@ -375,30 +375,42 @@ function AELive(props) {
                 <Form.Item label="实际销售额（万）" name="sales" rules={[{ required: true, message: '不能为空' }]}>
                     <InputNumber placeholder="请输入" min={0} />
                 </Form.Item>
-                <Form.Item label="常规品线上佣金比例（%）[例：20]" name="commission_normal_on" rules={[{ required: true, message: '不能为空' }]}>
-                    <InputNumber min={0} max={100} />
-                </Form.Item>
-                <Form.Item label="福利品线上佣金比例（%）[例：20]" name="commission_welfare_on" rules={[{ required: true, message: '不能为空' }]}>
-                    <InputNumber min={0} max={100} />
-                </Form.Item>
-                <Form.Item label="爆品线上佣金比例（%）[例：20]" name="commission_bao_on" rules={[{ required: true, message: '不能为空' }]}>
-                    <InputNumber min={0} max={100} />
-                </Form.Item>
-                <Form.Item label="线上佣金备注" name="commission_note_on">
-                    <TextArea placeholder="请输入" />
-                </Form.Item>
-                <Form.Item label="常规品线下佣金比例（%）[例：20]" name="commission_normal_down" rules={[{ required: true, message: '不能为空' }]}>
-                    <InputNumber min={0} max={100} />
-                </Form.Item>
-                <Form.Item label="福利品线下佣金比例（%）[例：20]" name="commission_welfare_down" rules={[{ required: true, message: '不能为空' }]}>
-                    <InputNumber min={0} max={100} />
-                </Form.Item>
-                <Form.Item label="爆品线下佣金比例（%）[例：20]" name="commission_bao_down" rules={[{ required: true, message: '不能为空' }]}>
-                    <InputNumber min={0} max={100} />
-                </Form.Item>
-                <Form.Item label="线下佣金备注" name="commission_note_down">
-                    <TextArea placeholder="请输入" />
-                </Form.Item>
+                <Card title="线上佣金">
+                    <Form.Item label="常规品线上佣金比例（%）[例：20]" name="commission_normal_on" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber min={0} max={100} />
+                    </Form.Item>
+                    <Form.Item label="福利品线上佣金比例（%）[例：20]" name="commission_welfare_on" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber min={0} max={100} />
+                    </Form.Item>
+                    <Form.Item label="爆品线上佣金比例（%）[例：20]" name="commission_bao_on" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber min={0} max={100} />
+                    </Form.Item>
+                    <Form.Item label="佣金备注" name="commission_note_on">
+                        <TextArea placeholder="请输入" />
+                    </Form.Item>
+                </Card>
+                <Card title="线下佣金" style={{ marginTop: '20px' }}>
+                    <Form.Item label="常规品线下佣金比例（%）[例：20]" name="commission_normal_down" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber min={0} max={100} />
+                    </Form.Item>
+                    <Form.Item label="福利品线下佣金比例（%）[例：20]" name="commission_welfare_down" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber min={0} max={100} />
+                    </Form.Item>
+                    <Form.Item label="爆品线下佣金比例（%）[例：20]" name="commission_bao_down" rules={[{ required: true, message: '不能为空' }]}>
+                        <InputNumber min={0} max={100} />
+                    </Form.Item>
+                    <Form.Item label="佣金备注" name="commission_note_down">
+                        <TextArea placeholder="请输入" />
+                    </Form.Item>
+                </Card>
+                <Card title="特殊活动额外佣金[例：不投流、不满赠……]" style={{ margin: '20px 0' }}>
+                    <Form.Item label="额外佣金（%）[例：2]" name="commission_other">
+                        <InputNumber min={0} max={100} />
+                    </Form.Item>
+                    <Form.Item label="佣金备注" name="commission_note_other">
+                        <TextArea placeholder="请输入" />
+                    </Form.Item>
+                </Card>
                 <Space size='large'>
                     <Form.Item label="主商务" name="u_id_1" rules={[{ required: true, message: '不能为空' }]} >
                         <Select style={{ width: 160 }} placeholder="请选择" options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(true); }} />

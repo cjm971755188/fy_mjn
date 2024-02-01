@@ -31,36 +31,14 @@ router.post('/getMiddlemanList', (req, res) => {
     // 分页
     let current = params.pagination.current ? params.pagination.current : 0
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
-    let sql = `SELECT z.* FROM (
-                SELECT m.* FROM (
-                    SELECT a.mid FROM (
-                        (SELECT m.mid , m.u_id as u_id_1, null as u_id_2 FROM middleman m)
-                        UNION
-                        (SELECT m1.mid, tms0.u_id_1, tms0.u_id_2
-                            FROM talent t
-                                LEFT JOIN (SELECT tid, MAX(tsid) tsid FROM talent_schedule ts GROUP BY tid) ts1 ON ts1.tid = t.tid
-                                LEFT JOIN talent_schedule ts0 ON ts0.tsid = ts1.tsid
-                                LEFT JOIN middleman m1 ON m1.mid = ts0.m_id_1
-                                LEFT JOIN talent_model tm ON tm.tid = t.tid
-                                LEFT JOIN (SELECT tmid, MAX(tmsid) tmsid FROM talent_model_schedule tms GROUP BY tmid) tms1 ON tms1.tmid = tm.tmid
-                                LEFT JOIN talent_model_schedule tms0 ON tms0.tmsid = tms1.tmsid)
-                        UNION
-                        (SELECT m2.mid, tms0.u_id_1, tms0.u_id_2
-                            FROM talent t
-                                LEFT JOIN (SELECT tid, MAX(tsid) tsid FROM talent_schedule ts GROUP BY tid) ts1 ON ts1.tid = t.tid
-                                LEFT JOIN talent_schedule ts0 ON ts0.tsid = ts1.tsid
-                                LEFT JOIN middleman m2 ON m2.mid = ts0.m_id_2
-                                LEFT JOIN talent_model tm ON tm.tid = t.tid
-                                LEFT JOIN (SELECT tmid, MAX(tmsid) tmsid FROM talent_model_schedule tms GROUP BY tmid) tms1 ON tms1.tmid = tm.tmid
-                                LEFT JOIN talent_model_schedule tms0 ON tms0.tmsid = tms1.tmsid)
-                    ) a
-                        INNER JOIN (SELECT * FROM user ${whereUser}) u1 ON u1.uid = a.u_id_1
-                        LEFT JOIN (SELECT * FROM user ${whereUser}) u2 ON u2.uid = a.u_id_2
-                    GROUP BY a.mid
-                    ) b
-                        LEFT JOIN middleman m ON m.mid = b.mid
+    let sql = `SELECT z.* 
+                FROM (
+                    SELECT m.*, u.name as u_name
+                    FROM middleman m
+                        INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid  = m.u_id
                 ) z
-                ${whereFilter}`
+                ${whereFilter}
+                ORDER BY z.mid DESC`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`
@@ -88,7 +66,10 @@ router.post('/addMiddleman', (req, res) => {
                 let can_piao = params.can_piao ? `'${params.can_piao}'` : null
                 let piao_type = params.piao_type ? `'${params.piao_type}'` : null
                 let shui_point = params.shui_point ? `'${params.shui_point}'` : null
-                let sql = `INSERT INTO middleman values('${mid}', '${params.type}', '${params.name}', '${params.liaison_name}', '${params.liaison_v}', ${liaison_phone}, '${params.pay_way}', ${can_piao}, ${piao_type}, ${shui_point}, '${params.pay_name}', '${params.pay_bank}', '${params.pay_account}', null, '正常', '${params.userInfo.uid}', '${dayjs().valueOf()}')`
+                let pay_name = params.pay_name ? `'${params.pay_name}'` : null
+                let pay_bank = params.pay_bank ? `'${params.pay_bank}'` : null
+                let pay_account = params.pay_account ? `'${params.pay_account}'` : null
+                let sql = `INSERT INTO middleman values('${mid}', '${params.type}', '${params.name}', '${params.liaison_name}', '${params.liaison_v}', ${liaison_phone}, '${params.pay_way}', ${can_piao}, ${piao_type}, ${shui_point}, ${pay_name}, ${pay_bank}, ${pay_account}, null, '正常', '${params.userInfo.uid}', '${dayjs().valueOf()}')`
                 db.query(sql, (err, results) => {
                     if (err) throw err;
                     res.send({ code: 200, data: [], msg: `` })
@@ -111,7 +92,10 @@ router.post('/editMiddleman', (req, res) => {
             let can_piao = params.can_piao ? `'${params.can_piao}'` : null
             let piao_type = params.piao_type ? `'${params.piao_type}'` : null
             let shui_point = params.shui_point ? `'${params.shui_point}'` : null
-            let sql = `UPDATE middleman SET type = '${params.type}', name = '${params.name}', liaison_name = '${params.liaison_name}', liaison_v = '${params.liaison_v}', liaison_phone = ${liaison_phone}, pay_way = '${params.pay_way}', can_piao = ${can_piao}, piao_type = ${piao_type}, shui_point = ${shui_point}, pay_name = '${params.pay_name}', pay_bank = '${params.pay_bank}', pay_account = '${params.pay_account}', history_other_info = '${params.history_other_info}' WHERE mid = '${params.mid}'`
+            let pay_name = params.pay_name ? `'${params.pay_name}'` : null
+            let pay_bank = params.pay_bank ? `'${params.pay_bank}'` : null
+            let pay_account = params.pay_account ? `'${params.pay_account}'` : null
+            let sql = `UPDATE middleman SET type = '${params.type}', name = '${params.name}', liaison_name = '${params.liaison_name}', liaison_v = '${params.liaison_v}', liaison_phone = ${liaison_phone}, pay_way = '${params.pay_way}', can_piao = ${can_piao}, piao_type = ${piao_type}, shui_point = ${shui_point}, pay_name = ${pay_name}, pay_bank = ${pay_bank}, pay_account = ${pay_account}, history_other_info = '${params.history_other_info}' WHERE mid = '${params.mid}'`
             db.query(sql, (err, results) => {
                 if (err) throw err;
                 res.send({ code: 200, data: [], msg: `` })

@@ -42,7 +42,7 @@ export const platform = [
     { key: 6, label: "淘宝", value: "淘宝" },
     { key: 7, label: "微店", value: "微店" },
     { key: 8, label: "有赞", value: "有赞" },
-    { key: 9, label: "聚水潭", value: "聚水潭" }
+    { key: 9, label: "小红书", value: "小红书" }
 ]
 
 export const shop = [

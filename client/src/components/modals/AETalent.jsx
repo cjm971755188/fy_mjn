@@ -35,29 +35,24 @@ function AETalent(props) {
                         message.success(res.data.msg)
                     } else if (type === 'finish') {
                         if (res.data.data.length === 0) {
-                            if (props.type === 'history') {
+                            let z = 0
+                            if (form.getFieldValue('models').join().match('线上平台')) {
+                                if (form.getFieldValue('accounts') === undefined) {
+                                    message.error('线上平台模式，信息缺失！')
+                                    z++
+                                }
+                            }
+                            if (form.getFieldValue('models').join().match('社群团购') && form.getFieldValue('group_name') === undefined) {
+                                message.error('社群团购模式，信息缺失！')
+                                z++
+                            }
+                            if (form.getFieldValue('models').join().match('供货') && form.getFieldValue('provide_name') === undefined) {
+                                message.error('供货模式，信息缺失！')
+                                z++
+                            }
+                            if (z === 0) {
                                 props.onOK(values);
                                 reset();
-                            } else {
-                                let z = 0
-                                if (form.getFieldValue('models').join().match('线上平台')) {
-                                    if (form.getFieldValue('accounts') === undefined) {
-                                        message.error('线上平台模式，信息缺失！')
-                                        z++
-                                    }
-                                }
-                                if (form.getFieldValue('models').join().match('社群团购') && form.getFieldValue('group_name') === undefined) {
-                                    message.error('社群团购模式，信息缺失！')
-                                    z++
-                                }
-                                if (form.getFieldValue('models').join().match('供货') && form.getFieldValue('provide_name') === undefined) {
-                                    message.error('供货模式，信息缺失！')
-                                    z++
-                                }
-                                if (z === 0) {
-                                    props.onOK(values);
-                                    reset();
-                                }
                             }
                         }
                     } else {
@@ -609,7 +604,7 @@ function AETalent(props) {
                                         <List.Item.Meta
                                             avatar={<Image width={50} src={people} preview={false} />}
                                             title={<Space size={'large'}><span>{`编号: ${item.tmid}`}</span><span>{`状态: ${item.status}`}</span><span>{`${item.status === '已拉黑' ? '拉黑人' : '商务'}: ${item.u_name}`}</span></Space>}
-                                            description={<Space size={'large'} style={{ color: `${item.status === '已拉黑' ? 'red' : ''}`}}>{item.status === '已拉黑' ? <><span>{`原因: ${item.note}`}</span><span>{`重复名称/ID: ${item.name}`}</span></> :
+                                            description={<Space size={'large'} style={{ color: `${item.status === '已拉黑' ? 'red' : ''}` }}>{item.status === '已拉黑' ? <><span>{`原因: ${item.note}`}</span><span>{`重复名称/ID: ${item.name}`}</span></> :
                                                 <><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}
                                                     <span>{`重复名称/ID: ${item.account_name || item.group_name || item.provide_name}`}</span></>}</Space>}
                                         />

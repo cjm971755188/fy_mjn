@@ -21,25 +21,21 @@ router.post('/getChanceList', (req, res) => {
         }
     }
     // 条件筛选
-    let whereFilter = `where c.status != '已失效' and c.status != '已拉黑'`
+    let whereFilter = `where z.status != '已失效'`
     if (params.filtersDate && params.filtersDate.length === 2) {
-        whereFilter += ` and c.create_time >= '${params.filtersDate[0]}' and c.create_time < '${params.filtersDate[1]}'`
+        whereFilter += ` and z.create_time >= '${params.filtersDate[0]}' and z.create_time < '${params.filtersDate[1]}'`
     }
     for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
         if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
-            whereFilter += ` and c.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
+            whereFilter += ` and z.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
         } else {
-            whereFilter += ` and c.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
+            whereFilter += ` and z.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
         }
     }
     // 分页
     let current = params.pagination.current ? params.pagination.current : 0
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
-    let sql = `SELECT c.*, u.name 
-                FROM chance c 
-                    INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = c.u_id
-                ${whereFilter}
-                ORDER BY c.cid DESC`
+    let sql = `SELECT * FROM (SELECT c.*, u.name FROM chance c INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = c.u_id) z ${whereFilter} ORDER BY z.cid DESC`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`
@@ -63,7 +59,6 @@ router.post('/searchSameChance', (req, res) => {
     let r = [], r_name = ''
     for (let i = 0; i < names.length; i++) {
         if (params.type === 'chance') {
-            filter = `c.account_names LIKE '%${names[i]}%' OR c.group_name LIKE '%${names[i]}%' OR c.provide_name LIKE '%${names[i]}%'`
             /* (SELECT	c.cid, '' as name, c.models, c.platforms, null as account_ids, c.account_names, c.group_name, c.provide_name, u.name as u_name, c.status
             FROM	chance c
                 LEFT JOIN user u ON u.uid = c.u_id
@@ -79,9 +74,11 @@ router.post('/searchSameChance', (req, res) => {
                         WHERE	(tm.account_name LIKE '%${names[i]}%' OR tm.group_name LIKE '%${names[i]}%' OR tm.provide_name LIKE '%${names[i]}%')
                             and tm.status != '已失效')
                     UNION
-                    (SELECT	b.bid, b.name, '', '', '', '', '', '', u.name as u_name, b.status, note
+                    (SELECT	b.bid, b.name, '', '', '', '', '', '', u.name as u_name, b.status, bs1.reason
                         FROM block b
-                            LEFT JOIN user u ON u.uid = b.create_uid
+                            LEFT JOIN (SELECT bid, MAX(bsid) as bsid FROM block_schedule WHERE operate != '拉黑释放' and status = '生效中' GROUP BY bid) bs0 ON bs0.bid = b.bid
+                            LEFT JOIN block_schedule bs1 ON bs1.bsid = bs0.bsid
+                            LEFT JOIN user u ON u.uid = bs1.create_uid
                         WHERE b.name LIKE '%${names[i]}%'
                             and b.status = '已拉黑')`
         } else if (params.type === 'talent') {
@@ -99,9 +96,11 @@ router.post('/searchSameChance', (req, res) => {
                     WHERE	(${filter})
                         and tm.status != '已失效')
                     UNION
-                    (SELECT	b.bid, b.name, '', '', '', '', '', '', u.name as u_name, b.status, note
+                    (SELECT	b.bid, b.name, '', '', '', '', '', '', u.name as u_name, b.status, bs1.reason
                         FROM block b
-                            LEFT JOIN user u ON u.uid = b.create_uid
+                            LEFT JOIN (SELECT bid, MAX(bsid) as bsid FROM block_schedule WHERE operate != '拉黑释放' and status = '生效中' GROUP BY bid) bs0 ON bs0.bid = b.bid
+                            LEFT JOIN block_schedule bs1 ON bs1.bsid = bs0.bsid
+                            LEFT JOIN user u ON u.uid = bs1.create_uid
                         WHERE b.name LIKE '%${names[i]}%'
                             and b.status = '已拉黑')`
         } else if (params.type.match('model')) {
@@ -116,9 +115,11 @@ router.post('/searchSameChance', (req, res) => {
                     WHERE	(${filter})
                         and tm.status != '已失效')
                     UNION
-                    (SELECT	b.bid, b.name, '', '', '', '', '', '', u.name as u_name, b.status, note
+                    (SELECT	b.bid, b.name, '', '', '', '', '', '', u.name as u_name, b.status, bs1.reason
                         FROM block b
-                            LEFT JOIN user u ON u.uid = b.create_uid
+                            LEFT JOIN (SELECT bid, MAX(bsid) as bsid FROM block_schedule WHERE operate != '拉黑释放' and status = '生效中' GROUP BY bid) bs0 ON bs0.bid = b.bid
+                            LEFT JOIN block_schedule bs1 ON bs1.bsid = bs0.bsid
+                            LEFT JOIN user u ON u.uid = bs1.create_uid
                         WHERE b.name LIKE '%${names[i]}%'
                             and b.status = '已拉黑')`
         }

@@ -32,7 +32,8 @@ export const province = [
     { key: 30, label: "宁夏回族自治区", value: "宁夏回族自治区" },
     { key: 31, label: "新疆维吾尔自治区", value: "新疆维吾尔自治区" },
     { key: 32, label: "香港特别行政区", value: "香港特别行政区" },
-    { key: 33, label: "澳门特别行政区", value: "澳门特别行政区" }
+    { key: 33, label: "澳门特别行政区", value: "澳门特别行政区" },
+    { key: 34, label: "海外", value: "海外" }
 ]
 
 export const weeks = [

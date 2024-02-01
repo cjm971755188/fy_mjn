@@ -36,32 +36,32 @@ function TalentList() {
         },
         {
             title: '商务',
-            dataIndex: 'u_names',
-            key: 'u_names',
+            dataIndex: 'u_name',
+            key: 'u_name',
             render: (_, record) => (
                 <Popover title="商务信息" content={
                     <List>
-                        <List.Item>主商务：{record.u_name_1}</List.Item>
-                        <List.Item>副商务：{record.u_name_2}</List.Item>
-                        <List.Item>原商务：{record.u_name_0}</List.Item>
+                        <List.Item>主商务：{record.u_name_1 ? `${record.u_name_1}(${record.u_point_1}%)` : null}</List.Item>
+                        <List.Item>副商务：{record.u_name_2 ? `${record.u_name_2}(${record.u_point_2}%)` : null}</List.Item>
+                        <List.Item>原商务：{record.u_name_0 ? `${record.u_name_0}(${record.u_point_0}%)` : null}</List.Item>
                     </List>}
                 >
-                    <span>{record.u_names}</span>
+                    <span>{record.u_name_1}{record.u_name_2 ? `, ${record.u_name_2}` : null}{record.u_name_0 ? `, ${record.u_name_0}` : null}</span>
                 </Popover>
             )
         },
         {
             title: '中间人',
-            dataIndex: 'm_names',
-            key: 'm_names',
+            dataIndex: 'm_name',
+            key: 'm_name',
             render: (_, record) => (
                 <Popover title="中间人信息" content={
                     <List>
-                        <List.Item>一级中间人：{record.m_name_1}</List.Item>
-                        <List.Item>二级中间人：{record.m_name_2}</List.Item>
+                        <List.Item>一级中间人：{record.m_name_1 ? `${record.m_name_1}(${record.m_point_1}%)` : null}</List.Item>
+                        <List.Item>二级中间人：{record.m_name_2 ? `${record.m_name_2}(${record.m_point_2}%)` : null}</List.Item>
                     </List>}
                 >
-                    <span>{record.m_names}</span>
+                    <span>{record.m_name_1 ? `${record.m_name_1}` : null}{record.m_name_2 ? `, ${record.m_name_2}` : null}</span>
                 </Popover>
             )
         },
@@ -130,12 +130,16 @@ function TalentList() {
                 <Space size="large">
                     {examPower && record.status.match('待审批') ? <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> :
                         record.status === '报备驳回' || record.status === '已撤销' ? null : <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>查看详情</NavLink>}
-                    {editPower && record.status === '报备待审批' ? <Popconfirm
+                    {editPower && record.status.match('待审批') ? <Popconfirm
                         title="确认要撤销该申请吗"
                         okText="撤销"
                         cancelText="取消"
                         onConfirm={() => {
-                            revokeReportAPI({ tid: record.tid });
+                            if (record.status === '报备待审批') {
+                                revokeReportAPI({ tid: record.tid });
+                            } else {
+                                revokeOthersAPI({ tid: record.tid });
+                            }
                         }}
                     >
                         <a>撤销</a>
@@ -465,6 +469,34 @@ function TalentList() {
             console.error(err)
         })
     };
+    // 撤销其他
+    const revokeOthersAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/talent/revokeOthers',
+            data: {
+                tid: payload.tid,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    getTalentListAPI();
+                } else {
+                    message.error(res.data.msg)
+                }
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    };
     // 获取上次报备信息
     const getReportInfoAPI = (payload) => {
         request({
@@ -705,12 +737,8 @@ function TalentList() {
                     <Form.Item label='达人层级' name='type'>
                         <Select style={{ width: 160 }} options={talentType} />
                     </Form.Item>
-                    {editPower ? null : <Form.Item label='商务' name='u_ids' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
-                    </Form.Item>}
-                    <Form.Item label='中间人' name='m_ids' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={middlemansItems} onFocus={() => { getmiddlemansItemsAPI(); }} />
-                    </Form.Item>
+                    {editPower ? null : <Form.Item label='商务' name='u_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>}
+                    <Form.Item label='中间人' name='m_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='年框状态' name='yearbox_status'>
                         <Select style={{ width: 160 }} options={yearboxStatus} />
                     </Form.Item>

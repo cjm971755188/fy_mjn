@@ -33,9 +33,9 @@ function AEMiddleman(props) {
                 if (values.pay_bank === '支付宝') {
                     props.onOK(values);
                     reset();
-                } else if (!values.pay_bank.match('银行')) {
+                } else if (values.pay_bank && !values.pay_bank.match('银行')) {
                     message.error('请填写正确的银行名称')
-                } else if (values.pay_bank.split('银行')[1] === '') {
+                } else if (values.pay_bank && values.pay_bank.split('银行')[1] === '') {
                     message.error('请填写到xx银行xx支行')
                 } else {
                     props.onOK(values);
@@ -64,6 +64,7 @@ function AEMiddleman(props) {
                     <Radio.Group onChange={(e) => { setPayWay(e.target.value); }} value={payWay}>
                         <Radio value={'对公'}>对公</Radio>
                         <Radio value={'对私'}>对私</Radio>
+                        <Radio value={'线上结算'}>线上结算</Radio>
                     </Radio.Group>
                 </Form.Item>
                 {payWay === '对公' ? <><Form.Item label="能否开票" name="can_piao" rules={[{ required: true, message: '不能为空' }]}>
@@ -81,7 +82,7 @@ function AEMiddleman(props) {
                         <Form.Item label="税点（%）" name="shui_point" rules={[{ required: true, message: '不能为空' }]}>
                             <InputNumber placeholder="请输入" min={0} max={100} />
                         </Form.Item></> : null}</> : null}
-                <Form.Item label="收款姓名" name="pay_name" rules={[{ required: true, message: '不能为空' }]}>
+                {payWay === '线上结算' ? null : <><Form.Item label="收款姓名" name="pay_name" rules={[{ required: true, message: '不能为空' }]}>
                     <Input placeholder="请输入" />
                 </Form.Item>
                 <Form.Item label="开户行/“支付宝”" name="pay_bank" rules={[{ required: true, message: '不能为空' }]}>
@@ -89,7 +90,7 @@ function AEMiddleman(props) {
                 </Form.Item>
                 <Form.Item label="收款账号" name="pay_account" rules={[{ required: true, message: '不能为空' }]}>
                     <Input placeholder="请输入" />
-                </Form.Item>
+                </Form.Item></>}
             </Form>
         </Modal>
     )

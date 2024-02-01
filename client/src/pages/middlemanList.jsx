@@ -52,6 +52,7 @@ function MiddlemanList() {
                 </Popover>
             )
         },
+        { title: '商务', dataIndex: 'u_name', key: 'u_name' },
         {
             title: '操作',
             key: 'action',

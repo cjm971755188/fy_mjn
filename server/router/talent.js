@@ -8,16 +8,16 @@ const sendRobot = require('../api/ddrobot')
 router.post('/getTalentList', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where status != '失效' and status != '测试'`
+    let whereUser = ``
     if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
         if (params.userInfo.position === '副总') {
-            whereUser += ` and department = '${params.userInfo.department}'`
+            whereUser += `WHERE u0.department = '${params.userInfo.department}' or u1.department = '${params.userInfo.department}' or u2.department = '${params.userInfo.department}'`
         }
         if (params.userInfo.position === '主管') {
-            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+            whereUser += `WHERE (u0.department = '${params.userInfo.department}' and u0.company = '${params.userInfo.company}') or (u1.department = '${params.userInfo.department}' and u1.company = '${params.userInfo.company}') or (u2.department = '${params.userInfo.department}' and u2.company = '${params.userInfo.company}')`
         }
         if (params.userInfo.position === '商务') {
-            whereUser += ` and uid = '${params.userInfo.uid}'`
+            whereUser += `WHERE u0.uid = '${params.userInfo.uid}' or u1.uid = '${params.userInfo.uid}' or u2.uid = '${params.userInfo.uid}'`
         }
     }
     // 条件筛选
@@ -32,37 +32,33 @@ router.post('/getTalentList', (req, res) => {
     // 分页
     let current = params.pagination.current ? params.pagination.current : 0
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
-    let sql = `SELECT * FROM (
-                SELECT t.*, tm.models, CONCAT(ts.m_id_1, ',', ts.m_id_2) as m_ids, ts.m_name_1, ts.m_name_2, CONCAT(ts.m_name_1, ',', ts.m_name_2) as m_names, 
-                    IF(ts.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, 
-                    CONCAT(tm.u_id_1, ',', tm.u_id_2, ',', ts.u_id_0) as u_ids, CONCAT(tm.u_name_1, ',', tm.u_name_2, ',', ts.u_name_0) as u_names, tm.u_name_1, tm.u_name_2, ts.u_name_0, tm.model_status, COUNT(l.lid) as live_count, SUM(l.sales) as live_sum
-                FROM talent t
-                    LEFT JOIN (
-                        SELECT ts0.tid, IF(m1.mid IS NULL, '', m1.mid) as m_id_1, IF(m1.name IS NULL, '', m1.name) as m_name_1, IF(m2.mid IS NULL, '', m2.mid) as m_id_2, IF(m2.name IS NULL, '', m2.name) as m_name_2,
-                            IF(ts0.u_id_0 IS NULL, '', ts0.u_id_0) as u_id_0, IF(u0.name IS NULL, '', u0.name) as u_name_0, ts0.yearbox_start_date, ts0.yearbox_cycle, ts0.yearbox_lavels_base, ts0.yearbox_lavels
-                        FROM talent_schedule ts0
-                            INNER JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule GROUP BY tid) ts1 ON ts1.tsid = ts0.tsid
-                            LEFT JOIN middleman m1 ON m1.mid = ts0.m_id_1
-                            LEFT JOIN middleman m2 ON m2.mid = ts0.m_id_2
-                            LEFT JOIN user u0 ON u0.uid = ts0.u_id_0
-                    ) ts ON ts.tid = t.tid
-                    INNER JOIN (
-                        SELECT tm.tid, GROUP_CONCAT(DISTINCT tm.model) as models, GROUP_CONCAT(DISTINCT tms.u_id_1) as u_id_1, GROUP_CONCAT(DISTINCT tms.u_name_1) as u_name_1, 
-                            GROUP_CONCAT(DISTINCT tms.u_id_2) as u_id_2, GROUP_CONCAT(DISTINCT tms.u_name_2) as u_name_2, GROUP_CONCAT(DISTINCT IF(tm.model_files is null, '暂无', '生效中')) as model_status
-                        FROM talent_model tm
-                            INNER JOIN (
-                                SELECT tms0.tmid, IF(u1.uid IS NULL, '', u1.uid) as u_id_1, IF(u1.name IS NULL, '', u1.name) as u_name_1, IF(u2.uid IS NULL, '', u2.uid) as u_id_2, IF(u2.name IS NULL, '', u2.name) as u_name_2
-                                FROM talent_model_schedule tms0
-                                    INNER JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule GROUP BY tmid) tms1 ON tms1.tmsid = tms0.tmsid
-                                    INNER JOIN (SELECT * FROM user ${whereUser}) u1 ON u1.uid = tms0.u_id_1
-                                    LEFT JOIN user u2 ON u2.uid = tms0.u_id_2
-                            ) tms ON tms.tmid = tm.tmid
-                        GROUP BY tm.tid
-                    ) tm ON tm.tid = t.tid
+    let sql = `SELECT z.*
+                FROM (
+                    SELECT	t.tid, t.cid, t.name, GROUP_CONCAT(DISTINCT tm.model) as models, t.year_deal, t.type, 
+                        tms1.u_id_1, u1.name as u_name_1, GROUP_CONCAT(DISTINCT tms1.u_point_1) as u_point_1, 
+                        GROUP_CONCAT(DISTINCT tms1.u_id_2) as u_id_2, GROUP_CONCAT(DISTINCT u2.name) as u_name_2, GROUP_CONCAT(DISTINCT tms1.u_point_2) as u_point_2, 
+                        GROUP_CONCAT(DISTINCT ts1.u_id_0) as u_id_0, GROUP_CONCAT(DISTINCT u0.name) as u_name_0, GROUP_CONCAT(DISTINCT ts1.u_point_0) as u_point_0,
+                        CONCAT(u1.name, IF(GROUP_CONCAT(DISTINCT u2.name) IS NULL, '', GROUP_CONCAT(DISTINCT u2.name)), IF(GROUP_CONCAT(DISTINCT u0.name) IS NULL, '', GROUP_CONCAT(DISTINCT u0.name))) as u_names,
+                        GROUP_CONCAT(DISTINCT ts1.m_id_1) as m_id_1, GROUP_CONCAT(DISTINCT m1.name) as m_name_1, GROUP_CONCAT(DISTINCT ts1.m_point_1) as m_point_1, 
+                        GROUP_CONCAT(DISTINCT ts1.m_id_2) as m_id_2, GROUP_CONCAT(DISTINCT m2.name) as m_name_2, GROUP_CONCAT(DISTINCT ts1.m_point_2) as m_point_2,
+                        CONCAT(IF(GROUP_CONCAT(DISTINCT m1.name) IS NULL, '', GROUP_CONCAT(DISTINCT m1.name)), IF(GROUP_CONCAT(DISTINCT m2.name) IS NULL, '', GROUP_CONCAT(DISTINCT m2.name))) as m_names,
+                        IF(ts1.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels, 
+                        IF(tm.model_files IS NULL, '暂无', '生效中') as model_status, t.status, COUNT(DISTINCT l.lid) as live_count, SUM(l.sales) as live_sum
+                    FROM talent t
+                        LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule GROUP BY tid) ts0 ON ts0.tid = t.tid
+                    LEFT JOIN talent_schedule ts1 ON ts1.tsid = ts0.tsid
+                        LEFT JOIN middleman m1 ON m1.mid = ts1.m_id_1
+                        LEFT JOIN middleman m2 ON m2.mid = ts1.m_id_2
+                        LEFT JOIN user u0 ON u0.uid = ts1.u_id_0
+                        LEFT JOIN talent_model tm ON tm.tid = t.tid
+                        LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
+                    LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
+                        LEFT JOIN user u1 ON u1.uid = tms1.u_id_1
+                    LEFT JOIN user u2 ON u2.uid = tms1.u_id_2
                         LEFT JOIN live l ON l.tid = t.tid
-                GROUP BY t.cid, t.crowd_name, t.liaison_name, t.liaison_phone, t.liaison_type, t.liaison_v, m_ids, ts.m_name_1, ts.m_name_2, m_names, tm.model_status, tm.models, t.name, t.province, t.status, t.tid, t.type, u_ids, ts.u_name_0, tm.u_name_1, 
-                    tm.u_name_2, u_names, t.year_deal, ts.yearbox_cycle, ts.yearbox_lavels, ts.yearbox_lavels_base, ts.yearbox_start_date
-                ) z 
+                    ${whereUser}
+                    GROUP BY t.tid, t.cid, t.name, t.year_deal, t.type, tms1.u_id_1, u1.name, yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels, model_status, t.status
+                ) z
                 ${whereFilter}
                 ORDER BY z.tid DESC`
     db.query(sql, (err, results) => {
@@ -182,6 +178,8 @@ router.post('/editTalent', (req, res) => {
                                 isAdd = false
                                 if (key === 'yearbox_files') {
                                     sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i].replace('/public', '')}',`
+                                } else {
+                                    sql += Object.values(params.new)[i] === null ? ` null,` : ` '${Object.values(params.new)[i]}',`
                                 }
                             }
                         }
@@ -195,7 +193,7 @@ router.post('/editTalent', (req, res) => {
                             isAdd = false
                             sql += results[0][key] === null ? ` null,` : ` '${results[0][key]}',`
                         }
-                    } else if (params.operate.match('中间人') || params.operate.match('年框') || params.operate === '拉黑达人') {
+                    } else if (params.operate.match('中间人') || params.operate.match('年框') || params.operate === '拉黑达人' || params.operate === '拉黑释放') {
                         for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
                             if (isAdd && Object.keys(params.new)[i] === key) {
                                 isAdd = false
@@ -243,8 +241,8 @@ router.post('/editTalent', (req, res) => {
                     })
                 } else if (params.operate === '新增年框资料') {
                     res.send({ code: 200, data: [], msg: `${params.operate}成功` })
-                } else if (params.operate.match('中间人') || params.operate.match('年框') || params.operate === '拉黑达人') {
-                    let sql = `UPDATE talent set status = '${params.operate.match('中间人') ? '中间人待审批' : params.operate === '拉黑达人' ? '拉黑待审批' : '年框待审批'}' WHERE tid = '${params.tid}'`
+                } else if (params.operate.match('中间人') || params.operate.match('年框') || params.operate === '拉黑达人' || params.operate === '拉黑释放') {
+                    let sql = `UPDATE talent set status = '${params.operate.match('中间人') ? '中间人待审批' : params.operate === '拉黑达人' ? '拉黑待审批' : params.operate === '拉黑释放' ? '拉黑释放待审批' : '年框待审批'}' WHERE tid = '${params.tid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
                         let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
@@ -285,7 +283,7 @@ router.post('/examTalent', (req, res) => {
         if (err) throw err;
         let sql = `UPDATE talent_schedule 
                     SET examine_time = '${time}', examine_uid = '${params.userInfo.uid}', examine_result = '${params.exam ? '通过' : '驳回'}', examine_note = ${note}, status = '${params.exam ? '生效中' : '已失效'}' 
-                    WHERE tsid = '${params.tsid}' and status = '待审批'`
+                    WHERE tid = '${params.tid}' and status = '待审批'`
         db.query(sql, (err, results) => {
             if (err) throw err;
             let sql = `UPDATE talent SET status = IF(status = '拉黑待审批', '${params.exam ? '已拉黑' : '合作中'}', 
@@ -293,10 +291,11 @@ router.post('/examTalent', (req, res) => {
                         WHERE tid = '${params.tid}'`
             db.query(sql, (err, results) => {
                 if (err) throw err;
-                if (params.status === '报备待审批') {
+                if (params.status === '报备待审批' || params.status === '拉黑待审批') {
                     let sql = `UPDATE talent_model_schedule tms, talent_model tm
                                 SET tms.examine_time = '${time}', tms.examine_uid = '${params.userInfo.uid}', tms.examine_result = '${params.exam ? '通过' : '驳回'}', tms.examine_note = ${note}, tms.status = '${params.exam ? '生效中' : '已失效'}' 
                                 WHERE tms.tmid = tm.tmid and tm.tid = '${params.tid}'`
+                    console.log(sql);
                     db.query(sql, (err, results) => {
                         if (err) throw err;
                         let sql = `UPDATE talent_model SET status = '${params.exam ? '合作中' : '已失效'}' WHERE tid = '${params.tid}'`
@@ -321,25 +320,6 @@ router.post('/examTalent', (req, res) => {
                                     res.send({ code: 200, data: [], msg: `` })
                                 })
                             })
-                        })
-                    })
-                } else if (params.status === '拉黑待审批' && results_t[0].cid !== 'undefined' && params.exam) {
-                    let sql = `UPDATE chance c, talent t SET c.status = '已拉黑' WHERE c.cid = t.cid and t.tid = '${params.tid}'`
-                    db.query(sql, (err, results) => {
-                        if (err) throw err;
-                        let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
-                        db.query(sql, (err, results_u) => {
-                            if (err) throw err;
-                            sendRobot(
-                                results_u[0].secret,
-                                results_u[0].url,
-                                `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
-                                `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${note}`}`,
-                                `http://1.15.89.163:5173`,
-                                [results_u[0].phone],
-                                false
-                            )
-                            res.send({ code: 200, data: [], msg: `` })
                         })
                     })
                 } else {
@@ -985,10 +965,10 @@ router.post('/revokeReport', (req, res) => {
     let sql = `UPDATE talent SET status = '已撤销' WHERE tid = '${params.tid}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        let sql = `UPDATE talent_schedule SET status = '已失效' WHERE tid = '${params.tid}'`
+        let sql = `UPDATE talent_schedule SET status = '已失效' WHERE tid = '${params.tid}' and status = '待审批'`
         db.query(sql, (err, results) => {
             if (err) throw err;
-            let sql = `UPDATE talent_model tm, talent_model_schedule tms SET tm.status = '已失效', tms.status = '已失效' WHERE tm.tid = '${params.tid}' and tm.tmid = tms.tmid`
+            let sql = `UPDATE talent_model tm, talent_model_schedule tms SET tm.status = '已失效', tms.status = '已失效' WHERE tm.tid = '${params.tid}' and tm.tmid = tms.tmid and tms.status = '待审批'`
             db.query(sql, (err, results) => {
                 if (err) throw err;
                 let sql = `SELECT cid FROM talent WHERE tid = '${params.tid}'`
@@ -1004,6 +984,24 @@ router.post('/revokeReport', (req, res) => {
                         })
                     }
                 })
+            })
+        })
+    })
+})
+
+// 撤销报备
+router.post('/revokeOthers', (req, res) => {
+    let params = req.body
+    let sql = `UPDATE talent SET status = '合作中' WHERE tid = '${params.tid}'`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        let sql = `UPDATE talent_schedule SET status = '已失效' WHERE tid = '${params.tid}' and status = '待审批'`
+        db.query(sql, (err, results) => {
+            if (err) throw err;
+            let sql = `UPDATE talent_model tm, talent_model_schedule tms SET tm.status = '合作中', tms.status = '已失效' WHERE tm.tid = '${params.tid}' and tm.tmid = tms.tmid and tms.status = '待审批'`
+            db.query(sql, (err, results) => {
+                if (err) throw err;
+                res.send({ code: 200, data: [], msg: `撤销成功` })
             })
         })
     })

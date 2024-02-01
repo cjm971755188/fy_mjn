@@ -23,7 +23,7 @@ function AEBlock(props) {
                 <Form.Item label="达人昵称" name="name" rules={[{ required: true, message: '不能为空' }]}>
                     <Input placeholder="请输入" />
                 </Form.Item>
-                <Form.Item label="拉黑原因" name="note">
+                <Form.Item label="拉黑原因" name="reason">
                     <TextArea placeholder="请输入" />
                 </Form.Item>
             </Form>
