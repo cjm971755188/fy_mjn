@@ -8,7 +8,7 @@ router.post('/getTalentStatistics', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试'`
-    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
+    if (params.userInfo.department === '事业部') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
@@ -60,7 +60,7 @@ router.post('/getSalemansChanceOprate', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where u.status != '失效' and u.status != '测试' and u.department = '事业部' and u.position != '副总' and u.position != '副总助理' and u.position != '助理'`
-    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
+    if (params.userInfo.department === '事业部') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and u.department = '${params.userInfo.department}'`
         }
@@ -112,7 +112,7 @@ router.post('/getAdReTimeDiff', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where u.status != '失效' and u.status != '测试' and u.department = '事业部' and u.position != '副总' and u.position != '副总助理' and u.position != '助理'`
-    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
+    if (params.userInfo.department === '事业部') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and u.department = '${params.userInfo.department}'`
         }
@@ -172,7 +172,7 @@ router.post('/getPlatformTalent', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试' and department = '事业部' and position != '副总'`
-    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
+    if (params.userInfo.department === '事业部') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
@@ -213,7 +213,7 @@ router.post('/getClassTalent', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试' and department = '事业部' and position != '副总'`
-    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
+    if (params.userInfo.department === '事业部') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
@@ -257,7 +257,7 @@ router.post('/getTypeTalent', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试' and department = '事业部' and position != '副总'`
-    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
+    if (params.userInfo.department === '事业部') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
@@ -298,7 +298,7 @@ router.post('/getProvinceTalent', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where u.status != '失效' and u.status != '测试' and u.department = '事业部' and u.position != '副总'`
-    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
+    if (params.userInfo.department === '事业部') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and u.department = '${params.userInfo.department}'`
         }

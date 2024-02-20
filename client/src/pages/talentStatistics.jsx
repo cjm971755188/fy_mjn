@@ -618,7 +618,6 @@ function TalentStatistics() {
                                         return params.name + "<br/>" + '达人数量' + " : " + "0";
                                     }
                                 },
-                                /* formatter: '{b} <br />达人数量: {c} 个' // 自定义提示框的显示格式，{b} 代表区域名称，{c} 代表数据值 */
                             },
                             grid: {
                                 left: '5%',
@@ -627,7 +626,7 @@ function TalentStatistics() {
                             series: [
                                 {
                                     data: provinceTalentOption.data,
-                                    geoIndex: 0,  //将空气质量的数据和第0个geo配置关联在一起
+                                    geoIndex: 0, 
                                     type: 'map',
                                 },
                             ],

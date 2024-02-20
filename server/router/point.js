@@ -4,12 +4,12 @@ const db = require('../config/db')
 const BASE_URL = require('../config/config')
 const dayjs = require('dayjs');
 
-// 获取提点结算规则
+/* // 获取提点结算规则
 router.post('/getPointList', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试'`
-    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
+    if (params.userInfo.department === '事业部') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
@@ -264,14 +264,14 @@ router.post('/getExportPointList', (req, res) => {
         if (err) throw err;
         res.send({ code: 200, data: results, msg: `` })
     })
-})
+}) */
 
 // 获取达人昵称匹配规则
 router.post('/getKeywordList', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试'`
-    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
+    if (params.userInfo.department === '事业部') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }

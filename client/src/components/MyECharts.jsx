@@ -9,8 +9,9 @@ function MyECharts(props) {
 
     useLayoutEffect(() => {
         const chart = chartRef.current && echarts.init(chartRef.current);
-        chart && chart.setOption(option);
         echarts.registerMap('chinaMap', { geoJSON: chinaMap })
+        chart && chart.setOption(option);
+        
     }, [option]);
 
     //创建一个resize事件

@@ -59,11 +59,7 @@ const menuItemsTotal = [
             {
                 key: '/admin/talent/middleman_list',
                 label: '中间人列表'
-            }/* ,
-            {
-                key: '/admin/talent/extra_list',
-                label: '额外结佣列表'
-            } */
+            }
         ]
     },
     {
@@ -75,10 +71,10 @@ const menuItemsTotal = [
                 key: '/admin/point/keyword_list',
                 label: '达人昵称规则'
             },
-            {
+            /* {
                 key: '/admin/point/point_list',
                 label: '提点规则'
-            }
+            } */
         ]
     },
     
@@ -101,6 +97,16 @@ const getMenuItems = (department, position) => {
         let menu = menuItemsTotal[i];
         if (menu.label === '达人详情') {
             continue
+        } else if (menu.label === '业务管理' && position !== '管理员' && department === '财务部') {
+            let m = menu
+            let c = []
+            for (let i = 0; i < menu.children.length; i++) {
+                if (menu.children[i].label === '日常统计' || menu.children[i].label === '达人列表' || menu.children[i].label === '专场列表' || menu.children[i].label === '中间人列表') {
+                    c.push(menu.children[i])
+                }
+            }
+            m.children = c
+            arrObj.push(m)
         } else if (menu.label === '用户管理' && position !== '管理员' && position !== '总裁' && position !== '副总' && position !== '主管') {
             continue
         } else if (menu.label === '结算管理' && position !== '管理员' && department !== '财务部') {

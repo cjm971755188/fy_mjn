@@ -13,7 +13,6 @@ function AEChance(props) {
     const [isShowProvide, setIsShowProvide] = useState(false)
     const [isShowSearch, setIsShowSearch] = useState(false)
     const [sameList, setSameList] = useState([])
-    const [samename, setSameName] = useState('')
     const searchSameChanceAPI = (type, payload) => {
         request({
             method: 'post',
@@ -24,13 +23,11 @@ function AEChance(props) {
                 if (res.data.code !== 200) {
                     setIsShowSearch(true)
                     setSameList(res.data.data)
-                    setSameName(res.data.samename)
                     message.error(res.data.msg)
                 } else {
                     if (type === 'search') {
                         setIsShowSearch(false)
                         setSameList([])
-                        setSameName('')
                         message.success(res.data.msg)
                     } else if (type === 'finish') {
                         if (res.data.data.length === 0) {
@@ -55,7 +52,6 @@ function AEChance(props) {
         setIsShowProvide(false);
         setIsShowSearch(false);
         setSameList([]);
-        setSameList('');
     }
 
     useEffect(() => {
@@ -136,7 +132,6 @@ function AEChance(props) {
                         } else {
                             setIsShowSearch(false)
                             setSameList([])
-                            setSameName('')
                             message.error('未填写达人账号名/ID, 无法查询')
                         }
                     }}>查询</Button>

@@ -9,7 +9,7 @@ router.post('/getExtraList', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `WHERE status != '失效' and status != '测试'`
-    if (params.userInfo.position !== '管理员' && params.userInfo.position !== '总裁') {
+    if (params.userInfo.department === '事业部') {
         if (params.userInfo.position === '副总') {
             whereUser += ` and department = '${params.userInfo.department}'`
         }

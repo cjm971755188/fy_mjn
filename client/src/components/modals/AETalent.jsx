@@ -200,7 +200,7 @@ function AETalent(props) {
             <Modal
                 title={type == 'report' ? '达人报备' : type === 'history' ? '历史达人报备' : type === 'reReport' ? '再次报备' : type}
                 open={isShow}
-                width='40%'
+                width='60%'
                 maskClosable={false}
                 onOk={() => { form.submit(); }}
                 onCancel={() => { props.onCancel(); reset(); }}

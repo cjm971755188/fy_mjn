@@ -24,7 +24,7 @@ function AEBlock(props) {
                     <Input placeholder="请输入" />
                 </Form.Item>
                 <Form.Item label="拉黑原因" name="reason">
-                    <TextArea placeholder="请输入" />
+                    <TextArea placeholder="请输入" maxLength={255} />
                 </Form.Item>
             </Form>
         </Modal>
