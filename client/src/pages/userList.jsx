@@ -7,7 +7,7 @@ import AEUser from '../components/modals/AEUser'
 
 function UserList() {
     // 操作权限
-    const editPower = localStorage.getItem('position') === '管理员' ? true : false
+    const editPower = localStorage.getItem('position') === '管理员' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '副总' ? true : false
 
     // 表格：格式
     const columns = [

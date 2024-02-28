@@ -4,7 +4,7 @@ const db = require('../config/db')
 const BASE_URL = require('../config/config')
 const dayjs = require('dayjs');
 
-/* // 获取提点结算规则
+ // 获取提点结算规则
 router.post('/getPointList', (req, res) => {
     let params = req.body
     // 权限筛选
@@ -264,7 +264,7 @@ router.post('/getExportPointList', (req, res) => {
         if (err) throw err;
         res.send({ code: 200, data: results, msg: `` })
     })
-}) */
+}) 
 
 // 获取达人昵称匹配规则
 router.post('/getKeywordList', (req, res) => {

@@ -126,13 +126,12 @@ router.post('/getAdReTimeDiff', (req, res) => {
     let whereFilter = ``
     let start_time = params.filtersDate.length === 2 ? params.filtersDate[0] : ''
     let end_time = params.filtersDate.length === 2 ? params.filtersDate[1] : '2000000000000'
-    let sql = `SELECT u.uid, u.name, SUM(c.advance_time - c.create_time)/COUNT(*) as diff
+    let sql = `SELECT u.uid, u.name, SUM(IF(c.advance_time IS NULL, ${dayjs().valueOf()}, c.advance_time) - c.create_time)/COUNT(*) as diff
                 FROM user u
                     LEFT JOIN chance c ON c.u_id = u.uid
                 ${whereUser} 
-                    and c.advance_time IS NOT NULL
-                    and c.advance_time >= '${start_time}'
-                    and c.advance_time < '${end_time}'
+                    and IF(c.advance_time IS NULL, ${dayjs().valueOf()}, c.advance_time) >= '${start_time}'
+                    and IF(c.advance_time IS NULL, ${dayjs().valueOf()}, c.advance_time) < '${end_time}'
                 GROUP BY u.uid, u.name
                 ORDER BY diff DESC`
     db.query(sql, (err, advance) => {
@@ -144,13 +143,12 @@ router.post('/getAdReTimeDiff', (req, res) => {
                 name: advance[i].name
             })
         }
-        let sql = `SELECT u.uid, u.name, SUM(c.advance_time - c.create_time)/COUNT(*) as diff
+        let sql = `SELECT u.uid, u.name, SUM(IF(c.report_time IS NULL, ${dayjs().valueOf()}, c.report_time) - c.create_time)/COUNT(*) as diff
                     FROM user u
                         LEFT JOIN chance c ON c.u_id = u.uid
                     ${whereUser} 
-                        and c.report_time IS NOT NULL
-                        and c.report_time >= '${start_time}'
-                        and c.report_time < '${end_time}'
+                        and IF(c.report_time IS NULL, ${dayjs().valueOf()}, c.report_time) >= '${start_time}'
+                        and IF(c.report_time IS NULL, ${dayjs().valueOf()}, c.report_time) < '${end_time}'
                     GROUP BY u.uid, u.name
                     ORDER BY diff DESC`
         db.query(sql, (err, report) => {

@@ -1030,6 +1030,8 @@ function TalentDetail() {
                         if (Object.hasOwnProperty.call(ori, key)) {
                             if (ori[key] === null && key !== 'u_id_2' && key !== 'u_point_2' && key !== 'u_note' && key !== 'commission_note' && key !== 'discount_note') {
                                 continue
+                            } else if (key === 'shop') {
+                                continue
                             } else {
                                 o[key] = ori[key]
                             }
@@ -1073,7 +1075,7 @@ function TalentDetail() {
                         type = type.match('综合信息') ? type : type.match('基础信息') ? '综合信息' : '佣金提点'
                     }
                     let operate = modelType + type
-                    if (modelType.match('新增')) {
+                     if (modelType.match('新增')) {
                         addTalentModelAPI(values)
                     } else if (Object.keys(z).length === 0) {
                         if (type.match('基础信息')) {
@@ -1087,7 +1089,7 @@ function TalentDetail() {
                         }
                     } else {
                         editTalentModelAPI(operate, JSON.stringify(z), payload)
-                    }
+                    } 
                 }}
                 onCancel={() => { setIsShowModel(false); formModel.resetFields(); setTypeModel(''); }}
             />

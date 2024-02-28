@@ -29,6 +29,8 @@ router.post('/getTalentList', (req, res) => {
             whereFilter += ` and z.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
         }
     }
+    // 排序
+    let order = params.sorter.sort ? params.sorter.sort : 'tid'
     // 分页
     let current = params.pagination.current ? params.pagination.current : 0
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
@@ -60,7 +62,7 @@ router.post('/getTalentList', (req, res) => {
                     GROUP BY t.tid, t.cid, t.name, t.year_deal, t.type, tms1.u_id_1, u1.name, yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels, model_status, t.status
                 ) z
                 ${whereFilter}
-                ORDER BY z.tid DESC`
+                ORDER BY z.${order} DESC`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`

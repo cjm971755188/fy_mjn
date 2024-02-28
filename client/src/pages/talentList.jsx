@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { NavLink } from 'react-router-dom'
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Alert, Modal, Popconfirm } from 'antd';
+import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Row, Modal, Popconfirm } from 'antd';
 import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined, CloseCircleTwoTone, VerticalAlignBottomOutlined } from '@ant-design/icons';
 import { model, uPoint0, talentStatus, yearboxStatus, modelStatus, talentType } from '../baseData/talent'
 import AETalent from '../components/modals/AETalent'
@@ -168,6 +168,7 @@ function TalentList() {
     const [tableParams, setTableParams] = useState({
         filtersDate: [],
         filters: {},
+        sorter: '',
         pagination: {
             current: 1,
             pageSize: 10,
@@ -182,7 +183,9 @@ function TalentList() {
             method: 'post',
             url: '/talent/getTalentList',
             data: {
+                filtersDate: tableParams.filtersDate,
                 filters: tableParams.filters,
+                sorter: tableParams.sorter,
                 pagination: {
                     current: tableParams.pagination.current - 1,
                     pageSize: tableParams.pagination.pageSize,
@@ -224,6 +227,7 @@ function TalentList() {
             },
             filters: tableParams.filters,
             filtersDate: tableParams.filtersDate,
+            sorter: tableParams.sorter,
             ...sorter,
         });
         if (pagination.pageSize !== tableParams.pagination?.pageSize) {
@@ -232,6 +236,7 @@ function TalentList() {
     }
     // 查询、清空筛选
     const [filterForm] = Form.useForm()
+    const [sortForm] = Form.useForm()
     const [salemansItems, setSalemansItems] = useState()
     const getSalemansItemsAPI = () => {
         request({
@@ -251,35 +256,6 @@ function TalentList() {
             if (res.status == 200) {
                 if (res.data.code == 200) {
                     setSalemansItems(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [middlemansItems, setMiddlemansItems] = useState()
-    const getmiddlemansItemsAPI = () => {
-        request({
-            method: 'post',
-            url: '/middleman/getmiddlemansItems',
-            data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setMiddlemansItems(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -759,6 +735,32 @@ function TalentList() {
                                     filters: {}
                                 })
                             }}>清空筛选</Button>
+                        </Space>
+                    </Form.Item>
+                </Form>
+                <Form
+                    layout="inline"
+                    form={sortForm}
+                    onFinish={(values) => {
+                        setTableParams({
+                            ...tableParams,
+                            sorter: values
+                        })
+                    }}
+                >
+                    <Form.Item label='排列顺序' name='sort'>
+                        <Select style={{ width: 160 }} options={[{ key: 0, label: '年度预估GMV', value: 'year_deal' }, { key: 1, label: '专场GMV', value: 'live_sum' }]} />
+                    </Form.Item>
+                    <Form.Item style={{ marginBottom: '20px' }}>
+                        <Space size={'large'}>
+                            <Button type="primary" htmlType="submit">排序</Button>
+                            <Button type="primary" onClick={() => {
+                                sortForm.resetFields();
+                                setTableParams({
+                                    ...tableParams,
+                                    sorter: {}
+                                })
+                            }}>清空排序</Button>
                         </Space>
                     </Form.Item>
                 </Form>

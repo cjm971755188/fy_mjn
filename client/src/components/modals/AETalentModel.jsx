@@ -137,7 +137,7 @@ function AETalentModel(props) {
                         <Input placeholder="请输入" onChange={(e) => { form.setFieldValue('account_id', e.target.value) }} disabled={type && type.match('修改') ? true : false} />
                     </Form.Item>
                     <Form.Item label="账号名称" name="account_name" rules={[{ required: true, message: '不能为空' }]}>
-                        <Input placeholder="请输入" disabled={type && type.match('修改') ? true : false} />
+                        <Input placeholder="请输入" />
                     </Form.Item>
                     <Form.Item label="账号类型" name="account_type" rules={[{ required: true, message: '不能为空' }]}>
                         <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('account_type', value) }} options={accountType} />

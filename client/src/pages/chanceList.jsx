@@ -21,9 +21,22 @@ function ChanceList() {
         { title: '商机编号', dataIndex: 'cid', key: 'cid' },
         { title: '模式', dataIndex: 'models', key: 'models' },
         { title: '关联平台', dataIndex: 'platforms', key: 'platforms' },
-        { title: '线上名', dataIndex: 'account_names', key: 'account_names' },
-        { title: '团购名', dataIndex: 'group_name', key: 'group_name' },
-        { title: '供货名', dataIndex: 'provide_name', key: 'provide_name' },
+        {
+            title: '达人名称',
+            dataIndex: 'liaison_name',
+            key: 'liaison_name',
+            render: (_, record) => (
+                <Popover title="名称" content={
+                    <List>
+                        <List.Item>线上名：{record.account_names}</List.Item>
+                        <List.Item>团购名：{record.group_name}</List.Item>
+                        <List.Item>供货名：{record.provide_name}</List.Item>
+                    </List>}
+                >
+                    <span>{record.account_names === null ? '' : record.account_names}{record.group_name === null ? '' : record.group_name}{record.provide_name === null ? '' : record.provide_name}</span>
+                </Popover>
+            )
+        },
         { title: '寻找时间', dataIndex: 'create_time', key: 'create_time', render: (_, record) => (<span>{dayjs(Number(record.create_time)).format('YYYY-MM-DD')}</span>) },
         {
             title: '寻找证明',
@@ -105,7 +118,7 @@ function ChanceList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
-                    {record.status !== '报备通过' ? <a onClick={() => {
+                    {editPower && record.status !== '报备通过' ? <a onClick={() => {
                         setIsShowNote(true);
                         setNote(record.note);
                         setSelectNoteID(record.cid);

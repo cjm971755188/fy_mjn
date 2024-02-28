@@ -39,6 +39,21 @@ function LiveList() {
         { title: '中控', dataIndex: 'c_name_1', key: 'c_name_1' },
         { title: '服务商务', dataIndex: 'u_name_3', key: 'u_name_3' },
         {
+            title: '专场GMV',
+            dataIndex: 'sales',
+            key: 'sales',
+            render: (_, record) => (
+                <Popover title="专场目标达成信息" content={
+                    <List>
+                        <List.Item>目标：{record.goal} 万</List.Item>
+                        <List.Item>达成率：{(record.sales/record.goal*100).toFixed(0)} %</List.Item>
+                    </List>}
+                >
+                    <span>{record.sales} 万</span>
+                </Popover>
+            )
+        },
+        {
             title: '商务归属',
             dataIndex: 'u_name',
             key: 'u_name',

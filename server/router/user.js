@@ -90,7 +90,11 @@ router.post('/getUserList', (req, res) => {
         let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`
         db.query(s, (err, r) => {
             if (err) throw err;
-            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: `` })
+            let s = `SELECT platform, SUM(price) as sales FROM orders GROUP BY platform`
+            db.query(s, (err, z) => {
+                if (err) throw err;
+                res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, z, msg: `` })
+            })
         })
     })
 })
