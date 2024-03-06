@@ -9,7 +9,7 @@ router.post('/getLiveList', (req, res) => {
     // 权限筛选
     let whereUser = `WHERE status != '失效' and status != '测试'`
     if (params.userInfo.department === '事业部') {
-        if (params.userInfo.position === '副总') {
+        if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
         if (params.userInfo.position === '主管') {
@@ -35,7 +35,7 @@ router.post('/getLiveList', (req, res) => {
     let current = params.pagination.current ? params.pagination.current : 0
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
     let sql = `SELECT z.* FROM (
-                    SELECT l.*, t.name, GROUP_CONCAT(DISTINCT tm.model, '_', tm.platform, '_', tm.shop, '_', IF(tm.account_name IS NULL, IF(tm.group_name IS NULL, tm.provide_name, tm.group_name), account_name)) as models,
+                    SELECT l.*, t.name, GROUP_CONCAT(DISTINCT tm.model, '_', tm.platform, '_', tm.shop_type, '_', tm.shop_name, '_', IF(tm.account_name IS NULL, IF(tm.group_name IS NULL, tm.provide_name, tm.group_name), account_name)) as models,
                         u1.name as a_name_1, u2.name as a_name_2, u3.name as c_name_1, u4.name as u_name_3, u5.name as u_name_1, u6.name as u_name_2
                     FROM live l
                         LEFT JOIN talent t ON t.tid = l.tid

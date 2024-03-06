@@ -10,7 +10,7 @@ router.post('/getChanceList', (req, res) => {
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试'`
     if (params.userInfo.department === '事业部') {
-        if (params.userInfo.position === '副总') {
+        if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
         if (params.userInfo.position === '主管') {
@@ -238,10 +238,11 @@ router.post('/reportChance', (req, res) => {
                 let m_id_1 = params.m_id_1 ? params.m_id_1.value ? `'${params.m_id_1.value}'` : `'${params.m_id_1}'` : null
                 let m_type_1 = params.m_type_1 ? params.m_type_1.value ? `'${params.m_type_1.value}'` : `'${params.m_type_1}'` : null
                 let m_point_1 = params.m_point_1 ? params.m_point_1.value ? `'${params.m_point_1.value}'` : `'${params.m_point_1}'` : null
+                let m_note_1 = params.m_note_1 ? `'${params.m_note_1}'` : null
                 let m_id_2 = params.m_id_2 ? params.m_id_2.value ? `'${params.m_id_2.value}'` : `'${params.m_id_2}'` : null
                 let m_type_2 = params.m_type_2 ? params.m_type_2.value ? `'${params.m_type_2.value}'` : `'${params.m_type_2}'` : null
                 let m_point_2 = params.m_point_2 ? params.m_point_2.value ? `'${params.m_point_2.value}'` : `'${params.m_point_2}'` : null
-                let m_note = params.m_note_2 ? `'${params.m_note_2}'` : null
+                let m_note_2 = params.m_note_2 ? `'${params.m_note_2}'` : null
                 let u_id_0 = params.u_id_0 ? params.u_id_0.value ? `'${params.u_id_0.value}'` : `'${params.u_id_0}'` : null
                 let u_point_0 = params.u_point_0 ? params.u_point_0.value ? `'${params.u_point_0.value}'` : `'${params.u_point_0}'` : null
                 let sql = `SELECT * FROM talent`
@@ -255,7 +256,7 @@ router.post('/reportChance', (req, res) => {
                         db.query(sql, (err, results) => {
                             if (err) throw err;
                             let tsid = 'TS' + `${results.length + 1}`.padStart(7, '0')
-                            let sql = `INSERT INTO talent_schedule values('${tsid}', '${tid}', ${m_id_1}, ${m_type_1}, ${m_point_1}, ${m_id_2}, ${m_type_2}, ${m_point_2}, ${m_note}, null, null, null, null, null, null, null, null, ${u_id_0}, ${u_point_0}, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批')`
+                            let sql = `INSERT INTO talent_schedule values('${tsid}', '${tid}', ${m_id_1}, ${m_type_1}, ${m_point_1}, ${m_note_1}, ${m_id_2}, ${m_type_2}, ${m_point_2}, ${m_note_2}, null, null, null, null, null, null, null, null, null, ${u_id_0}, ${u_point_0}, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批')`
                             db.query(sql, (err, results) => {
                                 if (err) throw err;
                                 let sql = `SELECT * FROM talent_model`
@@ -272,13 +273,14 @@ router.post('/reportChance', (req, res) => {
                                             for (let i = 0; i < params.accounts.length; i++) {
                                                 let tmid = 'TM' + `${count_d + i + 1}`.padStart(7, '0')
                                                 let tmsid = 'TMS' + `${count_l + i + 1}`.padStart(7, '0')
+                                                let shop_name = params.accounts[i].shop_name ? `'${params.accounts[i].shop_name}'` : null
                                                 let keyword = params.accounts[i].keyword ? `'${params.accounts[i].keyword}'` : null
                                                 let commission_note = params.accounts[i].commission_note ? `'${params.accounts[i].commission_note}'` : null
                                                 let u_id_2 = params.accounts[i].u_id_2 ? params.accounts[i].u_id_2.value ? `'${params.accounts[i].u_id_2.value}'` : `'${params.accounts[i].u_id_2}'` : null
                                                 let u_point_2 = params.accounts[i].u_point_2 ? params.accounts[i].u_point_2.value ? `'${params.accounts[i].u_point_2.value}'` : `'${params.accounts[i].u_point_2}'` : null
                                                 let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
                                                 let model_files = params.accounts[i].model_files ? `'${JSON.stringify(params.accounts[i].model_files)}'` : null
-                                                sql_d += `('${tmid}', '${tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].shop}', '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', null, null, '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', ${model_files}, '待审批'),`
+                                                sql_d += `('${tmid}', '${tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].shop_type}', ${shop_name}, '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', null, null, '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', ${model_files}, '待审批'),`
                                                 sql_l += `('${tmsid}', '${tmid}', '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', ${commission_note}, null, null, null, '${params.userInfo.uid}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
                                             }
                                             count_d += params.accounts.length
@@ -292,7 +294,7 @@ router.post('/reportChance', (req, res) => {
                                             let u_point_2 = params.group_u_point_2 ? params.group_u_point_2.value ? `'${params.group_u_point_2.value}'` : `'${params.group_u_point_2}'` : null
                                             let u_note = params.group_u_note ? `'${params.group_u_note}'` : null
                                             let model_files = params.group_model_files ? `'${JSON.stringify(params.model_files)}'` : null
-                                            sql_d += `('${tmid}', '${tid}', '社群团购', '聚水潭', '${params.group_shop}', null, null, '${params.group_name}', null, null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
+                                            sql_d += `('${tmid}', '${tid}', '社群团购', '聚水潭', null, '${params.group_shop}', null, null, '${params.group_name}', null, null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
                                             sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.userInfo.uid}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
                                             count_d += 1
                                             count_l += 1
@@ -305,7 +307,7 @@ router.post('/reportChance', (req, res) => {
                                             let u_point_2 = params.provide_u_point_2 ? params.provide_u_point_2.value ? `'${params.provide_u_point_2.value}'` : `'${params.provide_u_point_2}'` : null
                                             let u_note = params.provide_u_note ? `'${params.provide_u_note}'` : null
                                             let model_files = params.provide_model_files ? `'${JSON.stringify(params.model_files)}'` : null
-                                            sql_d += `('${tmid}', '${tid}', '供货', '聚水潭', '${params.provide_shop}', null, null, null, '${params.provide_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
+                                            sql_d += `('${tmid}', '${tid}', '供货', '聚水潭', null, '${params.provide_shop}', null, null, null, '${params.provide_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
                                             sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, '${params.userInfo.uid}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
                                             count_d += 1
                                             count_l += 1

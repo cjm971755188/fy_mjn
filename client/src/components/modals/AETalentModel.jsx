@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import request from '../../service/request'
 import { Card, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, message, List, Image } from 'antd';
-import { accountType, accountModelType, ageCut, priceCut, shop, platform } from '../../baseData/talent'
+import { accountType, accountModelType, ageCut, priceCut, shop_type, platform } from '../../baseData/talent'
 import { province } from '../../baseData/province'
 import people from '../../assets/people.jpg'
 
@@ -47,6 +47,7 @@ function AETalentModel(props) {
             console.error(err)
         })
     }
+    const [hasOnlyShop, setHasOnlyShop] = useState(false)
     const [hasFuSaleman, setHasFuSaleman] = useState(false)
     const [salemanAssistantsItems, setSalemanAssistantsItems] = useState(false)
     const getSalemanAssistantsItemsAPI = () => {
@@ -130,9 +131,23 @@ function AETalentModel(props) {
                             }}
                         />
                     </Form.Item>
-                        <Form.Item label="店铺" name="shop" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('shop', value) }} options={shop} />
-                        </Form.Item></>}
+                        <Form.Item label="店铺类型" name="shop_type" rules={[{ required: true, message: '不能为空' }]}>
+                            <Select
+                                placeholder="请选择"
+                                onChange={(value) => {
+                                    form.setFieldValue('shop_type', value);
+                                    if (value === '专属店铺') {
+                                        setHasOnlyShop(true);
+                                    } else {
+                                        setHasOnlyShop(false);
+                                    }
+                                }}
+                                options={shop_type}
+                            />
+                        </Form.Item>
+                        {hasOnlyShop ? <Form.Item label="店铺名称" name="shop_name" rules={[{ required: true, message: '不能为空' }]}>
+                            <Input placeholder="请输入" />
+                        </Form.Item> : null}</>}
                     <Form.Item label="账号ID" name="account_id" rules={[{ required: true, message: '不能为空' }]}>
                         <Input placeholder="请输入" onChange={(e) => { form.setFieldValue('account_id', e.target.value) }} disabled={type && type.match('修改') ? true : false} />
                     </Form.Item>
@@ -205,7 +220,7 @@ function AETalentModel(props) {
                     <Form.Item label="达人名称" name="group_name" rules={[{ required: true, message: '不能为空' }]}>
                         <Input placeholder="请输入" />
                     </Form.Item>
-                    <Form.Item label="聚水潭店铺名" name="shop" rules={[{ required: true, message: '不能为空' }]}>
+                    <Form.Item label="聚水潭店铺名" name="shop_name" rules={[{ required: true, message: '不能为空' }]}>
                         <Input placeholder="请输入" />
                     </Form.Item>
                     <Form.Item label="常规品佣金（%）[例：20]" name="commission_normal" rules={[{ required: true, message: '不能为空' }]}>
@@ -250,7 +265,7 @@ function AETalentModel(props) {
                     <Form.Item label="达人名称" name="provide_name" rules={[{ required: true, message: '不能为空' }]}>
                         <Input placeholder="请输入" />
                     </Form.Item>
-                    <Form.Item label="聚水潭店铺名" name="shop" rules={[{ required: true, message: '不能为空' }]}>
+                    <Form.Item label="聚水潭店铺名" name="shop_name" rules={[{ required: true, message: '不能为空' }]}>
                         <Input placeholder="请输入" />
                     </Form.Item>
                     <Form.Item label="买断折扣（折）[例：7.5]" name="discount_buyout" rules={[{ required: true, message: '不能为空' }]}>
@@ -318,7 +333,7 @@ function AETalentModel(props) {
                                     <List.Item.Meta
                                         avatar={<Image width={50} src={people} preview={false} />}
                                         title={<Space size={'large'}><span>{`编号: ${item.tmid}`}</span><span>{`状态: ${item.status}`}</span><span>{`${item.status === '已拉黑' ? '拉黑人' : '商务'}: ${item.u_name}`}</span></Space>}
-                                        description={<Space size={'large'} style={{ color: `${item.status === '已拉黑' ? 'red' : ''}`}}>{item.status === '已拉黑' ? <><span>{`原因: ${item.note}`}</span><span>{`重复名称/ID: ${item.name}`}</span></> :
+                                        description={<Space size={'large'} style={{ color: `${item.status === '已拉黑' ? 'red' : ''}` }}>{item.status === '已拉黑' ? <><span>{`原因: ${item.note}`}</span><span>{`重复名称/ID: ${item.name}`}</span></> :
                                             <><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}
                                                 <span>{`重复名称/ID: ${item.account_name || item.group_name || item.provide_name}`}</span></>}</Space>}
                                     />

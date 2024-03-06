@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom'
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Row, Modal, Popconfirm } from 'antd';
 import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined, CloseCircleTwoTone, VerticalAlignBottomOutlined } from '@ant-design/icons';
-import { model, uPoint0, talentStatus, yearboxStatus, modelStatus, talentType } from '../baseData/talent'
+import { model, platform, uPoint0, talentStatus, yearboxStatus, modelStatus, talentType } from '../baseData/talent'
 import AETalent from '../components/modals/AETalent'
 import AELive from '../components/modals/AELive'
 import dayjs from 'dayjs'
@@ -15,13 +15,13 @@ function TalentList() {
     // 操作权限
     const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理') || localStorage.getItem('position') === '管理员' ? true : false
     const examPower = localStorage.getItem('position') === '副总' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '管理员' ? true : false
-    const userShowPower = localStorage.getItem('position') === '商务' ? true : false
 
     // 表格：格式
     let columns = [
         { title: '编号', dataIndex: 'tid', key: 'tid' },
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
         { title: '合作模式', dataIndex: 'models', key: 'models' },
+        { title: '平台', dataIndex: 'platforms', key: 'platforms' },
         {
             title: '年度预估GMV',
             dataIndex: 'year_deal',
@@ -587,10 +587,13 @@ function TalentList() {
     }
     // 导出
     let exportColumns = [
+        { title: '平台', dataIndex: 'platforms', key: 'platforms' },
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
         { title: '层级', dataIndex: 'type', key: 'type' },
         { title: '专场销售额(万)', dataIndex: 'live_sum', key: 'live_sum' },
-        { title: '商务', dataIndex: 'u_names', key: 'u_names' }
+        { title: '主商务', dataIndex: 'u_name_1', key: 'u_name_1' },
+        { title: '副商务', dataIndex: 'u_name_2', key: 'u_name_2' },
+        { title: '原商务', dataIndex: 'u_name_0', key: 'u_name_0' }
     ]
     const getExportTalentListAPI = () => {
         request({
@@ -625,7 +628,7 @@ function TalentList() {
         exportData.forEach(item => {
             const itemData = []
             exportColumns.forEach(ele => {
-                let val = item[ele.dataIndex] || null
+                let val = item[ele.dataIndex] === null ? null : item[ele.dataIndex].toString().replace(',', '/').replace(',', '/').replace(',', '/').replace(',', '/')
                 if ((+val).toString() === val) { // 判断当前值是否为纯数字
                     val = `\t${val.toString()}` // 纯数字加一个制表符，正常文件中不显示，但是会让excel不再特殊处理纯数字字符串
                 }
@@ -690,7 +693,7 @@ function TalentList() {
     return (
         <Fragment>
             <Card title="达人列表" extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('history'); }}>添加历史达人</Button> :
-                <Button type="primary" icon={<VerticalAlignBottomOutlined />} onClick={() => { getExportTalentListAPI(); }}>导出（层级专场）</Button>}>
+                <Button type="primary" icon={<VerticalAlignBottomOutlined />} onClick={() => { getExportTalentListAPI(); }}>导出</Button>}>
                 <Form
                     layout="inline"
                     form={filterForm}
@@ -709,6 +712,9 @@ function TalentList() {
                     <Form.Item label='达人名称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='合作模式' name='models'>
                         <Select style={{ width: 160 }} options={model} />
+                    </Form.Item>
+                    <Form.Item label='平台' name='platforms'>
+                        <Select style={{ width: 160 }} options={platform} />
                     </Form.Item>
                     <Form.Item label='达人层级' name='type'>
                         <Select style={{ width: 160 }} options={talentType} />

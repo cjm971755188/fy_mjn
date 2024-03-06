@@ -63,7 +63,7 @@ router.post('/getUserList', (req, res) => {
     let where = `where status != '失效' and status != '测试' and position != '管理员' and uid != '${params.userInfo.uid}'`
     // 权限筛选
     if (params.userInfo.department === '事业部') {
-        if (params.userInfo.position === '副总') {
+        if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
             where += ` and department = '${params.userInfo.department}'`
         }
         if (params.userInfo.position === '主管') {
@@ -90,11 +90,7 @@ router.post('/getUserList', (req, res) => {
         let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`
         db.query(s, (err, r) => {
             if (err) throw err;
-            let s = `SELECT platform, SUM(price) as sales FROM orders GROUP BY platform`
-            db.query(s, (err, z) => {
-                if (err) throw err;
-                res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, z, msg: `` })
-            })
+            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: `` })
         })
     })
 })

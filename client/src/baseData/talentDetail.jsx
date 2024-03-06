@@ -22,6 +22,7 @@ export const descriptionsItems = [
     { key: 17, label: "付款周期", value: "yearbox_cycle" },
     { key: 18, label: "付款类型", value: "yearbox_type" },
     { key: 63, label: "基础提点", value: "yearbox_lavels_base" },
+    { key: 70, label: "备注", value: "yearbox_note" },  // 最新添加
     
     { key: 19, label: "付款类型", value: "m_paytype_1" },
     { key: 20, label: "类型", value: "m_type_1" },
@@ -31,7 +32,8 @@ export const descriptionsItems = [
     { key: 24, label: "类型", value: "m_type_2" },
     { key: 25, label: "昵称", value: "m_name_2" },
     { key: 26, label: "提点(%)", value: "m_point_2" },
-    { key: 27, label: "提点备注", value: "m_note" },
+    { key: 27, label: "提点备注", value: "m_note_1" },
+    { key: 69, label: "提点备注", value: "m_note_2" },
 
     { key: 28, label: "账号ID", value: "account_id" },
     { key: 29, label: "账号名称", value: "account_name" },

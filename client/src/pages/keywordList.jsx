@@ -12,7 +12,8 @@ function KeywordList() {
     let columns = [
         { title: '模式', dataIndex: 'model', key: 'model' },
         { title: '平台', dataIndex: 'platform', key: 'platform' },
-        { title: '店铺', dataIndex: 'shop', key: 'shop' },
+        { title: '店铺类型', dataIndex: 'shop_type', key: 'shop_type' },
+        { title: '店铺名称', dataIndex: 'shop_name', key: 'shop_name' },
         { title: '关键字（账号/前后缀）', dataIndex: 'keyword', key: 'keyword' },
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
     ]
@@ -91,7 +92,8 @@ function KeywordList() {
     let exportColumns = [
         { title: '模式', dataIndex: 'model', key: 'model' },
         { title: '平台', dataIndex: 'platform', key: 'platform' },
-        { title: '店铺', dataIndex: 'shop', key: 'shop' },
+        { title: '店铺类型', dataIndex: 'shop_type', key: 'shop_type' },
+        { title: '店铺名称', dataIndex: 'shop_name', key: 'shop_name' },
         { title: '关键字（账号/前后缀）', dataIndex: 'keyword', key: 'keyword' },
         { title: '达人昵称', dataIndex: 'name', key: 'name' }
     ]
@@ -170,7 +172,8 @@ function KeywordList() {
             >
                 <Form.Item label='模式' name='model' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                 <Form.Item label='平台' name='platform' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                <Form.Item label='店铺' name='shop' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                <Form.Item label='店铺类型' name='shop_type' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                <Form.Item label='店铺名称' name='shop_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                 <Form.Item label='关键字' name='keyword' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                 <Form.Item label='达人昵称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                 <Form.Item style={{ marginBottom: '20px' }}>

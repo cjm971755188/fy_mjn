@@ -19,7 +19,7 @@ function TalentDetail() {
     let location = useLocation();
     const navigate = useNavigate();
     const { tid } = location.state;
-    
+
     // 操作权限
     const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理') || localStorage.getItem('position') === '管理员' ? true : false
     const examPower = localStorage.getItem('position') === '副总' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '管理员' ? true : false
@@ -110,7 +110,13 @@ function TalentDetail() {
                             })}
                         </List>
                     }
-                    if ([15, 16, 17, 18].indexOf(descriptionsItems[j].key) !== -1) {
+                    if (descriptionsItems[j].key === 16) {
+                        description.span = 2
+                    }
+                    if (descriptionsItems[j].key === 70) {
+                        description.span = 5
+                    }
+                    if ([15, 16, 17, 18, 70].indexOf(descriptionsItems[j].key) !== -1) {
                         items.push(description)
                     }
                 }
@@ -217,7 +223,7 @@ function TalentDetail() {
                         label: descriptionsItems[j].label,
                         children: Object.values(detailData)[i]
                     }
-                    if ([23, 24, 25, 26, 27].indexOf(descriptionsItems[j].key) !== -1) {
+                    if ([23, 24, 25, 26, 69].indexOf(descriptionsItems[j].key) !== -1) {
                         items.push(description)
                     }
                 }
@@ -618,12 +624,14 @@ function TalentDetail() {
                                         });
                                         formYear.setFieldValue('yearbox_lavels_base', detailData.yearbox_lavels_base);
                                         formYear.setFieldValue('yearbox_lavels', JSON.parse(detailData.yearbox_lavels));
+                                        formYear.setFieldValue('yearbox_note', detailData.yearbox_note);
                                         setEditOri({
                                             yearbox_start_date: detailData.yearbox_start_date,
                                             yearbox_cycle: detailData.yearbox_cycle,
                                             yearbox_type: detailData.yearbox_type,
                                             yearbox_lavels_base: detailData.yearbox_lavels_base,
                                             yearbox_lavels: detailData.yearbox_lavels,
+                                            yearbox_note: detailData.yearbox_note,
                                         })
                                         setIsShowYear(true);
                                         setYearType('修改年框');
@@ -664,7 +672,8 @@ function TalentDetail() {
                                     setEditOri({
                                         m_id_1: detailData.m_id_1,
                                         m_type_1: detailData.m_paytype_1,
-                                        m_point_1: detailData.m_point_1
+                                        m_point_1: detailData.m_point_1,
+                                        m_note_1: detailData.m_note_1,
                                     })
                                     formMiddle.setFieldsValue({
                                         m_id: {
@@ -675,7 +684,8 @@ function TalentDetail() {
                                             value: detailData.m_paytype_1,
                                             label: detailData.m_paytype_1
                                         },
-                                        m_point: detailData.m_point_1
+                                        m_point: detailData.m_point_1,
+                                        m_note: detailData.m_note_1
                                     })
                                     setIsShowMiddle(true);
                                     setMiddleType('修改一级中间人');
@@ -689,11 +699,13 @@ function TalentDetail() {
                                                 m_id_1: detailData.m_id_1,
                                                 m_name_1: detailData.m_name_1,
                                                 m_paytype_1: detailData.m_paytype_1,
-                                                m_point_1: detailData.m_point_1
+                                                m_point_1: detailData.m_point_1,
+                                                m_note_1: detailData.m_note_1
                                             }), {
                                                 m_id_1: null,
                                                 m_type_1: null,
-                                                m_point_1: null
+                                                m_point_1: null,
+                                                m_note_1: null
                                             });
                                         }}
                                         okText="删除"
@@ -716,7 +728,8 @@ function TalentDetail() {
                                     setEditOri({
                                         m_id_2: detailData.m_id_2,
                                         m_type_2: detailData.m_paytype_2,
-                                        m_point_2: detailData.m_point_2
+                                        m_point_2: detailData.m_point_2,
+                                        m_note_2: detailData.m_note_2
                                     })
                                     formMiddle.setFieldsValue({
                                         m_id: {
@@ -727,7 +740,8 @@ function TalentDetail() {
                                             value: detailData.m_paytype_2,
                                             label: detailData.m_paytype_2
                                         },
-                                        m_point: detailData.m_point_2
+                                        m_point: detailData.m_point_2,
+                                        m_note: detailData.m_note_2
                                     })
                                     setIsShowMiddle(true);
                                     setMiddleType('修改二级中间人');
@@ -741,11 +755,13 @@ function TalentDetail() {
                                                 m_id_2: detailData.m_id_2,
                                                 m_name_2: detailData.m_name_2,
                                                 m_paytype_2: detailData.m_paytype_2,
-                                                m_point_2: detailData.m_point_2
+                                                m_point_2: detailData.m_point_2,
+                                                m_note_2: detailData.m_note_2
                                             }), {
                                                 m_id_2: null,
                                                 m_type_2: null,
-                                                m_point_2: null
+                                                m_point_2: null,
+                                                m_note_2: null
                                             });
                                         }}
                                         okText="删除"
@@ -789,7 +805,7 @@ function TalentDetail() {
                             return (
                                 <Card
                                     key={index}
-                                    title={<Space><span>{model.model}__{model.platform}__{model.shop}</span>
+                                    title={<Space><span>{model.model}__{model.platform}__{model.shop_type === '专属店铺' || model.shop_type === null ? model.shop_name : model.shop_type}</span>
                                         <Tag color={model.status === '待审批' ? "gold" : model.status === '合作中' ? "green" : model.status === '已失效' ? "red" : ""}>{model.status}</Tag>
                                     </Space>}
                                     style={{ marginBottom: '20px' }}
@@ -811,7 +827,7 @@ function TalentDetail() {
                                                     f[key] = model[key].split(',')
                                                 } else if ((key.match('discount') || key.match('commission') || key.match('u_') || key.match('shop'))) {
                                                     f[key] = model[key]
-                                                } else if (model[key] !== null && ['create_time', 'create_uid', 'model', 'platform', 'shop', 'status', 'tid'].indexOf(key) !== -1) {
+                                                } else if (model[key] !== null && ['create_time', 'create_uid', 'model', 'platform', 'shop_type', 'shop_name', 'status', 'tid'].indexOf(key) !== -1) {
                                                     delete f[key]
                                                 } else if (key === 'model_files') {
                                                     delete f[key]
@@ -962,13 +978,15 @@ function TalentDetail() {
                         payload = {
                             m_id_1: formMiddle.getFieldValue('m_id').value ? formMiddle.getFieldValue('m_id').value : formMiddle.getFieldValue('m_id'),
                             m_type_1: formMiddle.getFieldValue('m_type').value ? formMiddle.getFieldValue('m_type').value : formMiddle.getFieldValue('m_type'),
-                            m_point_1: formMiddle.getFieldValue('m_point')
+                            m_point_1: formMiddle.getFieldValue('m_point'),
+                            m_note_1: formMiddle.getFieldValue('m_note')
                         }
                     } else {
                         payload = {
                             m_id_2: formMiddle.getFieldValue('m_id').value ? formMiddle.getFieldValue('m_id').value : formMiddle.getFieldValue('m_id'),
                             m_type_2: formMiddle.getFieldValue('m_type').value ? formMiddle.getFieldValue('m_type').value : formMiddle.getFieldValue('m_type'),
-                            m_point_2: formMiddle.getFieldValue('m_point')
+                            m_point_2: formMiddle.getFieldValue('m_point'),
+                            m_note_2: formMiddle.getFieldValue('m_note')
                         }
                     }
                     let z = {}
@@ -995,6 +1013,9 @@ function TalentDetail() {
                     </Form.Item>
                     <Form.Item label="提点（%）" name="m_point" rules={[{ required: true, message: '不能为空' }]}>
                         <InputNumber />
+                    </Form.Item>
+                    <Form.Item label="备注" name="m_note">
+                        <TextArea maxLength={500} />
                     </Form.Item>
                 </Form>
             </Modal>
@@ -1030,7 +1051,7 @@ function TalentDetail() {
                         if (Object.hasOwnProperty.call(ori, key)) {
                             if (ori[key] === null && key !== 'u_id_2' && key !== 'u_point_2' && key !== 'u_note' && key !== 'commission_note' && key !== 'discount_note') {
                                 continue
-                            } else if (key === 'shop') {
+                            } else if (key.match('shop')) {
                                 continue
                             } else {
                                 o[key] = ori[key]
@@ -1075,7 +1096,7 @@ function TalentDetail() {
                         type = type.match('综合信息') ? type : type.match('基础信息') ? '综合信息' : '佣金提点'
                     }
                     let operate = modelType + type
-                     if (modelType.match('新增')) {
+                    if (modelType.match('新增')) {
                         addTalentModelAPI(values)
                     } else if (Object.keys(z).length === 0) {
                         if (type.match('基础信息')) {
@@ -1089,7 +1110,7 @@ function TalentDetail() {
                         }
                     } else {
                         editTalentModelAPI(operate, JSON.stringify(z), payload)
-                    } 
+                    }
                 }}
                 onCancel={() => { setIsShowModel(false); formModel.resetFields(); setTypeModel(''); }}
             />

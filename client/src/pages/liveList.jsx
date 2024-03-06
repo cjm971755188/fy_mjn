@@ -228,7 +228,7 @@ function LiveList() {
     const searchTalentAPI = (value) => {
         request({
             method: 'post',
-            url: '/talent/searchTalents',
+            url: '/talent/getTalentItems',
             data: {
                 value,
                 userInfo: {

@@ -7,14 +7,10 @@ export const chanceStatus = [
 ]
 
 export const talentStatus = [
-    { key: 0, label: "报备待审批", value: "报备待审批" },
-    { key: 1, label: "报备驳回", value: "报备驳回" },
-    { key: 2, label: "已撤回", value: "已撤回" },
-    { key: 3, label: "合作中", value: "合作中" },
-    { key: 4, label: "年框待审批", value: "年框待审批" },
-    { key: 5, label: "新合作待审批", value: "新合作待审批" },
-    { key: 6, label: "合作变更待审批", value: "合作变更待审批" },
-    { key: 7, label: "移交待审批", value: "移交待审批" }
+    { key: 0, label: "报备驳回", value: "报备驳回" },
+    { key: 1, label: "已撤回", value: "已撤回" },
+    { key: 2, label: "合作中", value: "合作中" },
+    { key: 3, label: "待审批", value: "待审批" }
 ]
 
 export const yearboxStatus = [
@@ -45,11 +41,10 @@ export const platform = [
     { key: 9, label: "小红书", value: "小红书" }
 ]
 
-export const shop = [
+export const shop_type = [
     { key: 0, label: "普通店铺", value: "普通店铺" },
-    { key: 1, label: "视频号团长", value: "视频号团长" },
-    { key: 2, label: "抖音团长", value: "抖音团长" },
-    { key: 3, label: "快手团长", value: "快手团长" }
+    { key: 1, label: "团长店铺", value: "团长店铺" },
+    { key: 2, label: "专属店铺", value: "专属店铺" }
 ]
 
 export const liaisonType = [

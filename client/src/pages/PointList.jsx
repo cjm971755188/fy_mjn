@@ -23,7 +23,14 @@ function PointList() {
         },
         { title: '模式', dataIndex: 'model', key: 'model' },
         { title: '平台', dataIndex: 'platform', key: 'platform' },
-        { title: '店铺', dataIndex: 'shop', key: 'shop' },
+        { 
+            title: '店铺', 
+            dataIndex: 'shop_type', 
+            key: 'shop_type',
+            render: (_, record) => (
+                <span>{record.shop_type === '专属店铺' ? `${record.shop_type} - ${record.shop_name}` : record.shop_type}</span>
+            )
+        },
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
         { title: '达人账号', dataIndex: 'account_name', key: 'account_name' },
         {
@@ -202,7 +209,7 @@ function PointList() {
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
         { title: '模式', dataIndex: 'model', key: 'model' },
         { title: '平台', dataIndex: 'platform', key: 'platform' },
-        { title: '店铺', dataIndex: 'shop', key: 'shop' },
+        { title: '店铺类型', dataIndex: 'shop_type', key: 'shop_type' },
         { title: '常规品(%)', dataIndex: 'commission_1', key: 'commission_1' },
         { title: '福利品(%)', dataIndex: 'commission_2', key: 'commission_2' },
         { title: '爆品(%)', dataIndex: 'commission_3', key: 'commission_3' },
@@ -310,7 +317,7 @@ function PointList() {
                     <Form.Item label='平台' name='platform'>
                         <Select style={{ width: 160 }} options={platform} />
                     </Form.Item>
-                    <Form.Item label='店铺' name='shop'><Input /></Form.Item>
+                    <Form.Item label='店铺类型' name='shop_type'><Input /></Form.Item>
                     <Form.Item label='常规/买断' name='commission_1'><Input /></Form.Item>
                     <Form.Item label='福利/含退货' name='commission_2'><Input /></Form.Item>
                     <Form.Item label='爆品' name='commission_3'><Input /></Form.Item>

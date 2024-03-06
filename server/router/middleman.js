@@ -9,7 +9,7 @@ router.post('/getMiddlemanList', (req, res) => {
     // 权限筛选
     let whereUser = `WHERE status != '失效' and status != '测试'`
     if (params.userInfo.department === '事业部') {
-        if (params.userInfo.position === '副总') {
+        if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
         if (params.userInfo.position === '主管') {
@@ -110,7 +110,7 @@ router.post('/getmiddlemansItems', (req, res) => {
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试'`
     if (params.userInfo.department === '事业部') {
-        if (params.userInfo.position === '副总') {
+        if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
         if (params.userInfo.position === '主管') {

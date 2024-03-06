@@ -4,6 +4,8 @@ import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { yearCycleType, yearType1, yearType2, yearType3 } from '../../baseData/talent'
 import dayjs from 'dayjs';
 
+const { TextArea } = Input;
+
 function AEYear(props) {
     const { type, isShow, form } = props;
 
@@ -79,6 +81,9 @@ function AEYear(props) {
                         </>
                     )}
                 </Form.List> : null}
+                <Form.Item label="备注" name="yearbox_note">
+                    <TextArea maxLength={500} />
+                </Form.Item>
             </Form>
         </Modal>
     )

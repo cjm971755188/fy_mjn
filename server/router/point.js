@@ -4,13 +4,13 @@ const db = require('../config/db')
 const BASE_URL = require('../config/config')
 const dayjs = require('dayjs');
 
- // 获取提点结算规则
+/*  // 获取提点结算规则
 router.post('/getPointList', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试'`
     if (params.userInfo.department === '事业部') {
-        if (params.userInfo.position === '副总') {
+        if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
         if (params.userInfo.position === '主管') {
@@ -37,7 +37,7 @@ router.post('/getPointList', (req, res) => {
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
     let sql = `SELECT z.* 
                 FROM (
-                    (SELECT	a.*, t.name, tm.model, tm.platform, tm.shop, tm.account_name, ts.m_id_1, m1.name as m_name_1, ts.m_point_1, ts.m_id_2, m2.name as m_name_2, ts.m_point_2, ts.m_note, 
+                    (SELECT	a.*, t.name, tm.model, tm.platform, tm.shop, tm.account_name, ts.m_id_1, m1.name as m_name_1, ts.m_point_1, ts.m_note_1, ts.m_id_2, m2.name as m_name_2, ts.m_point_2, ts.m_note_2, 
                         ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, 
                         tms.commission_normal as commission_1,
                         tms.commission_welfare as commission_2,
@@ -100,7 +100,7 @@ router.post('/getPointList', (req, res) => {
                         ) u0 ON u0.tid = t.tid and a.create_time >= u0.create_time
                     )
                     UNION
-                    (SELECT	a.*, t.name, tm.model, tm.platform, tm.shop, tm.account_name, ts.m_id_1, m1.name as m_name_1, ts.m_point_1, ts.m_id_2, m2.name as m_name_2, ts.m_point_2, ts.m_note, 
+                    (SELECT	a.*, t.name, tm.model, tm.platform, tm.shop, tm.account_name, ts.m_id_1, m1.name as m_name_1, ts.m_point_1, ts.m_note_1, ts.m_id_2, m2.name as m_name_2, ts.m_point_2, ts.m_note_2, 
                         ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, 
                         tms.commission_normal as commission_1,
                         tms.commission_welfare as commission_2,
@@ -188,7 +188,7 @@ router.post('/getExportPointList', (req, res) => {
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试'`
     if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
-        if (params.userInfo.position === '副总') {
+        if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
         if (params.userInfo.position === '主管') {
@@ -216,7 +216,8 @@ router.post('/getExportPointList', (req, res) => {
     }
     let sql = `SELECT z.* 
                 FROM (
-                    (SELECT	a.*, t.name, tm.model, tm.platform, tm.shop, tm.account_name, ts.m_id_1, m1.name as m_name_1, ts.m_point_1, ts.m_id_2, m2.name as m_name_2, ts.m_point_2, ts.m_note, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, 
+                    (SELECT	a.*, t.name, tm.model, tm.platform, tm.shop, tm.account_name, ts.m_id_1, m1.name as m_name_1, ts.m_point_1, ts.m_note_1, ts.m_id_2, m2.name as m_name_2, ts.m_point_2, ts.m_note_2, 
+                        ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, 
                         tms.commission_normal as commission_1,
                         tms.commission_welfare as commission_2,
                         tms.commission_bao as commission_3, 
@@ -264,7 +265,7 @@ router.post('/getExportPointList', (req, res) => {
         if (err) throw err;
         res.send({ code: 200, data: results, msg: `` })
     })
-}) 
+})  */
 
 // 获取达人昵称匹配规则
 router.post('/getKeywordList', (req, res) => {
@@ -272,7 +273,7 @@ router.post('/getKeywordList', (req, res) => {
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试'`
     if (params.userInfo.department === '事业部') {
-        if (params.userInfo.position === '副总') {
+        if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
         if (params.userInfo.position === '主管') {
@@ -295,7 +296,7 @@ router.post('/getKeywordList', (req, res) => {
     let current = params.pagination.current ? params.pagination.current : 0
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
     let sql = `SELECT z.* FROM (
-                (SELECT tm.tid, tm.tmid, tm.model, tm.platform, tm.shop, t.name, tm.keyword, t.status 
+                (SELECT tm.tid, tm.tmid, tm.model, tm.platform, tm.shop_type, tm.shop_name, t.name, tm.keyword, t.status 
                 FROM talent_model tm
                     LEFT JOIN talent t ON t.tid = tm.tid
                     LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms1 ON tms1.tmid = tm.tmid
@@ -304,7 +305,7 @@ router.post('/getKeywordList', (req, res) => {
                     LEFT JOIN user u2 ON u2.uid = tms0.u_id_2
                 WHERE tm.status != '已失效' and tm.keyword is not null)
                 UNION
-                (SELECT tm.tid, tm.tmid, tm.model, tm.platform, tm.shop, t.name, tm.account_name, t.status 
+                (SELECT tm.tid, tm.tmid, tm.model, tm.platform, tm.shop_type, tm.shop_name, t.name, tm.account_name, t.status 
                     FROM talent_model tm
                         LEFT JOIN talent t ON t.tid = tm.tid
                         LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms1 ON tms1.tmid = tm.tmid
@@ -314,7 +315,7 @@ router.post('/getKeywordList', (req, res) => {
                     WHERE tm.status != '已失效')
                 ) z
                 ${whereFilter}
-                ORDER BY model, platform, shop, name`
+                ORDER BY model, platform, shop_type, shop_name, name`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`
@@ -331,7 +332,7 @@ router.post('/getExportKeywordList', (req, res) => {
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试'`
     if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
-        if (params.userInfo.position === '副总') {
+        if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
             whereUser += ` and department = '${params.userInfo.department}'`
         }
         if (params.userInfo.position === '主管') {
@@ -351,7 +352,7 @@ router.post('/getExportKeywordList', (req, res) => {
         }
     }
     let sql = `SELECT z.* FROM (
-                (SELECT tm.tid, tm.tmid, tm.model, tm.platform, tm.shop, t.name, tm.keyword, t.status 
+                (SELECT tm.tid, tm.tmid, tm.model, tm.platform, tm.shop_type, tm.shop_name, t.name, tm.keyword, t.status 
                 FROM talent_model tm
                     LEFT JOIN talent t ON t.tid = tm.tid
                     LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms1 ON tms1.tmid = tm.tmid
@@ -360,7 +361,7 @@ router.post('/getExportKeywordList', (req, res) => {
                     LEFT JOIN user u2 ON u2.uid = tms0.u_id_2
                 WHERE tm.status != '已失效' and tm.keyword is not null)
                 UNION
-                (SELECT tm.tid, tm.tmid, tm.model, tm.platform, tm.shop, t.name, tm.account_name, t.status 
+                (SELECT tm.tid, tm.tmid, tm.model, tm.platform, tm.shop_type, tm.shop_name, t.name, tm.account_name, t.status 
                     FROM talent_model tm
                         LEFT JOIN talent t ON t.tid = tm.tid
                         LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms1 ON tms1.tmid = tm.tmid
@@ -370,7 +371,7 @@ router.post('/getExportKeywordList', (req, res) => {
                     WHERE tm.status != '已失效')
                 ) z
                 ${whereFilter}
-                ORDER BY model, platform, shop, name`
+                ORDER BY model, platform, shop_type, shop_name, name`
     db.query(sql, (err, results) => {
         if (err) throw err;
         res.send({ code: 200, data: results, msg: `` })

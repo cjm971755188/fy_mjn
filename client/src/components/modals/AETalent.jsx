@@ -2,7 +2,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import request from '../../service/request'
 import { Card, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, message, List, Image } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import { accountType, accountModelType, ageCut, priceCut, liaisonType, shop, platform, model, middlemanPayType, talentType } from '../../baseData/talent'
+import { accountType, accountModelType, ageCut, priceCut, liaisonType, shop_type, platform, model, middlemanPayType, talentType } from '../../baseData/talent'
 import { province } from '../../baseData/province'
 import people from '../../assets/people.jpg'
 import AEMiddleman from './AEMiddleman'
@@ -66,6 +66,7 @@ function AETalent(props) {
             console.error(err)
         })
     }
+    const [hasOnlyShop, setHasOnlyShop] = useState(false)
     const [hasFuSaleman, setHasFuSaleman] = useState(false)
     const [hasYuanSaleman, setHasYuanSaleman] = useState(false)
     const [hasFirstMiddle, setHasFirstMiddle] = useState(false)
@@ -315,8 +316,11 @@ function AETalent(props) {
                             <Form.Item label="付款类型" name="m_type_1" rules={[{ required: true, message: '不能为空' }]}>
                                 <Select options={middlemanPayType} />
                             </Form.Item>
-                            <Form.Item label="一级中间人提成点（%）[例：0.5]" name="m_point_1" rules={[{ required: true, message: '不能为空' }]}>
+                            <Form.Item label="提成点（%）[例：0.5]" name="m_point_1" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber min={0} max={100} />
+                            </Form.Item>
+                            <Form.Item label="备注" name="m_note_1">
+                                <TextArea maxLength={500} />
                             </Form.Item></> : null}
                         {hasSecondMiddle ? <>
                             <Form.Item label="二级中间人" name="m_id_2" rules={[{ required: true, message: '不能为空' }]}>
@@ -325,12 +329,12 @@ function AETalent(props) {
                             <Form.Item label="付款类型" name="m_type_2" rules={[{ required: true, message: '不能为空' }]}>
                                 <Select options={middlemanPayType} />
                             </Form.Item>
-                            <Form.Item label="二级中间人提成点（%）[例：0.5]" name="m_point_2" rules={[{ required: true, message: '不能为空' }]}>
+                            <Form.Item label="提成点（%）[例：0.5]" name="m_point_2" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber min={0} max={100} />
+                            </Form.Item>
+                            <Form.Item label="备注" name="m_note_2">
+                                <TextArea maxLength={500} />
                             </Form.Item></> : null}
-                        {hasFirstMiddle || hasSecondMiddle ? <Form.Item label="中间人提成备注" name="m_note">
-                            <TextArea />
-                        </Form.Item> : null}
                         {type === 'history' || type === 'reReport' ? <><Form.Item label="是否有原商务">
                             <Radio.Group onChange={(e) => { setHasYuanSaleman(e.target.value); }} value={hasYuanSaleman} style={{ marginLeft: '20px' }}>
                                 <Radio value={false}>无原商务</Radio>
@@ -374,7 +378,7 @@ function AETalent(props) {
                             {(fields, { add, remove }) => (
                                 <>
                                     {fields.map(({ key, name, ...restField }) => (
-                                        <Card key={key} title={`第 ${name + 1} 个账号`} extra={<MinusCircleOutlined onClick={() => remove(name)} />} style={{ marginBottom: '20px' }}>
+                                        <Card key={key} title={`第 ${name + 1} 个账号`} extra={<MinusCircleOutlined onClick={() => { remove(name); setHasOnlyShop(false); setHasFuSaleman(false); }} />} style={{ marginBottom: '20px' }}>
                                             <Form.Item label="平台" {...restField} name={[name, "platform"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select
                                                     placeholder="请选择"
@@ -382,9 +386,23 @@ function AETalent(props) {
                                                     onChange={(value) => { form.setFieldValue('platform', value) }}
                                                 />
                                             </Form.Item>
-                                            <Form.Item label="店铺" {...restField} name={[name, "shop"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('shop', value) }} options={shop} />
+                                            <Form.Item label="店铺类型" {...restField} name={[name, "shop_type"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                <Select
+                                                    placeholder="请选择"
+                                                    onChange={(value) => {
+                                                        form.setFieldValue('shop_type', value);
+                                                        if (value === '专属店铺') {
+                                                            setHasOnlyShop(true);
+                                                        } else {
+                                                            setHasOnlyShop(false);
+                                                        }
+                                                    }}
+                                                    options={shop_type}
+                                                />
                                             </Form.Item>
+                                            {hasOnlyShop ? <Form.Item label="店铺名称" {...restField} name={[name, "shop_name"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                <Input placeholder="请输入" />
+                                            </Form.Item> : null}
                                             <Form.Item label="账号ID" {...restField} name={[name, "account_id"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Input placeholder="请输入" onChange={(e) => { form.setFieldValue('account_id', e.target.value) }} />
                                             </Form.Item>
@@ -401,22 +419,22 @@ function AETalent(props) {
                                                 <Select mode="tags" allowClear placeholder="请输入" onChange={(value) => { form.setFieldValue('keyword', value) }} options={[]} />
                                             </Form.Item>
                                             <Form.Item label="平时带货在线（人）[例：1000]" {...restField} name={[name, "people_count"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <InputNumber min={0} />
+                                                <InputNumber placeholder="请输入" min={0} />
                                             </Form.Item>
                                             <Form.Item label="女粉比例（%）[例：50]" {...restField} name={[name, "fe_proportion"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <InputNumber min={0} max={100} />
+                                                <InputNumber placeholder="请输入" min={0} max={100} />
                                             </Form.Item>
                                             <Form.Item label="粉丝地域分布（省份）" {...restField} name={[name, "main_province"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select mode="multiple" allowClear placeholder="请选择" showSearch filterOption={filterOption} onChange={(value) => { form.setFieldValue('main_province', value) }} options={province} />
                                             </Form.Item>
                                             <Form.Item label="粉丝购买主力年龄段（岁）" {...restField} name={[name, "age_cuts"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Select mode="multiple" allowClear options={ageCut} />
+                                                <Select mode="multiple" allowClear placeholder="请选择" options={ageCut} />
                                             </Form.Item>
                                             <Form.Item label="平均客单价（元）" {...restField} name={[name, "price_cut"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Select options={priceCut} />
+                                                <Select placeholder="请选择" options={priceCut} />
                                             </Form.Item>
                                             <Form.Item label="常规品线上佣金比例（%）[例：20]" {...restField} name={[name, "commission_normal"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <InputNumber min={0} max={100} />
+                                                <InputNumber placeholder="请输入" min={0} max={100} />
                                             </Form.Item>
                                             <Form.Item label="福利品线上佣金比例（%）[例：20]" {...restField} name={[name, "commission_welfare"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <InputNumber placeholder="请输入" min={0} max={100} />
@@ -431,17 +449,17 @@ function AETalent(props) {
                                                 </Form.Item>
                                             </Space> */}
                                             <Form.Item label="爆品线上佣金比例（%）[例：20]" {...restField} name={[name, "commission_bao"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <InputNumber min={0} max={100} />
+                                                <InputNumber placeholder="请输入" min={0} max={100} />
                                             </Form.Item>
                                             <Form.Item label="佣金备注" {...restField} name={[name, "commission_note"]}>
-                                                <TextArea />
+                                                <TextArea placeholder="请输入" />
                                             </Form.Item>
                                             <Space size='large'>
                                                 <Form.Item label="主商务" {...restField} name={[name, "u_id_1"]} >
                                                     <Input defaultValue={localStorage.getItem('name')} disabled={true} />
                                                 </Form.Item>
                                                 <Form.Item label="主商务提成点（%）[例：0.5]" {...restField} name={[name, "u_point_1"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <InputNumber min={0} max={100} />
+                                                    <InputNumber placeholder="请输入" min={0} max={100} />
                                                 </Form.Item>
                                             </Space>
                                             <Form.Item label="是否有副商务">
@@ -459,7 +477,7 @@ function AETalent(props) {
                                                 </Form.Item>
                                             </Space> : null}
                                             <Form.Item label="商务提成备注" {...restField} name={[name, "u_note"]}>
-                                                <TextArea />
+                                                <TextArea placeholder="请输入" />
                                             </Form.Item>
                                         </Card>
                                     ))}
@@ -505,7 +523,7 @@ function AETalent(props) {
                                 <Input defaultValue={localStorage.getItem('name')} disabled={true} />
                             </Form.Item>
                             <Form.Item label="主商务提成点（%）[例：0.5]" name="group_u_point_1" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber min={0} max={100} />
+                                <InputNumber placeholder="请输入" min={0} max={100} />
                             </Form.Item>
                         </Space>
                         <Form.Item label="是否有副商务">
@@ -523,7 +541,7 @@ function AETalent(props) {
                             </Form.Item>
                         </Space> : null}
                         <Form.Item label="商务提成备注" name="group_u_note">
-                            <TextArea />
+                            <TextArea placeholder="请输入" />
                         </Form.Item>
                     </Card> : null}
                     {isShowProvide ? <Card title="供货" style={{ marginBottom: "20px" }}>
@@ -547,7 +565,7 @@ function AETalent(props) {
                                 <Input defaultValue={localStorage.getItem('name')} disabled={true} />
                             </Form.Item>
                             <Form.Item label="主商务提成点（%）[例：0.5]" name="provide_u_point_1" rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber min={0} max={100} />
+                                <InputNumber placeholder="请输入" min={0} max={100} />
                             </Form.Item>
                         </Space>
                         <Form.Item label="是否有副商务">
@@ -565,7 +583,7 @@ function AETalent(props) {
                             </Form.Item>
                         </Space> : null}
                         <Form.Item label="商务提成备注" name="provide_u_note">
-                            <TextArea />
+                            <TextArea placeholder="请输入" />
                         </Form.Item>
                     </Card> : null}
                     {type === 'report' ? null : <><Form.Item label="相同线上达人">

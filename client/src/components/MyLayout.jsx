@@ -70,11 +70,11 @@ const menuItemsTotal = [
             {
                 key: '/admin/point/keyword_list',
                 label: '达人昵称规则'
-            },
+            }/*,
             {
                 key: '/admin/point/point_list',
                 label: '提点规则'
-            }
+            }*/
         ]
     },
     
