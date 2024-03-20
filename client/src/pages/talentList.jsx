@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom'
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Row, Modal, Popconfirm } from 'antd';
 import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined, CloseCircleTwoTone, VerticalAlignBottomOutlined } from '@ant-design/icons';
-import { model, platform, uPoint0, talentStatus, yearboxStatus, modelStatus, talentType } from '../baseData/talent'
+import { model, platform, uPoint0, talentStatus, yearboxStatus, accountType, talentType, accountModelType } from '../baseData/talent'
 import AETalent from '../components/modals/AETalent'
 import AELive from '../components/modals/AELive'
 import dayjs from 'dayjs'
@@ -20,24 +20,29 @@ function TalentList() {
     let columns = [
         { title: '编号', dataIndex: 'tid', key: 'tid' },
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
+        { title: '账号类型', dataIndex: 'account_type', key: 'account_type' },
         { title: '合作模式', dataIndex: 'models', key: 'models' },
         { title: '平台', dataIndex: 'platforms', key: 'platforms' },
+        { title: '销售模式', dataIndex: 'account_models', key: 'account_models' },
         {
             title: '年度预估GMV',
             dataIndex: 'year_deal',
             key: 'year_deal',
+            width: 100,
             render: (_, record) => (<span>{record.year_deal} 万</span>)
         },
         {
             title: '层级',
             dataIndex: 'type',
             key: 'type',
+            width: 60,
             render: (_, record) => (<span>{record.type} 类</span>)
         },
         {
             title: '商务',
             dataIndex: 'u_name',
             key: 'u_name',
+            width: 80,
             render: (_, record) => (
                 <Popover title="商务信息" content={
                     <List>
@@ -54,6 +59,7 @@ function TalentList() {
             title: '中间人',
             dataIndex: 'm_name',
             key: 'm_name',
+            width: 120,
             render: (_, record) => (
                 <Popover title="中间人信息" content={
                     <List>
@@ -69,6 +75,7 @@ function TalentList() {
             title: '年框状态',
             dataIndex: 'yearbox_status',
             key: 'yearbox_status',
+            width: 100,
             render: (_, record) => (
                 <Popover title="提点备注" content={
                     <List style={{ marginLeft: '10px' }}>
@@ -91,20 +98,10 @@ function TalentList() {
             )
         },
         {
-            title: '合作协议状态',
-            dataIndex: 'model_status',
-            key: 'model_status',
-            render: (_, record) => (
-                <Space size="small">
-                    {record.model_status === '暂无' ? <StopTwoTone twoToneColor="#999999" /> : <PauseCircleTwoTone twoToneColor="#4ec990" />}
-                    <span>{record.model_status}</span>
-                </Space>
-            )
-        },
-        {
             title: '达人状态',
             dataIndex: 'status',
             key: 'status',
+            width: 100,
             render: (_, record) => (
                 <Space size="small">
                     {record.status.match('待审批') ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
@@ -119,6 +116,7 @@ function TalentList() {
             title: '合作专场',
             dataIndex: 'live',
             key: 'live',
+            width: 140,
             render: (_, record) => (
                 <span>{record.live_count} 场（{record.live_sum ? record.live_sum : 0} 万）</span>
             )
@@ -129,7 +127,8 @@ function TalentList() {
             render: (_, record) => (
                 <Space size="large">
                     {examPower && record.status.match('待审批') ? <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> :
-                        record.status === '报备驳回' || record.status === '已撤销' ? null : <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>查看详情</NavLink>}
+                        record.status === '报备驳回' || record.status === '已撤销' ? null : 
+                        <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid, tableParams: { ...tableParams, pagination: { ...tableParams.pagination, showTotal: null}} }}>查看详情</NavLink>}
                     {editPower && record.status.match('待审批') ? <Popconfirm
                         title="确认要撤销该申请吗"
                         okText="撤销"
@@ -148,12 +147,12 @@ function TalentList() {
                         setClickTid(record.tid);
                         setIsShowGive(true);
                     }}>移交</a>
-                        <a onClick={() => {
+                        {/* <a onClick={() => {
                             setLiveType('add');
                             setIsShowLive(true);
                             liveForm.setFieldValue('name', record.name);
                             liveForm.setFieldValue('tid', record.tid);
-                        }}>添加专场</a></> : null}
+                        }}>添加专场</a> */}</> : null}
                     {record.status === '报备驳回' ? <><a onClick={() => { getRefundReasonAPI({ tid: record.tid }); }}>查看驳回备注</a>
                         <a onClick={() => { setClickTid(record.tid); getReportInfoAPI({ tid: record.tid }); }}>重新报备</a></> : null}
                     {record.status === '已撤销' ? <a onClick={() => { setClickTid(record.tid); getReportInfoAPI({ tid: record.tid }); }}>重新报备</a> : null}
@@ -710,22 +709,25 @@ function TalentList() {
                 >
                     <Form.Item label='编号' name='tid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='达人名称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='账号类型' name='account_type'>
+                        <Select style={{ width: 160 }} options={accountType} />
+                    </Form.Item>
                     <Form.Item label='合作模式' name='models'>
                         <Select style={{ width: 160 }} options={model} />
                     </Form.Item>
                     <Form.Item label='平台' name='platforms'>
                         <Select style={{ width: 160 }} options={platform} />
                     </Form.Item>
+                    <Form.Item label='销售模式' name='account_models'>
+                        <Select style={{ width: 160 }} options={accountModelType} />
+                    </Form.Item>
                     <Form.Item label='达人层级' name='type'>
                         <Select style={{ width: 160 }} options={talentType} />
                     </Form.Item>
-                    {editPower ? null : <Form.Item label='商务' name='u_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>}
+                    <Form.Item label='商务' name='u_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='中间人' name='m_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='年框状态' name='yearbox_status'>
                         <Select style={{ width: 160 }} options={yearboxStatus} />
-                    </Form.Item>
-                    <Form.Item label='合作协议状态' name='model_status'>
-                        <Select style={{ width: 160 }} options={modelStatus} />
                     </Form.Item>
                     <Form.Item label='达人状态' name='status'>
                         <Select style={{ width: 160 }} options={talentStatus} />

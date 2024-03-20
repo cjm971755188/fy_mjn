@@ -7,7 +7,7 @@ import FilePreview from '../FilePreview';
 function AEFile(props) {
     const { id, type, isShow } = props;
     // 操作权限
-    const editPower = localStorage.getItem('position') === '商务' ? true : false
+    const editPower = localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理' ? true : false
     // 表格：格式
     const columns = [
         {

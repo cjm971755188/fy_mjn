@@ -4,11 +4,9 @@ import request from '../service/request'
 import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
-    CalendarOutlined,
     RollbackOutlined,
     UserOutlined,
-    AreaChartOutlined,
-    BranchesOutlined,
+    LineChartOutlined,
     TeamOutlined,
     DollarOutlined
 } from '@ant-design/icons';

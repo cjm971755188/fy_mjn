@@ -416,7 +416,7 @@ function TalentStatistics() {
                             },
                             series: [
                                 {
-                                    name: '平均用时（小时）',
+                                    name: '平均用时（天）',
                                     type: 'pie',
                                     radius: ['40%', '70%'],
                                     avoidLabelOverlap: false,
@@ -451,7 +451,7 @@ function TalentStatistics() {
                             },
                             series: [
                                 {
-                                    name: '平均用时（小时）',
+                                    name: '平均用时（天）',
                                     type: 'pie',
                                     radius: ['40%', '70%'],
                                     avoidLabelOverlap: false,

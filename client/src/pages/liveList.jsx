@@ -526,12 +526,12 @@ function LiveList() {
                     <Form.Item label='服务商务' name='u_id_3' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(true); }} />
                     </Form.Item>
-                    {userShowPower ? null : <Form.Item label='主商务' name='u_id_1' style={{ marginBottom: '20px' }}>
+                    <Form.Item label='主商务' name='u_id_1' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
-                    </Form.Item>}
-                    {userShowPower ? null : <Form.Item label='副商务' name='u_id_2' style={{ marginBottom: '20px' }}>
+                    </Form.Item>
+                    <Form.Item label='副商务' name='u_id_2' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
-                    </Form.Item>}
+                    </Form.Item>
                     <Form.Item style={{ marginBottom: '20px' }}>
                         <Space size={'large'}>
                             <Button type="primary" htmlType="submit">查询</Button>

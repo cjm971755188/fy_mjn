@@ -21,7 +21,7 @@ router.post('/getChanceList', (req, res) => {
         }
     }
     // 条件筛选
-    let whereFilter = `where z.status != '已失效'`
+    let whereFilter = `where z.status != '已失效' and z.status != '报备通过'`
     if (params.filtersDate && params.filtersDate.length === 2) {
         whereFilter += ` and z.create_time >= '${params.filtersDate[0]}' and z.create_time < '${params.filtersDate[1]}'`
     }
@@ -374,6 +374,16 @@ router.post('/editNote', (req, res) => {
     db.query(sql, (err, results) => {
         if (err) throw err;
         res.send({ code: 200, data: [], msg: `修改成功` })
+    })
+})
+
+// 清除商机
+router.post('/clearChance', (req, res) => {
+    let params = req.body
+    let sql = `UPDATE chance SET status = '已失效' WHERE cid = '${params.cid}'`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        res.send({ code: 200, data: [], msg: `清除成功` })
     })
 })
 

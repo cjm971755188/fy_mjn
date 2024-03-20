@@ -139,7 +139,7 @@ router.post('/getAdReTimeDiff', (req, res) => {
         let a = []
         for (let i = 0; i < advance.length; i++) {
             a.push({
-                value: (advance[i].diff / 1000 / 3600).toFixed(2),
+                value: (advance[i].diff / 1000 / 3600 / 24).toFixed(2),
                 name: advance[i].name
             })
         }
@@ -156,7 +156,7 @@ router.post('/getAdReTimeDiff', (req, res) => {
             let r = []
             for (let i = 0; i < report.length; i++) {
                 r.push({
-                    value: (report[i].diff / 1000 / 3600).toFixed(2),
+                    value: (report[i].diff / 1000 / 3600 / 24).toFixed(2),
                     name: report[i].name
                 })
             }

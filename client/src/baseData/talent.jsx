@@ -2,7 +2,6 @@ export const chanceStatus = [
     { key: 0, label: "待推进", value: "待推进" },
     { key: 1, label: "待报备", value: "待报备" },
     { key: 2, label: "待审批", value: "待审批" },
-    { key: 3, label: "报备通过", value: "报备通过" },
     { key: 4, label: "报备驳回", value: "报备驳回" }
 ]
 

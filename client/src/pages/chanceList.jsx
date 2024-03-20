@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, message, Alert, Tooltip } from 'antd';
-import { PlusOutlined, CloseCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone, CheckCircleTwoTone } from '@ant-design/icons';
+import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, message, Popconfirm, Tooltip } from 'antd';
+import { PlusOutlined, CloseCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone, CheckCircleTwoTone, EditOutlined } from '@ant-design/icons';
 import { chanceStatus, model, platform } from '../baseData/talent'
 import MyDateSelect from '../components/MyDateSelect'
 import AEChance from '../components/modals/AEChance'
@@ -37,21 +37,23 @@ function ChanceList() {
                 </Popover>
             )
         },
-        { title: '寻找时间', dataIndex: 'create_time', key: 'create_time', render: (_, record) => (<span>{dayjs(Number(record.create_time)).format('YYYY-MM-DD')}</span>) },
         {
             title: '寻找证明',
             dataIndex: 'search_pic',
             key: 'search_pic',
             render: (_, record) => (
-                record.search_pic && record.search_pic.split(',').map((pic, index) => {
-                    return <Image key={index} width={50} height={50} src={pic} />
-                }) 
+                <Popover title="寻找时间" content={dayjs(Number(record.create_time)).format('YYYY-MM-DD')}>
+                    {record.search_pic && record.search_pic.split(',').map((pic, index) => {
+                        return <Image key={index} width={50} height={50} src={pic} />
+                    })}
+                </Popover>
             )
         },
         {
             title: '联系人',
             dataIndex: 'liaison_name',
             key: 'liaison_name',
+            width: 100,
             render: (_, record) => (
                 <Popover title="联系人信息" content={
                     <List>
@@ -66,15 +68,16 @@ function ChanceList() {
                 </Popover>
             )
         },
-        { title: '推进时间', dataIndex: 'advance_time', key: 'advance_time', render: (_, record) => (<span>{record.advance_time === null ? null : dayjs(Number(record.advance_time)).format('YYYY-MM-DD')}</span>) },
         {
             title: '推进证明',
             dataIndex: 'advance_pic',
             key: 'advance_pic',
             render: (_, record) => (
-                record.advance_pic && record.advance_pic.split(',').map((pic, index) => {
-                    return <Image key={index} width={50} height={50} src={pic} />
-                }) 
+                <Popover title="推进时间" content={dayjs(Number(record.advance_time)).format('YYYY-MM-DD')}>
+                    {record.advance_pic && record.advance_pic.split(',').map((pic, index) => {
+                        return <Image key={index} width={50} height={50} src={pic} />
+                    })}
+                </Popover>
             )
         },
         {
@@ -84,24 +87,33 @@ function ChanceList() {
             width: 150,
             render: (_, record) => (
                 <Tooltip title={record.note}>
-                    <div style={{
-                        width: '150px',
-                        textOverflow: 'ellipsis',
-                        overflow: 'hidden',
-                        whiteSpace: 'nowrap',
-                        cursor: 'pointer'
-                    }}
+                    <div
+                        style={{
+                            width: '150px',
+                            textOverflow: 'ellipsis',
+                            overflow: 'hidden',
+                            whiteSpace: 'nowrap',
+                            cursor: 'pointer'
+                        }}
+                        onClick={() => {
+                            if (editPower && record.status !== '报备通过') {
+                                setIsShowNote(true);
+                                setNote(record.note);
+                                setSelectNoteID(record.cid);
+                            }
+                        }}
                     >
-                        {record.note}
+                        {editPower && record.status !== '报备通过' ? <EditOutlined /> : null} {record.note}
                     </div>
                 </Tooltip>
             )
         },
-        { title: '商务', dataIndex: 'name', key: 'name' },
+        { title: '商务', dataIndex: 'name', key: 'name', width: 80 },
         {
             title: '状态',
             dataIndex: 'status',
             key: 'status',
+            width: 120,
             render: (_, record) => (
                 <Space size="small">
                     {record.status === '待推进' ? <PlayCircleTwoTone twoToneColor="#ee9900" /> :
@@ -118,11 +130,11 @@ function ChanceList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
-                    {editPower && record.status !== '报备通过' ? <a onClick={() => {
+                    {/* {editPower && record.status !== '报备通过' ? <a onClick={() => {
                         setIsShowNote(true);
                         setNote(record.note);
                         setSelectNoteID(record.cid);
-                    }}>修改备注</a> : null}
+                    }}>修改备注</a> : null} */}
                     {editPower && (record.status === '待推进' || record.status === '待报备' || record.status === '报备驳回') ? <a onClick={() => {
                         let models = record.models.split(',')
                         form.setFieldsValue({
@@ -141,7 +153,7 @@ function ChanceList() {
                         }
                         setType('edit');
                         setIsShow(true)
-                    }}>修改模式</a> : null}
+                    }}>修改寻找信息</a> : null}
                     {editPower && record.status === '待推进' ? <a onClick={() => {
                         let models = record.models.split(',')
                         setType('advance');
@@ -158,7 +170,7 @@ function ChanceList() {
                         })
                         setType('edit_chance');
                         setIsShowLiaison(true)
-                    }}>修改联系人</a> : null}
+                    }}>修改推进信息</a> : null}
                     {editPower && record.status === '待报备' ? <a onClick={() => {
                         let models = record.models.split(',')
                         let platformList = []
@@ -192,6 +204,16 @@ function ChanceList() {
                             cid: record.cid
                         });
                     }}>查看驳回备注</a><a onClick={() => { setClickCid(record.cid); getReportInfoAPI({ cid: record.cid }); }}>重新报备</a></> : null}
+                    {editPower && record.status !== '待审批' && record.status !== '报备通过' ? <Popconfirm
+                        title="清除商机"
+                        description="确定要清除该商机吗？【若想恢复，需联系管理员】"
+                        onConfirm={() => { clearChanceAPI({cid: record.cid}); }}
+                        onCancel={() => {}}
+                        okText="清除"
+                        cancelText="取消"
+                    >
+                        <a style={{ color: 'red' }}>清除</a>
+                    </Popconfirm> : null}
                 </Space>
             )
         }
@@ -654,6 +676,37 @@ function ChanceList() {
             console.error(err)
         })
     }
+    // 清除商机
+    const clearChanceAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/chance/clearChance',
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    getChanceListAPI();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     useEffect(() => {
         if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
@@ -694,9 +747,9 @@ function ChanceList() {
                     <Form.Item label='团购名' name='group_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='供货名' name='provide_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='联系人' name='liaison_name'><Input /></Form.Item>
-                    {userShowPower ? null : <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
+                    <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
-                    </Form.Item>}
+                    </Form.Item>
                     <Form.Item label='状态' name='status' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={chanceStatus} />
                     </Form.Item>

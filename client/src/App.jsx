@@ -18,7 +18,6 @@ function App() {
         <MyLayout>
             <Routes>
                 <Route path='/workbench' element={<Workbench />} />
-                <Route path='/user' element={<UserList />} />
                 <Route path='/talent/statistics' element={<TalentStatistics />} />
                 <Route path='/talent/chance_list' element={<ChanceList />} />
                 <Route path='/talent/talent_list' element={<TalentList />} />
@@ -28,6 +27,7 @@ function App() {
                 <Route path='/talent/middleman_list' element={<MiddlemanList />} />
                 <Route path='/point/keyword_list' element={<KeywordList />} />
                 <Route path='/point/point_list' element={<PointList />} />
+                <Route path='/user' element={<UserList />} />
             </Routes>
         </MyLayout>
     )

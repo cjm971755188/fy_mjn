@@ -18,7 +18,7 @@ function TalentDetail() {
     // 路由
     let location = useLocation();
     const navigate = useNavigate();
-    const { tid } = location.state;
+    const { tid, tableParams } = location.state;
 
     // 操作权限
     const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理') || localStorage.getItem('position') === '管理员' ? true : false
@@ -774,7 +774,7 @@ function TalentDetail() {
                         {isShowM2PayItems ? <Descriptions column={5} items={m2PayItems}></Descriptions> : null}
                     </Card>
                     <Card title={<Space><GlobalOutlined /><span>合作模式 ----- {detailData.models && detailData.models.length} 个</span></Space>}
-                        extra={detailData.status.match('待审批') ? null : editPower ? <Space>
+                        extra={detailData.status.match('待审批') && !detailData.status.match('新合作') ? null : editPower ? <Space>
                             <Button type="text" icon={<PlusOutlined />} onClick={() => {
                                 formModel.setFieldValue('u_id_1', {
                                     label: localStorage.getItem('name'),
