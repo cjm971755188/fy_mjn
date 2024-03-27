@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { NavLink } from 'react-router-dom'
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Row, Modal, Popconfirm } from 'antd';
+import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Alert, Modal, Popconfirm } from 'antd';
 import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined, CloseCircleTwoTone, VerticalAlignBottomOutlined } from '@ant-design/icons';
 import { model, platform, uPoint0, talentStatus, yearboxStatus, accountType, talentType, accountModelType } from '../baseData/talent'
 import AETalent from '../components/modals/AETalent'
@@ -13,17 +13,16 @@ const { TextArea } = Input;
 
 function TalentList() {
     // 操作权限
-    const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理') || localStorage.getItem('position') === '管理员' ? true : false
+    const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('company') !== '总公司') || localStorage.getItem('position') === '管理员' ? true : false
     const examPower = localStorage.getItem('position') === '副总' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
     let columns = [
         { title: '编号', dataIndex: 'tid', key: 'tid' },
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
-        { title: '账号类型', dataIndex: 'account_type', key: 'account_type' },
-        { title: '合作模式', dataIndex: 'models', key: 'models' },
-        { title: '平台', dataIndex: 'platforms', key: 'platforms' },
-        { title: '销售模式', dataIndex: 'account_models', key: 'account_models' },
+        { title: '账号类型', dataIndex: 'account_type', key: 'account_type', width: 140 },
+        { title: '平台', dataIndex: 'platforms', key: 'platforms', width: 100 },
+        { title: '销售模式', dataIndex: 'account_models', key: 'account_models', width: 140 },
         {
             title: '年度预估GMV',
             dataIndex: 'year_deal',
@@ -49,6 +48,8 @@ function TalentList() {
                         <List.Item>主商务：{record.u_name_1 ? `${record.u_name_1}(${record.u_point_1}%)` : null}</List.Item>
                         <List.Item>副商务：{record.u_name_2 ? `${record.u_name_2}(${record.u_point_2}%)` : null}</List.Item>
                         <List.Item>原商务：{record.u_name_0 ? `${record.u_name_0}(${record.u_point_0}%)` : null}</List.Item>
+                        <List.Item>提点备注：{record.u_note}</List.Item>
+                        <List.Item>业绩归属类型：{record.gmv_belong}</List.Item>
                     </List>}
                 >
                     <span>{record.u_name_1}{record.u_name_2 ? `, ${record.u_name_2}` : null}{record.u_name_0 ? `, ${record.u_name_0}` : null}</span>
@@ -127,8 +128,8 @@ function TalentList() {
             render: (_, record) => (
                 <Space size="large">
                     {examPower && record.status.match('待审批') ? <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> :
-                        record.status === '报备驳回' || record.status === '已撤销' ? null : 
-                        <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid, tableParams: { ...tableParams, pagination: { ...tableParams.pagination, showTotal: null}} }}>查看详情</NavLink>}
+                        record.status === '报备驳回' || record.status === '已撤销' ? null :
+                            <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid, tableParams: { ...tableParams, pagination: { ...tableParams.pagination, showTotal: null } } }}>查看详情</NavLink>}
                     {editPower && record.status.match('待审批') ? <Popconfirm
                         title="确认要撤销该申请吗"
                         okText="撤销"
@@ -154,8 +155,8 @@ function TalentList() {
                             liveForm.setFieldValue('tid', record.tid);
                         }}>添加专场</a> */}</> : null}
                     {record.status === '报备驳回' ? <><a onClick={() => { getRefundReasonAPI({ tid: record.tid }); }}>查看驳回备注</a>
-                        <a onClick={() => { setClickTid(record.tid); getReportInfoAPI({ tid: record.tid }); }}>重新报备</a></> : null}
-                    {record.status === '已撤销' ? <a onClick={() => { setClickTid(record.tid); getReportInfoAPI({ tid: record.tid }); }}>重新报备</a> : null}
+                        <a onClick={() => { setClickCid(record.cid); setClickTid(record.tid); getReportInfoAPI({ tid: record.tid }); }}>重新报备</a></> : null}
+                    {record.status === '已撤销' ? <a onClick={() => { setClickCid(record.cid); setClickTid(record.tid); getReportInfoAPI({ tid: record.tid }); }}>重新报备</a> : null}
                     {editPower && record.status === '合作中' ? <a style={{ color: 'red' }} onClick={() => { setClickTid(record.tid); setIsShowBlock(true); }}>拉黑</a> : null}
                 </Space>
             )
@@ -163,6 +164,7 @@ function TalentList() {
     ]
     // 表格：获取数据、分页
     const [data, setData] = useState();
+    const [waitSum, setWaitSum] = useState();
     const [loading, setLoading] = useState(false);
     const [tableParams, setTableParams] = useState({
         filtersDate: [],
@@ -191,6 +193,7 @@ function TalentList() {
                 },
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -201,7 +204,12 @@ function TalentList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
+                    let d = res.data.data
+                    for (let i = 0; i < res.data.data.length; i++) {
+                        d[i].account_models = res.data.data[i].account_models ? [...new Set(res.data.data[i].account_models.split(','))].sort().join() : null
+                    }
                     setData(res.data.data)
+                    setWaitSum(res.data.wait_sum)
                     setLoading(false)
                     setTableParams({
                         ...tableParams,
@@ -244,6 +252,7 @@ function TalentList() {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -270,16 +279,19 @@ function TalentList() {
     const [type, setType] = useState('')
     const [isShow, setIsShow] = useState(false)
     const [form] = Form.useForm()
+    const [clickCid, setClickCid] = useState('')
     const addHistoryTalentAPI = (payload) => {
         request({
             method: 'post',
             url: '/chance/reportChance',
             data: {
+                cid: clickCid,
                 ...payload,
                 operate: '达人报备',
                 clickTid,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -321,6 +333,7 @@ function TalentList() {
                 operate: '达人移交',
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -358,6 +371,7 @@ function TalentList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -394,6 +408,7 @@ function TalentList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -425,6 +440,7 @@ function TalentList() {
                 tid: payload.tid,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -453,6 +469,7 @@ function TalentList() {
                 tid: payload.tid,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -481,6 +498,7 @@ function TalentList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -491,8 +509,8 @@ function TalentList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    let models = [], accounts = [], group_name = null, group_shop = null, group_u_point_1 = null, group_u_id_2 = null, group_u_point_2 = null,
-                        provide_name = null, provide_shop = null, provide_u_point_1 = null, provide_u_id_2 = null, provide_u_point_2 = null,
+                    let models = [], accounts = [], group_name = null, group_shop = null, group_u_id_1 = null, group_u_point_1 = null, group_u_id_2 = null, group_u_point_2 = null,
+                        provide_name = null, provide_shop = null, provide_u_id_1 = null, provide_u_point_1 = null, provide_u_id_2 = null, provide_u_point_2 = null,
                         commission_normal = null, commission_welfare = null, commission_bao = null, commission_note = null, discount_buyout = null, discount_back = null, discount_label = null
                     for (let i = 0; i < res.data.data.length; i++) {
                         models.push(res.data.data[i].model)
@@ -503,7 +521,7 @@ function TalentList() {
                                 keyword: res.data.data[i].keyword.split(','),
                                 main_province: res.data.data[i].main_province.split(','),
                                 age_cuts: res.data.data[i].age_cuts.split(','),
-                                u_id_1: res.data.data[i].u_name_1,
+                                u_id_1: res.data.data[i].u_id_1,
                                 u_id_2: res.data.data[i].u_id_2 === null ? null : {
                                     value: res.data.data[i].u_id_2,
                                     label: res.data.data[i].u_name_2,
@@ -511,11 +529,15 @@ function TalentList() {
                             })
                         } else if (res.data.data[i].model === '社群团购') {
                             group_name = res.data.data[i].name
-                            group_shop = res.data.data[i].shop
+                            group_shop = res.data.data[i].shop_name
                             commission_normal = res.data.data[i].commission_normal
                             commission_welfare = res.data.data[i].commission_welfare
                             commission_bao = res.data.data[i].commission_bao
                             commission_note = res.data.data[i].commission_note
+                            group_u_id_1 = {
+                                value: res.data.data[i].u_id_1,
+                                label: res.data.data[i].u_name_1,
+                            }
                             group_u_point_1 = res.data.data[i].u_point_1
                             group_u_id_2 = {
                                 value: res.data.data[i].u_id_2,
@@ -524,10 +546,14 @@ function TalentList() {
                             group_u_point_2 = res.data.data[i].u_point_2
                         } else if (res.data.data[i].model === '供货') {
                             provide_name = res.data.data[i].name
-                            provide_shop = res.data.data[i].shop
+                            provide_shop = res.data.data[i].shop_name
                             discount_buyout = res.data.data[i].discount_buyout
                             discount_back = res.data.data[i].discount_back
                             discount_label = res.data.data[i].discount_label
+                            provide_u_id_1 = {
+                                value: res.data.data[i].u_id_1,
+                                label: res.data.data[i].u_name_1,
+                            }
                             provide_u_point_1 = res.data.data[i].u_point_1
                             provide_u_id_2 = {
                                 value: res.data.data[i].u_id_2,
@@ -554,6 +580,7 @@ function TalentList() {
                         },
                         group_name,
                         group_shop,
+                        group_u_id_1,
                         group_u_point_1,
                         group_u_id_2,
                         group_u_point_2,
@@ -563,6 +590,7 @@ function TalentList() {
                         commission_note,
                         provide_name,
                         provide_shop,
+                        provide_u_id_1,
                         provide_u_point_1,
                         provide_u_id_2,
                         provide_u_point_2,
@@ -602,6 +630,7 @@ function TalentList() {
                 filters: tableParams.filters,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -658,6 +687,7 @@ function TalentList() {
                 new: payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -725,6 +755,7 @@ function TalentList() {
                         <Select style={{ width: 160 }} options={talentType} />
                     </Form.Item>
                     <Form.Item label='商务' name='u_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='原商务' name='u_name_0' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='中间人' name='m_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='年框状态' name='yearbox_status'>
                         <Select style={{ width: 160 }} options={yearboxStatus} />
@@ -772,6 +803,7 @@ function TalentList() {
                         </Space>
                     </Form.Item>
                 </Form>
+                {examPower && waitSum !== 0 ? <Alert message={`还有 ${waitSum} 个达人未审批完毕`} type="warning" showIcon closable /> : null}
                 <Table
                     style={{ margin: '20px auto' }}
                     rowKey={(data) => data.tid}
@@ -786,7 +818,7 @@ function TalentList() {
                 isShow={isShow}
                 type={type}
                 form={form}
-                onOK={(values) => { console.log('values: ', values); addHistoryTalentAPI(values); }}
+                onOK={(values) => { addHistoryTalentAPI(values); }}
                 onCancel={() => { setIsShow(false); form.resetFields(); setType(''); setClickTid(''); }}
             />
             <Modal title="移交达人" open={isShowGive} onOk={() => { giveTalentAPI(); }} onCancel={() => { setIsShowGive(false); }}>

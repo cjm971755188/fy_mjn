@@ -22,6 +22,7 @@ function Login() {
                     localStorage.setItem('department', res.data.data.department)
                     localStorage.setItem('position', res.data.data.position)
                     localStorage.setItem('e_id', res.data.data.e_id)
+                    localStorage.setItem('up_uid', res.data.data.up_uid)
                     message.success('登录成功')
                     navigate('/admin/talent/statistics')
                 } else if (res.data.code == 202) {

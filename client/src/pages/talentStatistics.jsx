@@ -22,6 +22,7 @@ function TalentStatistics() {
                 filters: tableParams.filters,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -54,6 +55,7 @@ function TalentStatistics() {
                 filters: tableParams.filters,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -86,6 +88,7 @@ function TalentStatistics() {
                 filters: tableParams.filters,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -118,6 +121,7 @@ function TalentStatistics() {
                 filters: tableParams.filters,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -150,6 +154,7 @@ function TalentStatistics() {
                 filters: tableParams.filters,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -182,6 +187,7 @@ function TalentStatistics() {
                 filters: tableParams.filters,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -214,6 +220,7 @@ function TalentStatistics() {
                 filters: tableParams.filters,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),

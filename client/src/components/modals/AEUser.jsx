@@ -1,10 +1,54 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import request from '../../service/request'
 import { Form, Input, Modal, Cascader } from 'antd';
 import { combine } from '../../baseData/user'
 
 function AEUser(props) {
     const { type, isShow, form } = props;
 
+    const getSalemanItemsAPI = () => {
+        request({
+            method: 'post',
+            url: '/user/getSalemanItems',
+            data: {
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    let _combine = combine
+                    for (let i = 0; i < _combine.length; i++) {
+                        for (let j = 0; j < _combine[i].children.length; j++) {
+                            if (_combine[i].children[j].label === '事业部') {
+                                for (let k = 0; k < _combine[i].children[j].children.length; k++) {
+                                    if (_combine[i].children[j].children[k].label === '助理') {
+                                        _combine[i].children[j].children[k]['children'] = res.data.data
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+
+    useEffect(() => {
+        getSalemanItemsAPI();
+    }, [isShow])
     return (
         <Modal
             title={type === 'add' ? "添加新用户" : "修改用户信息"}

@@ -32,7 +32,8 @@ router.get('/download', (req, res) => {
 // 删除文件
 router.post('/delete', (req, res) => {
     let parmas = req.body
-    fs.unlink(parmas.url, (error) => {
+    let url = 'public/' + parmas.url
+    fs.unlink(url, (error) => {
         if (error) {
             throw error;
         } else {

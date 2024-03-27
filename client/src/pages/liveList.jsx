@@ -9,8 +9,7 @@ import dayjs from 'dayjs'
 
 function LiveList() {
     // 操作权限
-    const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理') || localStorage.getItem('position') === '管理员' ? true : false
-    const userShowPower = localStorage.getItem('position') === '商务' ? true : false
+    const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('company') !== '总公司') || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
     let columns = [
@@ -151,7 +150,6 @@ function LiveList() {
             )
         }
     ]
-    columns = userShowPower ? columns.filter(item => item.title !== '商务') : columns
     // 表格：获取数据、分页
     const [data, setData] = useState();
     const [loading, setLoading] = useState(false);
@@ -180,6 +178,7 @@ function LiveList() {
                 },
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -233,6 +232,7 @@ function LiveList() {
                 value,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -263,6 +263,7 @@ function LiveList() {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -300,6 +301,7 @@ function LiveList() {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -337,6 +339,7 @@ function LiveList() {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -373,6 +376,7 @@ function LiveList() {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -407,6 +411,7 @@ function LiveList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -441,6 +446,7 @@ function LiveList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),

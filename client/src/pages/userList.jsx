@@ -17,6 +17,7 @@ function UserList() {
         { title: '公司', dataIndex: 'company', key: 'company' },
         { title: '部门', dataIndex: 'department', key: 'department' },
         { title: '职位', dataIndex: 'position', key: 'position' },
+        { title: '上级商务', dataIndex: 'up_name', key: 'up_name' },
         {
             title: '状态',
             dataIndex: 'status',
@@ -100,6 +101,7 @@ function UserList() {
                 },
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -156,6 +158,7 @@ function UserList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -188,6 +191,7 @@ function UserList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -220,6 +224,7 @@ function UserList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -248,6 +253,7 @@ function UserList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),

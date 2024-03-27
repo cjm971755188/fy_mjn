@@ -11,7 +11,7 @@ function TalentBlockList() {
     // 操作权限
     const editPower = (localStorage.getItem('company') === '总公司' && localStorage.getItem('department') === '事业部') || localStorage.getItem('position') === '管理员' ? true : false
     const examPower = (localStorage.getItem('position') === '副总' && localStorage.getItem('department') === '事业部') || localStorage.getItem('position') === '管理员' ? true : false
-    const releasePower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '管理员' ? true : false
+    const releasePower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '助理' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
     let columns = [
@@ -142,6 +142,7 @@ function TalentBlockList() {
                 },
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -198,6 +199,7 @@ function TalentBlockList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -233,6 +235,7 @@ function TalentBlockList() {
                 new: payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -266,6 +269,7 @@ function TalentBlockList() {
                 reason,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -303,6 +307,7 @@ function TalentBlockList() {
                 new: payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -348,6 +353,7 @@ function TalentBlockList() {
                 type,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -386,6 +392,7 @@ function TalentBlockList() {
                 uid,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),

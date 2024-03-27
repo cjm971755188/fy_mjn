@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import request from '../../service/request'
 import { Card, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, message, List, Image } from 'antd';
-import { accountType, accountModelType, ageCut, priceCut, shop_type, platform } from '../../baseData/talent'
+import { accountType, accountModelType, ageCut, priceCut, shop_type, platform, gmvBelong } from '../../baseData/talent'
 import { province } from '../../baseData/province'
 import people from '../../assets/people.jpg'
 
@@ -57,6 +57,7 @@ function AETalentModel(props) {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -108,10 +109,11 @@ function AETalentModel(props) {
                 if (type.match('新增')) {
                     searchSameChanceAPI('finish', null, {
                         ...values,
+                        u_id_1: values.u_id_1 ? values.u_id_1.value || values.u_id_1.value === null ? values.u_id_1.value : values.u_id_1 : null,
                         type: type === '新增线上平台' ? 'model_1' : type === '新增社群团购' ? 'model_2' : 'model_3'
                     })
                 } else {
-                    props.onOK(values);
+                    props.onOK({...values, u_id_1: values.u_id_1 ? values.u_id_1.value || values.u_id_1.value === null ? values.u_id_1.value : values.u_id_1 : null,});
                     reset();
                 }
             }}>
@@ -191,8 +193,8 @@ function AETalentModel(props) {
                         <TextArea />
                     </Form.Item>
                     <Space size='large'>
-                        <Form.Item label="主商务" name="u_id_1" >
-                            <Select disabled={true} />
+                        <Form.Item label="主商务" name="u_id_1" rules={[{ required: true, message: '不能为空' }]}>
+                            <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} onChange={(value) => { form.setFieldValue('u_id_1', value) }} />
                         </Form.Item>
                         <Form.Item label="主商务提成点（%）[例：0.5]" name="u_point_1" rules={[{ required: true, message: '不能为空' }]}>
                             <InputNumber min={0} max={100} />
@@ -215,6 +217,9 @@ function AETalentModel(props) {
                     <Form.Item label="商务提成备注" name="u_note">
                         <TextArea />
                     </Form.Item>
+                    <Form.Item label="业绩归属" name="gmv_belong" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select placeholder="请选择" options={gmvBelong} />
+                    </Form.Item>
                 </Card> : null}
                 {isShowGroup ? <Card title="社群团购" style={{ marginBottom: "20px" }}>
                     <Form.Item label="达人名称" name="group_name" rules={[{ required: true, message: '不能为空' }]}>
@@ -236,8 +241,8 @@ function AETalentModel(props) {
                         <TextArea placeholder="请输入" />
                     </Form.Item>
                     <Space size='large'>
-                        <Form.Item label="主商务" name="u_id_1" >
-                            <Select disabled={true} />
+                        <Form.Item label="主商务" name="u_id_1" rules={[{ required: true, message: '不能为空' }]}>
+                            <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} onChange={(value) => { form.setFieldValue('u_id_1', value) }} />
                         </Form.Item>
                         <Form.Item label="主商务提成点（%）[例：0.5]" name="u_point_1" rules={[{ required: true, message: '不能为空' }]}>
                             <InputNumber min={0} max={100} />
@@ -259,6 +264,9 @@ function AETalentModel(props) {
                     </Space> : null}
                     <Form.Item label="商务提成备注" name="u_note">
                         <TextArea />
+                    </Form.Item>
+                    <Form.Item label="业绩归属" name="gmv_belong" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select placeholder="请选择" options={gmvBelong} />
                     </Form.Item>
                 </Card> : null}
                 {isShowProvide ? <Card title="供货" style={{ marginBottom: "20px" }}>
@@ -278,8 +286,8 @@ function AETalentModel(props) {
                         <TextArea placeholder="请输入" />
                     </Form.Item>
                     <Space size='large'>
-                        <Form.Item label="主商务" name="u_id_1" >
-                            <Select disabled={true} />
+                        <Form.Item label="主商务" name="u_id_1" rules={[{ required: true, message: '不能为空' }]}>
+                            <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} onChange={(value) => { form.setFieldValue('u_id_1', value) }} />
                         </Form.Item>
                         <Form.Item label="主商务提成点（%）[例：0.5]" name="u_point_1" rules={[{ required: true, message: '不能为空' }]}>
                             <InputNumber min={0} max={100} />
@@ -301,6 +309,9 @@ function AETalentModel(props) {
                     </Space> : null}
                     <Form.Item label="商务提成备注" name="u_note">
                         <TextArea />
+                    </Form.Item>
+                    <Form.Item label="业绩归属" name="gmv_belong" rules={[{ required: true, message: '不能为空' }]}>
+                        <Select placeholder="请选择" options={gmvBelong} />
                     </Form.Item>
                 </Card> : null}
                 {type && type.match('修改') ? null : <><Form.Item label="相同线上达人">

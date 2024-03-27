@@ -17,6 +17,7 @@ function AELive(props) {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -49,6 +50,7 @@ function AELive(props) {
                 tid: form.getFieldValue('tid').value ? form.getFieldValue('tid').value : form.getFieldValue('tid'),
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -77,6 +79,7 @@ function AELive(props) {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -114,6 +117,7 @@ function AELive(props) {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -151,6 +155,7 @@ function AELive(props) {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -187,6 +192,7 @@ function AELive(props) {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -237,6 +243,7 @@ function AELive(props) {
                     tmid: value[value.length - 1],
                     userInfo: {
                         uid: localStorage.getItem('uid'),
+                        up_uid: localStorage.getItem('up_uid'),
                         name: localStorage.getItem('name'),
                         company: localStorage.getItem('company'),
                         department: localStorage.getItem('department'),

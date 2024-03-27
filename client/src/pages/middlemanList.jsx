@@ -8,8 +8,7 @@ import dayjs from 'dayjs'
 
 function MiddlemanList() {
     // 操作权限
-    const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理') || localStorage.getItem('position') === '管理员' ? true : false
-    const userShowPower = localStorage.getItem('position') === '商务' ? true : false
+    const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('company') !== '总公司') || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
     let columns = [
@@ -68,7 +67,6 @@ function MiddlemanList() {
             )
         }
     ]
-    columns = userShowPower ? columns.filter(item => item.title !== '商务') : columns
     // 表格：获取数据、分页
     const [data, setData] = useState();
     const [loading, setLoading] = useState(false);
@@ -96,6 +94,7 @@ function MiddlemanList() {
                 },
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -147,6 +146,7 @@ function MiddlemanList() {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -181,6 +181,7 @@ function MiddlemanList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -213,6 +214,7 @@ function MiddlemanList() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -268,9 +270,9 @@ function MiddlemanList() {
                     <Form.Item label='名称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='联系人姓名' name='liaison_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='付款姓名' name='pay_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    {userShowPower ? null : <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
+                    <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
-                    </Form.Item>}
+                    </Form.Item>
                     <Form.Item style={{ marginBottom: '20px' }}>
                         <Space size={'large'}>
                             <Button type="primary" htmlType="submit">查询</Button>

@@ -2,7 +2,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import request from '../../service/request'
 import { Card, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, message, List, Image } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import { accountType, accountModelType, ageCut, priceCut, liaisonType, shop_type, platform, model, middlemanPayType, talentType } from '../../baseData/talent'
+import { accountType, accountModelType, ageCut, priceCut, liaisonType, shop_type, platform, model, middlemanPayType, talentType, gmvBelong } from '../../baseData/talent'
 import { province } from '../../baseData/province'
 import people from '../../assets/people.jpg'
 import AEMiddleman from './AEMiddleman'
@@ -81,6 +81,7 @@ function AETalent(props) {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -109,6 +110,7 @@ function AETalent(props) {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -145,6 +147,7 @@ function AETalent(props) {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -244,6 +247,8 @@ function AETalent(props) {
                         payload = {
                             cid: 'history',
                             ...values,
+                            group_u_id_1: values.group_u_id_1 ? values.group_u_id_1.value || values.group_u_id_1.value === null ? values.group_u_id_1.value : values.group_u_id_1 : null,
+                            provide_u_id_1: values.provide_u_id_1 ? values.provide_u_id_1.value || values.provide_u_id_1.value === null ? values.provide_u_id_1.value : values.provide_u_id_1 : null,
                             liaison_type: form.getFieldValue('liaison_type'),
                             liaison_name: form.getFieldValue('liaison_name'),
                             liaison_v: form.getFieldValue('liaison_v'),
@@ -254,6 +259,8 @@ function AETalent(props) {
                     } else {
                         payload = {
                             ...values,
+                            group_u_id_1: values.group_u_id_1 ? values.group_u_id_1.value || values.group_u_id_1.value === null ? values.group_u_id_1.value : values.group_u_id_1 : null,
+                            provide_u_id_1: values.provide_u_id_1 ? values.provide_u_id_1.value || values.provide_u_id_1.value === null ? values.provide_u_id_1.value : values.provide_u_id_1 : null,
                             type: 'talent'
                         }
                     }
@@ -455,8 +462,8 @@ function AETalent(props) {
                                                 <TextArea placeholder="请输入" />
                                             </Form.Item>
                                             <Space size='large'>
-                                                <Form.Item label="主商务" {...restField} name={[name, "u_id_1"]} >
-                                                    <Input defaultValue={localStorage.getItem('name')} disabled={true} />
+                                                <Form.Item label="主商务" {...restField} name={[name, "u_id_1"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                    <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                                                 </Form.Item>
                                                 <Form.Item label="主商务提成点（%）[例：0.5]" {...restField} name={[name, "u_point_1"]} rules={[{ required: true, message: '不能为空' }]}>
                                                     <InputNumber placeholder="请输入" min={0} max={100} />
@@ -478,6 +485,9 @@ function AETalent(props) {
                                             </Space> : null}
                                             <Form.Item label="商务提成备注" {...restField} name={[name, "u_note"]}>
                                                 <TextArea placeholder="请输入" />
+                                            </Form.Item>
+                                            <Form.Item label="业绩归属" {...restField} name={[name, "gmv_belong"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                <Select placeholder="请选择" options={gmvBelong} />
                                             </Form.Item>
                                         </Card>
                                     ))}
@@ -519,8 +529,8 @@ function AETalent(props) {
                             <TextArea placeholder="请输入" />
                         </Form.Item>
                         <Space size='large'>
-                            <Form.Item label="主商务" name="group_u_id_1" >
-                                <Input defaultValue={localStorage.getItem('name')} disabled={true} />
+                            <Form.Item label="主商务" name="group_u_id_1" rules={[{ required: true, message: '不能为空' }]}>
+                                <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                             </Form.Item>
                             <Form.Item label="主商务提成点（%）[例：0.5]" name="group_u_point_1" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber placeholder="请输入" min={0} max={100} />
@@ -543,6 +553,9 @@ function AETalent(props) {
                         <Form.Item label="商务提成备注" name="group_u_note">
                             <TextArea placeholder="请输入" />
                         </Form.Item>
+                        <Form.Item label="业绩归属" name="group_gmv_belong" rules={[{ required: true, message: '不能为空' }]}>
+                            <Select placeholder="请选择" options={gmvBelong} />
+                        </Form.Item>
                     </Card> : null}
                     {isShowProvide ? <Card title="供货" style={{ marginBottom: "20px" }}>
                         <Form.Item label="达人名称" name="provide_name" rules={[{ required: true, message: '不能为空' }]}>
@@ -561,8 +574,8 @@ function AETalent(props) {
                             <TextArea placeholder="请输入" />
                         </Form.Item>
                         <Space size='large'>
-                            <Form.Item label="主商务" name="provide_u_id_1" >
-                                <Input defaultValue={localStorage.getItem('name')} disabled={true} />
+                            <Form.Item label="主商务" name="provide_u_id_1" rules={[{ required: true, message: '不能为空' }]}>
+                                <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                             </Form.Item>
                             <Form.Item label="主商务提成点（%）[例：0.5]" name="provide_u_point_1" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber placeholder="请输入" min={0} max={100} />
@@ -584,6 +597,9 @@ function AETalent(props) {
                         </Space> : null}
                         <Form.Item label="商务提成备注" name="provide_u_note">
                             <TextArea placeholder="请输入" />
+                        </Form.Item>
+                        <Form.Item label="业绩归属" name="provide_gmv_belong" rules={[{ required: true, message: '不能为空' }]}>
+                            <Select placeholder="请选择" options={gmvBelong} />
                         </Form.Item>
                     </Card> : null}
                     {type === 'report' ? null : <><Form.Item label="相同线上达人">

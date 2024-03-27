@@ -168,3 +168,8 @@ export const productType= [
     { key: 1, label: "福利品", value: "福利品" },
     { key: 2, label: "爆品", value: "爆品" }
 ]
+
+export const gmvBelong= [
+    { key: 0, label: "主商务", value: "主商务" },
+    { key: 1, label: "主副商务一人一半", value: "主副商务一人一半" }
+]

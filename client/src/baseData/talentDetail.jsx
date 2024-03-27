@@ -22,7 +22,7 @@ export const descriptionsItems = [
     { key: 17, label: "付款周期", value: "yearbox_cycle" },
     { key: 18, label: "付款类型", value: "yearbox_type" },
     { key: 63, label: "基础提点", value: "yearbox_lavels_base" },
-    { key: 70, label: "备注", value: "yearbox_note" },  // 最新添加
+    { key: 70, label: "备注", value: "yearbox_note" }, 
     
     { key: 19, label: "付款类型", value: "m_paytype_1" },
     { key: 20, label: "类型", value: "m_type_1" },
@@ -67,7 +67,8 @@ export const descriptionsItems = [
     { key: 52, label: "副商务ID", value: "u_id_2" },
     { key: 53, label: "副商务", value: "u_name_2" },
     { key: 54, label: "提点(%)", value: "u_point_2" },
-    { key: 55, label: "提点备注", value: "u_note" },
+    { key: 55, label: "提点备注", value: "u_note" },  
+    { key: 71, label: "业绩归属", value: "gmv_belong" }, // 最新添加
 
     { key: 56, label: "付款方式", value: "pay_way" },
     { key: 57, label: "能否开票", value: "can_piao" },

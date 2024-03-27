@@ -18,6 +18,9 @@ router.post('/getLiveList', (req, res) => {
         if (params.userInfo.position === '商务') {
             whereUser += ` and uid = '${params.userInfo.uid}'`
         }
+        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
+            whereUser += ` and uid = '${params.userInfo.up_uid}'`
+        }
     }
     // 条件筛选
     let whereFilter = `where z.status != '已失效' and z.status != '已拉黑'`

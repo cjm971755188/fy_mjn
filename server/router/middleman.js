@@ -18,6 +18,9 @@ router.post('/getMiddlemanList', (req, res) => {
         if (params.userInfo.position === '商务') {
             whereUser += ` and uid = '${params.userInfo.uid}'`
         }
+        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
+            whereUser += ` and uid = '${params.userInfo.up_uid}'`
+        }
     }
     // 条件筛选
     let whereFilter = `where z.status != '失效'`
@@ -52,7 +55,7 @@ router.post('/getMiddlemanList', (req, res) => {
 // 添加中间人
 router.post('/addMiddleman', (req, res) => {
     let params = req.body
-    let sql = `SELECT * FROM middleman WHERE u_id = '${params.userInfo.uid}' and name = '${params.name}'`
+    let sql = `SELECT * FROM middleman WHERE u_id = '${params.userInfo.up_uid}' and name = '${params.name}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
         if (results.length !== 0) {
@@ -82,7 +85,7 @@ router.post('/addMiddleman', (req, res) => {
 // 修改中间人信息
 router.post('/editMiddleman', (req, res) => {
     let params = req.body
-    let sql = `SELECT * FROM middleman WHERE u_id = '${params.userInfo.uid}' and name = '${params.name}' and mid != '${params.mid}'`
+    let sql = `SELECT * FROM middleman WHERE u_id = '${params.userInfo.up_uid}' and name = '${params.name}' and mid != '${params.mid}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
         if (results.length > 0) {
@@ -118,6 +121,9 @@ router.post('/getmiddlemansItems', (req, res) => {
         }
         if (params.userInfo.position === '商务') {
             whereUser += ` and uid = '${params.userInfo.uid}'`
+        }
+        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
+            whereUser += ` and uid = '${params.userInfo.up_uid}'`
         }
     }
     let sql = `(SELECT m.* 

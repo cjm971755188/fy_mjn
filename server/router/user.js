@@ -60,31 +60,31 @@ router.post('/editPassword', (req, res) => {
 router.post('/getUserList', (req, res) => {
     let params = req.body
     // 去除 已删除 + 自己 + 管理员
-    let where = `where status != '失效' and status != '测试' and position != '管理员' and uid != '${params.userInfo.uid}'`
+    let where = `where u.status != '失效' and u.status != '测试' and u.position != '管理员' and u.uid != '${params.userInfo.uid}'`
     // 权限筛选
     if (params.userInfo.department === '事业部') {
         if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
-            where += ` and department = '${params.userInfo.department}'`
+            where += ` and u.department = '${params.userInfo.department}'`
         }
         if (params.userInfo.position === '主管') {
-            where += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+            where += ` and u.department = '${params.userInfo.department}' and u.company = '${params.userInfo.company}'`
         }
-        if (params.userInfo.position === '商务') {
-            where += ` and position = '助理' and create_uid = '${params.userInfo.uid}'`
+        if (params.userInfo.position === '商务' || (params.userInfo.company !== '总公司' && params.userInfo.position === '助理')) {
+            where += ` and u.position = '助理' and u.create_uid = '${params.userInfo.uid}'`
         }
     }
     // 条件筛选
     for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
         if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
-            where += ` and ${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
+            where += ` and u.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
         } else {
-            where += ` and ${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
+            where += ` and u.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
         }
     }
     // 分页
     let current = params.pagination.current ? params.pagination.current : 0
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
-    let sql = `SELECT uid, name, phone, company, department, position, status FROM user ${where}`
+    let sql = `SELECT u.uid, u.name, u.phone, u.company, u.department, u.position, u.up_uid, u1.name as up_name, u.status FROM user u LEFT JOIN user u1 ON u1.uid = u.up_uid ${where}`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`
@@ -131,7 +131,8 @@ router.post('/addUser', (req, res) => {
                     db.query(sql, (err, results) => {
                         if (err) throw err;
                         let uid = 'MJN' + `${results[0].sum}`.padStart(5, '0')
-                        let sql = `INSERT INTO user values('${uid}', '${params.name}', '${params.phone}', '123456', '${params.combine[0]}', '${params.combine[1]}', '${params.combine[2]}', null, null, '正常', '${params.userInfo.uid}', '${dayjs().valueOf()}')`
+                        let up_uid = params.combine[3] ? `'${params.combine[3]}'` : null
+                        let sql = `INSERT INTO user values('${uid}', '${params.name}', '${params.phone}', '123456', '${params.combine[0]}', '${params.combine[1]}', '${params.combine[2]}', ${up_uid}, null, null, '正常', '${params.userInfo.uid}', '${dayjs().valueOf()}')`
                         db.query(sql, (err, results) => {
                             if (err) throw err;
                             res.send({ code: 200, data: [], msg: `${params.name} 添加成功` })
@@ -160,7 +161,7 @@ router.post('/editUser', (req, res) => {
                 res.send({ code: 201, data: [], msg: `${params.combine[0]} ${params.combine[1]} 已存在 ${results.length} 名 主管` })
             }
         } else {
-            let sql = `UPDATE user SET name = '${params.name}', company = '${params.combine[0]}', department = '${params.combine[1]}', position = '${params.combine[2]}' WHERE uid = '${params.uid}'`
+            let sql = `UPDATE user SET name = '${params.name}', company = '${params.combine[0]}', department = '${params.combine[1]}', position = '${params.combine[2]}', up_uid = '${params.combine[3]}' WHERE uid = '${params.uid}'`
             db.query(sql, (err, results) => {
                 if (err) throw err;
                 res.send({ code: 200, data: [], msg: `修改成功` })

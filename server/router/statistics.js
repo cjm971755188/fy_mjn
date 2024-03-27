@@ -18,6 +18,9 @@ router.post('/getTalentStatistics', (req, res) => {
         if (params.userInfo.position === '商务') {
             whereUser += ` and uid = '${params.userInfo.uid}'`
         }
+        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
+            whereUser += ` and uid = '${params.userInfo.up_uid}'`
+        }
     }
     let whereFilter = ``
     let start_time = params.filtersDate.length === 2 ? params.filtersDate[0] : ''
@@ -68,7 +71,10 @@ router.post('/getSalemansChanceOprate', (req, res) => {
             whereUser += ` and u.department = '${params.userInfo.department}' and u.company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
-            whereUser += ` and u.uid = '${params.userInfo.uid}'`
+            whereUser += ` and uid = '${params.userInfo.uid}'`
+        }
+        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
+            whereUser += ` and uid = '${params.userInfo.up_uid}'`
         }
     }
     let whereFilter = ``
@@ -120,7 +126,10 @@ router.post('/getAdReTimeDiff', (req, res) => {
             whereUser += ` and u.department = '${params.userInfo.department}' and u.company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
-            whereUser += ` and u.uid = '${params.userInfo.uid}'`
+            whereUser += ` and uid = '${params.userInfo.uid}'`
+        }
+        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
+            whereUser += ` and uid = '${params.userInfo.up_uid}'`
         }
     }
     let whereFilter = ``
@@ -180,6 +189,9 @@ router.post('/getPlatformTalent', (req, res) => {
         if (params.userInfo.position === '商务') {
             whereUser += ` and uid = '${params.userInfo.uid}'`
         }
+        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
+            whereUser += ` and uid = '${params.userInfo.up_uid}'`
+        }
     }
     let whereFilter = ``
     let start_time = params.filtersDate.length === 2 ? params.filtersDate[0] : ''
@@ -220,6 +232,9 @@ router.post('/getClassTalent', (req, res) => {
         }
         if (params.userInfo.position === '商务') {
             whereUser += ` and uid = '${params.userInfo.uid}'`
+        }
+        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
+            whereUser += ` and uid = '${params.userInfo.up_uid}'`
         }
     }
     let whereFilter = ``
@@ -265,6 +280,9 @@ router.post('/getTypeTalent', (req, res) => {
         if (params.userInfo.position === '商务') {
             whereUser += ` and uid = '${params.userInfo.uid}'`
         }
+        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
+            whereUser += ` and uid = '${params.userInfo.up_uid}'`
+        }
     }
     let whereFilter = ``
     let start_time = params.filtersDate.length === 2 ? params.filtersDate[0] : ''
@@ -304,7 +322,10 @@ router.post('/getProvinceTalent', (req, res) => {
             whereUser += ` and u.department = '${params.userInfo.department}' and u.company = '${params.userInfo.company}'`
         }
         if (params.userInfo.position === '商务') {
-            whereUser += ` and u.uid = '${params.userInfo.uid}'`
+            whereUser += ` and uid = '${params.userInfo.uid}'`
+        }
+        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
+            whereUser += ` and uid = '${params.userInfo.up_uid}'`
         }
     }
     let whereFilter = ``

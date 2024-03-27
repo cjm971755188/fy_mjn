@@ -16,7 +16,7 @@ router.post('/getPointList', (req, res) => {
         if (params.userInfo.position === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
-        if (params.userInfo.position === '商务') {
+        if (params.userInfo.position === '商务' || (params.userInfo.company !== '总公司' && params.userInfo.position === '助理')) {
             whereUser += ` and uid = '${params.userInfo.uid}'`
         }
     }
@@ -194,7 +194,7 @@ router.post('/getExportPointList', (req, res) => {
         if (params.userInfo.position === '主管') {
             whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
         }
-        if (params.userInfo.position === '商务') {
+        if (params.userInfo.position === '商务' || (params.userInfo.company !== '总公司' && params.userInfo.position === '助理')) {
             whereUser += ` and uid = '${params.userInfo.uid}'`
         }
     }
@@ -272,17 +272,6 @@ router.post('/getKeywordList', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试'`
-    if (params.userInfo.department === '事业部') {
-        if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
-            whereUser += ` and department = '${params.userInfo.department}'`
-        }
-        if (params.userInfo.position === '主管') {
-            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
-        }
-        if (params.userInfo.position === '商务') {
-            whereUser += ` and uid = '${params.userInfo.uid}'`
-        }
-    }
     // 条件筛选
     let whereFilter = `where z.status != '已失效'`
     for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
@@ -331,17 +320,6 @@ router.post('/getExportKeywordList', (req, res) => {
     let params = req.body
     // 权限筛选
     let whereUser = `where status != '失效' and status != '测试'`
-    if (params.userInfo.position != '管理员' || params.userInfo.position.match('总裁')) {
-        if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
-            whereUser += ` and department = '${params.userInfo.department}'`
-        }
-        if (params.userInfo.position === '主管') {
-            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
-        }
-        if (params.userInfo.position === '商务') {
-            whereUser += ` and uid = '${params.userInfo.uid}'`
-        }
-    }
     // 条件筛选
     let whereFilter = `where z.status != '已失效'`
     for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import request from '../../service/request';
-import { Table, Modal, message, Space, Image } from 'antd';
+import { Table, Modal, message, Space, Popconfirm } from 'antd';
 import UpLoadFile from '../UpLoadFile';
 import FilePreview from '../FilePreview';
 
 function AEFile(props) {
     const { id, type, isShow } = props;
     // 操作权限
-    const editPower = localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理' ? true : false
+    const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('company') !== '总公司') || localStorage.getItem('position') === '管理员' ? true : false
     // 表格：格式
     const columns = [
         {
@@ -39,17 +39,17 @@ function AEFile(props) {
             key: 'action',
             render: (_, record) => (
                 <Space size="middle">
-                    <a onClick={() => { downloadAPI(record); }}>下载</a>{/* 
+                    <a onClick={() => { downloadAPI(record); }}>下载</a>
                     <Popconfirm
                         title="确认要删除该文件吗"
                         okText="删除"
                         cancelText="取消"
                         onConfirm={() => {
-                            deleteResourceAPI();
+                            deleteFileAPI(record);
                         }}
                     >
                         <a>删除</a>
-                    </Popconfirm> */}
+                    </Popconfirm>
                 </Space>
             ),
         }
@@ -66,6 +66,7 @@ function AEFile(props) {
                 type,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('e_id'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -99,6 +100,7 @@ function AEFile(props) {
                 new: payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -132,6 +134,7 @@ function AEFile(props) {
                 new: payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -173,6 +176,34 @@ function AEFile(props) {
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    // 删除
+    const deleteFileAPI = (url) => {
+        request({
+            method: 'post',
+            url: '/file/delete',
+            data: {
+                url: url.split('/')[3],
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('e_id'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                getFilesAPI();
+                message.error(res.data.msg)
+            } else {
+                message.error(res.data.msg)
             }
         }).catch((err) => {
             console.error(err)

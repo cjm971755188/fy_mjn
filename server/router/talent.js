@@ -11,13 +11,16 @@ router.post('/getTalentList', (req, res) => {
     let whereUser = ``
     if (params.userInfo.department === '事业部') {
         if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
-            whereUser += `WHERE u0.department = '${params.userInfo.department}' or u1.department = '${params.userInfo.department}' or u2.department = '${params.userInfo.department}'`
+            whereUser += `WHERE u0.department = '${params.userInfo.department}' or u1.department = '${params.userInfo.department}' or u2.department = '${params.userInfo.department}' `
         }
         if (params.userInfo.position === '主管') {
-            whereUser += `WHERE (u0.department = '${params.userInfo.department}' and u0.company = '${params.userInfo.company}') or (u1.department = '${params.userInfo.department}' and u1.company = '${params.userInfo.company}') or (u2.department = '${params.userInfo.department}' and u2.company = '${params.userInfo.company}')`
+            whereUser += `WHERE (u0.department = '${params.userInfo.department}' and u0.company = '${params.userInfo.company}') or (u1.department = '${params.userInfo.department}' and u1.company = '${params.userInfo.company}') or (u2.department = '${params.userInfo.department}' and u2.company = '${params.userInfo.company}') `
         }
         if (params.userInfo.position === '商务') {
-            whereUser += `WHERE u0.uid = '${params.userInfo.uid}' or u1.uid = '${params.userInfo.uid}' or u2.uid = '${params.userInfo.uid}'`
+            whereUser += `WHERE u0.uid = '${params.userInfo.uid}' or u1.uid = '${params.userInfo.uid}' or u2.uid = '${params.userInfo.uid}' `
+        }
+        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
+            whereUser += `WHERE u0.uid = '${params.userInfo.up_uid}' or u1.uid = '${params.userInfo.up_uid}' or u2.uid = '${params.userInfo.up_uid}' `
         }
     }
     // 条件筛选
@@ -26,7 +29,11 @@ router.post('/getTalentList', (req, res) => {
         if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
             whereFilter += ` and z.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
         } else {
-            whereFilter += ` and z.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
+            if (Object.keys(params.filters)[i] === 'name') {
+                whereFilter += ` and (z.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%' or z.account_name like '%${Object.values(params.filters)[i]}%')`
+            } else {
+                whereFilter += ` and z.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
+            }
         }
     }
     // 排序
@@ -40,21 +47,22 @@ router.post('/getTalentList', (req, res) => {
                         GROUP_CONCAT(DISTINCT tms1.u_id_1) as u_id_1, GROUP_CONCAT(DISTINCT u1.name) as u_name_1, GROUP_CONCAT(DISTINCT tms1.u_point_1) as u_point_1,
                         GROUP_CONCAT(DISTINCT tms1.u_id_2) as u_id_2, GROUP_CONCAT(DISTINCT u2.name) as u_name_2, GROUP_CONCAT(DISTINCT tms1.u_point_2) as u_point_2,
                         GROUP_CONCAT(DISTINCT ts1.u_id_0) as u_id_0, GROUP_CONCAT(DISTINCT u0.name) as u_name_0, GROUP_CONCAT(DISTINCT ts1.u_point_0) as u_point_0,
-                        CONCAT(GROUP_CONCAT(DISTINCT u1.name), IF(GROUP_CONCAT(DISTINCT u2.name) IS NULL, '', GROUP_CONCAT(DISTINCT u2.name)), IF(GROUP_CONCAT(DISTINCT u0.name) IS NULL, '', GROUP_CONCAT(DISTINCT u0.name))) as u_names,
+                        CONCAT(GROUP_CONCAT(DISTINCT u1.name), IF(GROUP_CONCAT(DISTINCT u2.name) IS NULL, '', GROUP_CONCAT(DISTINCT u2.name)), IF(GROUP_CONCAT(DISTINCT u0.name) IS NULL, '', GROUP_CONCAT(DISTINCT u0.name))) as u_names, 
+                        GROUP_CONCAT(DISTINCT tms1.u_note) as u_note, GROUP_CONCAT(DISTINCT tms1.gmv_belong) as gmv_belong,
                         GROUP_CONCAT(DISTINCT ts1.m_id_1) as m_id_1, GROUP_CONCAT(DISTINCT m1.name) as m_name_1, GROUP_CONCAT(DISTINCT ts1.m_point_1) as m_point_1,
                         GROUP_CONCAT(DISTINCT ts1.m_id_2) as m_id_2, GROUP_CONCAT(DISTINCT m2.name) as m_name_2, GROUP_CONCAT(DISTINCT ts1.m_point_2) as m_point_2,
                         CONCAT(IF(GROUP_CONCAT(DISTINCT m1.name) IS NULL, '', GROUP_CONCAT(DISTINCT m1.name)), IF(GROUP_CONCAT(DISTINCT m2.name) IS NULL, '', GROUP_CONCAT(DISTINCT m2.name))) as m_names,
                         IF(ts1.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels,
                         IF(tm.model_files IS NULL, '暂无', '生效中') as model_status, t.status, COUNT(DISTINCT l.lid) as live_count, SUM(l.sales) as live_sum, GROUP_CONCAT(DISTINCT tm.account_type) as account_type,
-                        GROUP_CONCAT(DISTINCT tm.account_models) as account_models
+                        GROUP_CONCAT(DISTINCT tm.account_models) as account_models, GROUP_CONCAT(DISTINCT IF(tm.account_name IS NULL, IF(tm.group_name IS NULL, provide_name, group_name), account_name)) as account_name
                     FROM talent t
-                        LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' GROUP BY tid) ts0 ON ts0.tid = t.tid
+                        LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' or operate = '达人报备' GROUP BY tid) ts0 ON ts0.tid = t.tid
                         LEFT JOIN talent_schedule ts1 ON ts1.tsid = ts0.tsid
                         LEFT JOIN middleman m1 ON m1.mid = ts1.m_id_1
                         LEFT JOIN middleman m2 ON m2.mid = ts1.m_id_2
                         LEFT JOIN user u0 ON u0.uid = ts1.u_id_0
                         LEFT JOIN talent_model tm ON tm.tid = t.tid
-                        LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
+                        LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' or operate = '达人报备' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                         LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                         LEFT JOIN user u1 ON u1.uid = tms1.u_id_1
                         LEFT JOIN user u2 ON u2.uid = tms1.u_id_2
@@ -66,10 +74,16 @@ router.post('/getTalentList', (req, res) => {
                 ORDER BY z.${order} DESC`
     db.query(sql, (err, results) => {
         if (err) throw err;
+        let wait_sum = 0
+        for (let i = 0; i < results.length; i++) {
+            if (results[i].status.match('待审批')) {
+                wait_sum += 1
+            }
+        }
         let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`
         db.query(s, (err, r) => {
             if (err) throw err;
-            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: `` })
+            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, wait_sum, msg: `` })
         })
     })
 })
@@ -93,7 +107,7 @@ router.post('/getTalentDetail', (req, res) => {
     db.query(sql, (err, results_base) => {
         if (err) throw err;
         let sql = `SELECT tm.*, tms0.commission_normal, tms0.commission_welfare, tms0.commission_bao, tms0.commission_note, tms0.discount_buyout, tms0.discount_back, tms0.discount_label, 
-                        tms0.u_id_1, u1.name as u_name_1, tms0.u_point_1, tms0.u_id_2, u2.name as u_name_2, tms0.u_point_2, tms0.u_note
+                        tms0.u_id_1, u1.name as u_name_1, tms0.u_point_1, tms0.u_id_2, u2.name as u_name_2, tms0.u_point_2, tms0.u_note, tms0.gmv_belong
                     FROM talent_model tm
                         LEFT JOIN talent_model_schedule tms0 ON tms0.tmid = tm.tmid
                         INNER JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms1 ON tms1.tmsid = tms0.tmsid
@@ -370,13 +384,13 @@ router.post('/addTalentModel', (req, res) => {
             let u_note = params.u_note ? `'${params.u_note}'` : null
             if (params.type === 'model_1') {
                 sql_d += `('${tmid}', '${params.tid}', '线上平台', '${params.platform}', '${params.shop_type}', ${shop_name}, '${params.account_id}', '${params.account_name}', null, null, '${params.account_type}', '${params.account_models}', ${keyword}, '${params.people_count}', '${params.fe_proportion}', '${params.age_cuts}', '${params.main_province}', '${params.price_cut}', null, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.userInfo.uid}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.u_id_1}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
             } else if (params.type === 'model_2') {
                 sql_d += `('${tmid}', '${params.tid}', '社群团购', '聚水潭', null, '${params.shop_name}', null, null, '${params.group_name}', null, null, null, null, null, null, null, null, null, null, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.userInfo.uid}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.u_id_1}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
             } else if (params.type === 'model_3') {
                 sql_d += `('${tmid}', '${params.tid}', '供货', '聚水潭', null, '${params.shop_name}', null, null, null, '${params.provide_name}', null, null, null, null, null, null, null, null, null, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, '${params.userInfo.uid}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, '${params.u_id_1}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
             }
             count_d += 1
             count_l += 1
@@ -714,7 +728,7 @@ router.post('/giveTalent', (req, res) => {
                                                 continue
                                             } else if (isAdd && key === 'u_id_0') {
                                                 isAdd = false
-                                                sql += ` '${params.userInfo.uid}',`
+                                                sql += ` '${params.u_id_0}',`
                                             } else if (isAdd && key === 'u_point_0') {
                                                 isAdd = false
                                                 sql += ` '${params.uPoint0}',`
@@ -791,6 +805,9 @@ router.post('/getTalentItems', (req, res) => {
         }
         if (params.userInfo.position === '商务') {
             whereUser += ` and uid = '${params.userInfo.uid}'`
+        }
+        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
+            whereUser += ` and uid = '${params.userInfo.up_uid}'`
         }
     }
     let sql = `SELECT DISTINCT t.tid, t.name
@@ -913,6 +930,9 @@ router.post('/getExportTalentList', (req, res) => {
         }
         if (params.userInfo.position === '商务') {
             whereUser += ` and uid = '${params.userInfo.uid}'`
+        }
+        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
+            whereUser += ` and uid = '${params.userInfo.up_uid}'`
         }
     }
     // 条件筛选

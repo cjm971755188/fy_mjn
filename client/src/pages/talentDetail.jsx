@@ -21,7 +21,7 @@ function TalentDetail() {
     const { tid, tableParams } = location.state;
 
     // 操作权限
-    const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') !== '副总' && localStorage.getItem('position') !== '助理') || localStorage.getItem('position') === '管理员' ? true : false
+    const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('company') !== '总公司') || localStorage.getItem('position') === '管理员' ? true : false
     const examPower = localStorage.getItem('position') === '副总' || localStorage.getItem('position') === '总裁' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 获取详情
@@ -40,6 +40,7 @@ function TalentDetail() {
                 tid,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -172,6 +173,7 @@ function TalentDetail() {
                 mid,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -250,6 +252,12 @@ function TalentDetail() {
                         }
                     } else if (data.model === '社群团购') {
                         if ((descriptionsItems[j].key >= 42 && descriptionsItems[j].key <= 45) || descriptionsItems[j].key === 64) {
+                            if (descriptionsItems[j].key === 44) {
+                                description.span = 2
+                            }
+                            if (descriptionsItems[j].key === 45) {
+                                description.span = 5
+                            }
                             items.push(description)
                         }
                     } else if (data.model === '供货') {
@@ -257,10 +265,22 @@ function TalentDetail() {
                             if (descriptionsItems[j].key === 48) {
                                 description.span = 2
                             }
+                            if (descriptionsItems[j].key === 48) {
+                                description.span = 5
+                            }
                             items.push(description)
                         }
                     }
-                    if ([50, 51, 53, 54, 55].indexOf(descriptionsItems[j].key) !== -1) {
+                    if ([50, 51, 53, 54, 55, 71].indexOf(descriptionsItems[j].key) !== -1) {
+                        if (descriptionsItems[j].key === 54) {
+                            description.span = 2
+                        }
+                        if (descriptionsItems[j].key === 55) {
+                            description.span = 5
+                        }
+                        if (descriptionsItems[j].key === 71) {
+                            description.span = 5
+                        }
                         items.push(description)
                     }
                 }
@@ -326,6 +346,7 @@ function TalentDetail() {
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -358,6 +379,7 @@ function TalentDetail() {
                 new: payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -408,6 +430,7 @@ function TalentDetail() {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -444,6 +467,7 @@ function TalentDetail() {
                 new: payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -488,6 +512,7 @@ function TalentDetail() {
                 uid: detailData.models[0].u_id_1,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -522,6 +547,7 @@ function TalentDetail() {
                 uid: detailData.models[0].u_id_1,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
                     e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
@@ -1051,8 +1077,6 @@ function TalentDetail() {
                         if (Object.hasOwnProperty.call(ori, key)) {
                             if (ori[key] === null && key !== 'u_id_2' && key !== 'u_point_2' && key !== 'u_note' && key !== 'commission_note' && key !== 'discount_note') {
                                 continue
-                            } else if (key.match('shop')) {
-                                continue
                             } else {
                                 o[key] = ori[key]
                             }
@@ -1082,7 +1106,7 @@ function TalentDetail() {
                                 if (Object.hasOwnProperty.call(payload, k)) {
                                     if (key === k && o[key] !== payload[k]) {
                                         z[key] = o[key]
-                                        if ((key.match('u_') || key.match('discount_') || key.match('commission_'))) {
+                                        if ((key.match('u_') || key.match('discount_') || key.match('commission_') || key === 'gmv_belong')) {
                                             type = type.match('综合信息') ? type : type.match('基础信息') ? '综合信息' : '佣金提点'
                                         } else {
                                             type = type.match('综合信息') ? type : type.match('佣金提点') ? '综合信息' : '基础信息'
@@ -1104,8 +1128,12 @@ function TalentDetail() {
                             setIsShowModel(false);
                             message.info('未修改任何信息');
                         } else {
-                            z.u_id_2 = payload.u_id_2 ? payload.u_id_2 : o.u_id_2
-                            z.u_point_2 = payload.u_point_2 ? payload.u_point_2 : o.u_point_2
+                            if (z.u_id_2) {
+                                z.u_id_2 = payload.u_id_2 ? payload.u_id_2 : o.u_id_2
+                            } 
+                            if (z.u_point_2) {
+                                z.u_point_2 = payload.u_point_2 ? payload.u_point_2 : o.u_point_2
+                            }
                             editTalentModelAPI(operate, JSON.stringify(z), payload)
                         }
                     } else {
