@@ -200,7 +200,16 @@ function AEFile(props) {
             }
         }).then((res) => {
             if (res.status == 200) {
-                getFilesAPI();
+                if (type.match('年框')) {
+                    editTalentAPI(`删除${type}`, null, {
+                        yearbox_files: JSON.stringify(data && data.filter(item => { return item !== url}))
+                    })
+                } else {
+                    editTalentModelAPI(`删除${type}`, data && data.length === 0 ? null : JSON.stringify(data), {
+                        tmid: id,
+                        model_files: JSON.stringify(data && data.filter(item => { return item !== url}))
+                    });
+                }
                 message.error(res.data.msg)
             } else {
                 message.error(res.data.msg)

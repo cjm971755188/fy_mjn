@@ -37,7 +37,7 @@ router.post('/delete', (req, res) => {
         if (error) {
             throw error;
         } else {
-            console.log('文件删除成功...');
+            res.send({ code: 200, data: [], msg: `文件删除成功` })
         }
     })
 })

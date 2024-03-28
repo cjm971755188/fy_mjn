@@ -53,7 +53,7 @@ router.post('/getTalentList', (req, res) => {
                         GROUP_CONCAT(DISTINCT ts1.m_id_2) as m_id_2, GROUP_CONCAT(DISTINCT m2.name) as m_name_2, GROUP_CONCAT(DISTINCT ts1.m_point_2) as m_point_2,
                         CONCAT(IF(GROUP_CONCAT(DISTINCT m1.name) IS NULL, '', GROUP_CONCAT(DISTINCT m1.name)), IF(GROUP_CONCAT(DISTINCT m2.name) IS NULL, '', GROUP_CONCAT(DISTINCT m2.name))) as m_names,
                         IF(ts1.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels,
-                        IF(tm.model_files IS NULL, '暂无', '生效中') as model_status, t.status, COUNT(DISTINCT l.lid) as live_count, SUM(l.sales) as live_sum, GROUP_CONCAT(DISTINCT tm.account_type) as account_type,
+                        GROUP_CONCAT(DISTINCT IF(tm.model_files IS NULL, '暂无', '生效中')) as model_status, t.status, COUNT(DISTINCT l.lid) as live_count, SUM(l.sales) as live_sum, GROUP_CONCAT(DISTINCT tm.account_type) as account_type,
                         GROUP_CONCAT(DISTINCT tm.account_models) as account_models, GROUP_CONCAT(DISTINCT IF(tm.account_name IS NULL, IF(tm.group_name IS NULL, provide_name, group_name), account_name)) as account_name
                     FROM talent t
                         LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' or operate = '达人报备' GROUP BY tid) ts0 ON ts0.tid = t.tid
@@ -68,7 +68,7 @@ router.post('/getTalentList', (req, res) => {
                         LEFT JOIN user u2 ON u2.uid = tms1.u_id_2
                         LEFT JOIN live l ON l.tid = t.tid and l.tmids LIKE CONCAT('%', tm.tmid, '%')
                     ${whereUser}
-                    GROUP BY t.tid, t.cid, t.name, t.year_deal, t.type, yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels, model_status, t.status
+                    GROUP BY t.tid, t.cid, t.name, t.year_deal, t.type, yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels, t.status
                 ) z
                 ${whereFilter}
                 ORDER BY z.${order} DESC`
@@ -189,7 +189,7 @@ router.post('/editTalent', (req, res) => {
                     } else if (isAdd && key === 'history_other_info') {
                         isAdd = false
                         sql += params.ori === null ? ` null,` : ` '${params.ori}',`
-                    } else if (params.operate.match('联系人') || params.operate.match('基础信息') || params.operate === '新增年框资料') {
+                    } else if (params.operate.match('联系人') || params.operate.match('基础信息') || params.operate.match('年框资料')) {
                         for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
                             if (isAdd && Object.keys(params.new)[i] === key) {
                                 isAdd = false
@@ -256,7 +256,7 @@ router.post('/editTalent', (req, res) => {
                         if (err) throw err;
                         res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                     })
-                } else if (params.operate === '新增年框资料') {
+                } else if (params.operate.match('年框资料')) {
                     res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                 } else if (params.operate.match('中间人') || params.operate.match('年框') || params.operate === '拉黑达人' || params.operate === '拉黑释放') {
                     let sql = `UPDATE talent set status = '${params.operate.match('中间人') ? '中间人待审批' : params.operate === '拉黑达人' ? '拉黑待审批' : params.operate === '拉黑释放' ? '拉黑释放待审批' : '年框待审批'}' WHERE tid = '${params.tid}'`
