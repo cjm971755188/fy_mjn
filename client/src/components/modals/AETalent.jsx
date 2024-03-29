@@ -2,7 +2,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import request from '../../service/request'
 import { Card, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, message, List, Image } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import { accountType, accountModelType, ageCut, priceCut, liaisonType, shop_type, platform, model, middlemanPayType, talentType, gmvBelong } from '../../baseData/talent'
+import { accountType, accountModelType, ageCut, priceCut, liaisonType, shop_type, platform, model, middlemanPayType, talentType, gmvBelong, customPayType } from '../../baseData/talent'
 import { province } from '../../baseData/province'
 import people from '../../assets/people.jpg'
 import AEMiddleman from './AEMiddleman'
@@ -15,6 +15,7 @@ function AETalent(props) {
     const [isShowPlatform, setIsShowPlatform] = useState(false)
     const [isShowGroup, setIsShowGroup] = useState(false)
     const [isShowProvide, setIsShowProvide] = useState(false)
+    const [isShowCustom, setIsShowCustom] = useState(false)
     const [isShowSearch, setIsShowSearch] = useState(false)
     const [sameList, setSameList] = useState([])
     const searchSameChanceAPI = (type, payload, values) => {
@@ -67,12 +68,14 @@ function AETalent(props) {
         })
     }
     const [hasOnlyShop, setHasOnlyShop] = useState(false)
+    const [payType, setPayType] = useState('')
     const [hasFuSaleman, setHasFuSaleman] = useState(false)
     const [hasYuanSaleman, setHasYuanSaleman] = useState(false)
     const [hasFirstMiddle, setHasFirstMiddle] = useState(false)
     const [hasSecondMiddle, setHasSecondMiddle] = useState(false)
     const [hasGroupFuSaleman, setGroupHasFuSaleman] = useState(false)
     const [hasProvideFuSaleman, setProvideHasFuSaleman] = useState(false)
+    const [hasCustomFuSaleman, setCustomHasFuSaleman] = useState(false)
     const [salemanAssistantsItems, setSalemanAssistantsItems] = useState()
     const getSalemanAssistantsItemsAPI = () => {
         request({
@@ -176,14 +179,17 @@ function AETalent(props) {
         setIsShowPlatform(false);
         setIsShowGroup(false);
         setIsShowProvide(false);
+        setIsShowCustom(false);
         setIsShowSearch(false);
         setSameList([]);
+        setPayType('');
         setHasFuSaleman(false);
         setHasYuanSaleman(false);
         setHasFirstMiddle(false);
         setHasSecondMiddle(false);
         setGroupHasFuSaleman(false);
         setProvideHasFuSaleman(false);
+        setCustomHasFuSaleman(false);
         setSalemanAssistantsItems();
         setTypeMid('add');
         setIsShowMid(false);
@@ -194,6 +200,8 @@ function AETalent(props) {
         setIsShowPlatform(form.getFieldValue('models') && form.getFieldValue('models').join(',').match('线上平台') ? true : false)
         setIsShowGroup(form.getFieldValue('models') && form.getFieldValue('models').join(',').match('社群团购') ? true : false)
         setIsShowProvide(form.getFieldValue('models') && form.getFieldValue('models').join(',').match('供货') ? true : false)
+        setIsShowCustom(form.getFieldValue('models') && form.getFieldValue('models').join(',').match('定制') ? true : false)
+        setPayType(form.getFieldValue('pay_type') && form.getFieldValue('pay_type') === '定金+尾款' ? '定金+尾款' : '')
         setHasFirstMiddle(form.getFieldValue('m_id_1') && form.getFieldValue('m_id_1').value !== null ? true : false)
         setHasSecondMiddle(form.getFieldValue('m_id_2') && form.getFieldValue('m_id_2').value !== null ? true : false)
         setHasYuanSaleman(form.getFieldValue('u_id_0') && form.getFieldValue('u_id_0').value !== null ? true : false)
@@ -225,13 +233,6 @@ function AETalent(props) {
                         values.u_type_0 = null
                         values.u_point_0 = null
                     }
-                    if (!hasFuSaleman && values.accounts) {
-                        for (let i = 0; i < values.accounts.length; i++) {
-                            values.accounts[i].u_id_2 = null
-                            values.accounts[i].u_type_2 = null
-                            values.accounts[i].u_point_2 = null
-                        }
-                    }
                     if (!hasGroupFuSaleman) {
                         values.group_u_id_2 = null
                         values.group_u_type_2 = null
@@ -242,6 +243,25 @@ function AETalent(props) {
                         values.provide_u_type_2 = null
                         values.provide_u_point_2 = null
                     }
+                    if (!hasCustomFuSaleman) {
+                        values.custom_u_id_2 = null
+                        values.custom_u_type_2 = null
+                        values.custom_u_point_2 = null
+                    }
+                    if (payType !== '定金+尾款') {
+                        values.deposit = null
+                        values.tail = null
+                    }
+                    if (values.accounts) {
+                        for (let i = 0; i < values.accounts.length; i++) {
+                            values.accounts[i].u_id_1 = values.accounts[i].u_id_1 ? values.accounts[i].u_id_1.value || values.accounts[i].u_id_1.value === null ? values.accounts[i].u_id_1.value : values.accounts[i].u_id_1 : null
+                            if (!hasFuSaleman) {
+                                values.accounts[i].u_id_2 = null
+                                values.accounts[i].u_type_2 = null
+                                values.accounts[i].u_point_2 = null
+                            }
+                        }
+                    }
                     let payload = {}
                     if (type === 'report') {
                         payload = {
@@ -249,6 +269,7 @@ function AETalent(props) {
                             ...values,
                             group_u_id_1: values.group_u_id_1 ? values.group_u_id_1.value || values.group_u_id_1.value === null ? values.group_u_id_1.value : values.group_u_id_1 : null,
                             provide_u_id_1: values.provide_u_id_1 ? values.provide_u_id_1.value || values.provide_u_id_1.value === null ? values.provide_u_id_1.value : values.provide_u_id_1 : null,
+                            custom_u_id_1: values.custom_u_id_1 ? values.custom_u_id_1.value || values.custom_u_id_1.value === null ? values.custom_u_id_1.value : values.custom_u_id_1 : null,
                             liaison_type: form.getFieldValue('liaison_type'),
                             liaison_name: form.getFieldValue('liaison_name'),
                             liaison_v: form.getFieldValue('liaison_v'),
@@ -261,7 +282,8 @@ function AETalent(props) {
                             ...values,
                             group_u_id_1: values.group_u_id_1 ? values.group_u_id_1.value || values.group_u_id_1.value === null ? values.group_u_id_1.value : values.group_u_id_1 : null,
                             provide_u_id_1: values.provide_u_id_1 ? values.provide_u_id_1.value || values.provide_u_id_1.value === null ? values.provide_u_id_1.value : values.provide_u_id_1 : null,
-                            type: 'talent'
+                            custom_u_id_1: values.custom_u_id_1 ? values.custom_u_id_1.value || values.custom_u_id_1.value === null ? values.custom_u_id_1.value : values.custom_u_id_1 : null,
+                            type: type === '新增线上平台' ? 'model_1' : type === '新增社群团购' ? 'model_2' : type === '新增供货' ? 'model_3' : 'talent'
                         }
                     }
                     searchSameChanceAPI('finish', null, payload)
@@ -280,7 +302,11 @@ function AETalent(props) {
                             <InputNumber placeholder="请输入" min={0} />
                         </Form.Item>
                         <Form.Item label="达人层级" name="talent_type" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select placeholder="请选择" options={talentType} />
+                            <Radio.Group>
+                                {talentType.map((item) => {
+                                    return <Radio key={item.key} value={item.value}>{item.label}</Radio>
+                                })}
+                            </Radio.Group>
                         </Form.Item>
                         {type === 'history' || type === 'reReport' ? <><Form.Item label="联系人类型" name="liaison_type" rules={[{ required: true, message: '不能为空' }]}>
                             <Select
@@ -307,11 +333,11 @@ function AETalent(props) {
                             <Button onClick={() => { setIsShowMid(true); setTypeMid('add'); }}>添加</Button>
                         </Form.Item>
                         <Form.Item label="是否有中间人">
-                            <Radio.Group onChange={(e) => { setHasFirstMiddle(e.target.value); }} value={hasFirstMiddle} style={{ marginLeft: '20px' }}>
+                            <Radio.Group onChange={(e) => { setHasFirstMiddle(e.target.value); }} value={hasFirstMiddle}>
                                 <Radio value={false}>无一级中间人</Radio>
                                 <Radio value={true}>有一级中间人</Radio>
                             </Radio.Group>
-                            <Radio.Group onChange={(e) => { setHasSecondMiddle(e.target.value); }} value={hasSecondMiddle} style={{ marginLeft: '20px' }}>
+                            <Radio.Group onChange={(e) => { setHasSecondMiddle(e.target.value); }} value={hasSecondMiddle}>
                                 <Radio value={false}>无二级中间人</Radio>
                                 <Radio value={true}>有二级中间人</Radio>
                             </Radio.Group>
@@ -343,7 +369,7 @@ function AETalent(props) {
                                 <TextArea maxLength={500} />
                             </Form.Item></> : null}
                         {type === 'history' || type === 'reReport' ? <><Form.Item label="是否有原商务">
-                            <Radio.Group onChange={(e) => { setHasYuanSaleman(e.target.value); }} value={hasYuanSaleman} style={{ marginLeft: '20px' }}>
+                            <Radio.Group onChange={(e) => { setHasYuanSaleman(e.target.value); }} value={hasYuanSaleman}>
                                 <Radio value={false}>无原商务</Radio>
                                 <Radio value={true}>有原商务</Radio>
                             </Radio.Group>
@@ -368,6 +394,7 @@ function AETalent(props) {
                                 setIsShowPlatform(value.join(',').match('线上平台') ? true : false)
                                 setIsShowGroup(value.join(',').match('社群团购') ? true : false)
                                 setIsShowProvide(value.join(',').match('供货') ? true : false)
+                                setIsShowCustom(value.join(',').match('定制') ? true : false)
                                 if (!value.join(',').match('线上平台')) {
                                     form.setFieldValue('accounts', null)
                                 }
@@ -376,6 +403,9 @@ function AETalent(props) {
                                 }
                                 if (!value.join(',').match('供货')) {
                                     form.setFieldValue('provide_name', null)
+                                }
+                                if (!value.join(',').match('定制')) {
+                                    form.setFieldValue('custom_name', null)
                                 }
                             }}
                         />
@@ -470,7 +500,7 @@ function AETalent(props) {
                                                 </Form.Item>
                                             </Space>
                                             <Form.Item label="是否有副商务">
-                                                <Radio.Group onChange={(e) => { setHasFuSaleman(e.target.value); }} value={hasFuSaleman} style={{ marginLeft: '20px' }}>
+                                                <Radio.Group onChange={(e) => { setHasFuSaleman(e.target.value); }} value={hasFuSaleman}>
                                                     <Radio value={false}>无副商务</Radio>
                                                     <Radio value={true}>有副商务</Radio>
                                                 </Radio.Group>
@@ -487,7 +517,11 @@ function AETalent(props) {
                                                 <TextArea placeholder="请输入" />
                                             </Form.Item>
                                             <Form.Item label="业绩归属" {...restField} name={[name, "gmv_belong"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Select placeholder="请选择" options={gmvBelong} />
+                                                <Radio.Group>
+                                                    {gmvBelong.map((item) => {
+                                                        return <Radio key={item.key} value={item.value}>{item.label}</Radio>
+                                                    })}
+                                                </Radio.Group>
                                             </Form.Item>
                                         </Card>
                                     ))}
@@ -513,15 +547,6 @@ function AETalent(props) {
                         <Form.Item label="福利品线上佣金比例（%）[例：20]" name="commission_welfare" rules={[{ required: true, message: '不能为空' }]}>
                             <InputNumber placeholder="请输入" min={0} max={100} />
                         </Form.Item>
-                        {/* <Space>
-                            <Form.Item label="福利品线上佣金比例（%）[例：20]" {...restField} name={[name, "commission_welfare_min"]} rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber placeholder="请输入" min={0} max={100} />
-                            </Form.Item>
-                            <p> ~ </p>
-                            <Form.Item {...restField} name={[name, "commission_welfare_max"]} rules={[{ required: true, message: '不能为空' }]}>
-                                <InputNumber placeholder="请输入" min={0} max={100} />
-                            </Form.Item>
-                        </Space> */}
                         <Form.Item label="爆品佣金（%）[例：20]" name="commission_bao" rules={[{ required: true, message: '不能为空' }]}>
                             <InputNumber placeholder="请输入" min={0} max={100} />
                         </Form.Item>
@@ -537,7 +562,7 @@ function AETalent(props) {
                             </Form.Item>
                         </Space>
                         <Form.Item label="是否有副商务">
-                            <Radio.Group onChange={(e) => { setGroupHasFuSaleman(e.target.value); }} value={hasGroupFuSaleman} style={{ marginLeft: '20px' }}>
+                            <Radio.Group onChange={(e) => { setGroupHasFuSaleman(e.target.value); }} value={hasGroupFuSaleman}>
                                 <Radio value={false}>无副商务</Radio>
                                 <Radio value={true}>有副商务</Radio>
                             </Radio.Group>
@@ -554,7 +579,11 @@ function AETalent(props) {
                             <TextArea placeholder="请输入" />
                         </Form.Item>
                         <Form.Item label="业绩归属" name="group_gmv_belong" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select placeholder="请选择" options={gmvBelong} />
+                            <Radio.Group>
+                                {gmvBelong.map((item) => {
+                                    return <Radio key={item.key} value={item.value}>{item.label}</Radio>
+                                })}
+                            </Radio.Group>
                         </Form.Item>
                     </Card> : null}
                     {isShowProvide ? <Card title="供货" style={{ marginBottom: "20px" }}>
@@ -582,7 +611,7 @@ function AETalent(props) {
                             </Form.Item>
                         </Space>
                         <Form.Item label="是否有副商务">
-                            <Radio.Group onChange={(e) => { setProvideHasFuSaleman(e.target.value); }} value={hasProvideFuSaleman} style={{ marginLeft: '20px' }}>
+                            <Radio.Group onChange={(e) => { setProvideHasFuSaleman(e.target.value); }} value={hasProvideFuSaleman}>
                                 <Radio value={false}>无副商务</Radio>
                                 <Radio value={true}>有副商务</Radio>
                             </Radio.Group>
@@ -599,7 +628,78 @@ function AETalent(props) {
                             <TextArea placeholder="请输入" />
                         </Form.Item>
                         <Form.Item label="业绩归属" name="provide_gmv_belong" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select placeholder="请选择" options={gmvBelong} />
+                            <Radio.Group>
+                                {gmvBelong.map((item) => {
+                                    return <Radio key={item.key} value={item.value}>{item.label}</Radio>
+                                })}
+                            </Radio.Group>
+                        </Form.Item>
+                    </Card> : null}
+                    {isShowCustom ? <Card title="定制" style={{ marginBottom: "20px" }}>
+                        <Form.Item label="达人名称" name="custom_name" rules={[{ required: true, message: '不能为空' }]}>
+                            <Input placeholder="请输入" />
+                        </Form.Item>
+                        <Form.Item label="聚水潭店铺名" name="custom_shop" rules={[{ required: true, message: '不能为空' }]}>
+                            <Input placeholder="请输入" />
+                        </Form.Item>
+                        <Form.Item label="产品利润点（%）[例：10]" name="profit_point" rules={[{ required: true, message: '不能为空' }]}>
+                            <InputNumber placeholder="请输入" min={0} max={100} />
+                        </Form.Item>
+                        <Form.Item label="税点（%）[例：3]" name="tax_point" rules={[{ required: true, message: '不能为空' }]}>
+                            <InputNumber placeholder="请输入" min={0} max={100} />
+                        </Form.Item>
+                        <Form.Item label="是否含包装" name="has_package" rules={[{ required: true, message: '不能为空' }]}>
+                            <Radio.Group>
+                                <Radio value="是">是</Radio>
+                                <Radio value="否">否</Radio>
+                            </Radio.Group>
+                        </Form.Item>
+                        <Form.Item label="付款方式" name="pay_type" rules={[{ required: true, message: '不能为空' }]}>
+                            <Radio.Group onChange={(e) => { setPayType(e.target.value); }} value={payType}>
+                                {customPayType.map((item) => {
+                                    return <Radio key={item.key} value={item.value}>{item.label}</Radio>
+                                })}
+                            </Radio.Group>
+                        </Form.Item>
+                        {payType === '定金+尾款' ? <Space size='large'>
+                            <Form.Item label="定金（%）[例：50]" name="deposit" rules={[{ required: true, message: '不能为空' }]}>
+                                <InputNumber placeholder="请输入" min={0} max={100} />
+                            </Form.Item>
+                            <Form.Item label="尾款（%）[例：50]" name="tail" rules={[{ required: true, message: '不能为空' }]}>
+                                <InputNumber placeholder="请输入" min={0} max={100} />
+                            </Form.Item>
+                        </Space> : null}
+                        <Space size='large'>
+                            <Form.Item label="主商务" name="custom_u_id_1" rules={[{ required: true, message: '不能为空' }]}>
+                                <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                            </Form.Item>
+                            <Form.Item label="主商务提成点（%）[例：0.5]" name="custom_u_point_1" rules={[{ required: true, message: '不能为空' }]}>
+                                <InputNumber placeholder="请输入" min={0} max={100} />
+                            </Form.Item>
+                        </Space>
+                        <Form.Item label="是否有副商务">
+                            <Radio.Group onChange={(e) => { setCustomHasFuSaleman(e.target.value); }} value={hasCustomFuSaleman}>
+                                <Radio value={false}>无副商务</Radio>
+                                <Radio value={true}>有副商务</Radio>
+                            </Radio.Group>
+                        </Form.Item>
+                        {hasCustomFuSaleman ? <Space size='large'>
+                            <Form.Item label="副商务" name={"custom_u_id_2"} rules={[{ required: true, message: '不能为空' }]} >
+                                <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                            </Form.Item>
+                            <Form.Item label="副商务提成点（%）[例：0.5]" name={"custom_u_point_2"} rules={[{ required: true, message: '不能为空' }]} >
+                                <InputNumber min={0} max={100} />
+                            </Form.Item>
+                        </Space> : null}
+                        <Form.Item label="商务提成备注" name="custom_u_note">
+                            <TextArea placeholder="请输入" />
+                        </Form.Item>
+                        <Form.Item label="业绩归属" name="custom_gmv_belong" rules={[{ required: true, message: '不能为空' }]}>
+                            <Radio.Group>
+                                {gmvBelong.map((item) => {
+                                    return <Radio key={item.key} value={item.value}>{item.label}</Radio>
+                                })}
+                            </Radio.Group>
                         </Form.Item>
                     </Card> : null}
                     {type === 'report' ? null : <><Form.Item label="相同线上达人">
@@ -610,15 +710,16 @@ function AETalent(props) {
                                     ids.push(form.getFieldValue('accounts')[i].account_id)
                                 }
                             }
-                            if ((form.getFieldValue('talent_name') && form.getFieldValue('talent_name') !== null) || (ids.length > 0) ||
-                                (form.getFieldValue('group_name') && form.getFieldValue('group_name') !== null) || (form.getFieldValue('provide_name') && form.getFieldValue('provide_name') !== null)) {
+                            if ((form.getFieldValue('talent_name') && form.getFieldValue('talent_name') !== null) || (ids.length > 0) || (form.getFieldValue('group_name') && form.getFieldValue('group_name') !== null) ||
+                                (form.getFieldValue('provide_name') && form.getFieldValue('provide_name') !== null) || (form.getFieldValue('custom_name') && form.getFieldValue('custom_name') !== null)) {
                                 let payload = {
                                     cid: type == 'add' ? '' : form.getFieldValue('cid'),
                                     type: 'talent',
                                     talent_name: form.getFieldValue('talent_name'),
                                     account_ids: ids,
                                     group_name: form.getFieldValue('group_name'),
-                                    provide_name: form.getFieldValue('provide_name')
+                                    provide_name: form.getFieldValue('provide_name'),
+                                    custom_name: form.getFieldValue('custom_name')
                                 }
                                 searchSameChanceAPI('search', payload, null)
                             } else {
@@ -639,8 +740,7 @@ function AETalent(props) {
                                             avatar={<Image width={50} src={people} preview={false} />}
                                             title={<Space size={'large'}><span>{`编号: ${item.tmid}`}</span><span>{`状态: ${item.status}`}</span><span>{`${item.status === '已拉黑' ? '拉黑人' : '商务'}: ${item.u_name}`}</span></Space>}
                                             description={<Space size={'large'} style={{ color: `${item.status === '已拉黑' ? 'red' : ''}` }}>{item.status === '已拉黑' ? <><span>{`原因: ${item.note}`}</span><span>{`重复名称/ID: ${item.name}`}</span></> :
-                                                <><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}
-                                                    <span>{`重复名称/ID: ${item.account_name || item.group_name || item.provide_name}`}</span></>}</Space>}
+                                                <><span>{`昵称: ${item.name}`}</span><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}<span>{`账号名称: ${item.account_name}`}</span></>}</Space>}
                                         />
                                     </List.Item>
                                 )}

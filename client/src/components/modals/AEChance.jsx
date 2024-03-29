@@ -11,6 +11,7 @@ function AEChance(props) {
     const [isShowPlatform, setIsShowPlatform] = useState(false)
     const [isShowGroup, setIsShowGroup] = useState(false)
     const [isShowProvide, setIsShowProvide] = useState(false)
+    const [isShowCustom, setIsShowCustom] = useState(false)
     const [isShowSearch, setIsShowSearch] = useState(false)
     const [sameList, setSameList] = useState([])
     const searchSameChanceAPI = (type, payload) => {
@@ -50,6 +51,7 @@ function AEChance(props) {
         setIsShowPlatform(false);
         setIsShowGroup(false);
         setIsShowProvide(false);
+        setIsShowCustom(false);
         setIsShowSearch(false);
         setSameList([]);
     }
@@ -58,6 +60,7 @@ function AEChance(props) {
         setIsShowPlatform(type !== 'advance' && form.getFieldValue('models') && form.getFieldValue('models').join(',').match('线上平台') ? true : false)
         setIsShowGroup(type !== 'advance' && form.getFieldValue('models') && form.getFieldValue('models').join(',').match('社群团购') ? true : false)
         setIsShowProvide(type !== 'advance' && form.getFieldValue('models') && form.getFieldValue('models').join(',').match('供货') ? true : false)
+        setIsShowCustom(type !== 'advance' && form.getFieldValue('models') && form.getFieldValue('models').join(',').match('定制') ? true : false)
     }, [isShow])
     return (
         <Modal
@@ -96,6 +99,7 @@ function AEChance(props) {
                             setIsShowPlatform(value.join(',').match('线上平台') ? true : false)
                             setIsShowGroup(value.join(',').match('社群团购') ? true : false)
                             setIsShowProvide(value.join(',').match('供货') ? true : false)
+                            setIsShowCustom(value.join(',').match('定制') ? true : false)
                         }}
                     />
                 </Form.Item> : null}
@@ -117,16 +121,22 @@ function AEChance(props) {
                         <Input placeholder="请输入" disabled={type === 'report' ? true : false} />
                     </Form.Item>
                 </Card> : null}
+                {isShowCustom ? <Card title="定制" style={{ marginBottom: "20px" }}>
+                    <Form.Item label="达人名称" name="custom_name" rules={[{ required: true, message: '不能为空' }]}>
+                        <Input placeholder="请输入" disabled={type === 'report' ? true : false} />
+                    </Form.Item>
+                </Card> : null}
                 <Form.Item label="相同线上达人">
                     <Button onClick={() => {
-                        if ((form.getFieldValue('account_names') && form.getFieldValue('account_names').length > 0) ||
-                            (form.getFieldValue('group_name') && form.getFieldValue('group_name').length > 0) || (form.getFieldValue('provide_name') && form.getFieldValue('provide_name').length > 0)) {
+                        if ((form.getFieldValue('account_names') && form.getFieldValue('account_names').length > 0) || (form.getFieldValue('group_name') && form.getFieldValue('group_name').length > 0) || 
+                            (form.getFieldValue('provide_name') && form.getFieldValue('provide_name').length > 0)  || (form.getFieldValue('custom_name') && form.getFieldValue('custom_name').length > 0)) {
                             let payload = {
                                 cid: type == 'add' ? '' : form.getFieldValue('cid'),
                                 type: 'chance',
                                 account_names: form.getFieldValue('account_names'),
                                 group_name: form.getFieldValue('group_name'),
-                                provide_name: form.getFieldValue('provide_name')
+                                provide_name: form.getFieldValue('provide_name'),
+                                custom_name: form.getFieldValue('custom_name')
                             }
                             searchSameChanceAPI('search', payload)
                         } else {
@@ -148,7 +158,7 @@ function AEChance(props) {
                                     title={<Space size={'large'}><span>{`编号: ${item.tmid}`}</span><span>{`状态: ${item.status}`}</span><span>{`${item.status === '已拉黑' ? '拉黑人' : '商务'}: ${item.u_name}`}</span></Space>}
                                     description={<Space size={'large'} style={{ color: `${item.status === '已拉黑' ? 'red' : ''}`}}>{item.status === '已拉黑' ? <><span>{`原因: ${item.note}`}</span><span>{`重复名称/ID: ${item.name}`}</span></> : 
                                         <><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}
-                                        <span>{`重复名称/ID: ${item.account_name || item.group_name || item.provide_name}`}</span></>}</Space>}
+                                        <span>{`重复名称/ID: ${item.account_name}`}</span></>}</Space>}
                                 />
                             </List.Item>
                         )}

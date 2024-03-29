@@ -208,8 +208,7 @@ router.post('/deleteUser', (req, res) => {
 router.post('/getSalemanAssistantItems', (req, res) => {
     let params = req.body
     // 去除 已删除 + 自己 + 管理员
-    let where = `where status != '失效' and status != '测试' and department = '事业部' and position != '副总' and position != '副总助理'`
-    let sql = `SELECT * FROM user ${where}`
+    let sql = `SELECT * FROM user WHERE uid = 'MJN00000' OR (status != '失效' and status != '测试' and department = '事业部' and position != '副总' and position != '副总助理')`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let salemans = []

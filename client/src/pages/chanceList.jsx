@@ -27,12 +27,13 @@ function ChanceList() {
             render: (_, record) => (
                 <Popover title="名称" content={
                     <List>
-                        <List.Item>线上名：{record.account_names}</List.Item>
-                        <List.Item>团购名：{record.group_name}</List.Item>
-                        <List.Item>供货名：{record.provide_name}</List.Item>
+                        <List.Item>线上平台：{record.account_names}</List.Item>
+                        <List.Item>社群团购：{record.group_name}</List.Item>
+                        <List.Item>供货：{record.provide_name}</List.Item>
+                        <List.Item>定制：{record.custom_name}</List.Item>
                     </List>}
                 >
-                    <span>{record.account_names === null ? '' : record.account_names}{record.group_name === null ? '' : record.group_name}{record.provide_name === null ? '' : record.provide_name}</span>
+                    <span>{record.account_names === null ? '' : record.account_names}{record.group_name === null ? '' : record.group_name}{record.provide_name === null ? '' : record.provide_name}{record.custom_name === null ? '' : record.custom_name}</span>
                 </Popover>
             )
         },
@@ -752,9 +753,7 @@ function ChanceList() {
                     <Form.Item label='平台' name='platforms' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={platform} />
                     </Form.Item>
-                    <Form.Item label='线上名' name='account_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='团购名' name='group_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='供货名' name='provide_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='达人名' name='account_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>
                     <Form.Item label='联系人' name='liaison_name'><Input /></Form.Item>
                     <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
                         <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />

@@ -10,7 +10,7 @@ import { province } from '../baseData/province'
 import AELiaison from '../components/modals/AELiaison'
 import AEYear from '../components/modals/AEYear'
 import AEFile from '../components/modals/AEFile'
-import AETalentModel from '../components/modals/AETalentModel'
+import AETalent from '../components/modals/AETalent'
 
 const { TextArea } = Input;
 
@@ -251,7 +251,7 @@ function TalentDetail() {
                             items.push(description)
                         }
                     } else if (data.model === '社群团购') {
-                        if ((descriptionsItems[j].key >= 42 && descriptionsItems[j].key <= 45) || descriptionsItems[j].key === 64) {
+                        if ((descriptionsItems[j].key >= 42 && descriptionsItems[j].key <= 45) || descriptionsItems[j].key === 64 || descriptionsItems[j].key === 29) {
                             if (descriptionsItems[j].key === 44) {
                                 description.span = 2
                             }
@@ -261,7 +261,7 @@ function TalentDetail() {
                             items.push(description)
                         }
                     } else if (data.model === '供货') {
-                        if ((descriptionsItems[j].key >= 46 && descriptionsItems[j].key <= 48) || descriptionsItems[j].key === 65) {
+                        if ((descriptionsItems[j].key >= 46 && descriptionsItems[j].key <= 48) || descriptionsItems[j].key === 65 || descriptionsItems[j].key === 29) {
                             if (descriptionsItems[j].key === 48) {
                                 description.span = 2
                             }
@@ -802,28 +802,19 @@ function TalentDetail() {
                     <Card title={<Space><GlobalOutlined /><span>合作模式 ----- {detailData.models && detailData.models.length} 个</span></Space>}
                         extra={detailData.status.match('待审批') && !detailData.status.match('新合作') ? null : editPower ? <Space>
                             <Button type="text" icon={<PlusOutlined />} onClick={() => {
-                                formModel.setFieldValue('u_id_1', {
-                                    label: localStorage.getItem('name'),
-                                    value: localStorage.getItem('uid')
-                                })
+                                formModel.setFieldValue('models', ['线上平台'])
                                 setIsShowModel(true);
-                                setTypeModel('新增线上平台');
+                                setTypeModel('新合作报备');
                             }}>新增线上平台</Button>
                             <Button type="text" icon={<PlusOutlined />} onClick={() => {
-                                formModel.setFieldValue('u_id_1', {
-                                    label: localStorage.getItem('name'),
-                                    value: localStorage.getItem('uid')
-                                })
+                                formModel.setFieldValue('models', ['社群团购'])
                                 setIsShowModel(true);
-                                setTypeModel('新增社群团购');
+                                setTypeModel('新合作报备');
                             }}>新增社群团购</Button>
                             <Button type="text" icon={<PlusOutlined />} onClick={() => {
-                                formModel.setFieldValue('u_id_1', {
-                                    label: localStorage.getItem('name'),
-                                    value: localStorage.getItem('uid')
-                                })
+                                formModel.setFieldValue('models', ['供货'])
                                 setIsShowModel(true);
-                                setTypeModel('新增供货');
+                                setTypeModel('新合作报备');
                             }}>新增供货</Button>
                         </Space> : null}
                     >
@@ -1045,7 +1036,7 @@ function TalentDetail() {
                     </Form.Item>
                 </Form>
             </Modal>
-            <AETalentModel
+            <AETalent
                 isShow={isShowModel}
                 type={modelType}
                 form={formModel}
@@ -1120,8 +1111,8 @@ function TalentDetail() {
                         type = type.match('综合信息') ? type : type.match('基础信息') ? '综合信息' : '佣金提点'
                     }
                     let operate = modelType + type
-                    if (modelType.match('新增')) {
-                        addTalentModelAPI(values)
+                    if (modelType.match('新')) {
+                        addTalentModelAPI({...values, operate: modelType, talent_name: detailData.name})
                     } else if (Object.keys(z).length === 0) {
                         if (type.match('基础信息')) {
                             formModel.resetFields();

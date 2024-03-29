@@ -54,7 +54,7 @@ router.post('/getTalentList', (req, res) => {
                         CONCAT(IF(GROUP_CONCAT(DISTINCT m1.name) IS NULL, '', GROUP_CONCAT(DISTINCT m1.name)), IF(GROUP_CONCAT(DISTINCT m2.name) IS NULL, '', GROUP_CONCAT(DISTINCT m2.name))) as m_names,
                         IF(ts1.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels,
                         GROUP_CONCAT(DISTINCT IF(tm.model_files IS NULL, '暂无', '生效中')) as model_status, t.status, COUNT(DISTINCT l.lid) as live_count, SUM(l.sales) as live_sum, GROUP_CONCAT(DISTINCT tm.account_type) as account_type,
-                        GROUP_CONCAT(DISTINCT tm.account_models) as account_models, GROUP_CONCAT(DISTINCT IF(tm.account_name IS NULL, IF(tm.group_name IS NULL, provide_name, group_name), account_name)) as account_name
+                        GROUP_CONCAT(DISTINCT tm.account_models) as account_models, GROUP_CONCAT(DISTINCT tm.account_name) as account_name
                     FROM talent t
                         LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' or operate = '达人报备' GROUP BY tid) ts0 ON ts0.tid = t.tid
                         LEFT JOIN talent_schedule ts1 ON ts1.tsid = ts0.tsid
@@ -373,27 +373,52 @@ router.post('/addTalentModel', (req, res) => {
             let sql_l = `INSERT INTO talent_model_schedule values`
             let count_d = results_d.length
             let count_l = results_l.length
-            let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
-            let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
-            let shop_name = params.shop_name ? `'${params.shop_name}'` : null
-            let keyword = params.keyword ? `'${params.keyword}'` : null
-            let commission_note = params.commission_note ? `'${params.commission_note}'` : null
-            let discount_label = params.discount_label ? `'${params.discount_label}'` : null
-            let u_id_2 = params.u_id_2 ? `'${params.u_id_2}'` : null
-            let u_point_2 = params.u_point_2 ? `'${params.u_point_2}'` : null
-            let u_note = params.u_note ? `'${params.u_note}'` : null
-            if (params.type === 'model_1') {
-                sql_d += `('${tmid}', '${params.tid}', '线上平台', '${params.platform}', '${params.shop_type}', ${shop_name}, '${params.account_id}', '${params.account_name}', null, null, '${params.account_type}', '${params.account_models}', ${keyword}, '${params.people_count}', '${params.fe_proportion}', '${params.age_cuts}', '${params.main_province}', '${params.price_cut}', null, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.u_id_1}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
-            } else if (params.type === 'model_2') {
-                sql_d += `('${tmid}', '${params.tid}', '社群团购', '聚水潭', null, '${params.shop_name}', null, null, '${params.group_name}', null, null, null, null, null, null, null, null, null, null, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.u_id_1}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
-            } else if (params.type === 'model_3') {
-                sql_d += `('${tmid}', '${params.tid}', '供货', '聚水潭', null, '${params.shop_name}', null, null, null, '${params.provide_name}', null, null, null, null, null, null, null, null, null, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, '${params.u_id_1}', '${params.u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, null, '${params.userInfo.uid}', '${time}', '新合作报备', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+            if (params.accounts) {
+                for (let i = 0; i < params.accounts.length; i++) {
+                    let tmid = 'TM' + `${count_d + i + 1}`.padStart(7, '0')
+                    let tmsid = 'TMS' + `${count_l + i + 1}`.padStart(7, '0')
+                    let shop_name = params.accounts[i].shop_name ? `'${params.accounts[i].shop_name}'` : null
+                    let keyword = params.accounts[i].keyword ? `'${params.accounts[i].keyword}'` : null
+                    let commission_note = params.accounts[i].commission_note ? `'${params.accounts[i].commission_note}'` : null
+                    let u_id_2 = params.accounts[i].u_id_2 ? params.accounts[i].u_id_2.value ? `'${params.accounts[i].u_id_2.value}'` : `'${params.accounts[i].u_id_2}'` : null
+                    let u_point_2 = params.accounts[i].u_point_2 ? params.accounts[i].u_point_2.value ? `'${params.accounts[i].u_point_2.value}'` : `'${params.accounts[i].u_point_2}'` : null
+                    let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
+                    let model_files = params.accounts[i].model_files ? `'${JSON.stringify(params.accounts[i].model_files)}'` : null
+                    sql_d += `('${tmid}', '${params.tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].shop_type}', ${shop_name}, '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', ${model_files}, '待审批'),`
+                    sql_l += `('${tmsid}', '${tmid}', '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', ${commission_note}, null, null, null, '${params.accounts[i].u_id_1}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.accounts[i].gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                }
+                count_d += params.accounts.length
+                count_l += params.accounts.length
             }
-            count_d += 1
-            count_l += 1
+            if (params.group_shop) {
+                let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
+                let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
+                let commission_note = params.commission_note ? `'${params.commission_note}'` : null
+                let u_id_2 = params.group_u_id_2 ? params.group_u_id_2.value ? `'${params.group_u_id_2.value}'` : `'${params.group_u_id_2}'` : null
+                let u_point_2 = params.group_u_point_2 ? params.group_u_point_2.value ? `'${params.group_u_point_2.value}'` : `'${params.group_u_point_2}'` : null
+                let u_note = params.group_u_note ? `'${params.group_u_note}'` : null
+                let model_files = params.group_model_files ? `'${JSON.stringify(params.model_files)}'` : null
+                sql_d += `('${tmid}', '${params.tid}', '社群团购', '聚水潭', null, '${params.group_shop}', null, '${params.group_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.group_u_id_1}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.group_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                count_d += 1
+                count_l += 1
+            }
+            if (params.provide_shop) {
+                let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
+                let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
+                let discount_label = params.discount_label ? `'${params.discount_label}'` : null
+                let u_id_2 = params.provide_u_id_2 ? params.provide_u_id_2.value ? `'${params.provide_u_id_2.value}'` : `'${params.provide_u_id_2}'` : null
+                let u_point_2 = params.provide_u_point_2 ? params.provide_u_point_2.value ? `'${params.provide_u_point_2.value}'` : `'${params.provide_u_point_2}'` : null
+                let u_note = params.provide_u_note ? `'${params.provide_u_note}'` : null
+                let model_files = params.provide_model_files ? `'${JSON.stringify(params.model_files)}'` : null
+                sql_d += `('${tmid}', '${params.tid}', '供货', '聚水潭', null, '${params.provide_shop}', null, '${params.provide_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, '${params.provide_u_id_1}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.provide_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                count_d += 1
+                count_l += 1
+            }
+            if (sql_d === 'INSERT INTO talent_model values') {
+                res.send({ code: 201, data: [], msg: `请输入正确的合作模式信息` })
+            }
             sql_d = sql_d.substring(0, sql_d.length - 1)
             sql_l = sql_l.substring(0, sql_l.length - 1)
             db.query(sql_d, (err, results) => {
@@ -403,23 +428,19 @@ router.post('/addTalentModel', (req, res) => {
                     let sql = `UPDATE talent SET status = '新合作待审批' WHERE tid = '${params.tid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
-                        let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
-                        db.query(sql, (err, results_t) => {
+                        let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
+                        db.query(sql, (err, results_e) => {
                             if (err) throw err;
-                            let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
-                            db.query(sql, (err, results_e) => {
-                                if (err) throw err;
-                                sendRobot(
-                                    results_e[0].secret,
-                                    results_e[0].url,
-                                    `${results_t[0].name} 新合作报备`,
-                                    `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：新合作报备 \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`,
-                                    `http://1.15.89.163:5173`,
-                                    [results_e[0].phone],
-                                    false
-                                )
-                                res.send({ code: 200, data: [], msg: `添加成功` })
-                            })
+                            sendRobot(
+                                results_e[0].secret,
+                                results_e[0].url,
+                                `${params.talent_name} ${params.operate}`,
+                                `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.talent_name} \n\n ### 审批人员：@${results_e[0].phone}`,
+                                `http://1.15.89.163:5173`,
+                                [results_e[0].phone],
+                                false
+                            )
+                            res.send({ code: 200, data: [], msg: `新合作报备成功` })
                         })
                     })
                 })
@@ -842,7 +863,7 @@ router.post('/getTalentItems', (req, res) => {
 // 获取合作模式下拉框
 router.post('/getModelItems', (req, res) => {
     let params = req.body
-    let sql = `SELECT tmid, CONCAT(model, '_', platform, '_', IF(shop_type IS NULL, '', shop_type), IF(shop_name IS NULL, '', shop_name), '_', IF(account_name IS NULL, IF(group_name IS NULL, provide_name, group_name), account_name)) as model FROM talent_model WHERE tid = '${params.tid}' and model != '供货' and status = '合作中'`
+    let sql = `SELECT tmid, CONCAT(model, '_', platform, '_', IF(shop_type IS NULL, '', shop_type), IF(shop_name IS NULL, '', shop_name), '_', account_name) as model FROM talent_model WHERE tid = '${params.tid}' and model != '供货' and status = '合作中'`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let models = []

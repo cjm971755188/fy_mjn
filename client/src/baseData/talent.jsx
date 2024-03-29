@@ -25,8 +25,8 @@ export const modelStatus = [
 export const model = [
     { key: 0, label: "线上平台", value: "线上平台" },
     { key: 1, label: "社群团购", value: "社群团购" },
-    { key: 2, label: "供货", value: "供货" },
-    { key: 3, label: "定制", value: "定制" }
+    { key: 2, label: "供货", value: "供货" }/* ,
+    { key: 3, label: "定制", value: "定制" } */
 ]
 
 export const platform = [
@@ -173,4 +173,10 @@ export const productType= [
 export const gmvBelong= [
     { key: 0, label: "主商务", value: "主商务" },
     { key: 1, label: "主副商务一人一半", value: "主副商务一人一半" }
+]
+
+export const customPayType= [
+    { key: 0, label: "定金+尾款", value: "定金+尾款" },
+    { key: 1, label: "货到付款", value: "货到付款" },
+    { key: 2, label: "款到发货", value: "款到发货" }
 ]
