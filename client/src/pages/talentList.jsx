@@ -21,6 +21,7 @@ function TalentList() {
         { title: '编号', dataIndex: 'tid', key: 'tid' },
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
         { title: '账号类型', dataIndex: 'account_type', key: 'account_type', width: 140 },
+        { title: '模式', dataIndex: 'models', key: 'models', width: 100 },
         { title: '平台', dataIndex: 'platforms', key: 'platforms', width: 100 },
         { title: '销售模式', dataIndex: 'account_models', key: 'account_models', width: 140 },
         {

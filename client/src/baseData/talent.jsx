@@ -25,8 +25,8 @@ export const modelStatus = [
 export const model = [
     { key: 0, label: "线上平台", value: "线上平台" },
     { key: 1, label: "社群团购", value: "社群团购" },
-    { key: 2, label: "供货", value: "供货" }/* ,
-    { key: 3, label: "定制", value: "定制" } */
+    { key: 2, label: "供货", value: "供货" },
+    { key: 3, label: "定制", value: "定制" }
 ]
 
 export const platform = [

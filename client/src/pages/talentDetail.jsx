@@ -251,22 +251,23 @@ function TalentDetail() {
                             items.push(description)
                         }
                     } else if (data.model === '社群团购') {
-                        if ((descriptionsItems[j].key >= 42 && descriptionsItems[j].key <= 45) || descriptionsItems[j].key === 64 || descriptionsItems[j].key === 29) {
-                            if (descriptionsItems[j].key === 44) {
+                        if ((descriptionsItems[j].key >= 38 && descriptionsItems[j].key <= 41) || descriptionsItems[j].key === 29) {
+                            items.push(description)
+                        }
+                    } else if (data.model === '供货') {
+                        if ((descriptionsItems[j].key >= 46 && descriptionsItems[j].key <= 48) || descriptionsItems[j].key === 29) {
+                            if (descriptionsItems[j].key === 48) {
                                 description.span = 2
                             }
-                            if (descriptionsItems[j].key === 45) {
+                            if (descriptionsItems[j].key === 48) {
                                 description.span = 5
                             }
                             items.push(description)
                         }
-                    } else if (data.model === '供货') {
-                        if ((descriptionsItems[j].key >= 46 && descriptionsItems[j].key <= 48) || descriptionsItems[j].key === 65 || descriptionsItems[j].key === 29) {
-                            if (descriptionsItems[j].key === 48) {
-                                description.span = 2
-                            }
-                            if (descriptionsItems[j].key === 48) {
-                                description.span = 5
+                    } else if (data.model === '定制') {
+                        if ((descriptionsItems[j].key >= 72 && descriptionsItems[j].key <= 75) || descriptionsItems[j].key === 29) {
+                            if (descriptionsItems[j].key === 75 && Object.values(data)[i] === '定金+尾款') {
+                                description.children = `${Object.values(data)[i]}(${Object.values(data)[i + 1]}%+${Object.values(data)[i + 2]}%)`
                             }
                             items.push(description)
                         }
@@ -816,6 +817,11 @@ function TalentDetail() {
                                 setIsShowModel(true);
                                 setTypeModel('新合作报备');
                             }}>新增供货</Button>
+                            <Button type="text" icon={<PlusOutlined />} onClick={() => {
+                                formModel.setFieldValue('models', ['定制'])
+                                setIsShowModel(true);
+                                setTypeModel('新合作报备');
+                            }}>新增定制</Button>
                         </Space> : null}
                     >
                         {detailData.models && detailData.models.map((model, index) => {
@@ -827,7 +833,7 @@ function TalentDetail() {
                                     </Space>}
                                     style={{ marginBottom: '20px' }}
                                     extra={detailData.status.match('待审批') ? null : editPower ? <><Button type="text" icon={<EditOutlined />} onClick={() => {
-                                        let f = { ...model, tmid: model.tmid }
+                                        let f = { ...model, tmid: model.tmid, models: [model.model] }
                                         for (const key in model) {
                                             if (Object.hasOwnProperty.call(model, key)) {
                                                 if (key === 'u_id_1') {
@@ -842,16 +848,50 @@ function TalentDetail() {
                                                     }
                                                 } else if (model[key] !== null && (key === 'account_models' || key === 'age_cuts' || key === 'keyword' || key === 'main_province')) {
                                                     f[key] = model[key].split(',')
-                                                } else if ((key.match('discount') || key.match('commission') || key.match('u_') || key.match('shop'))) {
+                                                } else if ((key.match('discount') || key.match('commission') || key.match('u_') || key.match('shop') || key === 'tmid')) {
                                                     f[key] = model[key]
-                                                } else if (model[key] !== null && ['create_time', 'create_uid', 'model', 'platform', 'shop_type', 'shop_name', 'status', 'tid'].indexOf(key) !== -1) {
+                                                } else if (model[key] !== null && ['create_time', 'create_uid', 'model', 'shop_type', 'shop_name', 'status', 'tid'].indexOf(key) !== -1) {
                                                     delete f[key]
                                                 } else if (key === 'model_files') {
                                                     delete f[key]
                                                 }
                                             }
                                         }
-                                        formModel.setFieldsValue(f)
+                                        if (model.model === '社群团购') {
+                                            f.group_name = f.account_name
+                                            f.group_shop = f.shop_name
+                                            f.group_u_id_1 = f.u_id_1
+                                            f.group_u_point_1 = f.u_point_1
+                                            f.group_u_id_2 = f.u_id_2
+                                            f.group_u_point_2 = f.u_point_2
+                                            f.group_u_note = f.u_note
+                                            f.group_gmv_belong = f.gmv_belong
+                                        } else if (model.model === '供货') {
+                                            f.provide_name = f.account_name
+                                            f.provide_shop = f.shop_name
+                                            f.provide_u_id_1 = f.u_id_1
+                                            f.provide_u_point_1 = f.u_point_1
+                                            f.provide_u_id_2 = f.u_id_2
+                                            f.provide_u_point_2 = f.u_point_2
+                                            f.provid_u_note = f.u_note
+                                            f.provide_gmv_belong = f.gmv_belong
+                                        } else if (model.model === '定制') {
+                                            f.custom_name = f.account_name
+                                            f.custom_shop = f.shop_name
+                                            f.custom_u_id_1 = f.u_id_1
+                                            f.custom_u_point_1 = f.u_point_1
+                                            f.custom_u_id_2 = f.u_id_2
+                                            f.custom_u_point_2 = f.u_point_2
+                                            f.custom_u_note = f.u_note
+                                            f.custom_gmv_belong = f.gmv_belong
+                                        } 
+                                        if (model.model === '线上平台') {
+                                            formModel.setFieldValue('accounts', [f])
+                                            formModel.setFieldValue('models', [model.model])
+                                            formModel.setFieldValue('tmid', model.tmid)
+                                        } else {
+                                            formModel.setFieldsValue(f)
+                                        }
                                         setEditOri(f)
                                         setIsShowModel(true);
                                         setTypeModel(`修改${model.model}`);
@@ -1041,94 +1081,169 @@ function TalentDetail() {
                 type={modelType}
                 form={formModel}
                 onOK={(values) => {
-                    let ori = null
-                    if (editOri) {
-                        ori = editOri
-                        ori.u_id_1 = editOri.u_id_1 ? editOri.u_id_1.value || editOri.u_id_1.value === null ? editOri.u_id_1.value : editOri.u_id_1 : null
-                        ori.u_id_2 = editOri.u_id_2 ? editOri.u_id_2.value || editOri.u_id_2.value === null ? editOri.u_id_2.value : editOri.u_id_2 : null
-                        ori.u_point_1 = editOri.u_point_1 ? editOri.u_point_1.value || editOri.u_point_1.value === null ? editOri.u_point_1.value : editOri.u_point_1 : null
-                        ori.u_point_2 = editOri.u_point_2 ? editOri.u_point_2.value || editOri.u_point_2.value === null ? editOri.u_point_2.value : editOri.u_point_2 : null
-                        if (ori.account_models) {
-                            ori.account_models = editOri.account_models.join()
-                        }
-                        if (ori.age_cuts) {
-                            ori.age_cuts = editOri.age_cuts.join()
-                        }
-                        if (ori.keyword) {
-                            ori.keyword = editOri.keyword.join()
-                        }
-                        if (ori.main_province) {
-                            ori.main_province = editOri.main_province.join()
-                        }
-                        delete ori.u_name_1
-                        delete ori.u_name_2
-                    }
-                    let o = {}
-                    for (const key in ori) {
-                        if (Object.hasOwnProperty.call(ori, key)) {
-                            if (ori[key] === null && key !== 'u_id_2' && key !== 'u_point_2' && key !== 'u_note' && key !== 'commission_note' && key !== 'discount_note') {
-                                continue
-                            } else {
-                                o[key] = ori[key]
+                    if (modelType.match('新')) {
+                        addTalentModelAPI({ ...values, operate: modelType, talent_name: detailData.name })
+                    } else {
+                        let o = {}, v = {}
+                        for (const key in editOri) {
+                            if (Object.hasOwnProperty.call(editOri, key)) {
+                                if (modelType.match('定制') && (key.match('custom_') || ['', 'profit_point', 'tax_point', 'has_package', 'pay_type', 'deposit', 'tail'].indexOf(key) !== -1)) {
+                                    o[key] = editOri[key]
+                                } else if (modelType.match('供货') && (key.match('provide_') || key.match('discount_'))) {
+                                    o[key] = editOri[key]
+                                } else if (modelType.match('社群团购') && (key.match('group_') || key.match('commission_'))) {
+                                    o[key] = editOri[key]
+                                } else if (modelType.match('线上平台') && key !== 'models') {
+                                    o[key] = editOri[key]
+                                }
                             }
                         }
-                    }
-                    let payload = values
-                    payload.u_id_1 = values.u_id_1 ? values.u_id_1.value || values.u_id_1.value === null ? values.u_id_1.value : values.u_id_1 : null
-                    payload.u_id_2 = values.u_id_2 ? values.u_id_2.value || values.u_id_2.value === null ? values.u_id_2.value : values.u_id_2 : null
-                    payload.u_point_1 = values.u_point_1 ? values.u_point_1.value || values.u_point_1.value === null ? values.u_point_1.value : values.u_point_1 : null
-                    payload.u_point_2 = values.u_point_2 ? values.u_point_2.value || values.u_point_2.value === null ? values.u_point_2.value : values.u_point_2 : null
-                    if (payload.account_models) {
-                        payload.account_models = values.account_models.join()
-                    }
-                    if (payload.age_cuts) {
-                        payload.age_cuts = values.age_cuts.join()
-                    }
-                    if (payload.keyword) {
-                        payload.keyword = values.keyword.join()
-                    }
-                    if (payload.main_province) {
-                        payload.main_province = values.main_province.join()
-                    }
-                    let z = {}, type = ''
-                    for (const key in o) {
-                        if (Object.hasOwnProperty.call(o, key)) {
-                            for (const k in payload) {
-                                if (Object.hasOwnProperty.call(payload, k)) {
-                                    if (key === k && o[key] !== payload[k]) {
-                                        z[key] = o[key]
-                                        if ((key.match('u_') || key.match('discount_') || key.match('commission_') || key === 'gmv_belong')) {
-                                            type = type.match('综合信息') ? type : type.match('基础信息') ? '综合信息' : '佣金提点'
-                                        } else {
-                                            type = type.match('综合信息') ? type : type.match('佣金提点') ? '综合信息' : '基础信息'
+                        if (modelType.match('定制')) {
+                            o.custom_u_id_1 = o.custom_u_id_1 ? o.custom_u_id_1.value || o.custom_u_id_1.value === null ? o.custom_u_id_1.value : o.custom_u_id_1 : null
+                            o.custom_u_id_2 = o.custom_u_id_2 ? o.custom_u_id_2.value || o.custom_u_id_2.value === null ? o.custom_u_id_2.value : o.custom_u_id_2 : null
+                            o.custom_u_point_1 = o.custom_u_point_1 ? o.custom_u_point_1.value || o.custom_u_point_1.value === null ? o.custom_u_point_1.value : o.custom_u_point_1 : null
+                            o.custom_u_point_2 = o.custom_u_point_2 ? o.custom_u_point_2.value || o.custom_u_point_2.value === null ? o.custom_u_point_2.value : o.custom_u_point_2 : null
+                        } else if (modelType.match('供货')) {
+                            o.provide_u_id_1 = o.provide_u_id_1 ? o.provide_u_id_1.value || o.provide_u_id_1.value === null ? o.provide_u_id_1.value : o.provide_u_id_1 : null
+                            o.provide_u_id_2 = o.provide_u_id_2 ? o.provide_u_id_2.value || o.provide_u_id_2.value === null ? o.provide_u_id_2.value : o.provide_u_id_2 : null
+                            o.provide_u_point_1 = o.provide_u_point_1 ? o.provide_u_point_1.value || o.provide_u_point_1.value === null ? o.provide_u_point_1.value : o.provide_u_point_1 : null
+                            o.provide_u_point_2 = o.provide_u_point_2 ? o.provide_u_point_2.value || o.provide_u_point_2.value === null ? o.provide_u_point_2.value : o.provide_u_point_2 : null
+                        } else if (modelType.match('社群团购')) {
+                            o.group_u_id_1 = o.group_u_id_1 ? o.group_u_id_1.value || o.group_u_id_1.value === null ? o.group_u_id_1.value : o.group_u_id_1 : null
+                            o.group_u_id_2 = o.group_u_id_2 ? o.group_u_id_2.value || o.group_u_id_2.value === null ? o.group_u_id_2.value : o.group_u_id_2 : null
+                            o.group_u_point_1 = o.group_u_point_1 ? o.group_u_point_1.value || o.group_u_point_1.value === null ? o.group_u_point_1.value : o.group_u_point_1 : null
+                            o.group_u_point_2 = o.group_u_point_2 ? o.group_u_point_2.value || o.group_u_point_2.value === null ? o.group_u_point_2.value : o.group_u_point_2 : null
+                        } else if (modelType.match('线上平台')) {
+                            o.u_id_1 = o.u_id_1 ? o.u_id_1.value || o.u_id_1.value === null ? o.u_id_1.value : o.u_id_1 : null
+                            o.u_id_2 = o.u_id_2 ? o.u_id_2.value || o.u_id_2.value === null ? o.u_id_2.value : o.group_u_id_2 : null
+                            o.u_point_1 = o.u_point_1 ? o.u_point_1.value || o.u_point_1.value === null ? o.u_point_1.value : o.u_point_1 : null
+                            o.u_point_2 = o.u_point_2 ? o.u_point_2.value || o.u_point_2.value === null ? o.u_point_2.value : o.u_point_2 : null
+                        }
+                        if (o.account_models) {
+                            o.account_models = o.account_models.join()
+                        }
+                        if (o.age_cuts) {
+                            o.age_cuts = o.age_cuts.join()
+                        }
+                        if (o.keyword) {
+                            o.keyword = o.keyword.join()
+                        }
+                        if (o.main_province) {
+                            o.main_province = o.main_province.join()
+                        }
+                        for (const key in values) {
+                            if (Object.hasOwnProperty.call(values, key)) {
+                                if (modelType.match('定制') && (key.match('custom_') || ['', 'profit_point', 'tax_point', 'has_package', 'pay_type', 'deposit', 'tail'].indexOf(key) !== -1)) {
+                                    v[key] = values[key]
+                                } else if (modelType.match('供货') && (key.match('provide_') || key.match('discount_'))) {
+                                    v[key] = values[key]
+                                } else if (modelType.match('社群团购') && (key.match('group_') || key.match('commission_'))) {
+                                    v[key] = values[key]
+                                }
+                            }
+                        }
+                        if (modelType.match('线上平台')) {
+                            for (const key in values.accounts[0]) {
+                                if (Object.hasOwnProperty.call(values.accounts[0], key)) {
+                                    if (key !== 'models') {
+                                        v[key] = values.accounts[0][key]
+                                    }
+                                }
+                            }
+                        }
+                        if (modelType.match('定制')) {
+                            v.custom_u_id_1 = v.custom_u_id_1 ? v.custom_u_id_1.value || v.custom_u_id_1.value === null ? v.custom_u_id_1.value : v.custom_u_id_1 : null
+                            v.custom_u_id_2 = v.custom_u_id_2 ? v.custom_u_id_2.value || v.custom_u_id_2.value === null ? o.custom_u_id_2.value : v.custom_u_id_2 : null
+                            v.custom_u_point_1 = v.custom_u_point_1 ? v.custom_u_point_1.value || v.custom_u_point_1.value === null ? v.custom_u_point_1.value : v.custom_u_point_1 : null
+                            v.custom_u_point_2 = v.custom_u_point_2 ? v.custom_u_point_2.value || v.custom_u_point_2.value === null ? v.custom_u_point_2.value : v.custom_u_point_2 : null
+                        } else if (modelType.match('供货')) {
+                            v.provide_u_id_1 = v.provide_u_id_1 ? v.provide_u_id_1.value || v.provide_u_id_1.value === null ? v.provide_u_id_1.value : v.provide_u_id_1 : null
+                            v.provide_u_id_2 = v.provide_u_id_2 ? v.provide_u_id_2.value || v.provide_u_id_2.value === null ? o.provide_u_id_2.value : v.provide_u_id_2 : null
+                            v.provide_u_point_1 = v.provide_u_point_1 ? v.provide_u_point_1.value || v.provide_u_point_1.value === null ? v.provide_u_point_1.value : v.provide_u_point_1 : null
+                            v.provide_u_point_2 = v.provide_u_point_2 ? v.provide_u_point_2.value || v.provide_u_point_2.value === null ? v.provide_u_point_2.value : v.provide_u_point_2 : null
+                        } else if (modelType.match('社群团购')) {
+                            v.group_u_id_1 = v.group_u_id_1 ? v.group_u_id_1.value || v.group_u_id_1.value === null ? v.group_u_id_1.value : v.group_u_id_1 : null
+                            v.group_u_id_2 = v.group_u_id_2 ? v.group_u_id_2.value || v.group_u_id_2.value === null ? o.group_u_id_2.value : v.group_u_id_2 : null
+                            v.group_u_point_1 = v.group_u_point_1 ? v.group_u_point_1.value || v.group_u_point_1.value === null ? v.group_u_point_1.value : v.group_u_point_1 : null
+                            v.group_u_point_2 = v.group_u_point_2 ? v.group_u_point_2.value || v.group_u_point_2.value === null ? v.group_u_point_2.value : v.group_u_point_2 : null
+                        } else if (modelType.match('线上平台')) {
+                            v.u_id_1 = v.u_id_1 ? v.u_id_1.value || v.u_id_1.value === null ? v.u_id_1.value : v.u_id_1 : null
+                            v.u_id_2 = v.u_id_2 ? v.u_id_2.value || v.u_id_2.value === null ? o.u_id_2.value : v.group_u_id_2 : null
+                            v.u_point_1 = v.u_point_1 ? v.u_point_1.value || v.u_point_1.value === null ? v.u_point_1.value : v.u_point_1 : null
+                            v.u_point_2 = v.u_point_2 ? v.u_point_2.value || v.u_point_2.value === null ? v.u_point_2.value : v.u_point_2 : null
+                        }
+                        if (v.account_models) {
+                            v.account_models = v.account_models.join()
+                        }
+                        if (v.age_cuts) {
+                            v.age_cuts = v.age_cuts.join()
+                        }
+                        if (v.keyword) {
+                            v.keyword = v.keyword.join()
+                        }
+                        if (v.main_province) {
+                            v.main_province = v.main_province.join()
+                        }
+                        let z = {}, type = ''
+                        for (const key in o) {
+                            if (Object.hasOwnProperty.call(o, key)) {
+                                for (const k in v) {
+                                    if (Object.hasOwnProperty.call(v, k)) {
+                                        if (key === k && o[key] !== v[k]) {
+                                            z[key] = o[key]
+                                            if ((key.match('u_') || key.match('discount_') || key.match('commission_') || ['gmv_belong', 'profit_point', 'tax_point', 'has_package', 'pay_type', 'deposit', 'tail'].indexOf(key) !== -1)) {
+                                                type = type.match('综合信息') ? type : type.match('基础信息') ? '综合信息' : '佣金提点'
+                                            } else {
+                                                type = type.match('综合信息') ? type : type.match('佣金提点') ? '综合信息' : '基础信息'
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
-                    if (o !== null && Object.keys(o).length !== Object.keys(payload).length) {
-                        type = type.match('综合信息') ? type : type.match('基础信息') ? '综合信息' : '佣金提点'
-                    }
-                    let operate = modelType + type
-                    if (modelType.match('新')) {
-                        addTalentModelAPI({...values, operate: modelType, talent_name: detailData.name})
-                    } else if (Object.keys(z).length === 0) {
-                        if (type.match('基础信息')) {
+                        let operate = modelType + type
+                        if (Object.keys(z).length === 0) {
                             formModel.resetFields();
                             setIsShowModel(false);
                             message.info('未修改任何信息');
                         } else {
-                            if (z.u_id_2) {
-                                z.u_id_2 = payload.u_id_2 ? payload.u_id_2 : o.u_id_2
-                            } 
-                            if (z.u_point_2) {
-                                z.u_point_2 = payload.u_point_2 ? payload.u_point_2 : o.u_point_2
+                            let payload = { tmid: editOri.tmid }, changes = {}
+                            for (const key in v) {
+                                if (Object.hasOwnProperty.call(v, key)) {
+                                    if (['custom_name', 'provide_name', 'group_name'].indexOf(key) !== -1) {
+                                        payload['account_name'] = v[key]
+                                    } else if (['custom_shop', 'provide_shop', 'group_shop'].indexOf(key) !== -1) {
+                                        payload['shop_name'] = v[key]
+                                    } else if (key.match('custom_')) {
+                                        payload[key.replace('custom_', '')] = v[key]
+                                    } else if (key.match('provide_')) {
+                                        payload[key.replace('provide_', '')] = v[key]
+                                    } else if (key.match('group_')) {
+                                        payload[key.replace('group_', '')] = v[key]
+                                    } else {
+                                        payload[key] = v[key]
+                                    }
+                                }
                             }
-                            editTalentModelAPI(operate, JSON.stringify(z), payload)
+                            for (const key in z) {
+                                if (Object.hasOwnProperty.call(z, key)) {
+                                    if (['custom_name', 'provide_name', 'group_name'].indexOf(key) !== -1) {
+                                        changes['account_name'] = z[key]
+                                    } else if (['custom_shop', 'provide_shop', 'group_shop'].indexOf(key) !== -1) {
+                                        changes['shop_name'] = z[key]
+                                    } else if (key.match('custom_')) {
+                                        changes[key.replace('custom_', '')] = z[key]
+                                    } else if (key.match('provide_')) {
+                                        changes[key.replace('provide_', '')] = z[key]
+                                    } else if (key.match('group_')) {
+                                        changes[key.replace('group_', '')] = z[key]
+                                    } else {
+                                        changes[key] = z[key]
+                                    }
+                                }
+                            }
+                            editTalentModelAPI(operate, JSON.stringify(changes), payload)
                         }
-                    } else {
-                        editTalentModelAPI(operate, JSON.stringify(z), payload)
                     }
                 }}
                 onCancel={() => { setIsShowModel(false); formModel.resetFields(); setTypeModel(''); }}

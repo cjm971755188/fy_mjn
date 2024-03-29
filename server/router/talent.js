@@ -107,7 +107,7 @@ router.post('/getTalentDetail', (req, res) => {
     db.query(sql, (err, results_base) => {
         if (err) throw err;
         let sql = `SELECT tm.*, tms0.commission_normal, tms0.commission_welfare, tms0.commission_bao, tms0.commission_note, tms0.discount_buyout, tms0.discount_back, tms0.discount_label, 
-                        tms0.u_id_1, u1.name as u_name_1, tms0.u_point_1, tms0.u_id_2, u2.name as u_name_2, tms0.u_point_2, tms0.u_note, tms0.gmv_belong
+                        tms0.profit_point, tms0.tax_point, tms0.has_package, tms0.pay_type, tms0.deposit, tms0.tail, tms0.u_id_1, u1.name as u_name_1, tms0.u_point_1, tms0.u_id_2, u2.name as u_name_2, tms0.u_point_2, tms0.u_note, tms0.gmv_belong
                     FROM talent_model tm
                         LEFT JOIN talent_model_schedule tms0 ON tms0.tmid = tm.tmid
                         INNER JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms1 ON tms1.tmsid = tms0.tmsid
@@ -268,7 +268,7 @@ router.post('/editTalent', (req, res) => {
                             let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                             db.query(sql, (err, results_e) => {
                                 if (err) throw err;
-                                sendRobot(
+                                /* sendRobot(
                                     results_e[0].secret,
                                     results_e[0].url,
                                     `${results_t[0].name} ${params.operate}`,
@@ -276,7 +276,7 @@ router.post('/editTalent', (req, res) => {
                                     `http://1.15.89.163:5173`,
                                     [results_e[0].phone],
                                     false
-                                )
+                                ) */
                                 res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                             })
                         })
@@ -324,7 +324,7 @@ router.post('/examTalent', (req, res) => {
                                 let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
                                 db.query(sql, (err, results_u) => {
                                     if (err) throw err;
-                                    sendRobot(
+                                    /* sendRobot(
                                         results_u[0].secret,
                                         results_u[0].url,
                                         `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
@@ -332,7 +332,7 @@ router.post('/examTalent', (req, res) => {
                                         `http://1.15.89.163:5173`,
                                         [results_u[0].phone],
                                         false
-                                    )
+                                    ) */
                                     res.send({ code: 200, data: [], msg: `` })
                                 })
                             })
@@ -342,7 +342,7 @@ router.post('/examTalent', (req, res) => {
                     let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
                     db.query(sql, (err, results_u) => {
                         if (err) throw err;
-                        sendRobot(
+                        /* sendRobot(
                             results_u[0].secret,
                             results_u[0].url,
                             `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
@@ -350,7 +350,7 @@ router.post('/examTalent', (req, res) => {
                             `http://1.15.89.163:5173`,
                             [results_u[0].phone],
                             false
-                        )
+                        ) */
                         res.send({ code: 200, data: [], msg: `` })
                     })
                 }
@@ -385,7 +385,7 @@ router.post('/addTalentModel', (req, res) => {
                     let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
                     let model_files = params.accounts[i].model_files ? `'${JSON.stringify(params.accounts[i].model_files)}'` : null
                     sql_d += `('${tmid}', '${params.tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].shop_type}', ${shop_name}, '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', ${model_files}, '待审批'),`
-                    sql_l += `('${tmsid}', '${tmid}', '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', ${commission_note}, null, null, null, '${params.accounts[i].u_id_1}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.accounts[i].gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                    sql_l += `('${tmsid}', '${tmid}', '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', ${commission_note}, null, null, null, null, null, null, null, null, null, '${params.accounts[i].u_id_1}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.accounts[i].gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
                 }
                 count_d += params.accounts.length
                 count_l += params.accounts.length
@@ -399,7 +399,7 @@ router.post('/addTalentModel', (req, res) => {
                 let u_note = params.group_u_note ? `'${params.group_u_note}'` : null
                 let model_files = params.group_model_files ? `'${JSON.stringify(params.model_files)}'` : null
                 sql_d += `('${tmid}', '${params.tid}', '社群团购', '聚水潭', null, '${params.group_shop}', null, '${params.group_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.group_u_id_1}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.group_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, null, null, null, null, null, null, '${params.group_u_id_1}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.group_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
                 count_d += 1
                 count_l += 1
             }
@@ -412,7 +412,21 @@ router.post('/addTalentModel', (req, res) => {
                 let u_note = params.provide_u_note ? `'${params.provide_u_note}'` : null
                 let model_files = params.provide_model_files ? `'${JSON.stringify(params.model_files)}'` : null
                 sql_d += `('${tmid}', '${params.tid}', '供货', '聚水潭', null, '${params.provide_shop}', null, '${params.provide_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, '${params.provide_u_id_1}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.provide_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, null, null, null, null, null, null, '${params.provide_u_id_1}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.provide_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                count_d += 1
+                count_l += 1
+            }
+            if (params.custom_shop) {
+                let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
+                let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
+                let deposit = params.deposit ? `'${params.deposit}'` : null
+                let tail = params.tail ? `'${params.tail}'` : null
+                let u_id_2 = params.custom_u_id_2 ? params.custom_u_id_2.value ? `'${params.custom_u_id_2.value}'` : `'${params.custom_u_id_2}'` : null
+                let u_point_2 = params.custom_u_point_2 ? params.custom_u_point_2.value ? `'${params.custom_u_point_2.value}'` : `'${params.custom_u_point_2}'` : null
+                let u_note = params.custom_u_note ? `'${params.custom_u_note}'` : null
+                let model_files = params.custom_model_files ? `'${JSON.stringify(params.model_files)}'` : null
+                sql_d += `('${tmid}', '${params.tid}', '定制', '聚水潭', null, '${params.custom_shop}', null, '${params.custom_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, '${params.profit_point}', '${params.tax_point}', '${params.has_package}', '${params.pay_type}', ${deposit}, ${tail}, '${params.custom_u_id_1}', '${params.custom_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.custom_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
                 count_d += 1
                 count_l += 1
             }
@@ -431,7 +445,7 @@ router.post('/addTalentModel', (req, res) => {
                         let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                         db.query(sql, (err, results_e) => {
                             if (err) throw err;
-                            sendRobot(
+                            /* sendRobot(
                                 results_e[0].secret,
                                 results_e[0].url,
                                 `${params.talent_name} ${params.operate}`,
@@ -439,7 +453,7 @@ router.post('/addTalentModel', (req, res) => {
                                 `http://1.15.89.163:5173`,
                                 [results_e[0].phone],
                                 false
-                            )
+                            ) */
                             res.send({ code: 200, data: [], msg: `新合作报备成功` })
                         })
                     })
@@ -530,7 +544,8 @@ router.post('/editTalentModel', (req, res) => {
                     for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
                         if (Object.keys(params.new)[i] === 'model_files') {
                             sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i].replace('/pubilc', '')}',` : ` ${Object.keys(params.new)[i]} = null,`
-                        } else if (Object.keys(params.new)[i] !== 'tmid' && !Object.keys(params.new)[i].match('commission_') && !Object.keys(params.new)[i].match('discount_') && !Object.keys(params.new)[i].match('u_')) {
+                        } else if (Object.keys(params.new)[i] !== 'tmid' && !Object.keys(params.new)[i].match('commission_') && !Object.keys(params.new)[i].match('discount_') && !Object.keys(params.new)[i].match('u_') &&
+                                    ['gmv_belong', 'profit_point', 'tax_point', 'has_package', 'pay_type', 'deposit', 'tail'].indexOf(Object.keys(params.new)[i]) === -1) {
                             sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
                         }
                     }
@@ -553,7 +568,7 @@ router.post('/editTalentModel', (req, res) => {
                                 let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                                 db.query(sql, (err, results_e) => {
                                     if (err) throw err;
-                                    sendRobot(
+                                    /* sendRobot(
                                         results_e[0].secret,
                                         results_e[0].url,
                                         `${results_t[0].name} ${params.operate}`,
@@ -561,7 +576,7 @@ router.post('/editTalentModel', (req, res) => {
                                         `http://1.15.89.163:5173`,
                                         [results_e[0].phone],
                                         false
-                                    )
+                                    ) */
                                     res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                 })
                             })
@@ -570,7 +585,8 @@ router.post('/editTalentModel', (req, res) => {
                 } else if (params.operate.match('综合')) {
                     let sql = 'UPDATE talent_model SET'
                     for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
-                        if (Object.keys(params.new)[i] !== 'tmid' && !Object.keys(params.new)[i].match('commission_') && !Object.keys(params.new)[i].match('discount_') && !Object.keys(params.new)[i].match('u_')) {
+                        if (Object.keys(params.new)[i] !== 'tmid' && !Object.keys(params.new)[i].match('commission_') && !Object.keys(params.new)[i].match('discount_') && !Object.keys(params.new)[i].match('u_') &&
+                        ['gmv_belong', 'profit_point', 'tax_point', 'has_package', 'pay_type', 'deposit', 'tail'].indexOf(Object.keys(params.new)[i]) === -1) {
                             sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
                         }
                     }
@@ -590,7 +606,7 @@ router.post('/editTalentModel', (req, res) => {
                                     let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                                     db.query(sql, (err, results_e) => {
                                         if (err) throw err;
-                                        sendRobot(
+                                        /* sendRobot(
                                             results_e[0].secret,
                                             results_e[0].url,
                                             `${results_t[0].name} ${params.operate}`,
@@ -598,7 +614,7 @@ router.post('/editTalentModel', (req, res) => {
                                             `http://1.15.89.163:5173`,
                                             [results_e[0].phone],
                                             false
-                                        )
+                                        ) */
                                         res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                     })
                                 })
@@ -642,7 +658,7 @@ router.post('/examTalentModel', (req, res) => {
                     let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
                     db.query(sql, (err, results_u) => {
                         if (err) throw err;
-                        sendRobot(
+                        /* sendRobot(
                             results_u[0].secret,
                             results_u[0].url,
                             `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
@@ -650,7 +666,7 @@ router.post('/examTalentModel', (req, res) => {
                             `http://1.15.89.163:5173`,
                             [results_u[0].phone],
                             false
-                        )
+                        ) */
                         res.send({ code: 200, data: [], msg: `` })
                     })
                 })
@@ -789,7 +805,7 @@ router.post('/giveTalent', (req, res) => {
                                             let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                                             db.query(sql, (err, results_e) => {
                                                 if (err) throw err;
-                                                sendRobot(
+                                                /* sendRobot(
                                                     results_e[0].secret,
                                                     results_e[0].url,
                                                     `${results_t[0].name} ${params.operate}`,
@@ -797,7 +813,7 @@ router.post('/giveTalent', (req, res) => {
                                                     `http://1.15.89.163:5173`,
                                                     [results_e[0].phone],
                                                     false
-                                                )
+                                                ) */
                                                 res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                             })
                                         })

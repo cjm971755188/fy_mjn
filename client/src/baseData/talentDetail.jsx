@@ -50,14 +50,15 @@ export const descriptionsItems = [
     { key: 40, label: "爆品佣金(%)", value: "commission_bao" },
     { key: 41, label: "佣金备注", value: "commission_note" },
 
-    { key: 42, label: "常规品佣金(%)", value: "commission_normal" },
-    { key: 43, label: "福利品佣金(%)", value: "commission_welfare" },
-    { key: 44, label: "爆品佣金(%)", value: "commission_bao" },
-    { key: 45, label: "佣金备注", value: "commission_note" },
-
+    { key: 76, label: "聚水潭店铺名", value: "shop_name" },  // 最新添加
     { key: 46, label: "买断折扣(折)", value: "discount_buyout" },
     { key: 47, label: "含退货折扣(折)", value: "discount_back" },
     { key: 48, label: "折扣备注", value: "discount_label" },
+
+    { key: 72, label: "产品利润点(%)", value: "profit_point" },
+    { key: 73, label: "税点(%)", value: "tax_point" },
+    { key: 74, label: "是否含包装", value: "has_package" },
+    { key: 75, label: "付款方式", value: "pay_type" }, 
 
     { key: 49, label: "主商务ID", value: "u_id_1" },
     { key: 50, label: "主商务", value: "u_name_1" },
@@ -66,7 +67,7 @@ export const descriptionsItems = [
     { key: 53, label: "副商务", value: "u_name_2" },
     { key: 54, label: "提点(%)", value: "u_point_2" },
     { key: 55, label: "提点备注", value: "u_note" },  
-    { key: 71, label: "业绩归属", value: "gmv_belong" }, // 最新添加
+    { key: 71, label: "业绩归属", value: "gmv_belong" }, 
 
     { key: 56, label: "付款方式", value: "pay_way" },
     { key: 57, label: "能否开票", value: "can_piao" },

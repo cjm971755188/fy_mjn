@@ -11,7 +11,6 @@ import TalentBlockList from './pages/talentBlockList.jsx'
 import LiveList from './pages/liveList.jsx'
 import MiddlemanList from './pages/middlemanList.jsx'
 import KeywordList from './pages/keywordList.jsx'
-import PointList from './pages/pointList.jsx'
 
 function App() {
     return (
@@ -26,7 +25,6 @@ function App() {
                 <Route path='/talent/live_list' element={<LiveList />} />
                 <Route path='/talent/middleman_list' element={<MiddlemanList />} />
                 <Route path='/point/keyword_list' element={<KeywordList />} />
-                <Route path='/point/point_list' element={<PointList />} />
                 <Route path='/user' element={<UserList />} />
             </Routes>
         </MyLayout>

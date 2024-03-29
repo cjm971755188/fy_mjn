@@ -54,13 +54,14 @@ router.post('/searchSameChance', (req, res) => {
     let params = req.body, names = [], sql = ''
     if (params.type === 'chance') {
         names = Array.from(new Set([].concat(params.account_names ? params.account_names : []).concat(params.group_name ? params.group_name : []).concat(params.provide_name ? params.provide_name : []).concat(params.custom_name ? params.custom_name : [])))
-    } else if (params.type === 'talent') {
+    } else if (params.type === 'talent' || params.type === 'edit') {
         if (params.accounts) {
             for (let i = 0; i < params.accounts.length; i++) {
                 const element = params.accounts[i];
                 names = Array.from(new Set([].concat(element.account_id ? element.account_id : []).concat(element.account_name ? element.account_name : [])))
             }
         } else {
+            console.log(1);
             names = Array.from(new Set([].concat(params.account_ids ? params.account_ids : []).concat(params.talent_name ? params.talent_name : []).concat(params.group_name ? params.group_name : []).concat(params.provide_name ? params.provide_name : []).concat(params.custom_name ? params.custom_name : [])))
         }
     } else if (params.type.match('model')) {
@@ -75,7 +76,7 @@ router.post('/searchSameChance', (req, res) => {
                         LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                         LEFT JOIN user u ON u.uid = tms1.u_id_1
                     WHERE	(t.name LIKE '%${names[i]}%' or tm.account_id LIKE '%${names[i]}%' or tm.account_name LIKE '%${names[i]}%')
-                        and tm.status != '已失效')
+                        and tm.status != '已失效' ${params.type === 'edit' ? `and tm.tmid != '${params.tmid}'` : ''})
                 UNION
                 (SELECT	b.bid, b.name, '', '', '', '', u.name as u_name, b.status, bs1.reason
                     FROM block b
@@ -243,7 +244,7 @@ router.post('/reportChance', (req, res) => {
                                                 let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
                                                 let model_files = params.accounts[i].model_files ? `'${JSON.stringify(params.accounts[i].model_files)}'` : null
                                                 sql_d += `('${tmid}', '${tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].shop_type}', ${shop_name}, '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', ${model_files}, '待审批'),`
-                                                sql_l += `('${tmsid}', '${tmid}', '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', ${commission_note}, null, null, null, '${params.accounts[i].u_id_1}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.accounts[i].gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                                                sql_l += `('${tmsid}', '${tmid}', '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', ${commission_note}, null, null, null, null, null, null, null, null, null, '${params.accounts[i].u_id_1}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.accounts[i].gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
                                             }
                                             count_d += params.accounts.length
                                             count_l += params.accounts.length
@@ -257,7 +258,7 @@ router.post('/reportChance', (req, res) => {
                                             let u_note = params.group_u_note ? `'${params.group_u_note}'` : null
                                             let model_files = params.group_model_files ? `'${JSON.stringify(params.model_files)}'` : null
                                             sql_d += `('${tmid}', '${tid}', '社群团购', '聚水潭', null, '${params.group_shop}', null, '${params.group_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
-                                            sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, '${params.group_u_id_1}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.group_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                                            sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, null, null, null, null, null, null, '${params.group_u_id_1}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.group_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
                                             count_d += 1
                                             count_l += 1
                                         }
@@ -270,7 +271,21 @@ router.post('/reportChance', (req, res) => {
                                             let u_note = params.provide_u_note ? `'${params.provide_u_note}'` : null
                                             let model_files = params.provide_model_files ? `'${JSON.stringify(params.model_files)}'` : null
                                             sql_d += `('${tmid}', '${tid}', '供货', '聚水潭', null, '${params.provide_shop}', null, '${params.provide_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
-                                            sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, '${params.provide_u_id_1}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.provide_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                                            sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, null, null, null, null, null, null, '${params.provide_u_id_1}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.provide_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                                            count_d += 1
+                                            count_l += 1
+                                        }
+                                        if (params.custom_shop) {
+                                            let tmid = 'TM' + `${count_d + 1}`.padStart(7, '0')
+                                            let tmsid = 'TMS' + `${count_l + 1}`.padStart(7, '0')
+                                            let deposit = params.deposit ? `'${params.deposit}'` : null
+                                            let tail = params.tail ? `'${params.tail}'` : null
+                                            let u_id_2 = params.custom_u_id_2 ? params.custom_u_id_2.value ? `'${params.custom_u_id_2.value}'` : `'${params.custom_u_id_2}'` : null
+                                            let u_point_2 = params.custom_u_point_2 ? params.custom_u_point_2.value ? `'${params.custom_u_point_2.value}'` : `'${params.custom_u_point_2}'` : null
+                                            let u_note = params.custom_u_note ? `'${params.custom_u_note}'` : null
+                                            let model_files = params.custom_model_files ? `'${JSON.stringify(params.model_files)}'` : null
+                                            sql_d += `('${tmid}', '${tid}', '定制', '聚水潭', null, '${params.custom_shop}', null, '${params.custom_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
+                                            sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, '${params.profit_point}', '${params.tax_point}', '${params.has_package}', '${params.pay_type}', ${deposit}, ${tail}, '${params.custom_u_id_1}', '${params.custom_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.custom_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
                                             count_d += 1
                                             count_l += 1
                                         }

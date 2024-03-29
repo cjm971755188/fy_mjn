@@ -230,22 +230,18 @@ function AETalent(props) {
                     }
                     if (!hasYuanSaleman) {
                         values.u_id_0 = null
-                        values.u_type_0 = null
                         values.u_point_0 = null
                     }
                     if (!hasGroupFuSaleman) {
                         values.group_u_id_2 = null
-                        values.group_u_type_2 = null
                         values.group_u_point_2 = null
                     }
                     if (!hasProvideFuSaleman) {
                         values.provide_u_id_2 = null
-                        values.provide_u_type_2 = null
                         values.provide_u_point_2 = null
                     }
                     if (!hasCustomFuSaleman) {
                         values.custom_u_id_2 = null
-                        values.custom_u_type_2 = null
                         values.custom_u_point_2 = null
                     }
                     if (payType !== '定金+尾款') {
@@ -276,6 +272,15 @@ function AETalent(props) {
                             liaison_phone: form.getFieldValue('liaison_phone'),
                             crowd_name: form.getFieldValue('crowd_name'),
                             type: 'talent'
+                        }
+                    } else if (type.match('修改')) {
+                        payload = {
+                            ...values,
+                            group_u_id_1: values.group_u_id_1 ? values.group_u_id_1.value || values.group_u_id_1.value === null ? values.group_u_id_1.value : values.group_u_id_1 : null,
+                            provide_u_id_1: values.provide_u_id_1 ? values.provide_u_id_1.value || values.provide_u_id_1.value === null ? values.provide_u_id_1.value : values.provide_u_id_1 : null,
+                            custom_u_id_1: values.custom_u_id_1 ? values.custom_u_id_1.value || values.custom_u_id_1.value === null ? values.custom_u_id_1.value : values.custom_u_id_1 : null,
+                            type: 'edit',
+                            tmid: form.getFieldValue('tmid')
                         }
                     } else {
                         payload = {
@@ -415,7 +420,7 @@ function AETalent(props) {
                             {(fields, { add, remove }) => (
                                 <>
                                     {fields.map(({ key, name, ...restField }) => (
-                                        <Card key={key} title={`第 ${name + 1} 个账号`} extra={<MinusCircleOutlined onClick={() => { remove(name); setHasOnlyShop(false); setHasFuSaleman(false); }} />} style={{ marginBottom: '20px' }}>
+                                        <Card key={key} title={`第 ${name + 1} 个账号`} extra={type.match('修改') ? null : <MinusCircleOutlined onClick={() => { remove(name); setHasOnlyShop(false); setHasFuSaleman(false); }} />} style={{ marginBottom: '20px' }}>
                                             <Form.Item label="平台" {...restField} name={[name, "platform"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select
                                                     placeholder="请选择"
@@ -525,11 +530,11 @@ function AETalent(props) {
                                             </Form.Item>
                                         </Card>
                                     ))}
-                                    <Form.Item>
+                                    {type.match('修改') ? null : <Form.Item>
                                         <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
                                             添加新账号
                                         </Button>
-                                    </Form.Item>
+                                    </Form.Item>}
                                 </>
                             )}
                         </Form.List>
@@ -714,7 +719,8 @@ function AETalent(props) {
                                 (form.getFieldValue('provide_name') && form.getFieldValue('provide_name') !== null) || (form.getFieldValue('custom_name') && form.getFieldValue('custom_name') !== null)) {
                                 let payload = {
                                     cid: type == 'add' ? '' : form.getFieldValue('cid'),
-                                    type: 'talent',
+                                    type: type.match('修改') ? 'edit' : type === '新增线上平台' ? 'model_1' : type === '新增社群团购' ? 'model_2' : type === '新增供货' ? 'model_3' : 'talent',
+                                    tmid: form.getFieldValue('tmid'),
                                     talent_name: form.getFieldValue('talent_name'),
                                     account_ids: ids,
                                     group_name: form.getFieldValue('group_name'),
