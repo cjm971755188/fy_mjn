@@ -1,11 +1,12 @@
 import React, { Fragment, useEffect, useState } from "react";
 import request from '../../service/request'
-import { Card, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, message, List, Image } from 'antd';
-import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { Card, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, message, List, Image, Popover } from 'antd';
+import { PlusOutlined, MinusCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { accountType, accountModelType, ageCut, priceCut, liaisonType, shop_type, platform, model, middlemanPayType, talentType, gmvBelong, customPayType } from '../../baseData/talent'
 import { province } from '../../baseData/province'
 import people from '../../assets/people.jpg'
 import AEMiddleman from './AEMiddleman'
+import UpLoadImg from '../UpLoadImg'
 
 const { TextArea } = Input;
 
@@ -92,8 +93,8 @@ function AETalent(props) {
                 }
             }
         }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
+            if (res.status === 200) {
+                if (res.data.code === 200) {
                     setSalemanAssistantsItems(res.data.data)
                 } else {
                     message.error(res.data.msg)
@@ -122,8 +123,8 @@ function AETalent(props) {
                 }
             }
         }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
+            if (res.status === 200) {
+                if (res.data.code === 200) {
                     setMiddlemansItems(res.data.data)
                 } else {
                     message.error(res.data.msg)
@@ -159,8 +160,8 @@ function AETalent(props) {
                 }
             }
         }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
+            if (res.status === 200) {
+                if (res.data.code === 200) {
                     setIsShowMid(false)
                     getMiddlemanListAPI()
                     formMid.resetFields()
@@ -210,7 +211,7 @@ function AETalent(props) {
     return (
         <Fragment>
             <Modal
-                title={type == 'report' ? '达人报备' : type === 'history' ? '历史达人报备' : type === 'reReport' ? '再次报备' : type}
+                title={type}
                 open={isShow}
                 width='60%'
                 maskClosable={false}
@@ -218,6 +219,7 @@ function AETalent(props) {
                 onCancel={() => { props.onCancel(); reset(); }}
             >
                 <Form form={form} onFinish={(values) => {
+                    let names = []
                     if (!hasFirstMiddle) {
                         values.m_id_1 = null
                         values.m_type_1 = null
@@ -256,10 +258,11 @@ function AETalent(props) {
                                 values.accounts[i].u_type_2 = null
                                 values.accounts[i].u_point_2 = null
                             }
+                            names.push(values.accounts[i].account_name)
                         }
                     }
                     let payload = {}
-                    if (type === 'report') {
+                    if (type === '达人报备') {
                         payload = {
                             cid: 'history',
                             ...values,
@@ -291,9 +294,13 @@ function AETalent(props) {
                             type: type === '新增线上平台' ? 'model_1' : type === '新增社群团购' ? 'model_2' : type === '新增供货' ? 'model_3' : 'talent'
                         }
                     }
-                    searchSameChanceAPI('finish', null, payload)
+                    searchSameChanceAPI('finish', null, {
+                        ...payload,
+                        cid: form.getFieldValue('cid'),
+                        account_names: names
+                    })
                 }}>
-                    {type == 'report' || type === 'history' || type === 'reReport' ? <>
+                    {type === '达人报备' || type === 'history' || type === 'reReport' ? <>
                         {type === 'history' || type === 'reReport' ? null : <Form.Item label="商机编号" name="cid" rules={[{ required: true, message: '不能为空' }]}>
                             <Input disabled={true} />
                         </Form.Item>}
@@ -424,7 +431,7 @@ function AETalent(props) {
                                             <Form.Item label="平台" {...restField} name={[name, "platform"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select
                                                     placeholder="请选择"
-                                                    options={type === 'report' ? form.getFieldValue('platformList') : platform}
+                                                    options={type === '报备达人' ? form.getFieldValue('platformList') : platform}
                                                     onChange={(value) => { form.setFieldValue('platform', value) }}
                                                 />
                                             </Form.Item>
@@ -697,7 +704,7 @@ function AETalent(props) {
                             </Form.Item>
                         </Space> : null}
                         <Form.Item label="商务提成备注" name="custom_u_note">
-                            <TextArea placeholder="请输入" />
+                            <TextArea placeholder="请输入" maxLength={255} />
                         </Form.Item>
                         <Form.Item label="业绩归属" name="custom_gmv_belong" rules={[{ required: true, message: '不能为空' }]}>
                             <Radio.Group>
@@ -707,22 +714,37 @@ function AETalent(props) {
                             </Radio.Group>
                         </Form.Item>
                     </Card> : null}
-                    {type === 'report' ? null : <><Form.Item label="相同线上达人">
+                    {type === '达人报备' ? <Form.Item label={<Popover title="证明方向" content={
+                        <List>
+                            <List.Item>1. 已排定专场时间</List.Item>
+                            <List.Item>2. 链接已经做，已经准备日播开卖</List.Item>
+                            <List.Item>3. 供货合同/ 或供货证明约定截图</List.Item>
+                            <List.Item>4. 定制合作截图或合同</List.Item>
+                        </List>}
+                    >
+                        <span><InfoCircleOutlined /> 报备证明</span>
+                    </Popover>}
+                        name="report_pic"
+                        rules={[{ required: true, message: '不能为空' }]}
+                    >
+                        <UpLoadImg title="上传" name="达人报备" setPicUrl={(value) => { form.setFieldValue('report_pic', value) }} />
+                    </Form.Item> : null}
+                    {type === '报备达人' ? null : <><Form.Item label="达人查重">
                         <Button onClick={() => {
-                            let ids = []
+                            let names = []
                             if (form.getFieldValue('accounts')) {
                                 for (let i = 0; i < form.getFieldValue('accounts').length; i++) {
-                                    ids.push(form.getFieldValue('accounts')[i].account_id)
+                                    names.push(form.getFieldValue('accounts')[i].account_name)
                                 }
                             }
-                            if ((form.getFieldValue('talent_name') && form.getFieldValue('talent_name') !== null) || (ids.length > 0) || (form.getFieldValue('group_name') && form.getFieldValue('group_name') !== null) ||
+                            if ((form.getFieldValue('talent_name') && form.getFieldValue('talent_name') !== null) || (names.length > 0) || (form.getFieldValue('group_name') && form.getFieldValue('group_name') !== null) ||
                                 (form.getFieldValue('provide_name') && form.getFieldValue('provide_name') !== null) || (form.getFieldValue('custom_name') && form.getFieldValue('custom_name') !== null)) {
                                 let payload = {
-                                    cid: type == 'add' ? '' : form.getFieldValue('cid'),
+                                    cid: type === 'add' ? '' : form.getFieldValue('cid'),
                                     type: type.match('修改') ? 'edit' : type === '新增线上平台' ? 'model_1' : type === '新增社群团购' ? 'model_2' : type === '新增供货' ? 'model_3' : 'talent',
                                     tmid: form.getFieldValue('tmid'),
                                     talent_name: form.getFieldValue('talent_name'),
-                                    account_ids: ids,
+                                    account_names: names,
                                     group_name: form.getFieldValue('group_name'),
                                     provide_name: form.getFieldValue('provide_name'),
                                     custom_name: form.getFieldValue('custom_name')

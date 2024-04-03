@@ -268,7 +268,7 @@ router.post('/editTalent', (req, res) => {
                             let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                             db.query(sql, (err, results_e) => {
                                 if (err) throw err;
-                                /* sendRobot(
+                                sendRobot(
                                     results_e[0].secret,
                                     results_e[0].url,
                                     `${results_t[0].name} ${params.operate}`,
@@ -276,7 +276,7 @@ router.post('/editTalent', (req, res) => {
                                     `http://1.15.89.163:5173`,
                                     [results_e[0].phone],
                                     false
-                                ) */
+                                )
                                 res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                             })
                         })
@@ -324,7 +324,7 @@ router.post('/examTalent', (req, res) => {
                                 let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
                                 db.query(sql, (err, results_u) => {
                                     if (err) throw err;
-                                    /* sendRobot(
+                                    sendRobot(
                                         results_u[0].secret,
                                         results_u[0].url,
                                         `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
@@ -332,7 +332,7 @@ router.post('/examTalent', (req, res) => {
                                         `http://1.15.89.163:5173`,
                                         [results_u[0].phone],
                                         false
-                                    ) */
+                                    )
                                     res.send({ code: 200, data: [], msg: `` })
                                 })
                             })
@@ -342,7 +342,7 @@ router.post('/examTalent', (req, res) => {
                     let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
                     db.query(sql, (err, results_u) => {
                         if (err) throw err;
-                        /* sendRobot(
+                        sendRobot(
                             results_u[0].secret,
                             results_u[0].url,
                             `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
@@ -350,7 +350,7 @@ router.post('/examTalent', (req, res) => {
                             `http://1.15.89.163:5173`,
                             [results_u[0].phone],
                             false
-                        ) */
+                        )
                         res.send({ code: 200, data: [], msg: `` })
                     })
                 }
@@ -445,7 +445,7 @@ router.post('/addTalentModel', (req, res) => {
                         let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                         db.query(sql, (err, results_e) => {
                             if (err) throw err;
-                            /* sendRobot(
+                            sendRobot(
                                 results_e[0].secret,
                                 results_e[0].url,
                                 `${params.talent_name} ${params.operate}`,
@@ -453,7 +453,7 @@ router.post('/addTalentModel', (req, res) => {
                                 `http://1.15.89.163:5173`,
                                 [results_e[0].phone],
                                 false
-                            ) */
+                            )
                             res.send({ code: 200, data: [], msg: `新合作报备成功` })
                         })
                     })
@@ -568,7 +568,7 @@ router.post('/editTalentModel', (req, res) => {
                                 let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                                 db.query(sql, (err, results_e) => {
                                     if (err) throw err;
-                                    /* sendRobot(
+                                    sendRobot(
                                         results_e[0].secret,
                                         results_e[0].url,
                                         `${results_t[0].name} ${params.operate}`,
@@ -576,7 +576,7 @@ router.post('/editTalentModel', (req, res) => {
                                         `http://1.15.89.163:5173`,
                                         [results_e[0].phone],
                                         false
-                                    ) */
+                                    )
                                     res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                 })
                             })
@@ -606,7 +606,7 @@ router.post('/editTalentModel', (req, res) => {
                                     let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                                     db.query(sql, (err, results_e) => {
                                         if (err) throw err;
-                                        /* sendRobot(
+                                        sendRobot(
                                             results_e[0].secret,
                                             results_e[0].url,
                                             `${results_t[0].name} ${params.operate}`,
@@ -614,7 +614,7 @@ router.post('/editTalentModel', (req, res) => {
                                             `http://1.15.89.163:5173`,
                                             [results_e[0].phone],
                                             false
-                                        ) */
+                                        )
                                         res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                     })
                                 })
@@ -658,7 +658,7 @@ router.post('/examTalentModel', (req, res) => {
                     let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
                     db.query(sql, (err, results_u) => {
                         if (err) throw err;
-                        /* sendRobot(
+                        sendRobot(
                             results_u[0].secret,
                             results_u[0].url,
                             `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
@@ -666,7 +666,7 @@ router.post('/examTalentModel', (req, res) => {
                             `http://1.15.89.163:5173`,
                             [results_u[0].phone],
                             false
-                        ) */
+                        )
                         res.send({ code: 200, data: [], msg: `` })
                     })
                 })
@@ -805,7 +805,7 @@ router.post('/giveTalent', (req, res) => {
                                             let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
                                             db.query(sql, (err, results_e) => {
                                                 if (err) throw err;
-                                                /* sendRobot(
+                                                sendRobot(
                                                     results_e[0].secret,
                                                     results_e[0].url,
                                                     `${results_t[0].name} ${params.operate}`,
@@ -813,7 +813,7 @@ router.post('/giveTalent', (req, res) => {
                                                     `http://1.15.89.163:5173`,
                                                     [results_e[0].phone],
                                                     false
-                                                ) */
+                                                )
                                                 res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                             })
                                         })

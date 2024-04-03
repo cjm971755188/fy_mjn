@@ -74,7 +74,7 @@ function TalentDetail() {
                                 return <Image key={index} width={50} height={50} src={pic} />
                             }) : '暂无' : Object.values(detailData)[i]
                     }
-                    if ([0, 2, 3, 4, 66, 67, 68].indexOf(descriptionsItems[j].key) !== -1) {
+                    if ([0, 2, 3, 4, 66, 67, 68, 77].indexOf(descriptionsItems[j].key) !== -1) {
                         items.push(description)
                     }
                 }

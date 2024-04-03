@@ -1,11 +1,10 @@
 import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, message, Popconfirm, Tooltip } from 'antd';
-import { PlusOutlined, CloseCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone, CheckCircleTwoTone, EditOutlined } from '@ant-design/icons';
+import { PlusOutlined, CloseCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone, EditOutlined } from '@ant-design/icons';
 import { chanceStatus, model, platform } from '../baseData/talent'
 import MyDateSelect from '../components/MyDateSelect'
 import AEChance from '../components/modals/AEChance'
-import AELiaison from '../components/modals/AELiaison'
 import AETalent from '../components/modals/AETalent'
 import dayjs from 'dayjs'
 
@@ -14,6 +13,7 @@ const { TextArea } = Input;
 function ChanceList() {
     // 操作权限
     const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('company') !== '总公司') || localStorage.getItem('position') === '管理员' ? true : false
+    const examPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') === '副总') || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
     let columns = [
@@ -24,30 +24,21 @@ function ChanceList() {
             title: '达人名称',
             dataIndex: 'liaison_name',
             key: 'liaison_name',
-            render: (_, record) => (
-                <Popover title="名称" content={
-                    <List>
-                        <List.Item>线上平台：{record.account_names}</List.Item>
-                        <List.Item>社群团购：{record.group_name}</List.Item>
-                        <List.Item>供货：{record.provide_name}</List.Item>
-                        <List.Item>定制：{record.custom_name}</List.Item>
-                    </List>}
-                >
-                    <span>{record.account_names === null ? '' : record.account_names}{record.group_name === null ? '' : record.group_name}{record.provide_name === null ? '' : record.provide_name}{record.custom_name === null ? '' : record.custom_name}</span>
-                </Popover>
-            )
-        },
-        {
-            title: '寻找证明',
-            dataIndex: 'search_pic',
-            key: 'search_pic',
-            render: (_, record) => (
-                <Popover title="寻找时间" content={dayjs(Number(record.create_time)).format('YYYY-MM-DD')}>
-                    {record.search_pic && record.search_pic.split(',').map((pic, index) => {
-                        return <Image key={index} width={50} height={50} src={pic} />
-                    })}
-                </Popover>
-            )
+            render: (_, record) => {
+                let liaison_name = new Set().add(record.account_names).add(record.group_name).add(record.provide_name).add(record.custom_name)
+                return (
+                    <Popover title="名称" content={
+                        <List>
+                            <List.Item>线上平台：{record.account_names}</List.Item>
+                            <List.Item>社群团购：{record.group_name}</List.Item>
+                            <List.Item>供货：{record.provide_name}</List.Item>
+                            <List.Item>定制：{record.custom_name}</List.Item>
+                        </List>}
+                    >
+                        <span>{[...liaison_name].filter(item => item !== null).join(',')}</span>
+                    </Popover>
+                )
+            }
         },
         {
             title: '联系人',
@@ -69,6 +60,18 @@ function ChanceList() {
             )
         },
         {
+            title: '寻找证明',
+            dataIndex: 'search_pic',
+            key: 'search_pic',
+            render: (_, record) => (
+                <Popover title="寻找时间" content={dayjs(Number(record.create_time)).format('YYYY-MM-DD')}>
+                    {record.search_pic && record.search_pic.split(',').map((pic, index) => {
+                        return <Image key={index} width={50} height={50} src={pic} />
+                    })}
+                </Popover>
+            )
+        },
+        {
             title: '推进证明',
             dataIndex: 'advance_pic',
             key: 'advance_pic',
@@ -78,6 +81,15 @@ function ChanceList() {
                         return <Image key={index} width={50} height={50} src={pic} />
                     })}
                 </Popover>
+            )
+        },
+        {
+            title: '保护期',
+            dataIndex: 'days',
+            key: 'days',
+            width: 80,
+            render: (_, record) => (
+                !record.days ? null : record.days <= 0 ? <span style={{ color: 'red' }}><b>已过期{-record.days} 天</b></span> : <span style={{ color: 'green' }}><b>{record.days} 天</b></span>
             )
         },
         {
@@ -113,15 +125,18 @@ function ChanceList() {
             title: '状态',
             dataIndex: 'status',
             key: 'status',
-            width: 120,
+            width: 140,
             render: (_, record) => (
                 <Space size="small">
-                    {record.status === '待推进' ? <PlayCircleTwoTone twoToneColor="#ee9900" /> :
-                        record.status === '待报备' ? <RightCircleTwoTone twoToneColor="#ee9900" /> :
-                            record.status === '待审批' ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
-                                record.status === '报备驳回' ? <CloseCircleTwoTone twoToneColor="#f81d22" /> :
-                                    record.status === '报备通过' ? <CheckCircleTwoTone twoToneColor="#4ec9b0" /> : null}
-                    <span>{record.status}</span>
+                    {record.status === '待推进' ? <PlayCircleTwoTone twoToneColor="#008dff" /> :
+                        record.status === '待报备' ? <RightCircleTwoTone twoToneColor="#c41d7f" /> :
+                            record.status.match('待审批') ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
+                                record.status.match('驳回') || record.status === '已过期' ? <CloseCircleTwoTone twoToneColor="#f81d22" /> : null}
+                    {record.status.match('驳回') ? <Popover title="驳回理由" content={record.examine_note || record.refund_note}>
+                        <span>{record.status}</span>
+                    </Popover> : record.status === '延期推进待审批' ? <Popover title="延期理由" content={record.delay_note}>
+                        <span>{record.status}</span>
+                    </Popover> : <span>{record.status}</span>}
                 </Space>
             )
         },
@@ -130,47 +145,66 @@ function ChanceList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
-                    {/* {editPower && record.status !== '报备通过' ? <a onClick={() => {
-                        setIsShowNote(true);
-                        setNote(record.note);
-                        setSelectNoteID(record.cid);
-                    }}>修改备注</a> : null} */}
-                    {editPower && (record.status === '待推进' || record.status === '待报备' || record.status === '报备驳回') ? <a onClick={() => {
+                    {editPower && (record.status === '待推进' || record.status === '待报备' || record.status === '已过期' || record.status.match('驳回')) ? <a onClick={() => {
                         let models = record.models.split(',')
                         form.setFieldsValue({
                             ...record,
                             models,
-                            search_pic: record.search_pic.split(',')
+                            search_pic: record.search_pic.split(','),
+                            advance_pic: record.advance_pic === null ? [] : record.advance_pic.split(',')
                         })
                         if (record.models.match('线上平台')) {
                             form.setFieldsValue({
                                 ...record,
                                 models,
                                 search_pic: record.search_pic.split(','),
+                                advance_pic: record.advance_pic === null ? [] : record.advance_pic.split(','),
                                 platforms: record.platforms === null ? null : record.platforms.split(','),
                                 account_names: record.account_names === null ? null : record.account_names.split(',')
                             })
                         }
-                        setType('edit');
+                        setType(`修改商机_${record.status}`);
                         setIsShow(true)
-                    }}>修改寻找信息</a> : null}
-                    {editPower && record.status === '待推进' ? <a onClick={() => {
+                    }}>修改信息</a> : null}
+                    {editPower && (record.status === '待推进' || record.status === '推进驳回' || record.status === '已过期') && record.liaison_name !== null ? <a onClick={() => {
                         let models = record.models.split(',')
-                        setType('advance');
                         form.setFieldsValue({
                             ...record,
-                            models
+                            models,
+                            search_pic: record.search_pic.split(','),
+                            advance_pic: record.advance_pic === null ? [] : record.advance_pic.split(',')
                         })
-                        setIsShowLiaison(true)
-                    }}>推进</a> : null}
-                    {editPower && (record.status === '待报备' || record.status === '报备驳回') ? <a onClick={() => {
-                        form.setFieldsValue({
-                            ...record,
-                            advance_pic: record.advance_pic.split(',')
-                        })
-                        setType('edit_chance');
-                        setIsShowLiaison(true)
-                    }}>修改推进信息</a> : null}
+                        if (record.models.match('线上平台')) {
+                            form.setFieldsValue({
+                                ...record,
+                                models,
+                                search_pic: record.search_pic.split(','),
+                                advance_pic: record.advance_pic === null ? [] : record.advance_pic.split(','),
+                                platforms: record.platforms === null ? null : record.platforms.split(','),
+                                account_names: record.account_names === null ? null : record.account_names.split(',')
+                            })
+                        }
+                        setClickName([...new Set().add(record.account_names).add(record.group_name).add(record.provide_name).add(record.custom_name)].filter(item => item !== null).join(','))
+                        setType(record.status === '已过期' ? '延期推进商机' : '推进商机');
+                        setIsShow(true)
+                    }}>{record.status === '已过期' ? '延期推进' : '推进'}</a> : null}
+                    {examPower && record.status.match('推进待审批') ? <><Popconfirm
+                        title="审批商机"
+                        description="确定要通过该商机推进吗？"
+                        onConfirm={() => {
+                            examChanceAPI({
+                                cid: record.cid,
+                                uid: record.u_id,
+                                names: [...new Set().add(record.account_names).add(record.group_name).add(record.provide_name).add(record.custom_name)].filter(item => item !== null).join(','),
+                                exam: true
+                            })
+                        }}
+                        onCancel={() => { }}
+                        okText="通过"
+                        cancelText="取消"
+                    >
+                        <a style={{ color: 'green' }}>通过</a>
+                    </Popconfirm><a style={{ color: 'red' }} onClick={() => { setClickUid(record.u_id); setClickCid(record.cid); setIsShowRefund(true); }}>驳回</a></> : null}
                     {editPower && record.status === '待报备' ? <a onClick={() => {
                         let models = record.models.split(',')
                         let platformList = []
@@ -187,6 +221,7 @@ function ChanceList() {
                         }
                         form.setFieldsValue({
                             ...record,
+                            cid: record.cid,
                             models,
                             platformList,
                             accountNameList,
@@ -196,19 +231,15 @@ function ChanceList() {
                             liaison_phone: record.liaison_phone,
                             crowd_name: record.crowd_name
                         })
-                        setType('report');
+                        setType('达人报备');
                         setIsShowReport(true);
                     }}>报备</a> : null}
-                    {record.status === '报备驳回' ? <><a onClick={() => {
-                        getRefundReasonAPI({
-                            cid: record.cid
-                        });
-                    }}>查看驳回备注</a><a onClick={() => { setClickCid(record.cid); getReportInfoAPI({ cid: record.cid }); }}>重新报备</a></> : null}
-                    {editPower && record.status !== '待审批' && record.status !== '报备通过' ? <Popconfirm
+                    {record.status === '报备驳回' ? <a onClick={() => { setClickCid(record.cid); getReportInfoAPI({ cid: record.cid }); }}>重新报备</a> : null}
+                    {editPower && !record.status.match('待审批') && record.status !== '报备通过' ? <Popconfirm
                         title="清除商机"
                         description="确定要清除该商机吗？【若想恢复，需联系管理员】"
-                        onConfirm={() => { clearChanceAPI({cid: record.cid}); }}
-                        onCancel={() => {}}
+                        onConfirm={() => { clearChanceAPI({ cid: record.cid }); }}
+                        onCancel={() => { }}
                         okText="清除"
                         cancelText="取消"
                     >
@@ -394,7 +425,8 @@ function ChanceList() {
             console.error(err)
         })
     }
-    const [isShowLiaison, setIsShowLiaison] = useState(false)
+    const [clickName, setClickName] = useState('')
+    const [clickUid, setClickUid] = useState('')
     const advanceChanceAPI = (payload) => {
         request({
             method: 'post',
@@ -414,41 +446,7 @@ function ChanceList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setIsShowLiaison(false);
-                    setType('');
-                    getChanceListAPI();
-                    form.resetFields();
-                    message.success(res.data.msg)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const editLiaisonAPI = (payload) => {
-        request({
-            method: 'post',
-            url: '/chance/editLiaison',
-            data: {
-                ...payload,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setIsShowLiaison(false);
+                    setIsShow(false);
                     setType('');
                     getChanceListAPI();
                     form.resetFields();
@@ -489,40 +487,6 @@ function ChanceList() {
                     getChanceListAPI();
                     form.resetFields();
                     message.success(res.data.msg)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    // 查看驳回理由
-    const [checkNoReason, setCheckNoReason] = useState('')
-    const [isShowCheckNo, setIsShowCheckNo] = useState(false)
-    const getRefundReasonAPI = (payload) => {
-        request({
-            method: 'post',
-            url: '/chance/getRefundReason',
-            data: {
-                ...payload,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setCheckNoReason(res.data.data)
-                    setIsShowCheckNo(true);
                 } else {
                     message.error(res.data.msg)
                 }
@@ -717,6 +681,40 @@ function ChanceList() {
             console.error(err)
         })
     }
+    // 审批商机
+    const [isShowRefund, setIsShowRefund] = useState(false)
+    const [formRefund] = Form.useForm()
+    const examChanceAPI = (payload) => {
+        request({
+            method: 'post',
+            url: '/chance/examChance',
+            data: {
+                ...payload,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
+                    e_id: localStorage.getItem('e_id'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    getChanceListAPI();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     useEffect(() => {
         if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
@@ -727,7 +725,7 @@ function ChanceList() {
     }, [JSON.stringify(tableParams)])
     return (
         <Fragment>
-            <Card title="商机列表" extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('add'); }}>添加新商机</Button> : null}>
+            <Card title="商机列表" extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('添加商机'); }}>添加新商机</Button> : null}>
                 <Form
                     layout="inline"
                     form={filterForm}
@@ -790,15 +788,8 @@ function ChanceList() {
                 isShow={isShow}
                 type={type}
                 form={form}
-                onOK={(values) => { type === 'add' ? addChanceAPI(values) : type === 'edit' ? editChanceAPI(values) : advanceChanceAPI(values) }}
+                onOK={(values) => { type === '添加商机' ? addChanceAPI(values) : type.match('修改商机') ? editChanceAPI(values) : type.match('推进商机') ? advanceChanceAPI({ ...values, names: clickName }) : null }}
                 onCancel={() => { setIsShow(false); form.resetFields(); setType(''); }}
-            />
-            <AELiaison
-                isShow={isShowLiaison}
-                type={type}
-                form={form}
-                onOK={(values) => { type === 'advance' ? advanceChanceAPI(values) : editLiaisonAPI(values) }}
-                onCancel={() => { setIsShowLiaison(false); form.resetFields(); setType(''); }}
             />
             <AETalent
                 isShow={isShowReport}
@@ -807,9 +798,6 @@ function ChanceList() {
                 onOK={(values) => { reportChanceAPI({ cid: clickCid, ...values }); }}
                 onCancel={() => { setIsShowReport(false); form.resetFields(); setType(''); }}
             />
-            <Modal title="报备驳回备注" open={isShowCheckNo} onOk={() => { setIsShowCheckNo(false); }} onCancel={() => { setIsShowCheckNo(false); }}>
-                <TextArea placeholder="请输入" value={checkNoReason} disabled={true} />
-            </Modal>
             <Modal title="备注" open={isShowNote} onOk={() => {
                 editNoteAPI({
                     cid: selectNoteID,
@@ -817,6 +805,20 @@ function ChanceList() {
                 });
             }} onCancel={() => { setIsShowNote(false); }}>
                 <TextArea placeholder="请输入" value={note} onChange={(e) => { setNote(e.target.value); }} maxLength={255} />
+            </Modal>
+            <Modal title="驳回理由填写" open={isShowRefund}
+                onOk={() => {
+                    examChanceAPI({ cid: clickCid, uid: clickUid, names: clickName, exam: false, refund_note: formRefund.getFieldValue('refund_note') })
+                    setIsShowRefund(false);
+                    formRefund.resetFields();
+                }}
+                onCancel={() => { setIsShowRefund(false); formRefund.resetFields(); }}
+            >
+                <Form form={formRefund}>
+                    <Form.Item label="驳回理由" name="refund_note" rules={[{ required: true, message: '不能为空' }]}>
+                        <TextArea placeholder="请输入" maxLength={255} />
+                    </Form.Item>
+                </Form>
             </Modal>
         </Fragment >
     )

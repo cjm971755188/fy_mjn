@@ -43,35 +43,41 @@ function TalentList() {
             dataIndex: 'u_name',
             key: 'u_name',
             width: 80,
-            render: (_, record) => (
-                <Popover title="商务信息" content={
-                    <List>
-                        <List.Item>主商务：{record.u_name_1 ? `${record.u_name_1}(${record.u_point_1}%)` : null}</List.Item>
-                        <List.Item>副商务：{record.u_name_2 ? `${record.u_name_2}(${record.u_point_2}%)` : null}</List.Item>
-                        <List.Item>原商务：{record.u_name_0 ? `${record.u_name_0}(${record.u_point_0}%)` : null}</List.Item>
-                        <List.Item>提点备注：{record.u_note}</List.Item>
-                        <List.Item>业绩归属类型：{record.gmv_belong}</List.Item>
-                    </List>}
-                >
-                    <span>{record.u_name_1}{record.u_name_2 ? `, ${record.u_name_2}` : null}{record.u_name_0 ? `, ${record.u_name_0}` : null}</span>
-                </Popover>
-            )
+            render: (_, record) => {
+                let u_name = new Set().add(record.u_name_1).add(record.u_name_2).add(record.u_name_0)
+                return (
+                    <Popover title="商务信息" content={
+                        <List>
+                            <List.Item>主商务：{record.u_name_1 ? `${record.u_name_1}(${record.u_point_1}%)` : null}</List.Item>
+                            <List.Item>副商务：{record.u_name_2 ? `${record.u_name_2}(${record.u_point_2}%)` : null}</List.Item>
+                            <List.Item>原商务：{record.u_name_0 ? `${record.u_name_0}(${record.u_point_0}%)` : null}</List.Item>
+                            <List.Item>提点备注：{record.u_note}</List.Item>
+                            <List.Item>业绩归属类型：{record.gmv_belong}</List.Item>
+                        </List>}
+                    >
+                        <span>{[...u_name].filter(item => item !== null).join(',')}</span>
+                    </Popover>
+                )
+            }
         },
         {
             title: '中间人',
             dataIndex: 'm_name',
             key: 'm_name',
             width: 120,
-            render: (_, record) => (
-                <Popover title="中间人信息" content={
-                    <List>
-                        <List.Item>一级中间人：{record.m_name_1 ? `${record.m_name_1}(${record.m_point_1}%)` : null}</List.Item>
-                        <List.Item>二级中间人：{record.m_name_2 ? `${record.m_name_2}(${record.m_point_2}%)` : null}</List.Item>
-                    </List>}
-                >
-                    <span>{record.m_name_1 ? `${record.m_name_1}` : null}{record.m_name_2 ? `, ${record.m_name_2}` : null}</span>
-                </Popover>
-            )
+            render: (_, record) => {
+                let m_name = new Set().add(record.m_name_1).add(record.m_name_2)
+                return (
+                    <Popover title="中间人信息" content={
+                        <List>
+                            <List.Item>一级中间人：{record.m_name_1 ? `${record.m_name_1}(${record.m_point_1}%)` : null}</List.Item>
+                            <List.Item>二级中间人：{record.m_name_2 ? `${record.m_name_2}(${record.m_point_2}%)` : null}</List.Item>
+                        </List>}
+                    >
+                        <span>{[...m_name].filter(item => item !== null).join(',')}</span>
+                    </Popover>
+                )
+            }
         },
         {
             title: '年框状态',

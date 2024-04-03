@@ -7,6 +7,7 @@ export const descriptionsItems = [
     { key: 66, label: "层级", value: "type" },
     { key: 67, label: "寻找证明", value: "search_pic" },
     { key: 68, label: "推进证明", value: "advance_pic" },
+    { key: 77, label: "报备证明", value: "report_pic" },   // 最新添加
     { key: 5, label: "类型", value: "liaison_type" },
     { key: 6, label: "姓名", value: "liaison_name" },
     { key: 7, label: "微信", value: "liaison_v" },
@@ -50,7 +51,7 @@ export const descriptionsItems = [
     { key: 40, label: "爆品佣金(%)", value: "commission_bao" },
     { key: 41, label: "佣金备注", value: "commission_note" },
 
-    { key: 76, label: "聚水潭店铺名", value: "shop_name" },  // 最新添加
+    { key: 76, label: "聚水潭店铺名", value: "shop_name" },  
     { key: 46, label: "买断折扣(折)", value: "discount_buyout" },
     { key: 47, label: "含退货折扣(折)", value: "discount_back" },
     { key: 48, label: "折扣备注", value: "discount_label" },
