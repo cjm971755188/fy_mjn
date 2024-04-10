@@ -170,9 +170,6 @@ function AEChance(props) {
                     <Form.Item label="联系人手机号" name="liaison_phone" rules={[{ len: 11, message: '手机号长度需11位' }, { pattern: /^1[3-9]\d{9}$/, message: '手机号错误' }]}>
                         <Input placeholder="请输入" />
                     </Form.Item>
-                    <Form.Item label="沟通群名称" name="crowd_name" rules={[{ required: true, message: '不能为空' }]}>
-                        <Input placeholder="请输入" />
-                    </Form.Item>
                     <Form.Item label={<Popover title="证明方向" content={
                         <List>
                             <List.Item>1. 商务加达人微信</List.Item>
@@ -187,6 +184,9 @@ function AEChance(props) {
                         <UpLoadImg title="上传" name="寻找商机" setPicUrl={(value) => { form.setFieldValue('search_pic', value) }} />
                     </Form.Item></>}
                 {type === '添加商机' || type === '修改商机_待推进' || type === '修改达人详情' ? null : <>
+                    <Form.Item label="沟通群名称" name="crowd_name" rules={[{ required: true, message: '不能为空' }]}>
+                        <Input placeholder="请输入" />
+                    </Form.Item>
                     {type === '延期推进商机' ? <Form.Item label="延期理由" name="delay_note" rules={[{ required: true, message: '不能为空' }]}>
                         <TextArea placeholder="请输入" maxLength={255} />
                     </Form.Item> : null}

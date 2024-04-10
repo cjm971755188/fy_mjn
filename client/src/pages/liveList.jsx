@@ -498,13 +498,13 @@ function LiveList() {
                         })
                     }}
                 >
-                    <Form.Item label='日期选择' name='date' style={{ marginBottom: '20px' }}>
+                    <Form.Item label='日期选择' name='date' style={{ margin: '0 10px 10px 0' }}>
                         <MyDateSelect selectType="date,week,month,quarter.year" setDate={(value) => { setDateSelect(value); }} />
                     </Form.Item>
-                    <Form.Item label='编号' name='lid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='编号' name='lid' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
                     <Form.Item label='达人昵称' name='tid'>
                         <Select
-                            style={{ width: 160 }}
+                            style={{ width: 120 }}
                             showSearch
                             placeholder="请输入"
                             disabled={type === 'add' ? true : false}
@@ -514,31 +514,31 @@ function LiveList() {
                             optionFilterProp="children"
                         />
                     </Form.Item>
-                    <Form.Item label='省份' name='place' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={placeType} />
+                    <Form.Item label='省份' name='place' style={{ margin: '0 10px 10px 0' }}>
+                        <Select style={{ width: 120 }} options={placeType} />
                     </Form.Item>
-                    <Form.Item label='直播间' name='room' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={roomType} />
+                    <Form.Item label='直播间' name='room' style={{ margin: '0 10px 10px 0' }}>
+                        <Select style={{ width: 120 }} options={roomType} />
                     </Form.Item>
-                    <Form.Item label='主播' name='a_id_1' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={authorsItems} onFocus={() => { getAuthorsItemsAPI(true); }} />
+                    <Form.Item label='主播' name='a_id_1' style={{ margin: '0 10px 10px 0' }}>
+                        <Select style={{ width: 120 }} options={authorsItems} onFocus={() => { getAuthorsItemsAPI(true); }} />
                     </Form.Item>
-                    <Form.Item label='副播' name='a_id_2' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={authorsItems} onFocus={() => { getAuthorsItemsAPI(true); }} />
+                    <Form.Item label='副播' name='a_id_2' style={{ margin: '0 10px 10px 0' }}>
+                        <Select style={{ width: 120 }} options={authorsItems} onFocus={() => { getAuthorsItemsAPI(true); }} />
                     </Form.Item>
-                    <Form.Item label='中控' name='c_id_1' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={controlsItems} onFocus={() => { getControlsItemsAPI(true); }} />
+                    <Form.Item label='中控' name='c_id_1' style={{ margin: '0 10px 10px 0' }}>
+                        <Select style={{ width: 120 }} options={controlsItems} onFocus={() => { getControlsItemsAPI(true); }} />
                     </Form.Item>
-                    <Form.Item label='服务商务' name='u_id_3' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(true); }} />
+                    <Form.Item label='服务商务' name='u_id_3' style={{ margin: '0 10px 10px 0' }}>
+                        <Select style={{ width: 120 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(true); }} />
                     </Form.Item>
-                    <Form.Item label='主商务' name='u_id_1' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                    <Form.Item label='主商务' name='u_id_1' style={{ margin: '0 10px 10px 0' }}>
+                        <Select style={{ width: 120 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                     </Form.Item>
-                    <Form.Item label='副商务' name='u_id_2' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                    <Form.Item label='副商务' name='u_id_2' style={{ margin: '0 10px 10px 0' }}>
+                        <Select style={{ width: 120 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                     </Form.Item>
-                    <Form.Item style={{ marginBottom: '20px' }}>
+                    <Form.Item style={{ margin: '0 10px 10px 0' }}>
                         <Space size={'large'}>
                             <Button type="primary" htmlType="submit">查询</Button>
                             <Button type="primary" onClick={() => {

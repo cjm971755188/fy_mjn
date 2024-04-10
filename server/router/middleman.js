@@ -55,7 +55,7 @@ router.post('/getMiddlemanList', (req, res) => {
 // 添加中间人
 router.post('/addMiddleman', (req, res) => {
     let params = req.body
-    let sql = `SELECT * FROM middleman WHERE u_id = '${params.userInfo.up_uid === 'null' ? params.userInfo.uid : params.userInfo.up_uid}' and name = '${params.name}'`
+    let sql = `SELECT * FROM middleman WHERE u_id = '${params.userInfo.up_uid === 'null' || params.userInfo.up_uid === null ? params.userInfo.uid : params.userInfo.up_uid}' and name = '${params.name}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
         if (results.length !== 0) {
@@ -72,7 +72,7 @@ router.post('/addMiddleman', (req, res) => {
                 let pay_name = params.pay_name ? `'${params.pay_name}'` : null
                 let pay_bank = params.pay_bank ? `'${params.pay_bank}'` : null
                 let pay_account = params.pay_account ? `'${params.pay_account}'` : null
-                let sql = `INSERT INTO middleman values('${mid}', '${params.type}', '${params.name}', '${params.liaison_name}', '${params.liaison_v}', ${liaison_phone}, '${params.pay_way}', ${can_piao}, ${piao_type}, ${shui_point}, ${pay_name}, ${pay_bank}, ${pay_account}, null, '正常', '${params.userInfo.up_uid === 'null' ? params.userInfo.uid : params.userInfo.up_uid}', '${dayjs().valueOf()}')`
+                let sql = `INSERT INTO middleman values('${mid}', '${params.type}', '${params.name}', '${params.liaison_name}', '${params.liaison_v}', ${liaison_phone}, '${params.pay_way}', ${can_piao}, ${piao_type}, ${shui_point}, ${pay_name}, ${pay_bank}, ${pay_account}, null, '正常', '${params.userInfo.up_uid === 'null' || params.userInfo.up_uid === null ? params.userInfo.uid : params.userInfo.up_uid}', '${dayjs().valueOf()}')`
                 db.query(sql, (err, results) => {
                     if (err) throw err;
                     res.send({ code: 200, data: [], msg: `` })
@@ -85,7 +85,7 @@ router.post('/addMiddleman', (req, res) => {
 // 修改中间人信息
 router.post('/editMiddleman', (req, res) => {
     let params = req.body
-    let sql = `SELECT * FROM middleman WHERE u_id = '${params.userInfo.up_uid === 'null' ? params.userInfo.uid : params.userInfo.up_uid}' and name = '${params.name}' and mid != '${params.mid}'`
+    let sql = `SELECT * FROM middleman WHERE u_id = '${params.userInfo.up_uid === 'null' || params.userInfo.up_uid === null ? params.userInfo.uid : params.userInfo.up_uid}' and name = '${params.name}' and mid != '${params.mid}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
         if (results.length > 0) {

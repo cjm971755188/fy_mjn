@@ -67,7 +67,7 @@ function TalentDetail() {
             for (let j = 0; j < descriptionsItems.length; j++) {
                 if (Object.keys(detailData)[i] === descriptionsItems[j].value) {
                     const description = {
-                        key: i,
+                        key: descriptionsItems[j].key,
                         label: descriptionsItems[j].label,
                         children: Object.keys(detailData)[i].match('pic') ? Object.values(detailData)[i] ?
                             Object.values(detailData)[i].split(',').map((pic, index) => {
@@ -80,6 +80,7 @@ function TalentDetail() {
                 }
             }
         }
+        items.sort((a, b) => a.key - b.key)
         items.push({
             key: 5,
             label: "原商务",
@@ -93,7 +94,7 @@ function TalentDetail() {
             for (let j = 0; j < descriptionsItems.length; j++) {
                 if (Object.keys(detailData)[i] === descriptionsItems[j].value) {
                     const description = {
-                        key: i,
+                        key: descriptionsItems[j].key,
                         label: descriptionsItems[j].label,
                         children: Object.values(detailData)[i]
                     }
@@ -131,7 +132,7 @@ function TalentDetail() {
             for (let j = 0; j < descriptionsItems.length; j++) {
                 if (Object.keys(detailData)[i] === descriptionsItems[j].value) {
                     const description = {
-                        key: i,
+                        key: descriptionsItems[j].key,
                         label: descriptionsItems[j].label,
                         children: Object.values(detailData)[i]
                     }
@@ -149,7 +150,7 @@ function TalentDetail() {
             for (let j = 0; j < descriptionsItems.length; j++) {
                 if (Object.keys(detailData)[i] === descriptionsItems[j].value) {
                     const description = {
-                        key: i,
+                        key: descriptionsItems[j].key,
                         label: descriptionsItems[j].label,
                         children: Object.values(detailData)[i]
                     }
@@ -221,7 +222,7 @@ function TalentDetail() {
             for (let j = 0; j < descriptionsItems.length; j++) {
                 if (Object.keys(detailData)[i] === descriptionsItems[j].value) {
                     const description = {
-                        key: i,
+                        key: descriptionsItems[j].key,
                         label: descriptionsItems[j].label,
                         children: Object.values(detailData)[i]
                     }
@@ -239,7 +240,7 @@ function TalentDetail() {
             for (let j = 0; j < descriptionsItems.length; j++) {
                 if (Object.keys(data)[i] === descriptionsItems[j].value) {
                     const description = {
-                        key: i,
+                        key: descriptionsItems[j].key,
                         label: descriptionsItems[j].label,
                         children: Object.values(data)[i]
                     }
@@ -884,7 +885,7 @@ function TalentDetail() {
                                             f.custom_u_point_2 = f.u_point_2
                                             f.custom_u_note = f.u_note
                                             f.custom_gmv_belong = f.gmv_belong
-                                        } 
+                                        }
                                         if (model.model === '线上平台') {
                                             formModel.setFieldValue('accounts', [f])
                                             formModel.setFieldValue('models', [model.model])
@@ -1080,6 +1081,7 @@ function TalentDetail() {
                 isShow={isShowModel}
                 type={modelType}
                 form={formModel}
+                tid={tid}
                 onOK={(values) => {
                     if (modelType.match('新')) {
                         addTalentModelAPI({ ...values, operate: modelType, talent_name: detailData.name })

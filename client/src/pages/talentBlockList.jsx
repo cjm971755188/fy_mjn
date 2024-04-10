@@ -444,10 +444,10 @@ function TalentBlockList() {
                         })
                     }}
                 >
-                    <Form.Item label='编号' name='bid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='达人昵称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='拉黑人' name='u_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item style={{ marginBottom: '20px' }}>
+                    <Form.Item label='编号' name='bid' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
+                    <Form.Item label='达人昵称' name='name' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
+                    <Form.Item label='拉黑人' name='u_name' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
+                    <Form.Item style={{ margin: '0 10px 10px 0' }}>
                         <Space size={'large'}>
                             <Button type="primary" htmlType="submit">查询</Button>
                             <Button type="primary" onClick={() => {

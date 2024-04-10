@@ -2,12 +2,13 @@ export const chanceStatus = [
     { key: 0, label: "待推进", value: "待推进" },
     { key: 1, label: "待报备", value: "待报备" },
     { key: 2, label: "待审批", value: "待审批" },
+    { key: 3, label: "已过期", value: "已过期" },
     { key: 4, label: "驳回", value: "驳回" }
 ]
 
 export const talentStatus = [
     { key: 0, label: "报备驳回", value: "报备驳回" },
-    { key: 1, label: "已撤回", value: "已撤回" },
+    { key: 1, label: "已撤销", value: "已撤销" },
     { key: 2, label: "合作中", value: "合作中" },
     { key: 3, label: "待审批", value: "待审批" }
 ]
@@ -79,7 +80,8 @@ export const accountType = [
     { key: 20, label: "网红类达人", value: "网红类达人" },
     { key: 21, label: "明星类达人", value: "明星类达人" },
     { key: 22, label: "知识类达人", value: "知识类达人" },
-    { key: 23, label: "剧情类达人", value: "剧情类达人" }
+    { key: 23, label: "剧情类达人", value: "剧情类达人" },
+    { key: 24, label: "生活博主", value: "生活博主" }
 ]
 
 export const accountModelType = [
@@ -179,4 +181,15 @@ export const customPayType= [
     { key: 0, label: "定金+尾款", value: "定金+尾款" },
     { key: 1, label: "货到付款", value: "货到付款" },
     { key: 2, label: "款到发货", value: "款到发货" }
+]
+
+export const saleStatus= [
+    { key: 0, label: "在售", value: "在售" },
+    { key: 1, label: "停滞", value: "停滞" },
+    { key: 2, label: "暂无", value: "暂无" }
+]
+
+export const stagnateLavel= [
+    { key: 0, label: "60-180天", value: "60-180天" },
+    { key: 1, label: "180天以上", value: "180天以上" }
 ]

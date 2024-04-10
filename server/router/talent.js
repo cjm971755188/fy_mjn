@@ -54,7 +54,10 @@ router.post('/getTalentList', (req, res) => {
                         CONCAT(IF(GROUP_CONCAT(DISTINCT m1.name) IS NULL, '', GROUP_CONCAT(DISTINCT m1.name)), IF(GROUP_CONCAT(DISTINCT m2.name) IS NULL, '', GROUP_CONCAT(DISTINCT m2.name))) as m_names,
                         IF(ts1.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels,
                         GROUP_CONCAT(DISTINCT IF(tm.model_files IS NULL, '暂无', '生效中')) as model_status, t.status, COUNT(DISTINCT l.lid) as live_count, SUM(l.sales) as live_sum, GROUP_CONCAT(DISTINCT tm.account_type) as account_type,
-                        GROUP_CONCAT(DISTINCT tm.account_models) as account_models, GROUP_CONCAT(DISTINCT tm.account_name) as account_name
+                        GROUP_CONCAT(DISTINCT tm.account_models) as account_models, GROUP_CONCAT(DISTINCT tm.account_name) as account_name, UNIX_TIMESTAMP(b.startsale) as startsale, UNIX_TIMESTAMP(b.lastsale) as lastsale, 
+                        IF(UNIX_TIMESTAMP(b.lastsale) IS NULL, '暂无', IF(DATEDIFF(now(), b.lastsale) > 60, '停滞', '在售')) as sale_type, DATEDIFF(now(), b.lastsale) as days, 
+                        IF(DATEDIFF(now(), b.lastsale) > 60 && DATEDIFF(now(), b.lastsale) <= 180, '60-180天', IF(DATEDIFF(now(), b.lastsale) > 180, '180天以上', null)) as stagnate_lavel, 
+                        b.price, b.done, b.eback, b.noeback, b.wait, b.daily_price, b.daily_done, b.daily_eback, b.daily_noeback, b.daily_wait, b.live_price, b.live_done, b.live_eback, b.live_noeback, b.live_wait
                     FROM talent t
                         LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' or operate = '达人报备' GROUP BY tid) ts0 ON ts0.tid = t.tid
                         LEFT JOIN talent_schedule ts1 ON ts1.tsid = ts0.tsid
@@ -67,11 +70,13 @@ router.post('/getTalentList', (req, res) => {
                         LEFT JOIN user u1 ON u1.uid = tms1.u_id_1
                         LEFT JOIN user u2 ON u2.uid = tms1.u_id_2
                         LEFT JOIN live l ON l.tid = t.tid and l.tmids LIKE CONCAT('%', tm.tmid, '%')
+                        LEFT JOIN join_bi b ON b.talent = t.name
                     ${whereUser}
-                    GROUP BY t.tid, t.cid, t.name, t.year_deal, t.type, yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels, t.status
+                    GROUP BY t.tid, t.cid, t.name, t.year_deal, t.type, yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels, t.status, 
+                                startsale, lastsale, b.price, b.done, b.eback, b.noeback, b.wait, b.daily_price, b.daily_done, b.daily_eback, b.daily_noeback, b.daily_wait, b.live_price, b.live_done, b.live_eback, b.live_noeback, b.live_wait
                 ) z
                 ${whereFilter}
-                ORDER BY z.${order} DESC`
+                ORDER BY z.${order} DESC, z.tid`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let wait_sum = 0
@@ -982,7 +987,7 @@ router.post('/getExportTalentList', (req, res) => {
         }
     }
     let sql = `SELECT * FROM (
-                SELECT t.*, tm.models, tm.platforms, CONCAT(ts.m_id_1, ',', ts.m_id_2) as m_ids, ts.m_name_1, ts.m_name_2, CONCAT(ts.m_name_1, ',', ts.m_name_2) as m_names, 
+                SELECT t.*, tm.models, tm.platforms, tm.account_type, CONCAT(ts.m_id_1, ',', ts.m_id_2) as m_ids, ts.m_name_1, ts.m_name_2, CONCAT(ts.m_name_1, ',', ts.m_name_2) as m_names, 
                     IF(ts.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, 
                     CONCAT(tm.u_id_1, ',', tm.u_id_2, ',', ts.u_id_0) as u_ids, CONCAT(tm.u_name_1, ',', tm.u_name_2, ',', ts.u_name_0) as u_names, tm.u_name_1, tm.u_name_2, ts.u_name_0, tm.model_status, COUNT(l.lid) as live_count, SUM(l.sales) as live_sum
                 FROM talent t
@@ -996,8 +1001,8 @@ router.post('/getExportTalentList', (req, res) => {
                             LEFT JOIN user u0 ON u0.uid = ts0.u_id_0
                     ) ts ON ts.tid = t.tid
                     INNER JOIN (
-                        SELECT tm.tid, GROUP_CONCAT(DISTINCT tm.model) as models, GROUP_CONCAT(DISTINCT tm.platform) as platforms, GROUP_CONCAT(DISTINCT tms.u_id_1) as u_id_1, GROUP_CONCAT(DISTINCT tms.u_name_1) as u_name_1, 
-                            GROUP_CONCAT(DISTINCT tms.u_id_2) as u_id_2, GROUP_CONCAT(DISTINCT tms.u_name_2) as u_name_2, GROUP_CONCAT(DISTINCT IF(tm.model_files is null, '暂无', '生效中')) as model_status
+                        SELECT tm.tid, GROUP_CONCAT(DISTINCT tm.model) as models, GROUP_CONCAT(DISTINCT tm.platform) as platforms, GROUP_CONCAT(DISTINCT tm.account_type) as account_type, GROUP_CONCAT(DISTINCT tms.u_id_1) as u_id_1, 
+                            GROUP_CONCAT(DISTINCT tms.u_name_1) as u_name_1, GROUP_CONCAT(DISTINCT tms.u_id_2) as u_id_2, GROUP_CONCAT(DISTINCT tms.u_name_2) as u_name_2, GROUP_CONCAT(DISTINCT IF(tm.model_files is null, '暂无', '生效中')) as model_status
                         FROM talent_model tm
                             INNER JOIN (
                                 SELECT tms0.tmid, IF(u1.uid IS NULL, '', u1.uid) as u_id_1, IF(u1.name IS NULL, '', u1.name) as u_name_1, IF(u2.uid IS NULL, '', u2.uid) as u_id_2, IF(u2.name IS NULL, '', u2.name) as u_name_2
@@ -1010,7 +1015,7 @@ router.post('/getExportTalentList', (req, res) => {
                     ) tm ON tm.tid = t.tid
                         LEFT JOIN live l ON l.tid = t.tid
                 GROUP BY t.cid, t.crowd_name, t.liaison_name, t.liaison_phone, t.liaison_type, t.liaison_v, m_ids, ts.m_name_1, ts.m_name_2, m_names, tm.model_status, tm.models, t.name, t.province, t.status, t.tid, t.type, u_ids, ts.u_name_0, tm.u_name_1, 
-                    tm.u_name_2, u_names, t.year_deal, ts.yearbox_cycle, ts.yearbox_lavels, ts.yearbox_lavels_base, ts.yearbox_start_date, tm.platforms
+                    tm.u_name_2, u_names, t.year_deal, ts.yearbox_cycle, ts.yearbox_lavels, ts.yearbox_lavels_base, ts.yearbox_start_date, tm.platforms, tm.account_type
                 ) z 
                 ${whereFilter}
                 ORDER BY z.tid DESC`

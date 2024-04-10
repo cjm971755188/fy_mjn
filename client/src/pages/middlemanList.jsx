@@ -263,17 +263,17 @@ function MiddlemanList() {
                         })
                     }}
                 >
-                    <Form.Item label='编号' name='mid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
+                    <Form.Item label='编号' name='mid' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
                     <Form.Item label='类型' name='type'>
-                        <Select style={{ width: 160 }} options={middleType} />
+                        <Select style={{ width: 120 }} options={middleType} />
                     </Form.Item>
-                    <Form.Item label='名称' name='name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='联系人姓名' name='liaison_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='付款姓名' name='pay_name' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                    <Form.Item label='名称' name='name' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
+                    <Form.Item label='联系人姓名' name='liaison_name' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
+                    <Form.Item label='付款姓名' name='pay_name' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
+                    <Form.Item label='商务' name='u_id' style={{ margin: '0 10px 10px 0' }}>
+                        <Select style={{ width: 120 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                     </Form.Item>
-                    <Form.Item style={{ marginBottom: '20px' }}>
+                    <Form.Item style={{ margin: '0 10px 10px 0' }}>
                         <Space size={'large'}>
                             <Button type="primary" htmlType="submit">查询</Button>
                             <Button type="primary" onClick={() => {

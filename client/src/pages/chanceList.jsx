@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, message, Popconfirm, Tooltip } from 'antd';
+import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, message, Popconfirm, Tooltip, Alert } from 'antd';
 import { PlusOutlined, CloseCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone, EditOutlined } from '@ant-design/icons';
 import { chanceStatus, model, platform } from '../baseData/talent'
 import MyDateSelect from '../components/MyDateSelect'
@@ -89,7 +89,10 @@ function ChanceList() {
             key: 'days',
             width: 80,
             render: (_, record) => (
-                !record.days ? null : record.days <= 0 ? <span style={{ color: 'red' }}><b>已过期{-record.days} 天</b></span> : <span style={{ color: 'green' }}><b>{record.days} 天</b></span>
+                <Popover title="累计给予保护天数" content={`${record.advance_days} 天`}>
+                    {!record.days ? null : record.days <= 0 ? <span style={{ color: 'red' }}><b>已过期{-record.days} 天</b></span> : <span style={{ color: 'green' }}><b>{record.days} 天</b></span>}
+                </Popover>
+                
             )
         },
         {
@@ -125,18 +128,16 @@ function ChanceList() {
             title: '状态',
             dataIndex: 'status',
             key: 'status',
-            width: 140,
+            width: 160,
             render: (_, record) => (
                 <Space size="small">
                     {record.status === '待推进' ? <PlayCircleTwoTone twoToneColor="#008dff" /> :
                         record.status === '待报备' ? <RightCircleTwoTone twoToneColor="#c41d7f" /> :
                             record.status.match('待审批') ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
                                 record.status.match('驳回') || record.status === '已过期' ? <CloseCircleTwoTone twoToneColor="#f81d22" /> : null}
-                    {record.status.match('驳回') ? <Popover title="驳回理由" content={record.examine_note || record.refund_note}>
+                    <Popover title="理由" content={record.examine_note || record.refund_note || record.delay_note}>
                         <span>{record.status}</span>
-                    </Popover> : record.status === '延期推进待审批' ? <Popover title="延期理由" content={record.delay_note}>
-                        <span>{record.status}</span>
-                    </Popover> : <span>{record.status}</span>}
+                    </Popover>
                 </Space>
             )
         },
@@ -251,6 +252,7 @@ function ChanceList() {
     ]
     // 表格：获取数据、分页
     const [data, setData] = useState();
+    const [waitSum, setWaitSum] = useState();
     const [loading, setLoading] = useState(false);
     const [tableParams, setTableParams] = useState({
         filtersDate: [],
@@ -289,6 +291,7 @@ function ChanceList() {
             if (res.status == 200) {
                 if (res.data.code == 200) {
                     setData(res.data.data)
+                    setWaitSum(res.data.wait_sum)
                     setLoading(false)
                     setTableParams({
                         ...tableParams,
@@ -741,25 +744,25 @@ function ChanceList() {
                         })
                     }}
                 >
-                    <Form.Item label='日期选择' name='date' style={{ marginBottom: '20px' }}>
+                    <Form.Item label='日期选择' name='date' style={{ margin: '0 10px 10px 0' }}>
                         <MyDateSelect selectType="date,week,month,quarter.year" setDate={(value) => { setDateSelect(value); }} />
                     </Form.Item>
-                    <Form.Item label='商机编号' name='cid' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='模式' name='models' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={model} />
+                    <Form.Item label='商机编号' name='cid' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
+                    <Form.Item label='模式' name='models' style={{ margin: '0 10px 10px 0' }}>
+                        <Select style={{ width: 120 }} options={model} />
                     </Form.Item>
-                    <Form.Item label='平台' name='platforms' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={platform} />
+                    <Form.Item label='平台' name='platforms' style={{ margin: '0 10px 10px 0' }}>
+                        <Select style={{ width: 120 }} options={platform} />
                     </Form.Item>
-                    <Form.Item label='达人名' name='account_names' style={{ marginBottom: '20px' }}><Input /></Form.Item>
-                    <Form.Item label='联系人' name='liaison_name'><Input /></Form.Item>
-                    <Form.Item label='商务' name='u_id' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                    <Form.Item label='达人名' name='account_names' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
+                    <Form.Item label='联系人' name='liaison_name'><Input style={{ width: 120 }} /></Form.Item>
+                    <Form.Item label='商务' name='u_id' style={{ margin: '0 10px 10px 0' }}>
+                        <Select style={{ width: 120 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
                     </Form.Item>
-                    <Form.Item label='状态' name='status' style={{ marginBottom: '20px' }}>
-                        <Select style={{ width: 160 }} options={chanceStatus} />
+                    <Form.Item label='状态' name='status' style={{ margin: '0 10px 10px 0' }}>
+                        <Select style={{ width: 120 }} options={chanceStatus} />
                     </Form.Item>
-                    <Form.Item style={{ marginBottom: '20px' }}>
+                    <Form.Item style={{ margin: '0 10px 10px 0' }}>
                         <Space size={'large'}>
                             <Button type="primary" htmlType="submit">查询</Button>
                             <Button type="primary" onClick={() => {
@@ -774,6 +777,7 @@ function ChanceList() {
                         </Space>
                     </Form.Item>
                 </Form>
+                {examPower && waitSum !== 0 ? <Alert message={`还有 ${waitSum} 个达人未审批完毕`} type="warning" showIcon closable /> : null}
                 <Table
                     style={{ margin: '20px auto' }}
                     rowKey={(data) => data.cid}

@@ -11,7 +11,7 @@ import UpLoadImg from '../UpLoadImg'
 const { TextArea } = Input;
 
 function AETalent(props) {
-    const { type, isShow, form } = props;
+    const { type, isShow, form, tid } = props;
 
     const [isShowPlatform, setIsShowPlatform] = useState(false)
     const [isShowGroup, setIsShowGroup] = useState(false)
@@ -291,12 +291,13 @@ function AETalent(props) {
                             group_u_id_1: values.group_u_id_1 ? values.group_u_id_1.value || values.group_u_id_1.value === null ? values.group_u_id_1.value : values.group_u_id_1 : null,
                             provide_u_id_1: values.provide_u_id_1 ? values.provide_u_id_1.value || values.provide_u_id_1.value === null ? values.provide_u_id_1.value : values.provide_u_id_1 : null,
                             custom_u_id_1: values.custom_u_id_1 ? values.custom_u_id_1.value || values.custom_u_id_1.value === null ? values.custom_u_id_1.value : values.custom_u_id_1 : null,
-                            type: type === '新增线上平台' ? 'model_1' : type === '新增社群团购' ? 'model_2' : type === '新增供货' ? 'model_3' : 'talent'
+                            type: 'talent'
                         }
                     }
                     searchSameChanceAPI('finish', null, {
                         ...payload,
                         cid: form.getFieldValue('cid'),
+                        tid: tid,
                         account_names: names
                     })
                 }}>
@@ -741,6 +742,7 @@ function AETalent(props) {
                                 (form.getFieldValue('provide_name') && form.getFieldValue('provide_name') !== null) || (form.getFieldValue('custom_name') && form.getFieldValue('custom_name') !== null)) {
                                 let payload = {
                                     cid: type === 'add' ? '' : form.getFieldValue('cid'),
+                                    tid: tid,
                                     type: type.match('修改') ? 'edit' : type === '新增线上平台' ? 'model_1' : type === '新增社群团购' ? 'model_2' : type === '新增供货' ? 'model_3' : 'talent',
                                     tmid: form.getFieldValue('tmid'),
                                     talent_name: form.getFieldValue('talent_name'),

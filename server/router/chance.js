@@ -42,7 +42,7 @@ router.post('/getChanceList', (req, res) => {
                 FROM (
                     SELECT c.cid, c.models, c.group_name, c.provide_name, c.custom_name, c.platforms, c.account_names, c.search_pic, c.liaison_type, c.liaison_name, c.liaison_v, c.liaison_phone, c.crowd_name, c.advance_pic, c.note, c.refund_note, c.delay_note, 
                             IF(15 - DATEDIFF(NOW(), FROM_UNIXTIME(LEFT(c.advance_time, 10))) < 0 && (c.status = '待报备' || c.status = '报备驳回'), '已过期', c.status) as status, c.u_id, c.create_time, c.advance_time, c.report_time, u.name, 
-                            15 - DATEDIFF(NOW(), FROM_UNIXTIME(LEFT(c.advance_time, 10))) as days, ts1.examine_note
+                            15 - DATEDIFF(NOW(), FROM_UNIXTIME(LEFT(c.advance_time, 10))) as days, ts1.examine_note, c.advance_days
                     FROM chance c 
                         INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid = c.u_id
                         LEFT JOIN (SELECT cid, MAX(tid) as tid FROM talent WHERE status = '已失效' GROUP BY cid) t ON t.cid = c.cid
@@ -53,10 +53,16 @@ router.post('/getChanceList', (req, res) => {
                 ORDER BY z.cid DESC`
     db.query(sql, (err, results) => {
         if (err) throw err;
+        let wait_sum = 0
+        for (let i = 0; i < results.length; i++) {
+            if (results[i].status.match('待审批')) {
+                wait_sum += 1
+            }
+        }
         let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`
         db.query(s, (err, r) => {
             if (err) throw err;
-            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: `` })
+            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, wait_sum, msg: `` })
         })
     })
 })
@@ -69,7 +75,7 @@ router.post('/searchSameChance', (req, res) => {
     for (let i = 0; i < names.length; i++) {
         sql = `(SELECT tm.tmid, t.name, tm.model, tm.platform, tm.account_id, tm.account_name, u.name as u_name, t.status, '' as note
                     FROM talent_model tm
-                        INNER JOIN talent t ON t.tid = tm.tid and t.status != '报备驳回' and t.status != '已撤销' and t.status != '已失效'
+                        INNER JOIN talent t ON t.tid = tm.tid and t.status != '报备驳回' and t.status != '已撤销' and t.status != '已失效' and t.tid != '${params.tid}'
                         LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                         LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                         LEFT JOIN user u ON u.uid = tms1.u_id_1
@@ -90,6 +96,7 @@ router.post('/searchSameChance', (req, res) => {
                     WHERE (c.account_names LIKE '%${names[i]}%' or c.group_name LIKE '%${names[i]}%' or c.provide_name LIKE '%${names[i]}%' or c.custom_name LIKE '%${names[i]}%')
                         and IF(c.advance_time IS NULL, -1, 15 - DATEDIFF(NOW(), FROM_UNIXTIME(LEFT(c.advance_time, 10)))) >= 0
                         and c.status != '待推进' 
+                        and c.status != '已失效' 
                         and c.status != '推进驳回'
                         and c.cid != '${params.cid}')` 
         db.query(sql, (err, results) => {
@@ -126,7 +133,7 @@ router.post('/addChance', (req, res) => {
         let custom_name = params.custom_name ? `'${params.custom_name}'` : null
         let liaison_phone = params.liaison_phone ? `'${params.liaison_phone}'` : null
         let sql = `INSERT INTO chance VALUES('${cid}', ${models}, ${group_name}, ${provide_name}, ${custom_name}, ${platforms}, ${account_names}, '${params.search_pic}', '${params.liaison_type}', '${params.liaison_name}', '${params.liaison_v}', 
-                    ${liaison_phone}, '${params.crowd_name}', null, null, null, null, '待推进', '${params.userInfo.up_uid === 'null' ? params.userInfo.uid : params.userInfo.up_uid}', ${dayjs().valueOf()}, null, null)`
+                    ${liaison_phone}, null, null, 0, null, null, null, '待推进', '${params.userInfo.up_uid === 'null' || params.userInfo.up_uid === null ? params.userInfo.uid : params.userInfo.up_uid}', ${dayjs().valueOf()}, null, null)`
         db.query(sql, (err, results) => {
             if (err) throw err;
             res.send({ code: 200, data: [], msg: `添加成功` })
@@ -161,8 +168,10 @@ router.post('/editChance', (req, res) => {
 router.post('/advanceChance', (req, res) => {
     let params = req.body
     params.advance_pic = params.advance_pic.replace('/public', '')
-    let delay_note = params.delay_note === null ? null : `'${params.delay_note}'`
-    let sql = `UPDATE chance SET status = IF(advance_time IS NULL, '推进待审批', '延期推进待审批'), advance_pic = '${params.advance_pic}', advance_time = ${dayjs().valueOf()}, delay_note = ${delay_note} WHERE cid = '${params.cid}'`
+    let delay_note = params.delay_note || params.delay_note === null ? null : `'${params.delay_note}'`
+    let sql = `UPDATE chance 
+                SET crowd_name = '${params.crowd_name}', status = IF(advance_time IS NULL, '推进待审批', '延期推进待审批'), advance_pic = '${params.advance_pic}', advance_time = ${dayjs().valueOf()}, delay_note = ${delay_note} 
+                WHERE cid = '${params.cid}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
         let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.up_id}'`
@@ -192,7 +201,7 @@ router.post('/examChance', (req, res) => {
     let note = params.refund_note === null ? null : `'${params.refund_note}'`
     let sql = ''
     if (params.exam) {
-        sql = `UPDATE chance SET status = '待报备' WHERE cid = '${params.cid}'`
+        sql = `UPDATE chance SET advance_days = advance_days + 15, status = '待报备' WHERE cid = '${params.cid}'`
     } else {
         sql = `UPDATE chance SET advance_pic = null, refund_note = ${note}, status = '推进驳回', advance_time = null WHERE cid = '${params.cid}'`
     }
