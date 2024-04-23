@@ -3,7 +3,7 @@ import * as echarts from 'echarts';
 import chinaMap from '../assets/chinaMap.json'
 
 function MyECharts(props) {
-    const { option, height } = props;
+    const { option, width, height } = props;
 
     const chartRef = useRef(null);
 
@@ -30,7 +30,7 @@ function MyECharts(props) {
     }, [])
 
     return (
-        <div ref={chartRef} style={{ padding: 0, width: '100%', height: height }} />
+        <div ref={chartRef} style={{ padding: 0, width: width, height: height }} />
     )
 }
 export default MyECharts;

@@ -45,3 +45,9 @@ export const weeks = [
     { key: 5, label: "星期六", value: 6 },
     { key: 6, label: "星期日", value: 7 }
 ]
+
+export const companyType = [
+    { key: 0, label: "一般纳税人", value: "一般纳税人" },
+    { key: 1, label: "小规模", value: "小规模" },
+    { key: 2, label: "个体户", value: "个体户" }
+]

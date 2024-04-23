@@ -66,6 +66,8 @@ const middlemanRouter = require('./router/middleman')
 app.use('/middleman', middlemanRouter)
 const userRouter = require('./router/user')
 app.use('/user', userRouter)
+const baseRouter = require('./router/base')
+app.use('/base', baseRouter)
 
 // 定义规则
 let rule = new schedule.RecurrenceRule();

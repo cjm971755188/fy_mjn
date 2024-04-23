@@ -1,11 +1,31 @@
 import React from "react";
 import { Form, Input, List, Modal, Select, Popover } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
-import { liaisonType } from '../../baseData/talent'
 import UpLoadImg from '../UpLoadImg'
 
 function AELiaison(props) {
     const { type, isShow, form } = props;
+
+    const [liaisonType, setLiaisonType] = useState([])
+    const getLiaisonTypes = () => {
+        request({
+            method: 'post',
+            url: '/base/getLiaisonsItems',
+            data: []
+        }).then((res) => {
+            if (res.status === 200) {
+                if (res.data.code === 200) {
+                    setLiaisonType(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     return (
         <Modal
@@ -32,8 +52,8 @@ function AELiaison(props) {
                         allowClear
                         style={{ width: '100%' }}
                         placeholder="请选择"
-                        onChange={(value) => { form.setFieldValue('liaison_type', value) }}
                         options={liaisonType}
+                        onClick={() => { getLiaisonTypes(); }}
                     />
                 </Form.Item>
                 <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '不能为空' }]}>

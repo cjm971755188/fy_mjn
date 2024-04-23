@@ -2,7 +2,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, message, Popconfirm, Tooltip, Alert } from 'antd';
 import { PlusOutlined, CloseCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone, EditOutlined } from '@ant-design/icons';
-import { chanceStatus, model, platform } from '../baseData/talent'
+import { chanceStatus, model } from '../baseData/talent'
 import MyDateSelect from '../components/MyDateSelect'
 import AEChance from '../components/modals/AEChance'
 import AETalent from '../components/modals/AETalent'
@@ -325,6 +325,26 @@ function ChanceList() {
     // 查询、清空筛选
     const [filterForm] = Form.useForm()
     const [dateSelect, setDateSelect] = useState()
+    const [platform, setPlatform] = useState([])
+    const getPlatforms = () => {
+        request({
+            method: 'post',
+            url: '/base/getPlatformsItems',
+            data: []
+        }).then((res) => {
+            if (res.status === 200) {
+                if (res.data.code === 200) {
+                    setPlatform(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
     const [salemanAssistantsItems, setSalemanAssistantsItems] = useState()
     const getSalemanAssistantsItemsAPI = () => {
         request({
@@ -638,7 +658,8 @@ function ChanceList() {
                         discount_back,
                         discount_label,
                         models,
-                        accounts
+                        accounts,
+                        report_pic: res.data.data[0].report_pic.split(',')
                     });
                     setIsShowReport(true);
                     setType('reReport');
@@ -752,7 +773,7 @@ function ChanceList() {
                         <Select style={{ width: 120 }} options={model} />
                     </Form.Item>
                     <Form.Item label='平台' name='platforms' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={platform} />
+                        <Select style={{ width: 120 }} options={platform} onFocus={() => { getPlatforms(); }} />
                     </Form.Item>
                     <Form.Item label='达人名' name='account_names' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
                     <Form.Item label='联系人' name='liaison_name'><Input style={{ width: 120 }} /></Form.Item>

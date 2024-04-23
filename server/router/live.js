@@ -7,19 +7,19 @@ const dayjs = require('dayjs');
 router.post('/getLiveList', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `WHERE status != '失效' and status != '测试'`
+    let whereUser = `where u1.status != '测试'`
     if (params.userInfo.department === '事业部') {
         if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
-            whereUser += ` and department = '${params.userInfo.department}'`
+            whereUser += ` and (u1.department = '${params.userInfo.department}' or u2.department = '${params.userInfo.department}')`
         }
         if (params.userInfo.position === '主管') {
-            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+            whereUser += ` and ((u1.department = '${params.userInfo.department}' and u1.company = '${params.userInfo.company}') or (u2.department = '${params.userInfo.department}' and u2.company = '${params.userInfo.company}'))`
         }
         if (params.userInfo.position === '商务') {
-            whereUser += ` and uid = '${params.userInfo.uid}'`
+            whereUser += ` and (l.u_id_1 = '${params.userInfo.uid}' or l.u_id_2 = '${params.userInfo.uid}')`
         }
         if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
-            whereUser += ` and uid = '${params.userInfo.up_uid}'`
+            whereUser += ` and (l.u_id_1 = '${params.userInfo.up_uid}' or l.u_id_2 = '${params.userInfo.up_uid}')`
         }
     }
     // 条件筛选
@@ -47,8 +47,9 @@ router.post('/getLiveList', (req, res) => {
                         LEFT JOIN user u2 ON u2.uid = l.a_id_2
                         LEFT JOIN user u3 ON u3.uid = l.c_id_1
                         LEFT JOIN user u4 ON u4.uid = l.u_id_3
-                        INNER JOIN (SELECT * FROM user ${whereUser}) u5 ON u5.uid = l.u_id_1
+                        LEFT JOIN user u5 ON u5.uid = l.u_id_1
                         LEFT JOIN user u6 ON u6.uid = l.u_id_2
+                    ${whereUser}
                     GROUP BY l.lid, l.tid, l.tmids, l.count_type, l.start_time, l.end_time, l.place, l.room, l.a_id_1, l.a_id_2, l.c_id_1, l.u_id_3, l.goal, l.sales, l.commission_normal_on, l.commission_welfare_on, l.commission_bao_on, 
                         l.commission_note_on, l.commission_normal_down, l.commission_welfare_down, l.commission_bao_down, l.commission_note_down, l.u_id_1, l.u_point_1, l.u_id_2, l.u_point_2, l.u_note, t.name, 
                         a_name_1, a_name_2, c_name_1, u_name_3, u_name_1, u_name_2
@@ -108,6 +109,32 @@ router.post('/editLive', (req, res) => {
     db.query(sql, (err, results) => {
         if (err) throw err;
         res.send({ code: 200, data: [], msg: `修改成功` })
+    })
+})
+
+// 获取专场列表
+router.post('/getLiveCalendar', (req, res) => {
+    let params = req.body
+    let sql = `SELECT z.* FROM (
+                    SELECT l.*, t.name, GROUP_CONCAT(DISTINCT tm.model, '_', tm.platform, '_', IF(tm.shop_type IS NULL, '', tm.shop_type), '_', IF(tm.shop_name IS NULL, '', tm.shop_name), '_', tm.account_name) as models,
+                        u1.name as a_name_1, u2.name as a_name_2, u3.name as c_name_1, u4.name as u_name_3, u5.name as u_name_1, u6.name as u_name_2
+                    FROM live l
+                        LEFT JOIN talent t ON t.tid = l.tid
+                        LEFT JOIN talent_model tm ON l.tmids LIKE CONCAT('%', tm.tmid, '%')
+                        LEFT JOIN user u1 ON u1.uid = l.a_id_1
+                        LEFT JOIN user u2 ON u2.uid = l.a_id_2
+                        LEFT JOIN user u3 ON u3.uid = l.c_id_1
+                        LEFT JOIN user u4 ON u4.uid = l.u_id_3
+                        LEFT JOIN user u5 ON u5.uid = l.u_id_1
+                        LEFT JOIN user u6 ON u6.uid = l.u_id_2
+                    GROUP BY l.lid, l.tid, l.tmids, l.count_type, l.start_time, l.end_time, l.place, l.room, l.a_id_1, l.a_id_2, l.c_id_1, l.u_id_3, l.goal, l.sales, l.commission_normal_on, l.commission_welfare_on, l.commission_bao_on, 
+                        l.commission_note_on, l.commission_normal_down, l.commission_welfare_down, l.commission_bao_down, l.commission_note_down, l.u_id_1, l.u_point_1, l.u_id_2, l.u_point_2, l.u_note, t.name, 
+                        a_name_1, a_name_2, c_name_1, u_name_3, u_name_1, u_name_2
+                ) z
+                ORDER BY z.start_time DESC`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        res.send({ code: 200, data: results, msg: `` })
     })
 })
 

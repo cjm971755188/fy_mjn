@@ -1,13 +1,14 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { NavLink } from 'react-router-dom'
 import request from '../service/request'
-import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Alert, Modal, Popconfirm } from 'antd';
-import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined, CloseCircleTwoTone, VerticalAlignBottomOutlined, FireTwoTone, BellTwoTone, HourglassTwoTone } from '@ant-design/icons';
-import { model, platform, uPoint0, talentStatus, yearboxStatus, accountType, talentType, accountModelType, saleStatus, stagnateLavel } from '../baseData/talent'
+import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Alert, Modal, Popconfirm, Divider, Row } from 'antd';
+import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined, CloseCircleTwoTone, VerticalAlignBottomOutlined, FireTwoTone, BellTwoTone } from '@ant-design/icons';
+import { model, uPoint0, talentStatus, yearboxStatus, talentType, accountModelType, saleStatus, stagnateLavel } from '../baseData/talent'
 import AETalent from '../components/modals/AETalent'
 import AELive from '../components/modals/AELive'
 import dayjs from 'dayjs'
 import FileSaver from 'file-saver'
+import MyECharts from '../components/MyECharts'
 
 const { TextArea } = Input;
 
@@ -126,21 +127,53 @@ function TalentList() {
             key: 'sale_type',
             width: 120,
             render: (_, record) => (
-                record.sale_type === '暂无' ? null :
-                    <Popover title="销售情况（2022年起）" content={
-                        <List>
-                            <List.Item>销售时间【{dayjs(record.lastsale * 1000).diff(dayjs(record.startsale * 1000), 'day')}天】：{dayjs(record.startsale * 1000).format('YYYY-MM-DD')} ~ {dayjs(record.lastsale * 1000).format('YYYY-MM-DD')}</List.Item>
-                            <List.Item>总销售：{`${record.price} 元 【成交 ${(record.done / record.price * 100).toFixed(2)}%, 发货退货 ${(record.eback / record.price * 100).toFixed(2)}%, 未发货退货 ${(record.noeback / record.price * 100).toFixed(2)}%, 在途 ${(record.wait / record.price * 100).toFixed(2)}%】`}</List.Item>
-                            <List.Item>日播：{`${record.daily_price} 元 【成交 ${record.daily_price === 0 ? 0 : (record.daily_done / record.daily_price * 100).toFixed(2)}%, 发货退货 ${record.daily_price === 0 ? 0 : (record.daily_eback / record.daily_price * 100).toFixed(2)}%, 
+                <Popover title="销售情况（2022年起）" content={<>
+                    <List split={false}>
+                        <List.Item>销售时间【{dayjs(record.lastsale * 1000).diff(dayjs(record.startsale * 1000), 'day')}天】{record.sale_type === null ? null : `：${dayjs(record.startsale * 1000).format('YYYY-MM-DD')} ~ ${dayjs(record.lastsale * 1000).format('YYYY-MM-DD')}`}</List.Item>
+                        <List.Item>总销售：{record.sale_type === null ? '0 元' : `${(record.price || 0).toLocaleString("en")} 元 【成交 ${(record.done / record.price * 100).toFixed(2)}%, 发货退货 ${(record.eback / record.price * 100).toFixed(2)}%, 未发货退货 ${(record.noeback / record.price * 100).toFixed(2)}%, 在途 ${(record.wait / record.price * 100).toFixed(2)}%】`}</List.Item>
+                        <List.Item>日播：{record.sale_type === null ? '0 元' : `${(record.daily_price || 0).toLocaleString("en")} 元 【成交 ${record.daily_price === 0 ? 0 : (record.daily_done / record.daily_price * 100).toFixed(2)}%, 发货退货 ${record.daily_price === 0 ? 0 : (record.daily_eback / record.daily_price * 100).toFixed(2)}%, 
                             未发货退货 ${record.daily_price === 0 ? 0 : (record.daily_noeback / record.daily_price * 100).toFixed(2)}%, 在途 ${record.daily_price === 0 ? 0 : (record.daily_wait / record.daily_price * 100).toFixed(2)}%】`}</List.Item>
-                            <List.Item>专场：{`${record.live_price} 元 【成交 ${record.live_price === 0 ? 0 : (record.live_done / record.live_price * 100).toFixed(2)}%, 发货退货 ${record.live_price === 0 ? 0 : (record.live_eback / record.live_price * 100).toFixed(2)}%, 
+                        <List.Item>专场：{record.sale_type === null ? '0 元' : `${(record.live_price || 0).toLocaleString("en")} 元 【成交 ${record.live_price === 0 ? 0 : (record.live_done / record.live_price * 100).toFixed(2)}%, 发货退货 ${record.live_price === 0 ? 0 : (record.live_eback / record.live_price * 100).toFixed(2)}%, 
                             未发货退货 ${record.live_price === 0 ? 0 : (record.live_noeback / record.live_price * 100).toFixed(2)}%, 在途 ${record.live_price === 0 ? 0 : (record.live_wait / record.live_price * 100).toFixed(2)}%】`}</List.Item>
-                        </List>}
-                    >
-                        <span style={{ color: `${record.sale_type === '停滞' ? 'red' : null}` }}>
-                            {record.sale_type === '在售' ? <FireTwoTone twoToneColor="#4ec990" /> : record.sale_type === '停滞' ? <BellTwoTone twoToneColor="#f81d22" /> : null} 
-                            {record.sale_type === '停滞' ?  record.sale_type + record.days + '天': record.sale_type}</span>
-                    </Popover>
+                    </List>
+                    {record.sale_type === null ? null : <>
+                        <Divider />
+                        <Row>2024年总销售：{record.sale_type === null ? '0 元' : `${(record.year_price || 0).toLocaleString("en")} 元`}</Row>
+                        <Card style={{ marginTop: '20px' }}>
+                            <MyECharts width='800px' height={400} option={{
+                                tooltip: {
+                                    trigger: 'item'
+                                },
+                                legend: {},
+                                grid: {
+                                    left: '10%',
+                                    right: '10%',
+                                    top: '10%',
+                                    button: '5%'
+                                },
+                                xAxis: {
+                                    type: 'category',
+                                    data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+                                },
+                                yAxis: {
+                                    type: 'value'
+                                },
+                                series: [
+                                    {
+                                        name: '销售额',
+                                        type: 'line',
+                                        data: [record.Jan, record.Feb, record.Mar, record.Apr],
+                                    }
+                                ]
+                            }} />
+                        </Card>
+                    </>}
+                </>}
+                >
+                    <span style={{ color: `${record.sale_type === '停滞' ? 'red' : null}` }}>
+                        {record.sale_type === '在售' ? <FireTwoTone twoToneColor="#4ec990" /> : record.sale_type === '停滞' ? <BellTwoTone twoToneColor="#f81d22" /> : <StopTwoTone twoToneColor="#999999" />}
+                        {record.sale_type === '在售' ? ' ' + record.sale_type : record.sale_type === '停滞' ? ' ' + record.sale_type + record.days + '天' : ' 无销售'}</span>
+                </Popover>
             )
         },
         {
@@ -265,6 +298,46 @@ function TalentList() {
     // 查询、清空筛选
     const [filterForm] = Form.useForm()
     const [sortForm] = Form.useForm()
+    const [platform, setPlatform] = useState([])
+    const getPlatforms = () => {
+        request({
+            method: 'post',
+            url: '/base/getPlatformsItems',
+            data: []
+        }).then((res) => {
+            if (res.status === 200) {
+                if (res.data.code === 200) {
+                    setPlatform(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const [accountType, setAccountType] = useState([])
+    const getAccountTypes = () => {
+        request({
+            method: 'post',
+            url: '/base/getAccountsItems',
+            data: []
+        }).then((res) => {
+            if (res.status === 200) {
+                if (res.data.code === 200) {
+                    setAccountType(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
     const [salemansItems, setSalemansItems] = useState()
     const getSalemansItemsAPI = () => {
         request({
@@ -619,7 +692,8 @@ function TalentList() {
                         discount_back,
                         discount_label,
                         models,
-                        accounts
+                        accounts,
+                        report_pic: res.data.data[0].report_pic.split(',')
                     });
                     setIsShow(true);
                     setType('reReport');
@@ -639,7 +713,14 @@ function TalentList() {
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
         { title: '账号类型', dataIndex: 'account_type', key: 'account_type' },
         { title: '层级', dataIndex: 'type', key: 'type' },
-        { title: '专场销售额(万)', dataIndex: 'live_sum', key: 'live_sum' },
+        { title: '销售状态', dataIndex: 'sale_type', key: 'sale_type' },
+        { title: '停滞天数', dataIndex: 'days', key: 'days' },
+        { title: '总销售额', dataIndex: 'price', key: 'price' },
+        { title: '成交额', dataIndex: 'done', key: 'done' },
+        { title: '日播销售额', dataIndex: 'daily_price', key: 'daily_price' },
+        { title: '日播成交额', dataIndex: 'daily_done', key: 'daily_done' },
+        { title: '专场销售额', dataIndex: 'live_price', key: 'live_price' },
+        { title: '专场成交额', dataIndex: 'live_done', key: 'live_done' },
         { title: '主商务', dataIndex: 'u_name_1', key: 'u_name_1' },
         { title: '副商务', dataIndex: 'u_name_2', key: 'u_name_2' },
         { title: '原商务', dataIndex: 'u_name_0', key: 'u_name_0' }
@@ -761,13 +842,13 @@ function TalentList() {
                 >
                     <Form.Item label='达人名称' name='name' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
                     <Form.Item label='账号类型' name='account_type' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={accountType} />
+                        <Select style={{ width: 120 }} options={accountType} onClick={() => { getAccountTypes(); }} />
                     </Form.Item>
                     <Form.Item label='合作模式' name='models' style={{ margin: '0 10px 10px 0' }}>
                         <Select style={{ width: 120 }} options={model} />
                     </Form.Item>
                     <Form.Item label='平台' name='platforms' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={platform} />
+                        <Select style={{ width: 120 }} options={platform} onFocus={() => { getPlatforms(); }} />
                     </Form.Item>
                     <Form.Item label='销售模式' name='account_models' style={{ margin: '0 10px 10px 0' }}>
                         <Select style={{ width: 120 }} options={accountModelType} />
@@ -814,8 +895,8 @@ function TalentList() {
                         })
                     }}
                 >
-                    <Form.Item label='排列顺序' name='sort'style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={[{ key: 0, label: '年度预估GMV', value: 'year_deal' }, { key: 2, label: '停滞天数', value: 'days' }]} />
+                    <Form.Item label='排列顺序' name='sort' style={{ margin: '0 10px 10px 0' }}>
+                        <Select style={{ width: 120 }} options={[{ key: 0, label: '年度预估GMV', value: 'year_deal' }, { key: 1, label: '当年销售额', value: 'year_price' }, { key: 2, label: '停滞天数', value: 'days' }]} />
                     </Form.Item>
                     <Form.Item style={{ margin: '0 10px 10px 0' }}>
                         <Space size={'large'}>

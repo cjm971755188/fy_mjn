@@ -55,9 +55,10 @@ router.post('/getTalentList', (req, res) => {
                         IF(ts1.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels,
                         GROUP_CONCAT(DISTINCT IF(tm.model_files IS NULL, '暂无', '生效中')) as model_status, t.status, COUNT(DISTINCT l.lid) as live_count, SUM(l.sales) as live_sum, GROUP_CONCAT(DISTINCT tm.account_type) as account_type,
                         GROUP_CONCAT(DISTINCT tm.account_models) as account_models, GROUP_CONCAT(DISTINCT tm.account_name) as account_name, UNIX_TIMESTAMP(b.startsale) as startsale, UNIX_TIMESTAMP(b.lastsale) as lastsale, 
-                        IF(UNIX_TIMESTAMP(b.lastsale) IS NULL, '暂无', IF(DATEDIFF(now(), b.lastsale) > 60, '停滞', '在售')) as sale_type, DATEDIFF(now(), b.lastsale) as days, 
+                        IF(UNIX_TIMESTAMP(b.lastsale) IS NULL, '无销售', IF(DATEDIFF(now(), b.lastsale) > 60, '停滞', '在售')) as sale_type, DATEDIFF(now(), b.lastsale) as days, 
                         IF(DATEDIFF(now(), b.lastsale) > 60 && DATEDIFF(now(), b.lastsale) <= 180, '60-180天', IF(DATEDIFF(now(), b.lastsale) > 180, '180天以上', null)) as stagnate_lavel, 
-                        b.price, b.done, b.eback, b.noeback, b.wait, b.daily_price, b.daily_done, b.daily_eback, b.daily_noeback, b.daily_wait, b.live_price, b.live_done, b.live_eback, b.live_noeback, b.live_wait
+                        b.price, b.done, b.eback, b.noeback, b.wait, b.daily_price, b.daily_done, b.daily_eback, b.daily_noeback, b.daily_wait, b.live_price, b.live_done, b.live_eback, b.live_noeback, b.live_wait, 
+                        b.year_price, b.Jan, b.Feb, b.Mar, b.Apr
                     FROM talent t
                         LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' or operate = '达人报备' GROUP BY tid) ts0 ON ts0.tid = t.tid
                         LEFT JOIN talent_schedule ts1 ON ts1.tsid = ts0.tsid
@@ -70,13 +71,56 @@ router.post('/getTalentList', (req, res) => {
                         LEFT JOIN user u1 ON u1.uid = tms1.u_id_1
                         LEFT JOIN user u2 ON u2.uid = tms1.u_id_2
                         LEFT JOIN live l ON l.tid = t.tid and l.tmids LIKE CONCAT('%', tm.tmid, '%')
-                        LEFT JOIN join_bi b ON b.talent = t.name
+                        LEFT JOIN join_bi b ON (b.talent = t.name) 
                     ${whereUser}
-                    GROUP BY t.tid, t.cid, t.name, t.year_deal, t.type, yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels, t.status, 
-                                startsale, lastsale, b.price, b.done, b.eback, b.noeback, b.wait, b.daily_price, b.daily_done, b.daily_eback, b.daily_noeback, b.daily_wait, b.live_price, b.live_done, b.live_eback, b.live_noeback, b.live_wait
+                    GROUP BY t.tid, t.cid, t.name, t.year_deal, t.type, yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels, t.status, startsale, lastsale, 
+                        b.price, b.done, b.eback, b.noeback, b.wait, b.daily_price, b.daily_done, b.daily_eback, b.daily_noeback, b.daily_wait, b.live_price, b.live_done, b.live_eback, b.live_noeback, b.live_wait, 
+                        b.year_price, b.Jan, b.Feb, b.Mar, b.Apr
                 ) z
                 ${whereFilter}
-                ORDER BY z.${order} DESC, z.tid`
+                ORDER BY z.${order} DESC, z.tid` 
+    /* let sql = `SELECT *
+                FROM (
+                    SELECT *, IF(b.b_name IS NULL, '无销售', IF(b.days > 60, '停滞', '在售')) as sale_type, IF(b.days > 60 && b.days <= 180, '60-180天', IF(b.days > 180, '180天以上', null)) as stagnate_lavel
+                    FROM (
+                        SELECT t.tid, t.cid, t.name, GROUP_CONCAT(DISTINCT tm.model) as models, GROUP_CONCAT(DISTINCT tm.platform) as platforms, t.year_deal, t.type,
+                            GROUP_CONCAT(DISTINCT tms1.u_id_1) as u_id_1, GROUP_CONCAT(DISTINCT u1.name) as u_name_1, GROUP_CONCAT(DISTINCT tms1.u_point_1) as u_point_1,
+                            GROUP_CONCAT(DISTINCT tms1.u_id_2) as u_id_2, GROUP_CONCAT(DISTINCT u2.name) as u_name_2, GROUP_CONCAT(DISTINCT tms1.u_point_2) as u_point_2,
+                            GROUP_CONCAT(DISTINCT ts1.u_id_0) as u_id_0, GROUP_CONCAT(DISTINCT u0.name) as u_name_0, GROUP_CONCAT(DISTINCT ts1.u_point_0) as u_point_0,
+                            CONCAT(GROUP_CONCAT(DISTINCT u1.name), IF(GROUP_CONCAT(DISTINCT u2.name) IS NULL, '', GROUP_CONCAT(DISTINCT u2.name)), IF(GROUP_CONCAT(DISTINCT u0.name) IS NULL, '', GROUP_CONCAT(DISTINCT u0.name))) as u_names, 
+                            GROUP_CONCAT(DISTINCT tms1.u_note) as u_note, GROUP_CONCAT(DISTINCT tms1.gmv_belong) as gmv_belong,
+                            GROUP_CONCAT(DISTINCT ts1.m_id_1) as m_id_1, GROUP_CONCAT(DISTINCT m1.name) as m_name_1, GROUP_CONCAT(DISTINCT ts1.m_point_1) as m_point_1,
+                            GROUP_CONCAT(DISTINCT ts1.m_id_2) as m_id_2, GROUP_CONCAT(DISTINCT m2.name) as m_name_2, GROUP_CONCAT(DISTINCT ts1.m_point_2) as m_point_2,
+                            CONCAT(IF(GROUP_CONCAT(DISTINCT m1.name) IS NULL, '', GROUP_CONCAT(DISTINCT m1.name)), IF(GROUP_CONCAT(DISTINCT m2.name) IS NULL, '', GROUP_CONCAT(DISTINCT m2.name))) as m_names,
+                            IF(ts1.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels,
+                            GROUP_CONCAT(DISTINCT IF(tm.model_files IS NULL, '暂无', '生效中')) as model_status, t.status, GROUP_CONCAT(DISTINCT tm.account_type) as account_type,
+                            GROUP_CONCAT(DISTINCT tm.account_models) as account_models, GROUP_CONCAT(DISTINCT tm.account_name) as account_name
+                        FROM talent t
+                            LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' or operate = '达人报备' GROUP BY tid) ts0 ON ts0.tid = t.tid
+                            LEFT JOIN talent_schedule ts1 ON ts1.tsid = ts0.tsid
+                            LEFT JOIN middleman m1 ON m1.mid = ts1.m_id_1
+                            LEFT JOIN middleman m2 ON m2.mid = ts1.m_id_2
+                            LEFT JOIN user u0 ON u0.uid = ts1.u_id_0
+                            LEFT JOIN talent_model tm ON tm.tid = t.tid
+                            LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' or operate = '达人报备' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
+                            LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
+                            LEFT JOIN user u1 ON u1.uid = tms1.u_id_1
+                            LEFT JOIN user u2 ON u2.uid = tms1.u_id_2
+                        ${whereUser}
+                        GROUP BY t.tid, t.cid, t.name, t.year_deal, t.type, yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels, t.status
+                    ) y
+                        LEFT JOIN (
+                            SELECT t.name as b_name, UNIX_TIMESTAMP(MIN(b.startsale)) as startsale, UNIX_TIMESTAMP(MAX(b.lastsale)) as lastsale, DATEDIFF(now(), MAX(b.lastsale)) as days, 
+                            SUM(b.price) as price, SUM(b.done) as done, SUM(b.eback) as eback, SUM(b.noeback) as noeback, SUM(b.wait) as wait, SUM(b.daily_price) as daily_price, SUM(b.daily_done) as daily_done, SUM(b.daily_eback) as daily_eback, 
+                            SUM(b.daily_noeback) as daily_noeback, SUM(b.daily_wait) as daily_wait, SUM(b.live_price) as live_price, SUM(b.live_done) as live_done, SUM(b.live_eback) as live_eback, SUM(b.live_noeback) as live_noeback, SUM(b.live_wait) as live_wait, 
+                            SUM(b.year_price) as year_price, SUM(b.Jan) as Jan, SUM(b.Feb) as Feb, SUM(b.Mar) as Mar, SUM(b.Apr) as Apr
+                        FROM join_bi b
+                            LEFT JOIN talent t ON b.talent = t.name OR b.talent LIKE CONCAT('%', t.name, '%')
+                        GROUP BY t.name
+                        ) b ON b.b_name = y.name
+                    ) z
+                ${whereFilter}
+                ORDER BY z.${order} DESC, z.tid DESC` */
     db.query(sql, (err, results) => {
         if (err) throw err;
         let wait_sum = 0
@@ -550,7 +594,7 @@ router.post('/editTalentModel', (req, res) => {
                         if (Object.keys(params.new)[i] === 'model_files') {
                             sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i].replace('/pubilc', '')}',` : ` ${Object.keys(params.new)[i]} = null,`
                         } else if (Object.keys(params.new)[i] !== 'tmid' && !Object.keys(params.new)[i].match('commission_') && !Object.keys(params.new)[i].match('discount_') && !Object.keys(params.new)[i].match('u_') &&
-                                    ['gmv_belong', 'profit_point', 'tax_point', 'has_package', 'pay_type', 'deposit', 'tail'].indexOf(Object.keys(params.new)[i]) === -1) {
+                            ['gmv_belong', 'profit_point', 'tax_point', 'has_package', 'pay_type', 'deposit', 'tail'].indexOf(Object.keys(params.new)[i]) === -1) {
                             sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
                         }
                     }
@@ -591,7 +635,7 @@ router.post('/editTalentModel', (req, res) => {
                     let sql = 'UPDATE talent_model SET'
                     for (let i = 0; i < Object.getOwnPropertyNames(params.new).length; i++) {
                         if (Object.keys(params.new)[i] !== 'tmid' && !Object.keys(params.new)[i].match('commission_') && !Object.keys(params.new)[i].match('discount_') && !Object.keys(params.new)[i].match('u_') &&
-                        ['gmv_belong', 'profit_point', 'tax_point', 'has_package', 'pay_type', 'deposit', 'tail'].indexOf(Object.keys(params.new)[i]) === -1) {
+                            ['gmv_belong', 'profit_point', 'tax_point', 'has_package', 'pay_type', 'deposit', 'tail'].indexOf(Object.keys(params.new)[i]) === -1) {
                             sql += Object.values(params.new)[i] !== null ? ` ${Object.keys(params.new)[i]} = '${Object.values(params.new)[i]}',` : ` ${Object.keys(params.new)[i]} = null,`
                         }
                     }
@@ -837,19 +881,19 @@ router.post('/giveTalent', (req, res) => {
 router.post('/getTalentItems', (req, res) => {
     let params = req.body
     // 权限筛选
-    let whereUser = `where status != '失效' and status != '测试'`
+    let whereUser = `where u1.status != '测试'`
     if (params.userInfo.department === '事业部') {
         if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
-            whereUser += ` and department = '${params.userInfo.department}'`
+            whereUser += ` and (u1.department = '${params.userInfo.department}' or u2.department = '${params.userInfo.department}')`
         }
         if (params.userInfo.position === '主管') {
-            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
+            whereUser += ` and ((u1.department = '${params.userInfo.department}' and u1.company = '${params.userInfo.company}') or (u2.department = '${params.userInfo.department}' and u2.company = '${params.userInfo.company}'))`
         }
         if (params.userInfo.position === '商务') {
-            whereUser += ` and uid = '${params.userInfo.uid}'`
+            whereUser += ` and (tms0.u_id_1 = '${params.userInfo.uid}' or tms0.u_id_2 = '${params.userInfo.uid}')`
         }
         if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
-            whereUser += ` and uid = '${params.userInfo.up_uid}'`
+            whereUser += ` and (tms0.u_id_1 = '${params.userInfo.up_uid}' or tms0.u_id_2 = '${params.userInfo.up_uid}')`
         }
     }
     let sql = `SELECT DISTINCT t.tid, t.name
@@ -861,8 +905,9 @@ router.post('/getTalentItems', (req, res) => {
                                 SELECT tms0.tmid, IF(u1.uid IS NULL, '', u1.uid) as u_id_1, IF(u1.name IS NULL, '', u1.name) as u_name_1, IF(u2.uid IS NULL, '', u2.uid) as u_id_2, IF(u2.name IS NULL, '', u2.name) as u_name_2
                                 FROM talent_model_schedule tms0
                                     INNER JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms1 ON tms1.tmsid = tms0.tmsid
-                                    INNER JOIN (SELECT * FROM user ${whereUser}) u1 ON u1.uid = tms0.u_id_1
+                                    LEFT JOIN user u1 ON u1.uid = tms0.u_id_1
                                     LEFT JOIN user u2 ON u2.uid = tms0.u_id_2
+                                ${whereUser}
                             ) tms ON tms.tmid = tm.tmid
                         WHERE tm.status != '已失效'
                     ) tm ON tm.tid = t.tid
@@ -902,7 +947,7 @@ router.post('/getModelItems', (req, res) => {
 // 获取合作模式默认佣金下拉框
 router.post('/getCommissions', (req, res) => {
     let params = req.body
-    let sql = `SELECT tms0.*, u1.name as u_name_1, u2.name as u_name_2
+    let sql = `SELECT tm.*, tms0.*, u1.name as u_name_1, u2.name as u_name_2
                 FROM talent_model tm
                     INNER JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms1 ON tms1.tmid = tm.tmid
                     LEFT JOIN talent_model_schedule tms0 ON tms0.tmsid = tms1.tmsid
@@ -989,7 +1034,10 @@ router.post('/getExportTalentList', (req, res) => {
     let sql = `SELECT * FROM (
                 SELECT t.*, tm.models, tm.platforms, tm.account_type, CONCAT(ts.m_id_1, ',', ts.m_id_2) as m_ids, ts.m_name_1, ts.m_name_2, CONCAT(ts.m_name_1, ',', ts.m_name_2) as m_names, 
                     IF(ts.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, 
-                    CONCAT(tm.u_id_1, ',', tm.u_id_2, ',', ts.u_id_0) as u_ids, CONCAT(tm.u_name_1, ',', tm.u_name_2, ',', ts.u_name_0) as u_names, tm.u_name_1, tm.u_name_2, ts.u_name_0, tm.model_status, COUNT(l.lid) as live_count, SUM(l.sales) as live_sum
+                    CONCAT(tm.u_id_1, ',', tm.u_id_2, ',', ts.u_id_0) as u_ids, CONCAT(tm.u_name_1, ',', tm.u_name_2, ',', ts.u_name_0) as u_names, tm.u_name_1, tm.u_name_2, ts.u_name_0, tm.model_status, COUNT(l.lid) as live_count, SUM(l.sales) as live_sum,
+                    IF(UNIX_TIMESTAMP(b.lastsale) IS NULL, '暂无', IF(DATEDIFF(now(), b.lastsale) > 60, '停滞', '在售')) as sale_type, DATEDIFF(now(), b.lastsale) as days, 
+                    IF(DATEDIFF(now(), b.lastsale) > 60 && DATEDIFF(now(), b.lastsale) <= 180, '60-180天', IF(DATEDIFF(now(), b.lastsale) > 180, '180天以上', null)) as stagnate_lavel,
+                    b.price, b.done, b.eback, b.noeback, b.wait, b.daily_price, b.daily_done, b.daily_eback, b.daily_noeback, b.daily_wait, b.live_price, b.live_done, b.live_eback, b.live_noeback, b.live_wait
                 FROM talent t
                     LEFT JOIN (
                         SELECT ts0.tid, IF(m1.mid IS NULL, '', m1.mid) as m_id_1, IF(m1.name IS NULL, '', m1.name) as m_name_1, IF(m2.mid IS NULL, '', m2.mid) as m_id_2, IF(m2.name IS NULL, '', m2.name) as m_name_2,
@@ -1014,8 +1062,10 @@ router.post('/getExportTalentList', (req, res) => {
                         GROUP BY tm.tid
                     ) tm ON tm.tid = t.tid
                         LEFT JOIN live l ON l.tid = t.tid
+                        LEFT JOIN join_bi b ON b.talent = t.name
                 GROUP BY t.cid, t.crowd_name, t.liaison_name, t.liaison_phone, t.liaison_type, t.liaison_v, m_ids, ts.m_name_1, ts.m_name_2, m_names, tm.model_status, tm.models, t.name, t.province, t.status, t.tid, t.type, u_ids, ts.u_name_0, tm.u_name_1, 
-                    tm.u_name_2, u_names, t.year_deal, ts.yearbox_cycle, ts.yearbox_lavels, ts.yearbox_lavels_base, ts.yearbox_start_date, tm.platforms, tm.account_type
+                    tm.u_name_2, u_names, t.year_deal, ts.yearbox_cycle, ts.yearbox_lavels, ts.yearbox_lavels_base, ts.yearbox_start_date, tm.platforms, tm.account_type, sale_type, days, stagnate_lavel, b.price, b.done, b.eback, b.noeback, b.wait, b.daily_price, 
+                    b.daily_done, b.daily_eback, b.daily_noeback, b.daily_wait, b.live_price, b.live_done, b.live_eback, b.live_noeback, b.live_wait
                 ) z 
                 ${whereFilter}
                 ORDER BY z.tid DESC`
@@ -1062,6 +1112,30 @@ router.post('/revokeOthers', (req, res) => {
                 res.send({ code: 200, data: [], msg: `撤销成功` })
             })
         })
+    })
+})
+
+// 获取达人平台
+router.post('/getTalentPlatformItems', (req, res) => {
+    let params = req.body
+    let sql = `SELECT tm.platform, GROUP_CONCAT(DISTINCT IF(tm.platform = '聚水潭', tm.shop_name, s.store)) as shops
+                FROM talent t
+                    LEFT JOIN talent_model tm ON tm.tid = t.tid and tm.status = '合作中'
+                    LEFT JOIN base_store s ON s.platform = tm.platform
+                WHERE t.tid = '${params.tid}' and t.status != '已失效' and t.status != '报备撤回' and t.status != '已撤销' and t.status != '已拉黑'
+                GROUP BY tm.platform`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        let r = []
+        for (let i = 0; i < results.length; i++) {
+            r.push({
+                key: i,
+                label: results[i].platform,
+                value: results[i].platform,
+                shops: results[i].shops.match(',') ? results[i].shops.split(',').sort() : [results[i].shops]
+            })
+        }
+        res.send({ code: 200, data: r, msg: `` })
     })
 })
 

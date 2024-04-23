@@ -2,8 +2,8 @@ import React, { Fragment, useEffect, useState } from "react";
 import request from '../../service/request'
 import { Card, Space, Form, Input, Modal, Button, Select, Radio, InputNumber, message, List, Image, Popover } from 'antd';
 import { PlusOutlined, MinusCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import { accountType, accountModelType, ageCut, priceCut, liaisonType, shop_type, platform, model, middlemanPayType, talentType, gmvBelong, customPayType } from '../../baseData/talent'
-import { province } from '../../baseData/province'
+import { accountModelType, ageCut, priceCut, shop_type, model, middlemanPayType, talentType, gmvBelong, customPayType } from '../../baseData/talent'
+import { province } from '../../baseData/base'
 import people from '../../assets/people.jpg'
 import AEMiddleman from './AEMiddleman'
 import UpLoadImg from '../UpLoadImg'
@@ -60,6 +60,66 @@ function AETalent(props) {
                     } else {
                         message.error('异常type，请联系开发者')
                     }
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const [platform, setPlatform] = useState([])
+    const getPlatforms = () => {
+        request({
+            method: 'post',
+            url: '/base/getPlatformsItems',
+            data: []
+        }).then((res) => {
+            if (res.status === 200) {
+                if (res.data.code === 200) {
+                    setPlatform(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const [accountType, setAccountType] = useState([])
+    const getAccountTypes = () => {
+        request({
+            method: 'post',
+            url: '/base/getAccountsItems',
+            data: []
+        }).then((res) => {
+            if (res.status === 200) {
+                if (res.data.code === 200) {
+                    setAccountType(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const [liaisonType, setLiaisonType] = useState([])
+    const getLiaisonTypes = () => {
+        request({
+            method: 'post',
+            url: '/base/getLiaisonsItems',
+            data: []
+        }).then((res) => {
+            if (res.status === 200) {
+                if (res.data.code === 200) {
+                    setLiaisonType(res.data.data)
+                } else {
+                    message.error(res.data.msg)
                 }
             } else {
                 message.error(res.data.msg)
@@ -326,8 +386,8 @@ function AETalent(props) {
                                 allowClear
                                 style={{ width: '100%' }}
                                 placeholder="请选择"
-                                onChange={(value) => { form.setFieldValue('liaison_type', value) }}
                                 options={liaisonType}
+                                onClick={() => { getLiaisonTypes(); }}
                             />
                         </Form.Item>
                             <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '不能为空' }]}>
@@ -433,7 +493,7 @@ function AETalent(props) {
                                                 <Select
                                                     placeholder="请选择"
                                                     options={type === '报备达人' ? form.getFieldValue('platformList') : platform}
-                                                    onChange={(value) => { form.setFieldValue('platform', value) }}
+                                                    onFocus={() => { getPlatforms(); }}
                                                 />
                                             </Form.Item>
                                             <Form.Item label="店铺类型" {...restField} name={[name, "shop_type"]} rules={[{ required: true, message: '不能为空' }]}>
@@ -460,13 +520,13 @@ function AETalent(props) {
                                                 <Input placeholder="请输入" />
                                             </Form.Item>
                                             <Form.Item label="账号类型" {...restField} name={[name, "account_type"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Select placeholder="请选择" onChange={(value) => { form.setFieldValue('account_type', value) }} options={accountType} />
+                                                <Select placeholder="请选择" options={accountType} onClick={() => { getAccountTypes(); }} />
                                             </Form.Item>
                                             <Form.Item label="合作方式" {...restField} name={[name, "account_models"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Select mode="multiple" allowClear placeholder="请选择" onChange={(value) => { form.setFieldValue('account_models', value) }} options={accountModelType} />
+                                                <Select mode="multiple" allowClear placeholder="请选择" options={accountModelType} />
                                             </Form.Item>
                                             <Form.Item label="关键字（前后缀）" {...restField} name={[name, "keyword"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Select mode="tags" allowClear placeholder="请输入" onChange={(value) => { form.setFieldValue('keyword', value) }} options={[]} />
+                                                <Select mode="tags" allowClear placeholder="请输入" options={[]} />
                                             </Form.Item>
                                             <Form.Item label="平时带货在线（人）[例：1000]" {...restField} name={[name, "people_count"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <InputNumber placeholder="请输入" min={0} />
@@ -475,7 +535,7 @@ function AETalent(props) {
                                                 <InputNumber placeholder="请输入" min={0} max={100} />
                                             </Form.Item>
                                             <Form.Item label="粉丝地域分布（省份）" {...restField} name={[name, "main_province"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Select mode="multiple" allowClear placeholder="请选择" showSearch filterOption={filterOption} onChange={(value) => { form.setFieldValue('main_province', value) }} options={province} />
+                                                <Select mode="multiple" allowClear placeholder="请选择" showSearch filterOption={filterOption} options={province} />
                                             </Form.Item>
                                             <Form.Item label="粉丝购买主力年龄段（岁）" {...restField} name={[name, "age_cuts"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select mode="multiple" allowClear placeholder="请选择" options={ageCut} />
@@ -527,7 +587,7 @@ function AETalent(props) {
                                                 </Form.Item>
                                             </Space> : null}
                                             <Form.Item label="商务提成备注" {...restField} name={[name, "u_note"]}>
-                                                <TextArea placeholder="请输入" />
+                                                <TextArea placeholder="请输入" maxLength={255} />
                                             </Form.Item>
                                             <Form.Item label="业绩归属" {...restField} name={[name, "gmv_belong"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Radio.Group>
@@ -715,7 +775,7 @@ function AETalent(props) {
                             </Radio.Group>
                         </Form.Item>
                     </Card> : null}
-                    {type === '达人报备' ? <Form.Item label={<Popover title="证明方向" content={
+                    {type === '达人报备' || type === 'history' || type === 'reReport' ? <Form.Item label={<Popover title="证明方向" content={
                         <List>
                             <List.Item>1. 已排定专场时间</List.Item>
                             <List.Item>2. 链接已经做，已经准备日播开卖</List.Item>

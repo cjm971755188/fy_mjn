@@ -8,7 +8,8 @@ import {
     UserOutlined,
     LineChartOutlined,
     TeamOutlined,
-    DollarOutlined
+    DollarOutlined,
+    SettingOutlined
 } from '@ant-design/icons';
 import { Layout, Menu, Button, theme, Dropdown, Breadcrumb, Form, Modal, Input, message, Col, Row } from 'antd';
 import logo from '../assets/logo_white.jpg'
@@ -50,6 +51,10 @@ const menuItemsTotal = [
                 key: '/admin/talent/talent_block_list',
                 label: '达人黑名单'
             },
+            /* {
+                key: '/admin/talent/live_calendar',
+                label: '专场日历'
+            }, */
             {
                 key: '/admin/talent/live_list',
                 label: '专场列表'
@@ -81,6 +86,37 @@ const menuItemsTotal = [
         label: '用户管理'
     },
     {
+        key: '/admin/set',
+        label: '系统设定',
+        icon: <SettingOutlined />,
+        children: [
+            {
+                key: '/admin/set/company',
+                label: '公司'
+            },
+            {
+                key: '/admin/set/platform',
+                label: '平台'
+            },
+            {
+                key: '/admin/set/store',
+                label: '店铺'
+            },
+            {
+                key: '/admin/set/liveroom',
+                label: '直播间'
+            },
+            {
+                key: '/admin/set/liaison',
+                label: '联系人类型'
+            },
+            {
+                key: '/admin/set/account',
+                label: '达人账号类型'
+            }
+        ]
+    },
+    {
         key: '/admin/talent/talent_list/talent_detail',
         icon: <UserOutlined />,
         label: '达人详情'
@@ -88,7 +124,7 @@ const menuItemsTotal = [
 ]
 
 // menu权限配置
-const getMenuItems = (department, position) => {
+const getMenuItems = (company, department, position) => {
     let arrObj = []
     for (let i = 0; i < menuItemsTotal.length; i++) {
         let menu = menuItemsTotal[i];
@@ -105,6 +141,10 @@ const getMenuItems = (department, position) => {
             m.children = c
             arrObj.push(m)
         } else if (menu.label === '用户管理' && position !== '管理员' && position !== '总裁' && position !== '副总' && position !== '主管') {
+            continue
+        } else if (menu.label === '系统设定' && company === '总公司' && department === '事业部') {
+            arrObj.push(menu)
+        } else if (menu.label === '系统设定' && position !== '管理员' && position !== '总裁') {
             continue
         } else if (menu.label === '结算管理' && position !== '管理员' && department !== '财务部') {
             continue
@@ -184,7 +224,7 @@ const MyLayout = ({ children }) => {
     // 面包屑
     let [bread, setBread] = useState([])
     // 权限菜单配置
-    let menuItems = getMenuItems(localStorage.getItem('department'), localStorage.getItem('position'))
+    let menuItems = getMenuItems(localStorage.getItem('company'), localStorage.getItem('department'), localStorage.getItem('position'))
 
     // 修改用户信息
     const [isShowEdit, setIsShowEdit] = useState(false)

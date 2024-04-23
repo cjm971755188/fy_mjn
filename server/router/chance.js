@@ -31,6 +31,8 @@ router.post('/getChanceList', (req, res) => {
     for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
         if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
             whereFilter += ` and z.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
+        } else if (Object.keys(params.filters)[i] == 'account_names') {
+            whereFilter += ` and (z.account_names like '%${Object.values(params.filters)[i]}%' or z.group_name like '%${Object.values(params.filters)[i]}%' or z.provide_name like '%${Object.values(params.filters)[i]}%' or z.custom_name like '%${Object.values(params.filters)[i]}%')`
         } else {
             whereFilter += ` and z.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
         }
@@ -98,6 +100,7 @@ router.post('/searchSameChance', (req, res) => {
                         and c.status != '待推进' 
                         and c.status != '已失效' 
                         and c.status != '推进驳回'
+                        and c.status != '报备通过'
                         and c.cid != '${params.cid}')` 
         db.query(sql, (err, results) => {
             if (err) throw err;

@@ -30,58 +30,10 @@ export const model = [
     { key: 3, label: "定制", value: "定制" }
 ]
 
-export const platform = [
-    { key: 0, label: "闯货", value: "闯货" },
-    { key: 1, label: "抖音", value: "抖音" },
-    { key: 2, label: "快手", value: "快手" },
-    { key: 3, label: "拼多多", value: "拼多多" },
-    { key: 4, label: "视频号", value: "视频号" },
-    { key: 6, label: "淘宝", value: "淘宝" },
-    { key: 7, label: "微店", value: "微店" },
-    { key: 8, label: "有赞", value: "有赞" },
-    { key: 9, label: "小红书", value: "小红书" }
-]
-
 export const shop_type = [
     { key: 0, label: "普通店铺", value: "普通店铺" },
     { key: 1, label: "团长店铺", value: "团长店铺" },
     { key: 2, label: "专属店铺", value: "专属店铺" }
-]
-
-export const liaisonType = [
-    { key: 0, label: "达人本人", value: "达人本人" },
-    { key: 1, label: "达人商务", value: "达人商务" },
-    { key: 2, label: "中间机构商务", value: "中间机构商务" },
-    { key: 3, label: "机构老板", value: "机构老板" },
-    { key: 4, label: "机构商务", value: "机构商务" }
-]
-
-export const accountType = [
-    { key: 0, label: "美学达人", value: "美学达人" },
-    { key: 1, label: "形体达人", value: "形体达人" },
-    { key: 2, label: "卖货达人-服饰", value: "卖货达人-服饰" },
-    { key: 3, label: "瑜伽达人", value: "瑜伽达人" },
-    { key: 4, label: "作家类达人", value: "作家类达人" },
-    { key: 5, label: "母婴达人", value: "母婴达人" },
-    { key: 6, label: "时尚类达人", value: "时尚类达人" },
-    { key: 7, label: "泛流达人", value: "泛流达人" },
-    { key: 8, label: "情感达人", value: "情感达人" },
-    { key: 9, label: "旅游达人", value: "旅游达人" },
-    { key: 10, label: "海外达人", value: "海外达人" },
-    { key: 11, label: "营养学达人", value: "营养学达人" },
-    { key: 12, label: "美食达人", value: "美食达人" },
-    { key: 13, label: "音乐达人", value: "音乐达人" },
-    { key: 14, label: "唱歌达人", value: "唱歌达人" },
-    { key: 15, label: "时事类达人", value: "时事类达人" },
-    { key: 16, label: "社群私域类达人", value: "社群私域类达人" },
-    { key: 17, label: "设计师类达人", value: "设计师类达人" },
-    { key: 18, label: "百科类达人", value: "百科类达人" },
-    { key: 19, label: "作家类", value: "作家类" },
-    { key: 20, label: "网红类达人", value: "网红类达人" },
-    { key: 21, label: "明星类达人", value: "明星类达人" },
-    { key: 22, label: "知识类达人", value: "知识类达人" },
-    { key: 23, label: "剧情类达人", value: "剧情类达人" },
-    { key: 24, label: "生活博主", value: "生活博主" }
 ]
 
 export const accountModelType = [
@@ -186,7 +138,7 @@ export const customPayType= [
 export const saleStatus= [
     { key: 0, label: "在售", value: "在售" },
     { key: 1, label: "停滞", value: "停滞" },
-    { key: 2, label: "暂无", value: "暂无" }
+    { key: 2, label: "无销售", value: "无销售" }
 ]
 
 export const stagnateLavel= [

@@ -6,7 +6,7 @@ import { Card, Input, Timeline, Button, Tag, Modal, Form, Descriptions, Row, Col
 import { AuditOutlined, MessageOutlined, GlobalOutlined, CrownOutlined, SettingOutlined, EditOutlined, PlusOutlined, MinusOutlined, UnorderedListOutlined, EyeOutlined } from '@ant-design/icons';
 import { middlemanPayType, talentType } from '../baseData/talent'
 import { descriptionsItems } from '../baseData/talentDetail'
-import { province } from '../baseData/province'
+import { province } from '../baseData/base'
 import AELiaison from '../components/modals/AELiaison'
 import AEYear from '../components/modals/AEYear'
 import AEFile from '../components/modals/AEFile'

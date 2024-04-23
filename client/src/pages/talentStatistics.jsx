@@ -338,7 +338,7 @@ function TalentStatistics() {
             <Row gutter={24} style={{ marginTop: '20px' }}>
                 <Col span={18}>
                     <Card title="各商务商机操作汇总">
-                        {!salemansChanceOprateLoading ? salemansChanceOprateOption.name.length !== 0 ? <MyECharts height={625} option={{
+                        {!salemansChanceOprateLoading ? salemansChanceOprateOption.name.length !== 0 ? <MyECharts width={'100%'} height={625} option={{
                             tooltip: {
                                 trigger: 'axis',
                                 axisPointer: {
@@ -412,7 +412,7 @@ function TalentStatistics() {
                 </Col>
                 <Col span={6}>
                     <Card title="商机推进平均用时">
-                        {!adReTimeDiffLoading ? adReTimeDiffOption.advance.length !== 0 ? <MyECharts height={250} option={{
+                        {!adReTimeDiffLoading ? adReTimeDiffOption.advance.length !== 0 ? <MyECharts width={'100%'} height={250} option={{
                             tooltip: {
                                 trigger: 'item'
                             },
@@ -447,7 +447,7 @@ function TalentStatistics() {
                         }} /> : <Empty imageStyle={{ height: '220px' }} /> : null}
                     </Card>
                     <Card title="商机报备平均用时" style={{ marginTop: '20px' }}>
-                        {!adReTimeDiffLoading ? adReTimeDiffOption.report.length !== 0 ? <MyECharts height={250} option={{
+                        {!adReTimeDiffLoading ? adReTimeDiffOption.report.length !== 0 ? <MyECharts width={'100%'} height={250} option={{
                             tooltip: {
                                 trigger: 'item'
                             },
@@ -486,7 +486,7 @@ function TalentStatistics() {
             <Row gutter={24} style={{ marginTop: '20px' }}>
                 <Col span={6}>
                     <Card title="达人合作平台比例">
-                        {!platformTalentLoading ? platformTalentOption.length !== 0 ? <MyECharts height={250} option={{
+                        {!platformTalentLoading ? platformTalentOption.length !== 0 ? <MyECharts width={'100%'} height={250} option={{
                             tooltip: {
                                 trigger: 'item'
                             },
@@ -521,7 +521,7 @@ function TalentStatistics() {
                         }} /> : <Empty imageStyle={{ height: '250px' }} /> : null}
                     </Card>
                     <Card title="达人层级比例" style={{ marginTop: '20px' }}>
-                        {!classTalentLoading ? classTalentOption.length !== 0 ? <MyECharts height={250} option={{
+                        {!classTalentLoading ? classTalentOption.length !== 0 ? <MyECharts width={'100%'} height={250} option={{
                             tooltip: {
                                 trigger: 'item'
                             },
@@ -558,7 +558,7 @@ function TalentStatistics() {
                 </Col>
                 <Col span={6}>
                     <Card title="线上达人类型比例">
-                        {!typeTalentLoading ? typeTalentOption.length !== 0 ? <MyECharts height={625} option={{
+                        {!typeTalentLoading ? typeTalentOption.length !== 0 ? <MyECharts width={'100%'} height={625} option={{
                             tooltip: {
                                 trigger: 'item'
                             },
@@ -595,7 +595,7 @@ function TalentStatistics() {
                 </Col>
                 <Col span={12}>
                     <Card title="各省份达人数量地图">
-                        {!provinceTalentLoading ? provinceTalentOption.data.length !== 0 ? <MyECharts height={625} option={{
+                        {!provinceTalentLoading ? provinceTalentOption.data.length !== 0 ? <MyECharts width={'100%'} height={625} option={{
                             geo: {
                                 type: 'map',
                                 map: 'chinaMap', //chinaMap需要和registerMap中的第一个参数保持一致

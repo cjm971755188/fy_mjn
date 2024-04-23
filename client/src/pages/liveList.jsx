@@ -4,7 +4,7 @@ import { Card, Table, Space, Form, Input, Button, Select, Popover, List, message
 import { PlusOutlined, TransactionOutlined } from '@ant-design/icons';
 import MyDateSelect from '../components/MyDateSelect'
 import AELive from '../components/modals/AELive'
-import { placeType, roomType } from '../baseData/live'
+import { placeType } from '../baseData/live'
 import dayjs from 'dayjs'
 
 function LiveList() {
@@ -398,6 +398,24 @@ function LiveList() {
             console.error(err)
         })
     }
+    const [liverooms, setLiverooms] = useState('')
+    const getLiveroomsItems = () => {
+        request({
+            method: 'post',
+            url: `/base/getLiveroomsItems`,
+            data: {}
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setLiverooms(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    };
 
     // 专场
     const [type, setType] = useState('')
@@ -518,7 +536,7 @@ function LiveList() {
                         <Select style={{ width: 120 }} options={placeType} />
                     </Form.Item>
                     <Form.Item label='直播间' name='room' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={roomType} />
+                        <Select style={{ width: 120 }} options={liverooms} onFocus={() => { getLiveroomsItems(true); }} />
                     </Form.Item>
                     <Form.Item label='主播' name='a_id_1' style={{ margin: '0 10px 10px 0' }}>
                         <Select style={{ width: 120 }} options={authorsItems} onFocus={() => { getAuthorsItemsAPI(true); }} />
