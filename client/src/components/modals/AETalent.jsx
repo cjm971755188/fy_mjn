@@ -68,56 +68,18 @@ function AETalent(props) {
             console.error(err)
         })
     }
-    const [platform, setPlatform] = useState([])
-    const getPlatforms = () => {
+    const [baseSets, setBaseSets] = useState([])
+    const getBaseSetItems = (payload) => {
         request({
             method: 'post',
-            url: '/base/getPlatformsItems',
-            data: []
-        }).then((res) => {
-            if (res.status === 200) {
-                if (res.data.code === 200) {
-                    setPlatform(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
+            url: '/base/getBaseSetItems',
+            data: {
+                type: payload
             }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [accountType, setAccountType] = useState([])
-    const getAccountTypes = () => {
-        request({
-            method: 'post',
-            url: '/base/getAccountsItems',
-            data: []
         }).then((res) => {
             if (res.status === 200) {
                 if (res.data.code === 200) {
-                    setAccountType(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [liaisonType, setLiaisonType] = useState([])
-    const getLiaisonTypes = () => {
-        request({
-            method: 'post',
-            url: '/base/getLiaisonsItems',
-            data: []
-        }).then((res) => {
-            if (res.status === 200) {
-                if (res.data.code === 200) {
-                    setLiaisonType(res.data.data)
+                    setBaseSets(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -175,7 +137,6 @@ function AETalent(props) {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -212,7 +173,6 @@ function AETalent(props) {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -313,6 +273,7 @@ function AETalent(props) {
                     if (values.accounts) {
                         for (let i = 0; i < values.accounts.length; i++) {
                             values.accounts[i].u_id_1 = values.accounts[i].u_id_1 ? values.accounts[i].u_id_1.value || values.accounts[i].u_id_1.value === null ? values.accounts[i].u_id_1.value : values.accounts[i].u_id_1 : null
+                            values.accounts[i].u_id_2 = values.accounts[i].u_id_2 ? values.accounts[i].u_id_2.value || values.accounts[i].u_id_2.value === null ? values.accounts[i].u_id_2.value : values.accounts[i].u_id_2 : null
                             if (!hasFuSaleman) {
                                 values.accounts[i].u_id_2 = null
                                 values.accounts[i].u_type_2 = null
@@ -321,14 +282,19 @@ function AETalent(props) {
                             names.push(values.accounts[i].account_name)
                         }
                     }
-                    let payload = {}
+                    let payload = {
+                        ...values,
+                        group_u_id_1: values.group_u_id_1 ? values.group_u_id_1.value || values.group_u_id_1.value === null ? values.group_u_id_1.value : values.group_u_id_1 : null,
+                        group_u_id_2: values.group_u_id_2 ? values.group_u_id_2.value || values.group_u_id_2.value === null ? values.group_u_id_2.value : values.group_u_id_2 : null,
+                        provide_u_id_1: values.provide_u_id_1 ? values.provide_u_id_1.value || values.provide_u_id_1.value === null ? values.provide_u_id_1.value : values.provide_u_id_1 : null,
+                        provide_u_id_2: values.provide_u_id_2 ? values.provide_u_id_2.value || values.provide_u_id_2.value === null ? values.provide_u_id_2.value : values.provide_u_id_2 : null,
+                        custom_u_id_1: values.custom_u_id_1 ? values.custom_u_id_1.value || values.custom_u_id_1.value === null ? values.custom_u_id_1.value : values.custom_u_id_1 : null,
+                        custom_u_id_2: values.custom_u_id_2 ? values.custom_u_id_2.value || values.custom_u_id_2.value === null ? values.custom_u_id_2.value : values.custom_u_id_2 : null
+                    }
                     if (type === '达人报备') {
                         payload = {
+                            ...payload, 
                             cid: 'history',
-                            ...values,
-                            group_u_id_1: values.group_u_id_1 ? values.group_u_id_1.value || values.group_u_id_1.value === null ? values.group_u_id_1.value : values.group_u_id_1 : null,
-                            provide_u_id_1: values.provide_u_id_1 ? values.provide_u_id_1.value || values.provide_u_id_1.value === null ? values.provide_u_id_1.value : values.provide_u_id_1 : null,
-                            custom_u_id_1: values.custom_u_id_1 ? values.custom_u_id_1.value || values.custom_u_id_1.value === null ? values.custom_u_id_1.value : values.custom_u_id_1 : null,
                             liaison_type: form.getFieldValue('liaison_type'),
                             liaison_name: form.getFieldValue('liaison_name'),
                             liaison_v: form.getFieldValue('liaison_v'),
@@ -338,19 +304,13 @@ function AETalent(props) {
                         }
                     } else if (type.match('修改')) {
                         payload = {
-                            ...values,
-                            group_u_id_1: values.group_u_id_1 ? values.group_u_id_1.value || values.group_u_id_1.value === null ? values.group_u_id_1.value : values.group_u_id_1 : null,
-                            provide_u_id_1: values.provide_u_id_1 ? values.provide_u_id_1.value || values.provide_u_id_1.value === null ? values.provide_u_id_1.value : values.provide_u_id_1 : null,
-                            custom_u_id_1: values.custom_u_id_1 ? values.custom_u_id_1.value || values.custom_u_id_1.value === null ? values.custom_u_id_1.value : values.custom_u_id_1 : null,
+                            ...payload, 
                             type: 'edit',
                             tmid: form.getFieldValue('tmid')
                         }
                     } else {
                         payload = {
-                            ...values,
-                            group_u_id_1: values.group_u_id_1 ? values.group_u_id_1.value || values.group_u_id_1.value === null ? values.group_u_id_1.value : values.group_u_id_1 : null,
-                            provide_u_id_1: values.provide_u_id_1 ? values.provide_u_id_1.value || values.provide_u_id_1.value === null ? values.provide_u_id_1.value : values.provide_u_id_1 : null,
-                            custom_u_id_1: values.custom_u_id_1 ? values.custom_u_id_1.value || values.custom_u_id_1.value === null ? values.custom_u_id_1.value : values.custom_u_id_1 : null,
+                            ...payload, 
                             type: 'talent'
                         }
                     }
@@ -386,8 +346,8 @@ function AETalent(props) {
                                 allowClear
                                 style={{ width: '100%' }}
                                 placeholder="请选择"
-                                options={liaisonType}
-                                onClick={() => { getLiaisonTypes(); }}
+                                options={baseSets}
+                                onClick={() => { getBaseSetItems('liaison'); }}
                             />
                         </Form.Item>
                             <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '不能为空' }]}>
@@ -489,11 +449,11 @@ function AETalent(props) {
                                 <>
                                     {fields.map(({ key, name, ...restField }) => (
                                         <Card key={key} title={`第 ${name + 1} 个账号`} extra={type.match('修改') ? null : <MinusCircleOutlined onClick={() => { remove(name); setHasOnlyShop(false); setHasFuSaleman(false); }} />} style={{ marginBottom: '20px' }}>
-                                            <Form.Item label="平台" {...restField} name={[name, "platform"]} rules={[{ required: true, message: '不能为空' }]}>
+                                            <Form.Item label="平台" {...restField} name={[name, "platforms"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select
                                                     placeholder="请选择"
-                                                    options={type === '报备达人' ? form.getFieldValue('platformList') : platform}
-                                                    onFocus={() => { getPlatforms(); }}
+                                                    options={type === '报备达人' ? form.getFieldValue('baseSetsList') : baseSets}
+                                                    onFocus={() => { getBaseSetItems('platform'); }}
                                                 />
                                             </Form.Item>
                                             <Form.Item label="店铺类型" {...restField} name={[name, "shop_type"]} rules={[{ required: true, message: '不能为空' }]}>
@@ -514,13 +474,13 @@ function AETalent(props) {
                                                 <Input placeholder="请输入" />
                                             </Form.Item> : null}
                                             <Form.Item label="账号ID" {...restField} name={[name, "account_id"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Input placeholder="请输入" onChange={(e) => { form.setFieldValue('account_id', e.target.value) }} />
+                                                <Input placeholder="请输入" />
                                             </Form.Item>
                                             <Form.Item label="账号名称" {...restField} name={[name, "account_name"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Input placeholder="请输入" />
                                             </Form.Item>
                                             <Form.Item label="账号类型" {...restField} name={[name, "account_type"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Select placeholder="请选择" options={accountType} onClick={() => { getAccountTypes(); }} />
+                                                <Select placeholder="请选择" options={baseSets} onClick={() => { getBaseSetItems('account'); }} />
                                             </Form.Item>
                                             <Form.Item label="合作方式" {...restField} name={[name, "account_models"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select mode="multiple" allowClear placeholder="请选择" options={accountModelType} />
@@ -830,7 +790,7 @@ function AETalent(props) {
                                             avatar={<Image width={50} src={people} preview={false} />}
                                             title={<Space size={'large'}><span>{`编号: ${item.tmid}`}</span><span>{`状态: ${item.status}`}</span><span>{`${item.status === '已拉黑' ? '拉黑人' : '商务'}: ${item.u_name}`}</span></Space>}
                                             description={<Space size={'large'} style={{ color: `${item.status === '已拉黑' ? 'red' : ''}` }}>{item.status === '已拉黑' ? <><span>{`原因: ${item.note}`}</span><span>{`重复名称/ID: ${item.name}`}</span></> :
-                                                <><span>{`昵称: ${item.name}`}</span><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}<span>{`账号名称: ${item.account_name}`}</span></>}</Space>}
+                                                <><span>{`昵称: ${item.name}`}</span><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.baseSets}`}</span> : null}<span>{`账号名称: ${item.account_name}`}</span></>}</Space>}
                                         />
                                     </List.Item>
                                 )}

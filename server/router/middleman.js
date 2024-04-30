@@ -2,52 +2,30 @@ const express = require('express');
 const router = express.Router();
 const dayjs = require('dayjs');
 const db = require('../config/db')
+const { power, filter } = require('../function/power')
 
 // 获取中间人列表
 router.post('/getMiddlemanList', (req, res) => {
     let params = req.body
-    // 权限筛选
-    let whereUser = `WHERE status != '失效' and status != '测试'`
-    if (params.userInfo.department === '事业部') {
-        if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
-            whereUser += ` and department = '${params.userInfo.department}'`
-        }
-        if (params.userInfo.position === '主管') {
-            whereUser += ` and department = '${params.userInfo.department}' and company = '${params.userInfo.company}'`
-        }
-        if (params.userInfo.position === '商务') {
-            whereUser += ` and uid = '${params.userInfo.uid}'`
-        }
-        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
-            whereUser += ` and uid = '${params.userInfo.up_uid}'`
-        }
-    }
-    // 条件筛选
-    let whereFilter = `where z.status != '失效'`
-    for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
-        if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
-            whereFilter += ` and z.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
-        } else {
-            whereFilter += ` and z.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
-        }
-    }
     // 分页
     let current = params.pagination.current ? params.pagination.current : 0
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
-    let sql = `SELECT z.* 
+    let sql = `SELECT SQL_CALC_FOUND_ROWS z.* 
                 FROM (
                     SELECT m.*, u.name as u_name
                     FROM middleman m
-                        INNER JOIN (SELECT * FROM user ${whereUser}) u ON u.uid  = m.u_id
+                        LEFT JOIN user u ON u.uid  = m.u_id
+                    ${power(['u'], params.userInfo)}
                 ) z
-                ${whereFilter}
-                ORDER BY z.mid DESC`
+                ${filter('normal', params.filters)}
+                ORDER BY z.mid DESC
+                LIMIT ${pageSize} OFFSET ${current * pageSize}`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`
-        db.query(s, (err, r) => {
+        let sql = `SELECT FOUND_ROWS() as count`
+        db.query(sql, (err, count) => {
             if (err) throw err;
-            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, msg: `` })
+            res.send({ code: 200, data: results, pagination: { ...params.pagination, total: count[0].count }, msg: `` })
         })
     })
 })

@@ -138,7 +138,9 @@ export const customPayType= [
 export const saleStatus= [
     { key: 0, label: "在售", value: "在售" },
     { key: 1, label: "停滞", value: "停滞" },
-    { key: 2, label: "无销售", value: "无销售" }
+    { key: 2, label: "即将过期", value: "即将过期" },
+    { key: 3, label: "已过期", value: "已过期" },
+    { key: 4, label: "无销售", value: "无销售" }
 ]
 
 export const stagnateLavel= [

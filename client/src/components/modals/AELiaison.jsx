@@ -1,4 +1,5 @@
-import React from "react";
+import React, { Fragment, useEffect, useState } from "react";
+import request from '../../service/request'
 import { Form, Input, List, Modal, Select, Popover } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import UpLoadImg from '../UpLoadImg'
@@ -6,16 +7,18 @@ import UpLoadImg from '../UpLoadImg'
 function AELiaison(props) {
     const { type, isShow, form } = props;
 
-    const [liaisonType, setLiaisonType] = useState([])
-    const getLiaisonTypes = () => {
+    const [baseSets, setBaseSets] = useState([])
+    const getBaseSetItems = (payload) => {
         request({
             method: 'post',
-            url: '/base/getLiaisonsItems',
-            data: []
+            url: '/base/getBaseSetItems',
+            data: {
+                type: payload
+            }
         }).then((res) => {
             if (res.status === 200) {
                 if (res.data.code === 200) {
-                    setLiaisonType(res.data.data)
+                    setBaseSets(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -52,8 +55,8 @@ function AELiaison(props) {
                         allowClear
                         style={{ width: '100%' }}
                         placeholder="请选择"
-                        options={liaisonType}
-                        onClick={() => { getLiaisonTypes(); }}
+                        options={baseSets}
+                        onClick={() => { getBaseSetItems('liasion'); }}
                     />
                 </Form.Item>
                 <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '不能为空' }]}>

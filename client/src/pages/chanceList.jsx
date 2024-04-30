@@ -3,7 +3,6 @@ import request from '../service/request'
 import { Card, Table, Space, Form, Input, Modal, Button, Image, List, Select, Popover, message, Popconfirm, Tooltip, Alert } from 'antd';
 import { PlusOutlined, CloseCircleTwoTone, ClockCircleTwoTone, PlayCircleTwoTone, RightCircleTwoTone, EditOutlined } from '@ant-design/icons';
 import { chanceStatus, model } from '../baseData/talent'
-import MyDateSelect from '../components/MyDateSelect'
 import AEChance from '../components/modals/AEChance'
 import AETalent from '../components/modals/AETalent'
 import dayjs from 'dayjs'
@@ -13,7 +12,7 @@ const { TextArea } = Input;
 function ChanceList() {
     // 操作权限
     const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('company') !== '总公司') || localStorage.getItem('position') === '管理员' ? true : false
-    const examPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('position') === '副总') || localStorage.getItem('position') === '管理员' ? true : false
+    const examPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('company') === '总公司') || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
     let columns = [
@@ -235,7 +234,7 @@ function ChanceList() {
                         setType('达人报备');
                         setIsShowReport(true);
                     }}>报备</a> : null}
-                    {record.status === '报备驳回' ? <a onClick={() => { setClickCid(record.cid); getReportInfoAPI({ cid: record.cid }); }}>重新报备</a> : null}
+                    {editPower && record.status === '报备驳回' ? <a onClick={() => { setClickCid(record.cid); getReportInfoAPI({ cid: record.cid }); }}>重新报备</a> : null}
                     {editPower && !record.status.match('待审批') && record.status !== '报备通过' ? <Popconfirm
                         title="清除商机"
                         description="确定要清除该商机吗？【若想恢复，需联系管理员】"
@@ -280,7 +279,6 @@ function ChanceList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -325,16 +323,18 @@ function ChanceList() {
     // 查询、清空筛选
     const [filterForm] = Form.useForm()
     const [dateSelect, setDateSelect] = useState()
-    const [platform, setPlatform] = useState([])
-    const getPlatforms = () => {
+    const [baseSets, setBaseSets] = useState([])
+    const getBaseSetItems = (payload) => {
         request({
             method: 'post',
-            url: '/base/getPlatformsItems',
-            data: []
+            url: '/base/getBaseSetItems',
+            data: {
+                type: payload
+            }
         }).then((res) => {
             if (res.status === 200) {
                 if (res.data.code === 200) {
-                    setPlatform(res.data.data)
+                    setBaseSets(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -354,7 +354,6 @@ function ChanceList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -389,7 +388,6 @@ function ChanceList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -423,7 +421,6 @@ function ChanceList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -459,7 +456,6 @@ function ChanceList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -495,7 +491,6 @@ function ChanceList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -533,7 +528,6 @@ function ChanceList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -569,7 +563,6 @@ function ChanceList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -683,7 +676,6 @@ function ChanceList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -717,7 +709,6 @@ function ChanceList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -765,15 +756,12 @@ function ChanceList() {
                         })
                     }}
                 >
-                    <Form.Item label='日期选择' name='date' style={{ margin: '0 10px 10px 0' }}>
-                        <MyDateSelect selectType="date,week,month,quarter.year" setDate={(value) => { setDateSelect(value); }} />
-                    </Form.Item>
                     <Form.Item label='商机编号' name='cid' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
                     <Form.Item label='模式' name='models' style={{ margin: '0 10px 10px 0' }}>
                         <Select style={{ width: 120 }} options={model} />
                     </Form.Item>
                     <Form.Item label='平台' name='platforms' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={platform} onFocus={() => { getPlatforms(); }} />
+                        <Select style={{ width: 120 }} options={baseSets} onFocus={() => { getBaseSetItems('platform'); }} />
                     </Form.Item>
                     <Form.Item label='达人名' name='account_names' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
                     <Form.Item label='联系人' name='liaison_name'><Input style={{ width: 120 }} /></Form.Item>

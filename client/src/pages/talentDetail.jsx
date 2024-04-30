@@ -175,7 +175,6 @@ function TalentDetail() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -349,7 +348,6 @@ function TalentDetail() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -382,7 +380,6 @@ function TalentDetail() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -433,7 +430,6 @@ function TalentDetail() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -470,7 +466,6 @@ function TalentDetail() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -515,7 +510,6 @@ function TalentDetail() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -550,7 +544,6 @@ function TalentDetail() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -1117,7 +1110,7 @@ function TalentDetail() {
                             o.group_u_point_2 = o.group_u_point_2 ? o.group_u_point_2.value || o.group_u_point_2.value === null ? o.group_u_point_2.value : o.group_u_point_2 : null
                         } else if (modelType.match('线上平台')) {
                             o.u_id_1 = o.u_id_1 ? o.u_id_1.value || o.u_id_1.value === null ? o.u_id_1.value : o.u_id_1 : null
-                            o.u_id_2 = o.u_id_2 ? o.u_id_2.value || o.u_id_2.value === null ? o.u_id_2.value : o.group_u_id_2 : null
+                            o.u_id_2 = o.u_id_2 ? o.u_id_2.value || o.u_id_2.value === null ? o.u_id_2.value : o.u_id_2 : null
                             o.u_point_1 = o.u_point_1 ? o.u_point_1.value || o.u_point_1.value === null ? o.u_point_1.value : o.u_point_1 : null
                             o.u_point_2 = o.u_point_2 ? o.u_point_2.value || o.u_point_2.value === null ? o.u_point_2.value : o.u_point_2 : null
                         }
@@ -1144,6 +1137,7 @@ function TalentDetail() {
                                 }
                             }
                         }
+                        console.log(values);
                         if (modelType.match('线上平台')) {
                             for (const key in values.accounts[0]) {
                                 if (Object.hasOwnProperty.call(values.accounts[0], key)) {
@@ -1170,7 +1164,7 @@ function TalentDetail() {
                             v.group_u_point_2 = v.group_u_point_2 ? v.group_u_point_2.value || v.group_u_point_2.value === null ? v.group_u_point_2.value : v.group_u_point_2 : null
                         } else if (modelType.match('线上平台')) {
                             v.u_id_1 = v.u_id_1 ? v.u_id_1.value || v.u_id_1.value === null ? v.u_id_1.value : v.u_id_1 : null
-                            v.u_id_2 = v.u_id_2 ? v.u_id_2.value || v.u_id_2.value === null ? o.u_id_2.value : v.group_u_id_2 : null
+                            v.u_id_2 = v.u_id_2 ? v.u_id_2.value || v.u_id_2.value === null ? o.u_id_2.value : v.u_id_2 : null
                             v.u_point_1 = v.u_point_1 ? v.u_point_1.value || v.u_point_1.value === null ? v.u_point_1.value : v.u_point_1 : null
                             v.u_point_2 = v.u_point_2 ? v.u_point_2.value || v.u_point_2.value === null ? v.u_point_2.value : v.u_point_2 : null
                         }

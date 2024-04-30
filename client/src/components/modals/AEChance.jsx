@@ -49,36 +49,18 @@ function AEChance(props) {
             console.error(err)
         })
     }
-    const [platform, setPlatform] = useState([])
-    const getPlatforms = () => {
+    const [baseSets, setBaseSets] = useState([])
+    const getBaseSetItems = (payload) => {
         request({
             method: 'post',
-            url: '/base/getPlatformsItems',
-            data: []
-        }).then((res) => {
-            if (res.status === 200) {
-                if (res.data.code === 200) {
-                    setPlatform(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
+            url: '/base/getBaseSetItems',
+            data: {
+                type: payload
             }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [liaisonType, setLiaisonType] = useState([])
-    const getLiaisonTypes = () => {
-        request({
-            method: 'post',
-            url: '/base/getLiaisonsItems',
-            data: []
         }).then((res) => {
             if (res.status === 200) {
                 if (res.data.code === 200) {
-                    setLiaisonType(res.data.data)
+                    setBaseSets(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -117,30 +99,20 @@ function AEChance(props) {
             <Form
                 form={form}
                 onFinish={(values) => {
+                    let payload = {
+                        ...values,
+                        cid: form.getFieldValue('cid'),
+                        operate: type,
+                        advance_pic: values.advance_pic ? values.advance_pic.join() : null
+                    }
                     if (type === '添加商机') {
                         let payload = {
-                            cid: '',
+                            ...payload,
                             type: 'chance',
-                            ...values,
-                            search_pic: values.search_pic ? values.search_pic.join() : null,
-                            advance_pic: values.advance_pic ? values.advance_pic.join() : null
+                            search_pic: values.search_pic ? values.search_pic.join() : null
                         }
                         searchSameChanceAPI('finish', payload)
-                    } else if (type.match('推进商机')) {
-                        let payload = {
-                            cid: form.getFieldValue('cid'),
-                            ...values,
-                            advance_pic: values.advance_pic ? values.advance_pic.join() : null,
-                            operate: type
-                        }
-                        props.onOK(payload);
-                        reset();
                     } else {
-                        let payload = {
-                            cid: form.getFieldValue('cid'),
-                            ...values,
-                            advance_pic: values.advance_pic ? values.advance_pic.join() : null
-                        }
                         props.onOK(payload);
                         reset();
                     }
@@ -167,8 +139,8 @@ function AEChance(props) {
                         />
                     </Form.Item> : null}
                     {isShowPlatform ? <Card title="线上平台" style={{ marginBottom: "20px" }}>
-                        <Form.Item label="平台" name="platforms" rules={[{ required: true, message: '不能为空' }]}>
-                            <Select mode="multiple" allowClear style={{ width: '100%' }} placeholder="请选择" options={platform} onFocus={() => { getPlatforms(); }}/>
+                        <Form.Item label="平台" name="baseSetss" rules={[{ required: true, message: '不能为空' }]}>
+                            <Select mode="multiple" allowClear style={{ width: '100%' }} placeholder="请选择" options={baseSets} onFocus={() => { getBaseSetItems('platform'); }}/>
                         </Form.Item>
                         <Form.Item label="达人账号" name="account_names" rules={[{ required: true, message: '不能为空' }]}>
                             <Select mode="tags" allowClear placeholder="请输入" onChange={(value) => { form.setFieldValue('account_names', value) }} options={[]} />
@@ -197,8 +169,8 @@ function AEChance(props) {
                             allowClear
                             style={{ width: '100%' }}
                             placeholder="请选择"
-                            options={liaisonType}
-                            onClick={() => { getLiaisonTypes(); }}
+                            options={baseSets}
+                            onClick={() => { getBaseSetItems('liaison'); }}
                         />
                     </Form.Item>
                     <Form.Item label="联系人姓名" name="liaison_name" rules={[{ required: true, message: '不能为空' }]}>
@@ -274,7 +246,7 @@ function AEChance(props) {
                                         avatar={<Image width={50} src={people} preview={false} />}
                                         title={<Space size={'large'}><span>{`编号: ${item.tmid}`}</span><span>{`状态: ${item.status}`}</span><span>{`${item.status === '已拉黑' ? '拉黑人' : '商务'}: ${item.u_name}`}</span></Space>}
                                         description={<Space size={'large'} style={{ color: `${item.status === '已拉黑' ? 'red' : ''}` }}>{item.status === '已拉黑' ? <><span>{`原因: ${item.note}`}</span><span>{`重复名称/ID: ${item.name}`}</span></> :
-                                            <><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.platform}`}</span> : null}<span>{`重复名称/ID: ${item.account_name}`}</span></>}</Space>}
+                                            <><span>{`模式: ${item.model}`}</span>{item.model === '线上平台' ? <span>{`平台: ${item.baseSets}`}</span> : null}<span>{`重复名称/ID: ${item.account_name}`}</span></>}</Space>}
                                     />
                                 </List.Item>
                             )}

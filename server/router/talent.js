@@ -3,136 +3,64 @@ const router = express.Router();
 const db = require('../config/db')
 const dayjs = require('dayjs');
 const sendRobot = require('../api/ddrobot')
+const { power, filter } = require('../function/power')
 
 // 获取达人列表
 router.post('/getTalentList', (req, res) => {
     let params = req.body
-    // 权限筛选
-    let whereUser = ``
-    if (params.userInfo.department === '事业部') {
-        if (params.userInfo.position === '副总' || (params.userInfo.company === '总公司' && params.userInfo.position === '助理')) {
-            whereUser += `WHERE u0.department = '${params.userInfo.department}' or u1.department = '${params.userInfo.department}' or u2.department = '${params.userInfo.department}' `
-        }
-        if (params.userInfo.position === '主管') {
-            whereUser += `WHERE (u0.department = '${params.userInfo.department}' and u0.company = '${params.userInfo.company}') or (u1.department = '${params.userInfo.department}' and u1.company = '${params.userInfo.company}') or (u2.department = '${params.userInfo.department}' and u2.company = '${params.userInfo.company}') `
-        }
-        if (params.userInfo.position === '商务') {
-            whereUser += `WHERE u0.uid = '${params.userInfo.uid}' or u1.uid = '${params.userInfo.uid}' or u2.uid = '${params.userInfo.uid}' `
-        }
-        if (params.userInfo.company !== '总公司' && params.userInfo.position === '助理') {
-            whereUser += `WHERE u0.uid = '${params.userInfo.up_uid}' or u1.uid = '${params.userInfo.up_uid}' or u2.uid = '${params.userInfo.up_uid}' `
-        }
-    }
-    // 条件筛选
-    let whereFilter = `where z.status != '已失效' and z.status != '已拉黑' and z.status != '拉黑待审批'`
-    for (let i = 0; i < Object.getOwnPropertyNames(params.filters).length; i++) {
-        if (Object.keys(params.filters)[i].split('_')[1] == 'id') {
-            whereFilter += ` and z.${Object.keys(params.filters)[i]} = '${Object.values(params.filters)[i]}'`
-        } else {
-            if (Object.keys(params.filters)[i] === 'name') {
-                whereFilter += ` and (z.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%' or z.account_name like '%${Object.values(params.filters)[i]}%')`
-            } else {
-                whereFilter += ` and z.${Object.keys(params.filters)[i]} like '%${Object.values(params.filters)[i]}%'`
-            }
-        }
-    }
-    // 排序
-    let order = params.sorter.sort ? params.sorter.sort : 'tid'
     // 分页
     let current = params.pagination.current ? params.pagination.current : 0
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
-    let sql = `SELECT z.*
+    let sql = `SELECT SQL_CALC_FOUND_ROWS z.*
                 FROM (
-                    SELECT t.tid, t.cid, t.name, GROUP_CONCAT(DISTINCT tm.model) as models, GROUP_CONCAT(DISTINCT tm.platform) as platforms, t.year_deal, t.type,
-                        GROUP_CONCAT(DISTINCT tms1.u_id_1) as u_id_1, GROUP_CONCAT(DISTINCT u1.name) as u_name_1, GROUP_CONCAT(DISTINCT tms1.u_point_1) as u_point_1,
-                        GROUP_CONCAT(DISTINCT tms1.u_id_2) as u_id_2, GROUP_CONCAT(DISTINCT u2.name) as u_name_2, GROUP_CONCAT(DISTINCT tms1.u_point_2) as u_point_2,
-                        GROUP_CONCAT(DISTINCT ts1.u_id_0) as u_id_0, GROUP_CONCAT(DISTINCT u0.name) as u_name_0, GROUP_CONCAT(DISTINCT ts1.u_point_0) as u_point_0,
-                        CONCAT(GROUP_CONCAT(DISTINCT u1.name), IF(GROUP_CONCAT(DISTINCT u2.name) IS NULL, '', GROUP_CONCAT(DISTINCT u2.name)), IF(GROUP_CONCAT(DISTINCT u0.name) IS NULL, '', GROUP_CONCAT(DISTINCT u0.name))) as u_names, 
-                        GROUP_CONCAT(DISTINCT tms1.u_note) as u_note, GROUP_CONCAT(DISTINCT tms1.gmv_belong) as gmv_belong,
-                        GROUP_CONCAT(DISTINCT ts1.m_id_1) as m_id_1, GROUP_CONCAT(DISTINCT m1.name) as m_name_1, GROUP_CONCAT(DISTINCT ts1.m_point_1) as m_point_1,
-                        GROUP_CONCAT(DISTINCT ts1.m_id_2) as m_id_2, GROUP_CONCAT(DISTINCT m2.name) as m_name_2, GROUP_CONCAT(DISTINCT ts1.m_point_2) as m_point_2,
-                        CONCAT(IF(GROUP_CONCAT(DISTINCT m1.name) IS NULL, '', GROUP_CONCAT(DISTINCT m1.name)), IF(GROUP_CONCAT(DISTINCT m2.name) IS NULL, '', GROUP_CONCAT(DISTINCT m2.name))) as m_names,
-                        IF(ts1.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels,
-                        GROUP_CONCAT(DISTINCT IF(tm.model_files IS NULL, '暂无', '生效中')) as model_status, t.status, COUNT(DISTINCT l.lid) as live_count, SUM(l.sales) as live_sum, GROUP_CONCAT(DISTINCT tm.account_type) as account_type,
-                        GROUP_CONCAT(DISTINCT tm.account_models) as account_models, GROUP_CONCAT(DISTINCT tm.account_name) as account_name, UNIX_TIMESTAMP(b.startsale) as startsale, UNIX_TIMESTAMP(b.lastsale) as lastsale, 
-                        IF(UNIX_TIMESTAMP(b.lastsale) IS NULL, '无销售', IF(DATEDIFF(now(), b.lastsale) > 60, '停滞', '在售')) as sale_type, DATEDIFF(now(), b.lastsale) as days, 
-                        IF(DATEDIFF(now(), b.lastsale) > 60 && DATEDIFF(now(), b.lastsale) <= 180, '60-180天', IF(DATEDIFF(now(), b.lastsale) > 180, '180天以上', null)) as stagnate_lavel, 
-                        b.price, b.done, b.eback, b.noeback, b.wait, b.daily_price, b.daily_done, b.daily_eback, b.daily_noeback, b.daily_wait, b.live_price, b.live_done, b.live_eback, b.live_noeback, b.live_wait, 
-                        b.year_price, b.Jan, b.Feb, b.Mar, b.Apr
-                    FROM talent t
-                        LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' or operate = '达人报备' GROUP BY tid) ts0 ON ts0.tid = t.tid
-                        LEFT JOIN talent_schedule ts1 ON ts1.tsid = ts0.tsid
-                        LEFT JOIN middleman m1 ON m1.mid = ts1.m_id_1
-                        LEFT JOIN middleman m2 ON m2.mid = ts1.m_id_2
-                        LEFT JOIN user u0 ON u0.uid = ts1.u_id_0
-                        LEFT JOIN talent_model tm ON tm.tid = t.tid
-                        LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' or operate = '达人报备' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
-                        LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
-                        LEFT JOIN user u1 ON u1.uid = tms1.u_id_1
-                        LEFT JOIN user u2 ON u2.uid = tms1.u_id_2
-                        LEFT JOIN live l ON l.tid = t.tid and l.tmids LIKE CONCAT('%', tm.tmid, '%')
-                        LEFT JOIN join_bi b ON (b.talent = t.name) 
-                    ${whereUser}
-                    GROUP BY t.tid, t.cid, t.name, t.year_deal, t.type, yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels, t.status, startsale, lastsale, 
-                        b.price, b.done, b.eback, b.noeback, b.wait, b.daily_price, b.daily_done, b.daily_eback, b.daily_noeback, b.daily_wait, b.live_price, b.live_done, b.live_eback, b.live_noeback, b.live_wait, 
-                        b.year_price, b.Jan, b.Feb, b.Mar, b.Apr
-                ) z
-                ${whereFilter}
-                ORDER BY z.${order} DESC, z.tid` 
-    /* let sql = `SELECT *
-                FROM (
-                    SELECT *, IF(b.b_name IS NULL, '无销售', IF(b.days > 60, '停滞', '在售')) as sale_type, IF(b.days > 60 && b.days <= 180, '60-180天', IF(b.days > 180, '180天以上', null)) as stagnate_lavel
+                    SELECT a.*, UNIX_TIMESTAMP(MIN(b.startsale)) as startsale, UNIX_TIMESTAMP(MAX(b.lastsale)) as lastsale, DATEDIFF(now(), MAX(b.lastsale)) as days, 
+                        IF(DATEDIFF(now(), MAX(b.lastsale)) > 60 && DATEDIFF(now(), MAX(b.lastsale)) <= 180, '60-180天', IF(DATEDIFF(now(), MAX(b.lastsale)) > 180, '180天以上', null)) as stagnate_lavel,
+                        IF(MAX(b.lastsale) IS NULL, '无销售', IF(DATEDIFF(now(), MAX(b.lastsale)) <= 60, '在售', IF(DATEDIFF(now(), MAX(b.lastsale)) > 60 && DATEDIFF(now(), MAX(b.lastsale)) <= 150, '停滞', 
+                            IF(DATEDIFF(now(), MAX(b.lastsale)) > 150 && DATEDIFF(now(), MAX(b.lastsale)) <= 180, '即将过期', '已过期')))) as sale_type,
+                        SUM(b.price) as price, SUM(b.done) as done, SUM(b.eback) as eback, SUM(b.noeback) as noeback, SUM(b.wait) as wait, SUM(b.daily_price) as daily_price, SUM(b.daily_done) as daily_done, SUM(b.daily_eback) as daily_eback, 
+                        SUM(b.daily_noeback) as daily_noeback, SUM(b.daily_wait) as daily_wait, SUM(b.live_price) as live_price, SUM(b.live_done) as live_done, SUM(b.live_eback) as live_eback, SUM(b.live_noeback) as live_noeback, 
+                        SUM(b.live_wait) as live_wait, SUM(b.year_price) as year_price, SUM(b.Jan) as Jan, SUM(b.Feb) as Feb, SUM(b.Mar) as Mar, SUM(b.Apr) as Apr
                     FROM (
-                        SELECT t.tid, t.cid, t.name, GROUP_CONCAT(DISTINCT tm.model) as models, GROUP_CONCAT(DISTINCT tm.platform) as platforms, t.year_deal, t.type,
-                            GROUP_CONCAT(DISTINCT tms1.u_id_1) as u_id_1, GROUP_CONCAT(DISTINCT u1.name) as u_name_1, GROUP_CONCAT(DISTINCT tms1.u_point_1) as u_point_1,
-                            GROUP_CONCAT(DISTINCT tms1.u_id_2) as u_id_2, GROUP_CONCAT(DISTINCT u2.name) as u_name_2, GROUP_CONCAT(DISTINCT tms1.u_point_2) as u_point_2,
-                            GROUP_CONCAT(DISTINCT ts1.u_id_0) as u_id_0, GROUP_CONCAT(DISTINCT u0.name) as u_name_0, GROUP_CONCAT(DISTINCT ts1.u_point_0) as u_point_0,
+                        SELECT t.tid, t.cid, t.name, t.year_deal, t.type, GROUP_CONCAT(DISTINCT tm.model) as models, GROUP_CONCAT(DISTINCT tm.platform) as platforms, GROUP_CONCAT(DISTINCT tm.account_type) as account_type, 
+                            GROUP_CONCAT(DISTINCT tm.account_models) as account_models, GROUP_CONCAT(DISTINCT tm.account_name) as account_name, 
+                            m1.name as m_name_1, ts.m_point_1, m2.name as m_name_2, ts.m_point_2, CONCAT(IF(m1.name IS NULL, '', m1.name), IF(m2.name IS NULL, '', m2.name)) as m_names, 
+                            GROUP_CONCAT(DISTINCT tms.u_id_1) as u_id_1, GROUP_CONCAT(DISTINCT u1.name) as u_name_1, GROUP_CONCAT(DISTINCT tms.u_point_1) as u_point_1,
+                            GROUP_CONCAT(DISTINCT tms.u_id_2) as u_id_2, GROUP_CONCAT(DISTINCT u2.name) as u_name_2, GROUP_CONCAT(DISTINCT tms.u_point_2) as u_point_2,
+                            GROUP_CONCAT(DISTINCT ts.u_id_0) as u_id_0, GROUP_CONCAT(DISTINCT u0.name) as u_name_0, GROUP_CONCAT(DISTINCT ts.u_point_0) as u_point_0,
                             CONCAT(GROUP_CONCAT(DISTINCT u1.name), IF(GROUP_CONCAT(DISTINCT u2.name) IS NULL, '', GROUP_CONCAT(DISTINCT u2.name)), IF(GROUP_CONCAT(DISTINCT u0.name) IS NULL, '', GROUP_CONCAT(DISTINCT u0.name))) as u_names, 
-                            GROUP_CONCAT(DISTINCT tms1.u_note) as u_note, GROUP_CONCAT(DISTINCT tms1.gmv_belong) as gmv_belong,
-                            GROUP_CONCAT(DISTINCT ts1.m_id_1) as m_id_1, GROUP_CONCAT(DISTINCT m1.name) as m_name_1, GROUP_CONCAT(DISTINCT ts1.m_point_1) as m_point_1,
-                            GROUP_CONCAT(DISTINCT ts1.m_id_2) as m_id_2, GROUP_CONCAT(DISTINCT m2.name) as m_name_2, GROUP_CONCAT(DISTINCT ts1.m_point_2) as m_point_2,
-                            CONCAT(IF(GROUP_CONCAT(DISTINCT m1.name) IS NULL, '', GROUP_CONCAT(DISTINCT m1.name)), IF(GROUP_CONCAT(DISTINCT m2.name) IS NULL, '', GROUP_CONCAT(DISTINCT m2.name))) as m_names,
-                            IF(ts1.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels,
-                            GROUP_CONCAT(DISTINCT IF(tm.model_files IS NULL, '暂无', '生效中')) as model_status, t.status, GROUP_CONCAT(DISTINCT tm.account_type) as account_type,
-                            GROUP_CONCAT(DISTINCT tm.account_models) as account_models, GROUP_CONCAT(DISTINCT tm.account_name) as account_name
+                            GROUP_CONCAT(DISTINCT tms.u_note) as u_note, GROUP_CONCAT(DISTINCT tms.gmv_belong) as gmv_belong,
+                            IF(ts.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, t.status
                         FROM talent t
                             LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' or operate = '达人报备' GROUP BY tid) ts0 ON ts0.tid = t.tid
-                            LEFT JOIN talent_schedule ts1 ON ts1.tsid = ts0.tsid
-                            LEFT JOIN middleman m1 ON m1.mid = ts1.m_id_1
-                            LEFT JOIN middleman m2 ON m2.mid = ts1.m_id_2
-                            LEFT JOIN user u0 ON u0.uid = ts1.u_id_0
+                            LEFT JOIN talent_schedule ts ON ts.tsid = ts0.tsid
+                            LEFT JOIN middleman m1 ON m1.mid = ts.m_id_1
+                            LEFT JOIN middleman m2 ON m2.mid = ts.m_id_2
+                            LEFT JOIN user u0 ON u0.uid = ts.u_id_0
                             LEFT JOIN talent_model tm ON tm.tid = t.tid
                             LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' or operate = '达人报备' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
-                            LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
-                            LEFT JOIN user u1 ON u1.uid = tms1.u_id_1
-                            LEFT JOIN user u2 ON u2.uid = tms1.u_id_2
-                        ${whereUser}
-                        GROUP BY t.tid, t.cid, t.name, t.year_deal, t.type, yearbox_status, ts1.yearbox_start_date, ts1.yearbox_cycle, ts1.yearbox_lavels_base, ts1.yearbox_lavels, t.status
-                    ) y
-                        LEFT JOIN (
-                            SELECT t.name as b_name, UNIX_TIMESTAMP(MIN(b.startsale)) as startsale, UNIX_TIMESTAMP(MAX(b.lastsale)) as lastsale, DATEDIFF(now(), MAX(b.lastsale)) as days, 
-                            SUM(b.price) as price, SUM(b.done) as done, SUM(b.eback) as eback, SUM(b.noeback) as noeback, SUM(b.wait) as wait, SUM(b.daily_price) as daily_price, SUM(b.daily_done) as daily_done, SUM(b.daily_eback) as daily_eback, 
-                            SUM(b.daily_noeback) as daily_noeback, SUM(b.daily_wait) as daily_wait, SUM(b.live_price) as live_price, SUM(b.live_done) as live_done, SUM(b.live_eback) as live_eback, SUM(b.live_noeback) as live_noeback, SUM(b.live_wait) as live_wait, 
-                            SUM(b.year_price) as year_price, SUM(b.Jan) as Jan, SUM(b.Feb) as Feb, SUM(b.Mar) as Mar, SUM(b.Apr) as Apr
-                        FROM join_bi b
-                            LEFT JOIN talent t ON b.talent = t.name OR b.talent LIKE CONCAT('%', t.name, '%')
-                        GROUP BY t.name
-                        ) b ON b.b_name = y.name
-                    ) z
-                ${whereFilter}
-                ORDER BY z.${order} DESC, z.tid DESC` */
+                            LEFT JOIN talent_model_schedule tms ON tms.tmsid = tms0.tmsid
+                            LEFT JOIN user u1 ON u1.uid = tms.u_id_1
+                            LEFT JOIN user u2 ON u2.uid = tms.u_id_2
+                        ${power(['u0', 'u1', 'u2'], params.userInfo)}
+                        GROUP BY t.tid, t.cid, t.name, t.year_deal, t.type, m1.name, ts.m_point_1, m2.name, ts.m_point_2, yearbox_status, ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels
+                    ) a
+                        LEFT JOIN join_bi b ON b.name = a.name
+                    GROUP BY a.tid, a.cid, a.name, a.year_deal, a.type, a.models, a.platforms, a.account_type, a.account_models, a.account_name, a.m_name_1, a.m_point_1, a.m_name_2, a.m_point_2, a.m_names, a.u_id_1, a.u_name_1, 
+                        a.u_point_1, a.u_id_2, a.u_name_2, a.u_point_2, a.u_id_0, a.u_name_0, a.u_point_0, a.u_names, a.u_note, a.gmv_belong, a.yearbox_status, a.yearbox_start_date, a.yearbox_cycle, a.yearbox_lavels_base, a.yearbox_lavels
+                ) z
+                ${filter('talent', params.filters)} and z.status != '已拉黑' and z.status != '拉黑待审批'
+                ORDER BY z.${params.sorter.sort ? params.sorter.sort : 'tid'} DESC, z.tid DESC
+                LIMIT ${pageSize} OFFSET ${current * pageSize}`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        let wait_sum = 0
-        for (let i = 0; i < results.length; i++) {
-            if (results[i].status.match('待审批')) {
-                wait_sum += 1
-            }
-        }
-        let s = sql + ` LIMIT ${pageSize} OFFSET ${current * pageSize}`
-        db.query(s, (err, r) => {
+        let sql = `SELECT FOUND_ROWS() as count`
+        db.query(sql, (err, count) => {
             if (err) throw err;
-            res.send({ code: 200, data: r, pagination: { ...params.pagination, total: results.length }, wait_sum, msg: `` })
+            let sql = `SELECT COUNT(*) as count FROM talent t WHERE t.status LIKE '%待审批'`
+            db.query(sql, (err, wait) => {
+                if (err) throw err;
+                res.send({ code: 200, data: results, pagination: { ...params.pagination, total: count[0].count }, wait_sum: wait[0].count, msg: `` })
+            })
         })
     })
 })
@@ -275,7 +203,7 @@ router.post('/editTalent', (req, res) => {
                             sql += ` '需要审批',`
                         } else if (isAdd && key === 'examine_uid') {
                             isAdd = false
-                            sql += ` '${params.userInfo.e_id}',`
+                            sql += ` 'MJN00027',`
                         } else if (isAdd && (key === 'examine_time' || key === 'examine_result' || key === 'examine_note')) {
                             isAdd = false
                             sql += ` null,`
@@ -314,7 +242,7 @@ router.post('/editTalent', (req, res) => {
                         let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
                         db.query(sql, (err, results_t) => {
                             if (err) throw err;
-                            let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
+                            let sql = `SELECT * FROM user WHERE uid = 'MJN00027'`
                             db.query(sql, (err, results_e) => {
                                 if (err) throw err;
                                 sendRobot(
@@ -434,7 +362,7 @@ router.post('/addTalentModel', (req, res) => {
                     let u_note = params.accounts[i].u_note ? `'${params.accounts[i].u_note}'` : null
                     let model_files = params.accounts[i].model_files ? `'${JSON.stringify(params.accounts[i].model_files)}'` : null
                     sql_d += `('${tmid}', '${params.tid}', '线上平台', '${params.accounts[i].platform}', '${params.accounts[i].shop_type}', ${shop_name}, '${params.accounts[i].account_id}', '${params.accounts[i].account_name}', '${params.accounts[i].account_type}', '${params.accounts[i].account_models}', ${keyword}, '${params.accounts[i].people_count}', '${params.accounts[i].fe_proportion}', '${params.accounts[i].age_cuts}', '${params.accounts[i].main_province}', '${params.accounts[i].price_cut}', ${model_files}, '待审批'),`
-                    sql_l += `('${tmsid}', '${tmid}', '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', ${commission_note}, null, null, null, null, null, null, null, null, null, '${params.accounts[i].u_id_1}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.accounts[i].gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                    sql_l += `('${tmsid}', '${tmid}', '${params.accounts[i].commission_normal}', '${params.accounts[i].commission_welfare}', '${params.accounts[i].commission_bao}', ${commission_note}, null, null, null, null, null, null, null, null, null, '${params.accounts[i].u_id_1}', '${params.accounts[i].u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.accounts[i].gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', 'MJN00027', null, null, null, '待审批'),`
                 }
                 count_d += params.accounts.length
                 count_l += params.accounts.length
@@ -448,7 +376,7 @@ router.post('/addTalentModel', (req, res) => {
                 let u_note = params.group_u_note ? `'${params.group_u_note}'` : null
                 let model_files = params.group_model_files ? `'${JSON.stringify(params.model_files)}'` : null
                 sql_d += `('${tmid}', '${params.tid}', '社群团购', '聚水潭', null, '${params.group_shop}', null, '${params.group_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, null, null, null, null, null, null, '${params.group_u_id_1}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.group_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', '${params.commission_normal}', '${params.commission_welfare}', '${params.commission_bao}', ${commission_note}, null, null, null, null, null, null, null, null, null, '${params.group_u_id_1}', '${params.group_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.group_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', 'MJN00027', null, null, null, '待审批'),`
                 count_d += 1
                 count_l += 1
             }
@@ -461,7 +389,7 @@ router.post('/addTalentModel', (req, res) => {
                 let u_note = params.provide_u_note ? `'${params.provide_u_note}'` : null
                 let model_files = params.provide_model_files ? `'${JSON.stringify(params.model_files)}'` : null
                 sql_d += `('${tmid}', '${params.tid}', '供货', '聚水潭', null, '${params.provide_shop}', null, '${params.provide_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, null, null, null, null, null, null, '${params.provide_u_id_1}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.provide_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, '${params.discount_buyout}', '${params.discount_back}', ${discount_label}, null, null, null, null, null, null, '${params.provide_u_id_1}', '${params.provide_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.provide_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', 'MJN00027', null, null, null, '待审批'),`
                 count_d += 1
                 count_l += 1
             }
@@ -475,7 +403,7 @@ router.post('/addTalentModel', (req, res) => {
                 let u_note = params.custom_u_note ? `'${params.custom_u_note}'` : null
                 let model_files = params.custom_model_files ? `'${JSON.stringify(params.model_files)}'` : null
                 sql_d += `('${tmid}', '${params.tid}', '定制', '聚水潭', null, '${params.custom_shop}', null, '${params.custom_name}', null, null, null, null, null, null, null, null, ${model_files}, '待审批'),`
-                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, '${params.profit_point}', '${params.tax_point}', '${params.has_package}', '${params.pay_type}', ${deposit}, ${tail}, '${params.custom_u_id_1}', '${params.custom_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.custom_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', '${params.userInfo.e_id}', null, null, null, '待审批'),`
+                sql_l += `('${tmsid}', '${tmid}', null, null, null, null, null, null, null, '${params.profit_point}', '${params.tax_point}', '${params.has_package}', '${params.pay_type}', ${deposit}, ${tail}, '${params.custom_u_id_1}', '${params.custom_u_point_1}', ${u_id_2}, ${u_point_2}, ${u_note}, '${params.custom_gmv_belong}', null, '${params.userInfo.uid}', '${time}', '${params.operate}', '需要审批', 'MJN00027', null, null, null, '待审批'),`
                 count_d += 1
                 count_l += 1
             }
@@ -491,7 +419,7 @@ router.post('/addTalentModel', (req, res) => {
                     let sql = `UPDATE talent SET status = '新合作待审批' WHERE tid = '${params.tid}'`
                     db.query(sql, (err, results) => {
                         if (err) throw err;
-                        let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
+                        let sql = `SELECT * FROM user WHERE uid = 'MJN00027'`
                         db.query(sql, (err, results_e) => {
                             if (err) throw err;
                             sendRobot(
@@ -571,7 +499,7 @@ router.post('/editTalentModel', (req, res) => {
                             sql += ` '需要审批',`
                         } else if (isAdd && key === 'examine_uid') {
                             isAdd = false
-                            sql += ` '${params.userInfo.e_id}',`
+                            sql += ` 'MJN00027',`
                         } else if (isAdd && (key === 'u_id_2' || key === 'u_point_2' || key === 'examine_time' || key === 'examine_result' || key === 'examine_note')) {
                             isAdd = false
                             sql += ` null,`
@@ -614,7 +542,7 @@ router.post('/editTalentModel', (req, res) => {
                             let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
                             db.query(sql, (err, results_t) => {
                                 if (err) throw err;
-                                let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
+                                let sql = `SELECT * FROM user WHERE uid = 'MJN00027'`
                                 db.query(sql, (err, results_e) => {
                                     if (err) throw err;
                                     sendRobot(
@@ -652,7 +580,7 @@ router.post('/editTalentModel', (req, res) => {
                                 let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
                                 db.query(sql, (err, results_t) => {
                                     if (err) throw err;
-                                    let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
+                                    let sql = `SELECT * FROM user WHERE uid = 'MJN00027'`
                                     db.query(sql, (err, results_e) => {
                                         if (err) throw err;
                                         sendRobot(
@@ -771,7 +699,7 @@ router.post('/giveTalent', (req, res) => {
                                 s += ` '需要审批',`
                             } else if (isAdd && key === 'examine_uid') {
                                 isAdd = false
-                                s += ` '${params.userInfo.e_id}',`
+                                s += ` 'MJN00027',`
                             } else if (isAdd && (key === 'history_other_info' || key === 'u_id_2' || key === 'u_point_2' || key === 'examine_time' || key === 'examine_result' || key === 'examine_note')) {
                                 isAdd = false
                                 s += ` null,`
@@ -832,7 +760,7 @@ router.post('/giveTalent', (req, res) => {
                                                 sql += ` '需要审批',`
                                             } else if (isAdd && key === 'examine_uid') {
                                                 isAdd = false
-                                                sql += ` '${params.userInfo.e_id}',`
+                                                sql += ` 'MJN00027',`
                                             } else if (isAdd && (key === 'history_other_info' || key === 'examine_time' || key === 'examine_result' || key === 'examine_note')) {
                                                 isAdd = false
                                                 sql += ` null,`
@@ -851,7 +779,7 @@ router.post('/giveTalent', (req, res) => {
                                         let sql = `SELECT * FROM talent WHERE tid = '${params.tid}'`
                                         db.query(sql, (err, results_t) => {
                                             if (err) throw err;
-                                            let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.e_id}'`
+                                            let sql = `SELECT * FROM user WHERE uid = 'MJN00027'`
                                             db.query(sql, (err, results_e) => {
                                                 if (err) throw err;
                                                 sendRobot(

@@ -2,10 +2,9 @@ import React, { Fragment, useEffect, useState } from "react";
 import { NavLink } from 'react-router-dom'
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Popover, Button, Select, List, message, Alert, Modal, Popconfirm, Divider, Row } from 'antd';
-import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined, CloseCircleTwoTone, VerticalAlignBottomOutlined, FireTwoTone, BellTwoTone } from '@ant-design/icons';
+import { PauseCircleTwoTone, ClockCircleTwoTone, StopTwoTone, PlusOutlined, CloseCircleTwoTone, VerticalAlignBottomOutlined, FireTwoTone, ClockCircleOutlined, QuestionCircleTwoTone } from '@ant-design/icons';
 import { model, uPoint0, talentStatus, yearboxStatus, talentType, accountModelType, saleStatus, stagnateLavel } from '../baseData/talent'
 import AETalent from '../components/modals/AETalent'
-import AELive from '../components/modals/AELive'
 import dayjs from 'dayjs'
 import FileSaver from 'file-saver'
 import MyECharts from '../components/MyECharts'
@@ -170,9 +169,11 @@ function TalentList() {
                     </>}
                 </>}
                 >
-                    <span style={{ color: `${record.sale_type === '停滞' ? 'red' : null}` }}>
-                        {record.sale_type === '在售' ? <FireTwoTone twoToneColor="#4ec990" /> : record.sale_type === '停滞' ? <BellTwoTone twoToneColor="#f81d22" /> : <StopTwoTone twoToneColor="#999999" />}
-                        {record.sale_type === '在售' ? ' ' + record.sale_type : record.sale_type === '停滞' ? ' ' + record.sale_type + record.days + '天' : ' 无销售'}</span>
+                    <span style={{ color: `${record.sale_type === '停滞' ? '#ee9900' : record.sale_type === '即将过期' ? '#c41d7f' : record.sale_type === '已过期' ? '#f81d22' : null}` }}>
+                        {record.sale_type === '在售' ? <FireTwoTone twoToneColor="#4ec990" /> : record.sale_type === '停滞' ? <QuestionCircleTwoTone twoToneColor="#ee9900" /> :
+                            record.sale_type === '即将过期' ? <ClockCircleTwoTone twoToneColor="#c41d7f" /> : record.sale_type === '已过期' ? <ClockCircleOutlined twoToneColor="#f81d22" /> : <StopTwoTone twoToneColor="#999999" />}
+                        {record.sale_type === '停滞' ? ' ' + record.sale_type + record.days + '天' : record.sale_type === '即将过期' ? ' 停滞' + record.days + '天' + record.sale_type :
+                            record.sale_type === '已过期' ? ' 停滞' + record.days + '天' + record.sale_type : ` ${record.sale_type}`}</span>
                 </Popover>
             )
         },
@@ -190,27 +191,21 @@ function TalentList() {
                         cancelText="取消"
                         onConfirm={() => {
                             if (record.status === '报备待审批') {
-                                revokeReportAPI({ tid: record.tid });
+                                revokeReport({ tid: record.tid });
                             } else {
-                                revokeOthersAPI({ tid: record.tid });
+                                revokeOthers({ tid: record.tid });
                             }
                         }}
                     >
                         <a>撤销</a>
                     </Popconfirm> : null}
-                    {editPower && record.status === '合作中' ? <><a onClick={() => {
+                    {editPower && record.status === '合作中' ? <a onClick={() => {
                         setClickTid(record.tid);
                         setIsShowGive(true);
-                    }}>移交</a>
-                        {/* <a onClick={() => {
-                            setLiveType('add');
-                            setIsShowLive(true);
-                            liveForm.setFieldValue('name', record.name);
-                            liveForm.setFieldValue('tid', record.tid);
-                        }}>添加专场</a> */}</> : null}
+                    }}>移交</a> : null}
                     {record.status === '报备驳回' ? <><a onClick={() => { getRefundReasonAPI({ tid: record.tid }); }}>查看驳回备注</a>
-                        <a onClick={() => { setClickCid(record.cid); setClickTid(record.tid); getReportInfoAPI({ tid: record.tid }); }}>重新报备</a></> : null}
-                    {record.status === '已撤销' ? <a onClick={() => { setClickCid(record.cid); setClickTid(record.tid); getReportInfoAPI({ tid: record.tid }); }}>重新报备</a> : null}
+                        <a onClick={() => { setClickCid(record.cid); setClickTid(record.tid); getReportInfo({ tid: record.tid }); }}>重新报备</a></> : null}
+                    {record.status === '已撤销' ? <a onClick={() => { setClickCid(record.cid); setClickTid(record.tid); getReportInfo({ tid: record.tid }); }}>重新报备</a> : null}
                     {editPower && record.status === '合作中' ? <a style={{ color: 'red' }} onClick={() => { setClickTid(record.tid); setIsShowBlock(true); }}>拉黑</a> : null}
                 </Space>
             )
@@ -248,7 +243,6 @@ function TalentList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -298,83 +292,13 @@ function TalentList() {
     // 查询、清空筛选
     const [filterForm] = Form.useForm()
     const [sortForm] = Form.useForm()
-    const [platform, setPlatform] = useState([])
-    const getPlatforms = () => {
-        request({
-            method: 'post',
-            url: '/base/getPlatformsItems',
-            data: []
-        }).then((res) => {
-            if (res.status === 200) {
-                if (res.data.code === 200) {
-                    setPlatform(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [accountType, setAccountType] = useState([])
-    const getAccountTypes = () => {
-        request({
-            method: 'post',
-            url: '/base/getAccountsItems',
-            data: []
-        }).then((res) => {
-            if (res.status === 200) {
-                if (res.data.code === 200) {
-                    setAccountType(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [salemansItems, setSalemansItems] = useState()
-    const getSalemansItemsAPI = () => {
-        request({
-            method: 'post',
-            url: '/user/getSalemanItems',
-            data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setSalemansItems(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
 
-    // 添加、修改、推进、报备
+    // 添加
     const [type, setType] = useState('')
     const [isShow, setIsShow] = useState(false)
     const [form] = Form.useForm()
     const [clickCid, setClickCid] = useState('')
-    const addHistoryTalentAPI = (payload) => {
+    const addHistoryTalent = (payload) => {
         request({
             method: 'post',
             url: '/chance/reportChance',
@@ -386,7 +310,6 @@ function TalentList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -416,7 +339,7 @@ function TalentList() {
     const [isShowGive, setIsShowGive] = useState()
     const [formGive] = Form.useForm()
     const [clickTid, setClickTid] = useState('')
-    const giveTalentAPI = () => {
+    const giveTalent = () => {
         request({
             method: 'post',
             url: '/talent/giveTalent',
@@ -428,7 +351,6 @@ function TalentList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -453,44 +375,6 @@ function TalentList() {
             console.error(err)
         })
     }
-    // 专场
-    const [liveType, setLiveType] = useState('')
-    const [isShowLive, setIsShowLive] = useState(false)
-    const [liveForm] = Form.useForm()
-    const addLiveAPI = (payload) => {
-        request({
-            method: 'post',
-            url: '/live/addLive',
-            data: {
-                ...payload,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setIsShowLive(false);
-                    setLiveType('');
-                    getTalentListAPI();
-                    liveForm.resetFields();
-                    message.success(res.data.msg)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
     // 查看驳回理由
     const [checkNoReason, setCheckNoReason] = useState('')
     const [isShowCheckNo, setIsShowCheckNo] = useState(false)
@@ -503,7 +387,6 @@ function TalentList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -525,8 +408,8 @@ function TalentList() {
             console.error(err)
         })
     }
-    // 撤销报备
-    const revokeReportAPI = (payload) => {
+    // 撤销
+    const revokeReport = (payload) => {
         request({
             method: 'post',
             url: '/talent/revokeReport',
@@ -535,7 +418,6 @@ function TalentList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -554,8 +436,7 @@ function TalentList() {
             console.error(err)
         })
     };
-    // 撤销其他
-    const revokeOthersAPI = (payload) => {
+    const revokeOthers = (payload) => {
         request({
             method: 'post',
             url: '/talent/revokeOthers',
@@ -564,7 +445,6 @@ function TalentList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -584,7 +464,7 @@ function TalentList() {
         })
     };
     // 获取上次报备信息
-    const getReportInfoAPI = (payload) => {
+    const getReportInfo = (payload) => {
         request({
             method: 'post',
             url: '/talent/getReportInfo',
@@ -593,7 +473,6 @@ function TalentList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -725,7 +604,7 @@ function TalentList() {
         { title: '副商务', dataIndex: 'u_name_2', key: 'u_name_2' },
         { title: '原商务', dataIndex: 'u_name_0', key: 'u_name_0' }
     ]
-    const getExportTalentListAPI = () => {
+    const getExportTalentList = () => {
         request({
             method: 'post',
             url: '/talent/getExportTalentList',
@@ -734,7 +613,6 @@ function TalentList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -791,7 +669,6 @@ function TalentList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -815,6 +692,59 @@ function TalentList() {
         })
     }
 
+    // 获取下拉框
+    const [baseSets, setBaseSets] = useState([])
+    const getBaseSetItems = (payload) => {
+        request({
+            method: 'post',
+            url: '/base/getBaseSetItems',
+            data: {
+                type: payload
+            }
+        }).then((res) => {
+            if (res.status === 200) {
+                if (res.data.code === 200) {
+                    setBaseSets(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const [salemans, setSalemans] = useState()
+    const getSalemanItems = () => {
+        request({
+            method: 'post',
+            url: '/user/getSalemanItems',
+            data: {
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setSalemans(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+
     useEffect(() => {
         if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
             navigate('/login')
@@ -825,7 +755,7 @@ function TalentList() {
     return (
         <Fragment>
             <Card title="达人列表" extra={editPower ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsShow(true); setType('history'); }}>添加历史达人</Button> :
-                <Button type="primary" icon={<VerticalAlignBottomOutlined />} onClick={() => { getExportTalentListAPI(); }}>导出</Button>}>
+                <Button type="primary" icon={<VerticalAlignBottomOutlined />} onClick={() => { getExportTalentList(); }}>导出</Button>}>
                 <Form
                     layout="inline"
                     form={filterForm}
@@ -842,13 +772,13 @@ function TalentList() {
                 >
                     <Form.Item label='达人名称' name='name' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
                     <Form.Item label='账号类型' name='account_type' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={accountType} onClick={() => { getAccountTypes(); }} />
+                        <Select style={{ width: 120 }} options={baseSets} onClick={() => { getBaseSetItems('account'); }} />
                     </Form.Item>
                     <Form.Item label='合作模式' name='models' style={{ margin: '0 10px 10px 0' }}>
                         <Select style={{ width: 120 }} options={model} />
                     </Form.Item>
                     <Form.Item label='平台' name='platforms' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={platform} onFocus={() => { getPlatforms(); }} />
+                        <Select style={{ width: 120 }} options={baseSets} onFocus={() => { getBaseSetItems('platform'); }} />
                     </Form.Item>
                     <Form.Item label='销售模式' name='account_models' style={{ margin: '0 10px 10px 0' }}>
                         <Select style={{ width: 120 }} options={accountModelType} />
@@ -926,48 +856,19 @@ function TalentList() {
                 isShow={isShow}
                 type={type}
                 form={form}
-                onOK={(values) => { addHistoryTalentAPI(values); }}
+                onOK={(values) => { addHistoryTalent(values); }}
                 onCancel={() => { setIsShow(false); form.resetFields(); setType(''); setClickTid(''); }}
             />
-            <Modal title="移交达人" open={isShowGive} onOk={() => { giveTalentAPI(); }} onCancel={() => { setIsShowGive(false); }}>
+            <Modal title="移交达人" open={isShowGive} onOk={() => { giveTalent(); }} onCancel={() => { setIsShowGive(false); }}>
                 <Form form={formGive}>
                     <Form.Item label="承接商务" name="u_id" rules={[{ required: true, message: '不能为空' }]}>
-                        <Select placeholder="请选择" options={salemansItems} onFocus={() => { getSalemansItemsAPI(); }} />
+                        <Select placeholder="请选择" options={salemans} onFocus={() => { getSalemanItems(); }} />
                     </Form.Item>
                     <Form.Item label="原商务（自己）提点（%）" name="u_point" rules={[{ required: true, message: '不能为空' }]}>
                         <Select placeholder="请选择" options={uPoint0} />
                     </Form.Item>
                 </Form>
             </Modal>
-            <AELive
-                isShow={isShowLive}
-                type={liveType}
-                form={liveForm}
-                onOK={(values) => {
-                    let tmids = []
-                    for (let i = 0; i < values.tmids.length; i++) {
-                        tmids.push(values.tmids[i] ? values.tmids[i].value || values.tmids[i].value === null ? values.tmids[i].value : values.tmids[i] : null)
-                    }
-                    let payload = {
-                        ...values,
-                        tid: values.tid ? values.tid.value || values.tid.value === null ? values.tid.value : values.tid : null,
-                        start_time: dayjs(values.start_time).valueOf(),
-                        start_time_2: dayjs(values.start_time_2).valueOf(),
-                        end_time_0: dayjs(values.end_time_0).valueOf(),
-                        end_time: dayjs(values.end_time).valueOf(),
-                        tmids: tmids.join(),
-                        a_id_1: values.a_id_1 ? values.a_id_1.value || values.a_id_1.value === null ? values.a_id_1.value : values.a_id_1 : null,
-                        a_id_2: values.a_id_2 ? values.a_id_2.value || values.a_id_2.value === null ? values.a_id_2.value : values.a_id_2 : null,
-                        c_id_1: values.c_id_1 ? values.c_id_1.value || values.c_id_1.value === null ? values.c_id_1.value : values.c_id_1 : null,
-                        s_id_1: values.s_id_1 ? values.s_id_1.value || values.s_id_1.value === null ? values.s_id_1.value : values.s_id_1 : null,
-                        u_id_3: values.u_id_3 ? values.u_id_3.value || values.u_id_3.value === null ? values.u_id_3.value : values.u_id_3 : null,
-                        u_id_1: values.u_id_1 ? values.u_id_1.value || values.u_id_1.value === null ? values.u_id_1.value : values.u_id_1 : null,
-                        u_id_2: values.u_id_2 ? values.u_id_2.value || values.u_id_2.value === null ? values.u_id_2.value : values.u_id_2 : null
-                    }
-                    addLiveAPI(payload)
-                }}
-                onCancel={() => { setIsShowLive(false); liveForm.resetFields(); setLiveType(''); }}
-            />
             <Modal title="报备驳回备注" open={isShowCheckNo} onOk={() => { setIsShowCheckNo(false); }} onCancel={() => { setIsShowCheckNo(false); }}>
                 <TextArea placeholder="请输入" value={checkNoReason} disabled={true} />
             </Modal>

@@ -3,7 +3,7 @@ import { Form, Input, Modal } from 'antd';
 
 const { TextArea } = Input;
 
-function AEBlock(props) {
+function AEBlack(props) {
     const { isShow, type, form } = props;
 
     return (
@@ -31,4 +31,4 @@ function AEBlock(props) {
     )
 }
 
-export default AEBlock
+export default AEBlack

@@ -2,12 +2,11 @@ import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Button, Modal, message, Tooltip } from 'antd';
 import { PlusOutlined, ClockCircleTwoTone, PauseCircleTwoTone } from '@ant-design/icons';
-import AEBlock from '../components/modals/AEBlock'
-import dayjs from 'dayjs'
+import AEBlack from '../components/modals/AEBlack'
 
 const { TextArea } = Input;
 
-function TalentBlockList() {
+function TalentBlackList() {
     // 操作权限
     const editPower = (localStorage.getItem('company') === '总公司' && localStorage.getItem('department') === '事业部') || localStorage.getItem('position') === '管理员' ? true : false
     const examPower = (localStorage.getItem('position') === '副总' && localStorage.getItem('department') === '事业部') || localStorage.getItem('position') === '管理员' ? true : false
@@ -76,13 +75,13 @@ function TalentBlockList() {
                         <a onClick={() => {
                             if (record.status.match('拉黑')) {
                                 if (record.bid[0] === 'B') {
-                                    examBlockAPI(record.bid, record.u_id_b, record.status, true, null);
+                                    examBlackAPI(record.bid, record.u_id_b, record.status, true, null);
                                 } else {
                                     examTalentAPI(record.bid, record.u_id_b, record.status, true, null);
                                 }
                             } else {
                                 if (record.bid[0] === 'B') {
-                                    examBlockAPI(record.bid, record.u_id_r, record.status, true, null);
+                                    examBlackAPI(record.bid, record.u_id_r, record.status, true, null);
                                 } else {
 
                                 }
@@ -129,11 +128,11 @@ function TalentBlockList() {
             }),
         }
     });
-    const getTalentBlockListAPI = () => {
+    const getTalentBlackListAPI = () => {
         setLoading(true)
         request({
             method: 'post',
-            url: '/block/getTalentBlockList',
+            url: '/black/getTalentBlackList',
             data: {
                 filters: tableParams.filters,
                 pagination: {
@@ -143,7 +142,6 @@ function TalentBlockList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -191,16 +189,15 @@ function TalentBlockList() {
     const [type, setType] = useState('add')
     const [isShow, setIsShow] = useState(false)
     const [form] = Form.useForm()
-    const addBlockAPI = (payload) => {
+    const addBlackAPI = (payload) => {
         request({
             method: 'post',
-            url: '/block/addBlock',
+            url: '/black/addBlack',
             data: {
                 ...payload,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -211,7 +208,7 @@ function TalentBlockList() {
             if (res.status == 200) {
                 if (res.data.code == 200) {
                     setIsShow(false)
-                    getTalentBlockListAPI()
+                    getTalentBlackListAPI()
                     form.resetFields()
                 } else {
                     message.error(res.data.msg)
@@ -224,10 +221,10 @@ function TalentBlockList() {
         })
     }
     const [editOri, setEditOri] = useState(false)
-    const editBlockAPI = (operate, ori, payload) => {
+    const editBlackAPI = (operate, ori, payload) => {
         request({
             method: 'post',
-            url: '/block/editBlock',
+            url: '/black/editBlack',
             data: {
                 bid: clickBid,
                 operate,
@@ -236,7 +233,6 @@ function TalentBlockList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -247,7 +243,7 @@ function TalentBlockList() {
             if (res.status == 200) {
                 if (res.data.code == 200) {
                     setIsShow(false)
-                    getTalentBlockListAPI()
+                    getTalentBlackListAPI()
                     form.resetFields()
                 } else {
                     message.error(res.data.msg)
@@ -263,14 +259,13 @@ function TalentBlockList() {
     const releaseTalentAPI = (bid, reason) => {
         request({
             method: 'post',
-            url: '/block/releaseTalent',
+            url: '/black/releaseTalent',
             data: {
                 bid,
                 reason,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -284,7 +279,7 @@ function TalentBlockList() {
                     setReason();
                     setClickBid();
                     setClickUid();
-                    getTalentBlockListAPI();
+                    getTalentBlackListAPI();
                     message.success(res.data.msg)
                 } else {
                     message.error(res.data.msg)
@@ -308,7 +303,6 @@ function TalentBlockList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -322,7 +316,7 @@ function TalentBlockList() {
                     setReason();
                     setClickBid();
                     setClickUid();
-                    getTalentBlockListAPI();
+                    getTalentBlackListAPI();
                     message.success(res.data.msg)
                 } else {
                     message.error(res.data.msg)
@@ -341,10 +335,10 @@ function TalentBlockList() {
     const [clickBid, setClickBid] = useState()
     const [clickUid, setClickUid] = useState()
     const [clickStatus, setClickStatus] = useState()
-    const examBlockAPI = (bid, uid, type, exam, reason) => {
+    const examBlackAPI = (bid, uid, type, exam, reason) => {
         request({
             method: 'post',
-            url: '/block/examBlock',
+            url: '/black/examBlack',
             data: {
                 bid,
                 exam,
@@ -354,7 +348,6 @@ function TalentBlockList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -368,7 +361,7 @@ function TalentBlockList() {
                     setReason();
                     setClickBid();
                     setClickUid();
-                    getTalentBlockListAPI();
+                    getTalentBlackListAPI();
                     message.success(res.data.msg)
                 } else {
                     message.error(res.data.msg)
@@ -393,7 +386,6 @@ function TalentBlockList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -407,7 +399,7 @@ function TalentBlockList() {
                     setReason();
                     setClickBid();
                     setClickUid();
-                    getTalentBlockListAPI();
+                    getTalentBlackListAPI();
                     message.success(res.data.msg)
                 } else {
                     message.error(res.data.msg)
@@ -425,7 +417,7 @@ function TalentBlockList() {
             navigate('/login')
             message.error('账号错误，请重新登录')
         }
-        getTalentBlockListAPI();
+        getTalentBlackListAPI();
     }, [JSON.stringify(tableParams)])
     return (
         <Fragment>
@@ -471,13 +463,13 @@ function TalentBlockList() {
                     onChange={handleTableChange}
                 />
             </Card>
-            <AEBlock
+            <AEBlack
                 isShow={isShow}
                 type={type}
                 form={form}
                 onOK={(values) => {
                     if (type === 'add') {
-                        addBlockAPI(values);
+                        addBlackAPI(values);
                     } else {
                         let ori = editOri
                         let z = {}, y = {}
@@ -493,7 +485,7 @@ function TalentBlockList() {
                                 }
                             }
                         }
-                        editBlockAPI('修改信息', JSON.stringify(z), y);
+                        editBlackAPI('修改信息', JSON.stringify(z), y);
                     }
                 }}
                 onCancel={() => { setIsShow(false); form.resetFields(); }}
@@ -501,7 +493,7 @@ function TalentBlockList() {
             <Modal title={reasonType && reasonType === 'refund' ? "驳回原因" : "释放原因"} open={isShowReason} onOk={() => {
                 if (reasonType === 'refund') {
                     if (clickBid[0] === 'B') {
-                        examBlockAPI(clickBid, clickUid, clickStatus, false, reason);
+                        examBlackAPI(clickBid, clickUid, clickStatus, false, reason);
                     } else {
                         examTalentAPI(clickBid, clickUid, clickStatus, false, reason);
                     }
@@ -512,7 +504,7 @@ function TalentBlockList() {
                         if (clickBid[0] === 'B') {
                             releaseTalentAPI(clickBid, reason);
                         } else {
-                            editTalentAPI('拉黑释放', null, { block_note: reason });
+                            editTalentAPI('拉黑释放', null, { black_note: reason });
                         }
                     }
                 }
@@ -523,4 +515,4 @@ function TalentBlockList() {
     )
 }
 
-export default TalentBlockList
+export default TalentBlackList

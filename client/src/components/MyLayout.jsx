@@ -48,7 +48,7 @@ const menuItemsTotal = [
                 label: '达人列表'
             },
             {
-                key: '/admin/talent/talent_block_list',
+                key: '/admin/talent/talent_black_list',
                 label: '达人黑名单'
             },
             /* {
@@ -65,21 +65,6 @@ const menuItemsTotal = [
             }
         ]
     },
-    /* {
-        key: '/admin/point',
-        label: '结算管理',
-        icon: <DollarOutlined />,
-        children: [
-            {
-                key: '/admin/point/keyword_list',
-                label: '达人昵称规则'
-            },
-            {
-                key: '/admin/point/point_list',
-                label: '提点规则'
-            }
-        ]
-    }, */
     {
         key: '/admin/user',
         icon: <UserOutlined />,
@@ -90,6 +75,10 @@ const menuItemsTotal = [
         label: '系统设定',
         icon: <SettingOutlined />,
         children: [
+            {
+                key: '/admin/set/project',
+                label: '项目'
+            },
             {
                 key: '/admin/set/company',
                 label: '公司'

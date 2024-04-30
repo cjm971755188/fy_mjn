@@ -179,7 +179,6 @@ function LiveList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -264,7 +263,6 @@ function LiveList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -302,7 +300,6 @@ function LiveList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -377,7 +374,6 @@ function LiveList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -398,24 +394,28 @@ function LiveList() {
             console.error(err)
         })
     }
-    const [liverooms, setLiverooms] = useState('')
-    const getLiveroomsItems = () => {
+    const [baseSets, setBaseSets] = useState([])
+    const getBaseSetItems = (payload) => {
         request({
             method: 'post',
-            url: `/base/getLiveroomsItems`,
-            data: {}
+            url: '/base/getBaseSetItems',
+            data: {
+                type: payload
+            }
         }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setLiverooms(res.data.data)
+            if (res.status === 200) {
+                if (res.data.code === 200) {
+                    setBaseSets(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
+            } else {
+                message.error(res.data.msg)
             }
         }).catch((err) => {
             console.error(err)
         })
-    };
+    }
 
     // 专场
     const [type, setType] = useState('')
@@ -430,7 +430,6 @@ function LiveList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -465,7 +464,6 @@ function LiveList() {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -536,7 +534,7 @@ function LiveList() {
                         <Select style={{ width: 120 }} options={placeType} />
                     </Form.Item>
                     <Form.Item label='直播间' name='room' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={liverooms} onFocus={() => { getLiveroomsItems(true); }} />
+                        <Select style={{ width: 120 }} options={baseSets} onFocus={() => { getBaseSetItems(true); }} />
                     </Form.Item>
                     <Form.Item label='主播' name='a_id_1' style={{ margin: '0 10px 10px 0' }}>
                         <Select style={{ width: 120 }} options={authorsItems} onFocus={() => { getAuthorsItemsAPI(true); }} />

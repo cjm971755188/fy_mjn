@@ -80,7 +80,6 @@ function AELive(props) {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -118,7 +117,6 @@ function AELive(props) {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -284,24 +282,28 @@ function AELive(props) {
         console.log('e: ', value[value.length - 1]);
 
     }
-    const [liverooms, setLiverooms] = useState('')
-    const getLiveroomsItems = () => {
+    const [baseSets, setBaseSets] = useState([])
+    const getBaseSetItems = (payload) => {
         request({
             method: 'post',
-            url: `/base/getLiveroomsItems`,
-            data: {}
+            url: '/base/getBaseSetItems',
+            data: {
+                type: payload
+            }
         }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setLiverooms(res.data.data)
+            if (res.status === 200) {
+                if (res.data.code === 200) {
+                    setBaseSets(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
+            } else {
+                message.error(res.data.msg)
             }
         }).catch((err) => {
             console.error(err)
         })
-    };
+    }
 
     useEffect(() => {
         setCountType(type.match('add') ? "单场" : form.getFieldValue('count_type'))
@@ -380,7 +382,7 @@ function AELive(props) {
                     <Select placeholder="请选择" options={placeType} />
                 </Form.Item>
                 <Form.Item label="直播间" name="room" rules={[{ required: true, message: '不能为空' }]}>
-                    <Select placeholder="请选择" options={liverooms} onClick={() => { getLiveroomsItems(); }} />
+                    <Select placeholder="请选择" options={baseSets} onClick={() => { getBaseSetItems('liveroom'); }} />
                 </Form.Item>
                 <Form.Item label="主播" name="a_id_1" rules={[{ required: true, message: '不能为空' }]}>
                     <Select placeholder="请选择" options={authorsItems} onFocus={() => { getAuthorsItemsAPI(true); }} />

@@ -75,10 +75,10 @@ function AELiveCalendar(props) {
         })
     }
     const [platforms, setPlatforms] = useState([])
-    const getPlatformsItems = () => {
+    const getPlatformItems = () => {
         request({
             method: 'post',
-            url: '/base/getPlatformsItems',
+            url: '/base/getPlatformItems',
             data: []
         }).then((res) => {
             if (res.status === 200) {
@@ -95,10 +95,10 @@ function AELiveCalendar(props) {
         })
     }
     const [liverooms, setLiverooms] = useState('')
-    const getLiveroomsItems = () => {
+    const getLiveroomItems = () => {
         request({
             method: 'post',
-            url: `/base/getLiveroomsItems`,
+            url: `/base/getLiveroomItems`,
             data: {}
         }).then((res) => {
             if (res.status == 200) {
@@ -151,7 +151,6 @@ function AELiveCalendar(props) {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -189,7 +188,6 @@ function AELiveCalendar(props) {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -354,7 +352,7 @@ function AELiveCalendar(props) {
         getAuthorsItemsAPI(true);
         getControlsItemsAPI(true);
         getSalemansItemsAPI(true);
-        getLiveroomsItems();
+        getLiveroomItems();
     }, [isShow])
     return (
         <Modal
@@ -430,9 +428,9 @@ function AELiveCalendar(props) {
                 <Form.Item label="地点" name="place" rules={[{ required: true, message: '不能为空' }]}>
                     <Radio.Group>{placeType.map((item, index) => { return <Radio key={index} value={item.value}>{item.label}</Radio> })}</Radio.Group>
                 </Form.Item>
-                <Form.Item label="直播间" name="room" rules={[{ required: true, message: '不能为空' }]}>
+                {liverooms.length === 0 ? null : <Form.Item label="直播间" name="room" rules={[{ required: true, message: '不能为空' }]}>
                     <Radio.Group>{liverooms.map((item, index) => { return <Radio key={index} value={item.value}>{item.label}</Radio> })}</Radio.Group>
-                </Form.Item>
+                </Form.Item>}
                 {type === '添加新专场' ? null : <><Form.Item label="主播" name="a_id_1" rules={[{ required: true, message: '不能为空' }]}>
                     <Radio.Group>{authorsItems.map((item, index) => { return <Radio key={index} value={item.value}>{item.label}</Radio> })}</Radio.Group>
                 </Form.Item>
@@ -455,7 +453,7 @@ function AELiveCalendar(props) {
                                         <Row key={key}>
                                             <Space size={"large"}>
                                                 <Form.Item label={`平台-${key + 1}`} {...restField} name={[name, "platforms"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <Select style={{ width: 120 }} placeholder="请选择" options={platforms} onFocus={() => { getPlatformsItems(); }} />
+                                                    <Select style={{ width: 120 }} placeholder="请选择" options={platforms} onFocus={() => { getPlatformItems(); }} />
                                                 </Form.Item>
                                                 <Form.Item label={`粉丝量（万）`} {...restField} name={[name, "fans_count"]} rules={[{ required: true, message: '不能为空' }]}>
                                                     <InputNumber placeholder="请输入" min={0} />

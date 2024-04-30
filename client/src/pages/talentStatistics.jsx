@@ -1,29 +1,26 @@
 import React, { Fragment, useState, useEffect } from "react";
 import request from '../service/request'
-import { Row, Col, Statistic, Card, Form, Space, Button, Popover, Empty } from "antd";
+import { Row, Col, Statistic, Card, Form, Space, Button, Empty } from "antd";
 import MyDateSelect from '../components/MyDateSelect'
 import MyECharts from '../components/MyECharts'
 
 function TalentStatistics() {
     // 表格：获取数据、分页
     const [tableParams, setTableParams] = useState({
-        filters: {},
         filtersDate: [],
     });
-    const [countData, setCountData] = useState({ chance: {}, talent: {} });
+    const [countData, setCountData] = useState({ count: { chance: {}, talent: 0 }, operate: { name: [], find: [], advance: [], c_report: [], t_report: [] }, diff: { advance: [], report: [] } });
     const [countLoading, setCountLoading] = useState(false);
-    const getTalentStatisticsAPI = () => {
+    const getCount = () => {
         setCountLoading(true)
         request({
             method: 'post',
-            url: '/statistics/getTalentStatistics',
+            url: '/statistics/getCount',
             data: {
                 filtersDate: tableParams.filtersDate,
-                filters: tableParams.filters,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -43,72 +40,6 @@ function TalentStatistics() {
             console.error(err)
         })
     };
-    const [salemansChanceOprateOption, setSalemansChanceOprateOption] = useState({ name: [] });
-    const [salemansChanceOprateLoading, setSalemansChanceOprateLoading] = useState(false);
-    const getSalemansChanceOprateAPI = () => {
-        setSalemansChanceOprateLoading(true)
-        request({
-            method: 'post',
-            url: '/statistics/getSalemansChanceOprate',
-            data: {
-                filtersDate: tableParams.filtersDate,
-                filters: tableParams.filters,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setSalemansChanceOprateOption(res.data.data)
-                    setSalemansChanceOprateLoading(false)
-                } else {
-                    message.error(res.data.msg)
-                }
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    };
-    const [adReTimeDiffOption, setAdReTimeDiffOption] = useState({ advance: [], report: [] });
-    const [adReTimeDiffLoading, setAdReTimeDiffLoading] = useState(false);
-    const getAdReTimeDiffAPI = () => {
-        setAdReTimeDiffLoading(true)
-        request({
-            method: 'post',
-            url: '/statistics/getAdReTimeDiff',
-            data: {
-                filtersDate: tableParams.filtersDate,
-                filters: tableParams.filters,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setAdReTimeDiffOption(res.data.data)
-                    setAdReTimeDiffLoading(false)
-                } else {
-                    message.error(res.data.msg)
-                }
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    };
     const [platformTalentOption, setPlatformTalentOption] = useState([]);
     const [platformTalentLoading, setPlatformTalentLoading] = useState(false);
     const getPlatformTalentAPI = () => {
@@ -118,11 +49,9 @@ function TalentStatistics() {
             url: '/statistics/getPlatformTalent',
             data: {
                 filtersDate: tableParams.filtersDate,
-                filters: tableParams.filters,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -151,11 +80,9 @@ function TalentStatistics() {
             url: '/statistics/getClassTalent',
             data: {
                 filtersDate: tableParams.filtersDate,
-                filters: tableParams.filters,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -184,11 +111,9 @@ function TalentStatistics() {
             url: '/statistics/getTypeTalent',
             data: {
                 filtersDate: tableParams.filtersDate,
-                filters: tableParams.filters,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -217,11 +142,9 @@ function TalentStatistics() {
             url: '/statistics/getProvinceTalent',
             data: {
                 filtersDate: tableParams.filtersDate,
-                filters: tableParams.filters,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
-                    e_id: localStorage.getItem('e_id'),
                     name: localStorage.getItem('name'),
                     company: localStorage.getItem('company'),
                     department: localStorage.getItem('department'),
@@ -251,9 +174,7 @@ function TalentStatistics() {
             navigate('/login')
             message.error('账号错误，请重新登录')
         }
-        getTalentStatisticsAPI();
-        getSalemansChanceOprateAPI();
-        getAdReTimeDiffAPI();
+        getCount();
         getPlatformTalentAPI();
         getClassTalentAPI();
         getTypeTalentAPI();
@@ -294,43 +215,17 @@ function TalentStatistics() {
                 <Col span={12}>
                     <Card title="新商机 - 数量汇总">
                         <Row gutter={24} style={{ textAlign: 'center' }}>
-                            <Col span={8}><Statistic title="寻找" value={countData.chance.find || 0} suffix="个" /></Col>
-                            <Col span={8}><Statistic title="推进" value={countData.chance.advance || 0} suffix="个" /></Col>
-                            <Col span={8}>
-                                <Popover content={
-                                    <Row gutter={24} style={{ width: '600px', textAlign: 'center' }}>
-                                        <Col span={8}><Statistic title="待审批" value={countData.chance.wait || 0} suffix="个" /></Col>
-                                        <Col span={8}><Statistic title="通过" value={countData.chance.yes || 0} suffix="个" /></Col>
-                                        <Col span={8}><Statistic title="驳回" value={countData.chance.no || 0} suffix="个" /></Col>
-                                    </Row>}
-                                >
-                                    <Statistic title="报备" value={countData.chance.report || 0} suffix="个" />
-                                </Popover>
-                            </Col>
+                            <Col span={8}><Statistic title="寻找" value={countData.count.chance.find + countData.count.chance.advance + countData.count.chance.report || 0} suffix="个" /></Col>
+                            <Col span={8}><Statistic title="推进" value={countData.count.chance.advance + countData.count.chance.report || 0} suffix="个" /></Col>
+                            <Col span={8}><Statistic title="报备" value={countData.count.chance.report || 0} suffix="个" /></Col>
                         </Row>
                     </Card>
                 </Col>
                 <Col span={12}>
                     <Card title="已合作达人 - 数量汇总">
                         <Row gutter={24} style={{ textAlign: 'center' }}>
-                            <Col span={12}>
-                                <Popover content={
-                                    <Row gutter={24} style={{ width: '200px', textAlign: 'center' }}>
-                                        <Col span={24}><Statistic title="待审批" value={countData.talent.history_wait || 0} suffix="个" /></Col>
-                                    </Row>}
-                                >
-                                    <Statistic title="历史达人登记" value={countData.talent.history || 0} suffix="个" />
-                                </Popover>
-                            </Col>
-                            <Col span={12}>
-                                <Popover content={
-                                    <Row gutter={24} style={{ width: '200px', textAlign: 'center' }}>
-                                        <Col span={24}><Statistic title="待审批" value={countData.talent.cooperate_wait || 0} suffix="个" /></Col>
-                                    </Row>}
-                                >
-                                    <Statistic title="合作中" value={countData.talent.cooperate || 0} suffix="个" />
-                                </Popover>
-                            </Col>
+                            <Col span={12}><Statistic title="历史达人登记" value={countData.count.talent || 0} suffix="个" /></Col>
+                            <Col span={12}><Statistic title="合作中" value={countData.count.talent + countData.count.chance.report || 0} suffix="个" /></Col>
                         </Row>
                     </Card>
                 </Col>
@@ -338,7 +233,7 @@ function TalentStatistics() {
             <Row gutter={24} style={{ marginTop: '20px' }}>
                 <Col span={18}>
                     <Card title="各商务商机操作汇总">
-                        {!salemansChanceOprateLoading ? salemansChanceOprateOption.name.length !== 0 ? <MyECharts width={'100%'} height={625} option={{
+                        {!countLoading ? countData.operate.name.length !== 0 ? <MyECharts width={'100%'} height={625} option={{
                             tooltip: {
                                 trigger: 'axis',
                                 axisPointer: {
@@ -353,7 +248,7 @@ function TalentStatistics() {
                             xAxis: [
                                 {
                                     type: 'category',
-                                    data: salemansChanceOprateOption.name,
+                                    data: countData.operate.name,
                                 }
                             ],
                             yAxis: [
@@ -371,7 +266,7 @@ function TalentStatistics() {
                                     emphasis: {
                                         focus: 'series'
                                     },
-                                    data: salemansChanceOprateOption.find
+                                    data: countData.operate.find
                                 },
                                 {
                                     name: '商机推进',
@@ -382,7 +277,7 @@ function TalentStatistics() {
                                     emphasis: {
                                         focus: 'series'
                                     },
-                                    data: salemansChanceOprateOption.advance
+                                    data: countData.operate.advance
                                 },
                                 {
                                     name: '商机报备',
@@ -393,7 +288,7 @@ function TalentStatistics() {
                                     emphasis: {
                                         focus: 'series'
                                     },
-                                    data: salemansChanceOprateOption.c_report
+                                    data: countData.operate.c_report
                                 },
                                 {
                                     name: '历史达人录入',
@@ -404,7 +299,7 @@ function TalentStatistics() {
                                     emphasis: {
                                         focus: 'series'
                                     },
-                                    data: salemansChanceOprateOption.t_report
+                                    data: countData.operate.t_report
                                 }
                             ]
                         }} /> : <Empty imageStyle={{ height: '250px' }} /> : null}
@@ -412,7 +307,7 @@ function TalentStatistics() {
                 </Col>
                 <Col span={6}>
                     <Card title="商机推进平均用时">
-                        {!adReTimeDiffLoading ? adReTimeDiffOption.advance.length !== 0 ? <MyECharts width={'100%'} height={250} option={{
+                        {!countLoading ? countData.diff.advance.length !== 0 ? <MyECharts width={'100%'} height={250} option={{
                             tooltip: {
                                 trigger: 'item'
                             },
@@ -441,13 +336,13 @@ function TalentStatistics() {
                                     labelLine: {
                                         show: false
                                     },
-                                    data: adReTimeDiffOption.advance
+                                    data: countData.diff.advance
                                 }
                             ]
                         }} /> : <Empty imageStyle={{ height: '220px' }} /> : null}
                     </Card>
                     <Card title="商机报备平均用时" style={{ marginTop: '20px' }}>
-                        {!adReTimeDiffLoading ? adReTimeDiffOption.report.length !== 0 ? <MyECharts width={'100%'} height={250} option={{
+                        {!countLoading ? countData.diff.report.length !== 0 ? <MyECharts width={'100%'} height={250} option={{
                             tooltip: {
                                 trigger: 'item'
                             },
@@ -476,7 +371,7 @@ function TalentStatistics() {
                                     labelLine: {
                                         show: false
                                     },
-                                    data: adReTimeDiffOption.report
+                                    data: countData.diff.report
                                 }
                             ]
                         }} /> : <Empty imageStyle={{ height: '220px' }} /> : null}
@@ -633,7 +528,7 @@ function TalentStatistics() {
                             series: [
                                 {
                                     data: provinceTalentOption.data,
-                                    geoIndex: 0, 
+                                    geoIndex: 0,
                                     type: 'map',
                                 },
                             ],

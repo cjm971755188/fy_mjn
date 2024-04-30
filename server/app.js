@@ -58,8 +58,8 @@ const chanceRouter = require('./router/chance')
 app.use('/chance', chanceRouter)
 const talentRouter = require('./router/talent')
 app.use('/talent', talentRouter)
-const blockRouter = require('./router/block')
-app.use('/block', blockRouter)
+const blackRouter = require('./router/black')
+app.use('/black', blackRouter)
 const liveRouter = require('./router/live')
 app.use('/live', liveRouter)
 const middlemanRouter = require('./router/middleman')
@@ -73,14 +73,42 @@ app.use('/base', baseRouter)
 let rule = new schedule.RecurrenceRule();
 // rule.date = [1]; // 每月1号 
 // rule.dayOfWeek = [1,3,5]; // 每周一、周三、周五 
-rule.hour = 0; rule.minute = 0; rule.second = 0; // 每天0点执行
+rule.hour = 12; rule.minute = 0; rule.second = 0; // 每天0点执行
 // rule.second = [0,10,20,30,40,50]; // 隔十秒
 // rule.minute = [0,20,40]; // 每小时的0分钟，20分钟，40分钟执行
 // 启动任务
 let job = schedule.scheduleJob(rule, () => {
-    /* let sql = `UPDATE chance SET status = '已过期' where `
+    /* let sql = `SELECT a.*, UNIX_TIMESTAMP(MAX(b.lastsale)) as lastsale, DATEDIFF(now(), MAX(b.lastsale)) as days, 
+                    IF(MAX(b.lastsale) IS NULL, '无销售', IF(DATEDIFF(now(), MAX(b.lastsale)) <= 60, '在售', IF(DATEDIFF(now(), MAX(b.lastsale)) > 60 && DATEDIFF(now(), MAX(b.lastsale)) <= 150, '停滞', 
+                            IF(DATEDIFF(now(), MAX(b.lastsale)) > 150 && DATEDIFF(now(), MAX(b.lastsale)) <= 180, '即将过期', '已过期')))) as sale_type,
+                    SUM(b.price) as price, SUM(b.done) as done, SUM(b.year_price) as year_price
+                FROM (
+                    SELECT t.tid, t.name, t.type, GROUP_CONCAT(DISTINCT u1.secret) as secret, GROUP_CONCAT(DISTINCT u1.url) as url, GROUP_CONCAT(DISTINCT u1.name) as u_name_1, GROUP_CONCAT(DISTINCT u2.name) as u_name_2, 
+                        GROUP_CONCAT(DISTINCT u0.name) as u_name_0, IF(ts.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status
+                    FROM talent t
+                            LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' GROUP BY tid) ts0 ON ts0.tid = t.tid
+                            LEFT JOIN talent_schedule ts ON ts.tsid = ts0.tsid
+                            LEFT JOIN middleman m1 ON m1.mid = ts.m_id_1
+                            LEFT JOIN middleman m2 ON m2.mid = ts.m_id_2
+                            LEFT JOIN user u0 ON u0.uid = ts.u_id_0
+                            LEFT JOIN talent_model tm ON tm.tid = t.tid AND tm.status != '已失效'
+                            LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
+                            LEFT JOIN talent_model_schedule tms ON tms.tmsid = tms0.tmsid
+                            LEFT JOIN user u1 ON u1.uid = tms.u_id_1
+                            LEFT JOIN user u2 ON u2.uid = tms.u_id_2
+                    WHERE t.status != '已失效' and t.status != '已拉黑' and t.status != '拉黑待审批'
+                    GROUP BY t.tid, t.cid, t.name, t.year_deal, t.type, m1.name, ts.m_point_1, m2.name, ts.m_point_2, yearbox_status, ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels
+                ) a
+                    LEFT JOIN join_bi b ON b.name = a.name
+                GROUP BY a.tid, a.name, a.type, a.secret, a.url, a.u_name_1, a.u_name_2, a.u_name_0, a.yearbox_status
+                HAVING sale_type = '即将过期'
+                ORDER BY days`
     db.query(sql, (err, results) => {
         if (err) throw err;
+        let 
+        for (let i = 0; i < results.length; i++) {
+            const element = array[i];
+        }
         res.send({ code: 200, data: [], msg: '修改成功' })
     }) */
 });
