@@ -137,35 +137,6 @@ function MiddlemanList() {
     }
     // 查询、清空筛选
     const [filterForm] = Form.useForm()
-    const [salemanAssistantsItems, setSalemanAssistantsItems] = useState()
-    const getSalemanAssistantsItemsAPI = () => {
-        request({
-            method: 'post',
-            url: '/user/getSalemanAssistantItems',
-            data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setSalemanAssistantsItems(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
 
     // 添加新中间人
     const [type, setType] = useState('add')
@@ -234,12 +205,31 @@ function MiddlemanList() {
             console.error(err)
         })
     }
+    // 下拉框
+    const [users, setUser] = useState()
+    const getUserItems = (type) => {
+        request({
+            method: 'post',
+            url: '/user/getUserItems',
+            data: {
+                type
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setUser(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     useEffect(() => {
-        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
-            navigate('/login')
-            message.error('账号错误，请重新登录')
-        }
         getMiddlemanListAPI();
     }, [JSON.stringify(tableParams)])
     return (
@@ -267,7 +257,7 @@ function MiddlemanList() {
                     <Form.Item label='联系人姓名' name='liaison_name' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
                     <Form.Item label='付款姓名' name='pay_name' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
                     <Form.Item label='商务' name='u_id' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                        <Select style={{ width: 120 }} options={users} onFocus={() => { getUserItems('saleman'); }} />
                     </Form.Item>
                     <Form.Item style={{ margin: '0 10px 10px 0' }}>
                         <Space size={'large'}>

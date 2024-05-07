@@ -15,7 +15,8 @@ export const talentStatus = [
 
 export const yearboxStatus = [
     { key: 0, label: "暂无", value: "暂无" },
-    { key: 1, label: "生效中", value: "生效中" }
+    { key: 1, label: "生效中", value: "生效中" },
+    { key: 2, label: "已失效", value: "已失效" }
 ]
 
 export const modelStatus = [
@@ -146,4 +147,11 @@ export const saleStatus= [
 export const stagnateLavel= [
     { key: 0, label: "60-180天", value: "60-180天" },
     { key: 1, label: "180天以上", value: "180天以上" }
+]
+
+export const modelType= [
+    { key: 0, label: "线上平台", value: "线上平台" },
+    { key: 1, label: "社群团购", value: "社群团购" },
+    { key: 2, label: "供货", value: "供货" },
+    { key: 3, label: "定制", value: "定制" }
 ]

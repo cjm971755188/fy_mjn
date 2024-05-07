@@ -7,7 +7,7 @@ import { AuditOutlined, MessageOutlined, GlobalOutlined, CrownOutlined, SettingO
 import { middlemanPayType, talentType } from '../baseData/talent'
 import { descriptionsItems } from '../baseData/talentDetail'
 import { province } from '../baseData/base'
-import AELiaison from '../components/modals/AELiaison'
+import AEChance from '../components/modals/AEChance'
 import AEYear from '../components/modals/AEYear'
 import AEFile from '../components/modals/AEFile'
 import AETalent from '../components/modals/AETalent'
@@ -18,7 +18,7 @@ function TalentDetail() {
     // 路由
     let location = useLocation();
     const navigate = useNavigate();
-    const { tid, tableParams } = location.state;
+    const { tid } = location.state;
 
     // 操作权限
     const editPower = (localStorage.getItem('department') === '事业部' && localStorage.getItem('company') !== '总公司') || localStorage.getItem('position') === '管理员' ? true : false
@@ -332,8 +332,8 @@ function TalentDetail() {
     const [yearType, setYearType] = useState()
     const [formYear] = Form.useForm()
     // 修改联系人
-    const [isShowLiaison, setIsShowLiaison] = useState(false)
-    const [formLiaison] = Form.useForm()
+    const [isShowChance, setIsShowChance] = useState(false)
+    const [formChance] = Form.useForm()
     const [editOri, setEditOri] = useState()
     // 新增、修改、删除中间人
     const [isShowMiddle, setIsShowMiddle] = useState(false)
@@ -393,8 +393,8 @@ function TalentDetail() {
                         setIsShowYear(false);
                         formYear.resetFields();
                     } else if (operate.match('联系人')) {
-                        setIsShowLiaison(false);
-                        formLiaison.resetFields();
+                        setIsShowChance(false);
+                        formChance.resetFields();
                     } else if (operate.match('中间人')) {
                         setIsShowMiddle(false);
                         formMiddle.resetFields();
@@ -566,10 +566,6 @@ function TalentDetail() {
     }
 
     useEffect(() => {
-        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
-            navigate('/login')
-            message.error('账号错误，请重新登录')
-        }
         getTalentDetailAPI();
     }, [tid])
     return (
@@ -578,7 +574,7 @@ function TalentDetail() {
                 <Col span={18}>
                     <Card title={<Space><CrownOutlined /><span>基础信息</span><Tag color={detailData.status.match('待审批') ? 'gold' : detailData.status.match('合作中') ? 'green' : 'grey'}>{detailData.status}</Tag></Space>}
                         style={{ marginBottom: '20px' }}
-                        extra={(detailData.status.match('待审批')) ? (examPower ?
+                        extra={detailData.status === '拉黑待审批' ? null : detailData.status.match('待审批') ? (examPower ?
                             <Space>
                                 <Button type="primary" onClick={() => {
                                     if (detailData.status.match('移交')) {
@@ -677,8 +673,8 @@ function TalentDetail() {
                                     }
                                 }
                                 setEditOri(ori)
-                                formLiaison.setFieldsValue({ tid: tid, ...ori })
-                                setIsShowLiaison(true);
+                                formChance.setFieldsValue({ tid: tid, ...ori })
+                                setIsShowChance(true);
                             }}>修改</Button> : null}
                         />
                         {detailData.m_id_1 === null ? <Descriptions title="无一级中间人"
@@ -998,10 +994,10 @@ function TalentDetail() {
                 }}
                 onCancel={() => { formYear.resetFields(); setIsShowYear(false); }}
             />
-            <AELiaison
-                isShow={isShowLiaison}
-                type={'edit_talent'}
-                form={formLiaison}
+            <AEChance
+                type={'修改联系人'}
+                isShow={isShowChance}
+                form={formChance}
                 onOK={(values) => {
                     let ori = editOri
                     let payload = values
@@ -1019,7 +1015,7 @@ function TalentDetail() {
                     }
                     editTalentAPI('修改联系人', Object.keys(z).length === 0 ? null : JSON.stringify(z), payload);
                 }}
-                onCancel={() => { setIsShowLiaison(false); formLiaison.resetFields(); }}
+                onCancel={() => { setIsShowChance(false); formChance.resetFields(); }}
             />
             <Modal title={middleType} open={isShowMiddle}
                 onOk={() => {
@@ -1137,7 +1133,6 @@ function TalentDetail() {
                                 }
                             }
                         }
-                        console.log(values);
                         if (modelType.match('线上平台')) {
                             for (const key in values.accounts[0]) {
                                 if (Object.hasOwnProperty.call(values.accounts[0], key)) {

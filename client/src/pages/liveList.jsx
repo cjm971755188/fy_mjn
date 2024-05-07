@@ -254,168 +254,6 @@ function LiveList() {
     }
     const filterOption = (input, option) =>
         (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
-    const [authorsItems, setAuthorsItems] = useState()
-    const getAuthorsItemsAPI = (type) => {
-        request({
-            method: 'post',
-            url: '/user/getAnthorItems',
-            data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    if (type) {
-                        setAuthorsItems(res.data.data)
-                    } else {
-                        let items = [
-                            { label: null, value: null },
-                            ...res.data.data
-                        ]
-                        setAuthorsItems(items)
-                    }
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [controlsItems, setControlsItems] = useState()
-    const getControlsItemsAPI = (type) => {
-        request({
-            method: 'post',
-            url: '/user/getControlItems',
-            data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    if (type) {
-                        setControlsItems(res.data.data)
-                    } else {
-                        let items = [
-                            { label: null, value: null },
-                            ...res.data.data
-                        ]
-                        setControlsItems(items)
-                    }
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [salemansItems, setSalemansItems] = useState()
-    const getSalemansItemsAPI = (type) => {
-        request({
-            method: 'post',
-            url: '/user/getSalemanItems',
-            data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    if (type) {
-                        setSalemansItems(res.data.data)
-                    } else {
-                        let items = [
-                            { label: null, value: null },
-                            ...res.data.data
-                        ]
-                        setSalemansItems(items)
-                    }
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [salemanAssistantsItems, setSalemanAssistantsItems] = useState()
-    const getSalemanAssistantsItemsAPI = () => {
-        request({
-            method: 'post',
-            url: '/user/getSalemanAssistantItems',
-            data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setSalemanAssistantsItems(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [baseSets, setBaseSets] = useState([])
-    const getBaseSetItems = (payload) => {
-        request({
-            method: 'post',
-            url: '/base/getBaseSetItems',
-            data: {
-                type: payload
-            }
-        }).then((res) => {
-            if (res.status === 200) {
-                if (res.data.code === 200) {
-                    setBaseSets(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
 
     // 专场
     const [type, setType] = useState('')
@@ -488,12 +326,61 @@ function LiveList() {
             console.error(err)
         })
     }
+    // 下拉框
+    const [baseSets, setBaseSets] = useState([])
+    const getBaseSetItems = (type) => {
+        request({
+            method: 'post',
+            url: '/base/getBaseSetItems',
+            data: {
+                type
+            }
+        }).then((res) => {
+            if (res.status === 200) {
+                if (res.data.code === 200) {
+                    setBaseSets(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const [users, setUser] = useState()
+    const getUserItems = (type) => {
+        request({
+            method: 'post',
+            url: '/user/getUserItems',
+            data: {
+                type
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    if (type) {
+                        setUser(res.data.data)
+                    } else {
+                        let items = [
+                            { label: null, value: null },
+                            ...res.data.data
+                        ]
+                        setUser(items)
+                    }
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
 
     useEffect(() => {
-        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
-            navigate('/login')
-            message.error('账号错误，请重新登录')
-        }
         getLiveListAPI();
     }, [JSON.stringify(tableParams)])
     return (
@@ -534,25 +421,25 @@ function LiveList() {
                         <Select style={{ width: 120 }} options={placeType} />
                     </Form.Item>
                     <Form.Item label='直播间' name='room' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={baseSets} onFocus={() => { getBaseSetItems(true); }} />
+                        <Select style={{ width: 120 }} options={baseSets} onFocus={() => { getBaseSetItems('liveroom'); }} />
                     </Form.Item>
                     <Form.Item label='主播' name='a_id_1' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={authorsItems} onFocus={() => { getAuthorsItemsAPI(true); }} />
+                        <Select style={{ width: 120 }} options={users} onFocus={() => { getUserItems('author'); }} />
                     </Form.Item>
                     <Form.Item label='副播' name='a_id_2' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={authorsItems} onFocus={() => { getAuthorsItemsAPI(true); }} />
+                        <Select style={{ width: 120 }} options={users} onFocus={() => { getUserItems('author'); }} />
                     </Form.Item>
                     <Form.Item label='中控' name='c_id_1' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={controlsItems} onFocus={() => { getControlsItemsAPI(true); }} />
+                        <Select style={{ width: 120 }} options={users} onFocus={() => { getUserItems('control'); }} />
                     </Form.Item>
                     <Form.Item label='服务商务' name='u_id_3' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={salemansItems} onFocus={() => { getSalemansItemsAPI(true); }} />
+                        <Select style={{ width: 120 }} options={users} onFocus={() => { getUserItems('saleman'); }} />
                     </Form.Item>
                     <Form.Item label='主商务' name='u_id_1' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                        <Select style={{ width: 120 }} options={users} onFocus={() => { getUserItems('saleman'); }} />
                     </Form.Item>
                     <Form.Item label='副商务' name='u_id_2' style={{ margin: '0 10px 10px 0' }}>
-                        <Select style={{ width: 120 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                        <Select style={{ width: 120 }} options={users} onFocus={() => { getUserItems('salemanAssistant'); }} />
                     </Form.Item>
                     <Form.Item style={{ margin: '0 10px 10px 0' }}>
                         <Space size={'large'}>

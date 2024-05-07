@@ -3,7 +3,7 @@ const router = express.Router();
 const dayjs = require('dayjs');
 const db = require('../config/db')
 const sendRobot = require('../api/ddrobot')
-const { power, filter } = require('../function/power')
+const { power, filter, isNull } = require('../function/power')
 
 // 获取商机列表
 router.post('/getChanceList', (req, res) => {
@@ -14,7 +14,7 @@ router.post('/getChanceList', (req, res) => {
     let sql = `SELECT SQL_CALC_FOUND_ROWS * 
                 FROM (
                     SELECT c.cid, c.models, c.group_name, c.provide_name, c.custom_name, c.platforms, c.account_names, c.search_pic, c.liaison_type, c.liaison_name, c.liaison_v, c.liaison_phone, c.crowd_name, c.advance_pic, c.note, c.refund_note, c.delay_note, 
-                            IF(15 - DATEDIFF(NOW(), FROM_UNIXTIME(LEFT(c.advance_time, 10))) < 0 && (c.status = '待报备' || c.status = '报备驳回'), '已过期', c.status) as status, c.u_id, c.create_time, c.advance_time, c.report_time, u.name, 
+                            IF(15 - DATEDIFF(NOW(), FROM_UNIXTIME(LEFT(c.advance_time, 10))) < 0 && (c.status = '待报备' || c.status = '报备驳回'), '已过期', c.status) as status, c.create_time, c.advance_time, c.report_time, c.u_id, u.name as u_name, 
                             15 - DATEDIFF(NOW(), FROM_UNIXTIME(LEFT(c.advance_time, 10))) as days, ts1.examine_note, c.advance_days
                     FROM chance c 
                         LEFT JOIN user u ON u.uid = c.u_id
@@ -55,13 +55,10 @@ router.post('/searchSameChance', (req, res) => {
                     WHERE	(t.name LIKE '%${names[i]}%' or tm.account_name LIKE '%${names[i]}%')
                         and tm.status != '已失效' ${params.type === 'edit' ? `and tm.tmid != '${params.tmid}'` : ''})
                 UNION
-                (SELECT	b.bid, b.name, '', '', '', '', u.name as u_name, b.status, bs1.reason
-                    FROM black b
-                        LEFT JOIN (SELECT bid, MAX(bsid) as bsid FROM black_schedule WHERE operate != '拉黑释放' and status = '生效中' GROUP BY bid) bs0 ON bs0.bid = b.bid
-                        LEFT JOIN black_schedule bs1 ON bs1.bsid = bs0.bsid
-                        LEFT JOIN user u ON u.uid = bs1.create_uid
-                    WHERE b.name LIKE '%${names[i]}%'
-                        and b.status = '已拉黑')
+                (SELECT	b.tbid, b.name, '', '', '', '', '', b.status, ''
+                FROM talent_black b
+                WHERE b.name LIKE '%${names[i]}%'
+                    and b.status != '失效')
                 UNION
                 (SELECT	c.cid, '', c.models, c.platforms, '', CONCAT(IF(c.account_names IS NULL, '', c.account_names), ',', IF(c.group_name IS NULL, '', c.group_name), ',', IF(c.provide_name IS NULL, '', c.provide_name), ',', IF(c.custom_name IS NULL, '', c.custom_name)), u.name as u_name, c.status, ''
                     FROM chance c
@@ -99,15 +96,9 @@ router.post('/addChance', (req, res) => {
     db.query(sql, (err, results) => {
         if (err) throw err;
         let cid = 'C' + `${results[0].sum + 1}`.padStart(7, '0')
-        let models = `'${params.models.join()}'`
-        let platforms = params.platforms ? `'${params.platforms.join()}'` : null
-        let account_names = params.account_names ? `'${params.account_names.join()}'` : null
-        let group_name = params.group_name ? `'${params.group_name}'` : null
-        let provide_name = params.provide_name ? `'${params.provide_name}'` : null
-        let custom_name = params.custom_name ? `'${params.custom_name}'` : null
-        let liaison_phone = params.liaison_phone ? `'${params.liaison_phone}'` : null
-        let sql = `INSERT INTO chance VALUES('${cid}', ${models}, ${group_name}, ${provide_name}, ${custom_name}, ${platforms}, ${account_names}, '${params.search_pic}', '${params.liaison_type}', '${params.liaison_name}', '${params.liaison_v}', 
-                    ${liaison_phone}, null, null, 0, null, null, null, '待推进', '${params.userInfo.up_uid === 'null' || params.userInfo.up_uid === null ? params.userInfo.uid : params.userInfo.up_uid}', ${dayjs().valueOf()}, null, null)`
+        let sql = `INSERT INTO chance VALUES('${cid}', ${isNull(params.models, 'join')}, ${isNull(params.group_name, 'normal')}, ${isNull(params.provide_name, 'normal')}, ${isNull(params.custom_name, 'normal')}, ${isNull(params.platforms, 'join')}, 
+                    ${isNull(params.account_names, 'join')}, '${params.search_pic}', '${params.liaison_type}', '${params.liaison_name}', '${params.liaison_v}', ${isNull(params.liaison_phone, 'normal')}, null, null, 0, null, null, null, '待推进', 
+                    '${params.userInfo.up_uid === 'null' || params.userInfo.up_uid === null ? params.userInfo.uid : params.userInfo.up_uid}', ${dayjs().valueOf()}, null, null)`
         db.query(sql, (err, results) => {
             if (err) throw err;
             res.send({ code: 200, data: [], msg: `添加成功` })
@@ -118,16 +109,14 @@ router.post('/addChance', (req, res) => {
 // 修改商机
 router.post('/editChance', (req, res) => {
     let params = req.body
-    params.models = params.models ? params.models.join() : null
-    params.platforms = params.platforms ? params.platforms.join() : null
-    params.account_names = params.account_names ? params.account_names.join() : null
-    params.group_name = params.group_name ? params.group_name : null
-    params.provide_name = params.provide_name ? params.provide_name : null
-    params.custom_name = params.custom_name ? params.custom_name : null
     let sql = 'UPDATE chance SET'
     for (let i = 0; i < Object.getOwnPropertyNames(params).length; i++) {
-        if (Object.keys(params)[i] !== 'userInfo' && Object.keys(params)[i] !== 'cid' && Object.keys(params)[i] !== 'type') {
-            sql += Object.values(params)[i] !== null ? ` ${Object.keys(params)[i]} = '${Object.values(params)[i]}',` : ` ${Object.keys(params)[i]} = null,`
+        if (['userInfo', 'cid', 'type', 'operate'].indexOf(Object.keys(params)[i]) > -1) {
+            continue
+        } else if (['models', 'platforms', 'account_names'].indexOf(Object.keys(params)[i]) > -1) {
+            sql += ` ${Object.keys(params)[i]} = ` + isNull(Object.values(params)[i], 'join') + ','
+        } else {
+            sql += ` ${Object.keys(params)[i]} = ` + isNull(Object.values(params)[i], 'normal') + ','
         }
     }
     sql = sql.substring(0, sql.length - 1)
@@ -141,30 +130,31 @@ router.post('/editChance', (req, res) => {
 // 推进商机
 router.post('/advanceChance', (req, res) => {
     let params = req.body
-    params.advance_pic = params.advance_pic.replace('/public', '')
-    let delay_note = params.delay_note || params.delay_note === null ? null : `'${params.delay_note}'`
     let sql = `UPDATE chance 
-                SET crowd_name = '${params.crowd_name}', status = IF(advance_time IS NULL, '推进待审批', '延期推进待审批'), advance_pic = '${params.advance_pic}', advance_time = ${dayjs().valueOf()}, delay_note = ${delay_note} 
+                SET crowd_name = '${params.crowd_name}', status = IF(advance_time IS NULL, '推进待审批', '延期推进待审批'), advance_pic = '${params.advance_pic}', advance_time = ${dayjs().valueOf()}, delay_note = ${isNull(params.delay_note, 'normal')} 
                 WHERE cid = '${params.cid}'`
     db.query(sql, (err, results) => {
         if (err) throw err;
-        let sql = `SELECT * FROM user WHERE uid = '${params.userInfo.up_id}'`
-        db.query(sql, (err, results_u) => {
+        let sql = `SELECT * FROM user WHERE uid = 'MJN00025'`
+        db.query(sql, (err, results_e) => {
             if (err) throw err;
-            let sql = `SELECT * FROM user WHERE uid = 'MJN00025'`
-            db.query(sql, (err, results_e) => {
-                if (err) throw err;
-                sendRobot(
-                    results_e[0].secret,
-                    results_e[0].url,
-                    `${params.names} ${params.operate}`,
-                    `### 申请人员：${results_u.length === 0 ? params.userInfo.name : results_u[0].name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.names} \n\n ### 审批人员：@${results_e[0].phone}`,
-                    `http://1.15.89.163:5173`,
-                    [results_e[0].phone],
-                    false
-                )
-                res.send({ code: 200, data: [], msg: `推进成功，等待审批` })
-            })
+            sendRobot(
+                results_e[0].secret,
+                results_e[0].url,
+                {
+                    "msgtype": "markdown",
+                    "markdown": {
+                        "title": `${params.names} ${params.operate}`,
+                        "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.names} \n\n ### 审批人员：@${results_e[0].phone} \n> 
+                            ##### 网址：http://1.15.89.163:5173`
+                    },
+                    "at": {
+                        "atMobiles": [results_e[0].phone],
+                        "isAtAll": false
+                    }
+                }
+            )
+            res.send({ code: 200, data: [], msg: `推进成功，等待审批` })
         })
     })
 })
@@ -172,26 +162,31 @@ router.post('/advanceChance', (req, res) => {
 // 审批商机
 router.post('/examChance', (req, res) => {
     let params = req.body
-    let note = params.refund_note === null ? null : `'${params.refund_note}'`
     let sql = ''
     if (params.exam) {
         sql = `UPDATE chance SET advance_days = advance_days + 15, status = '待报备' WHERE cid = '${params.cid}'`
     } else {
-        sql = `UPDATE chance SET advance_pic = null, refund_note = ${note}, status = '推进驳回', advance_time = null WHERE cid = '${params.cid}'`
+        sql = `UPDATE chance SET crowd_name = null, advance_pic = null, refund_note = ${isNull(params.note, 'normal')}, status = '推进驳回', advance_time = null WHERE cid = '${params.cid}'`
     }
     db.query(sql, (err, results) => {
         if (err) throw err;
-        let sql = `SELECT * FROM user WHERE uid = '${params.uid}'`
+        let sql = `SELECT u.* FROM chance c LEFT JOIN user u ON c.u_id = u.uid WHERE c.cid = '${params.cid}'`
         db.query(sql, (err, results_u) => {
             if (err) throw err;
             sendRobot(
                 results_u[0].secret,
                 results_u[0].url,
-                `${params.names} 推进商机 审批${params.exam ? '通过' : '驳回'}`,
-                `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：推进商机 \n\n ### 达人昵称：${params.names} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${note}`}`,
-                `http://1.15.89.163:5173`,
-                [results_u[0].phone],
-                false
+                {
+                    "msgtype": "markdown",
+                    "markdown": {
+                        "title": `${params.names} 推进商机 审批${params.exam ? '通过' : '驳回'}`,
+                        "text": `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：推进商机 \n\n ### 达人昵称：${params.names} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${isNull(params.note, 'normal')}`} \n> ##### 网址：http://1.15.89.163:5173`
+                    },
+                    "at": {
+                        "atMobiles": [results_u[0].phone],
+                        "isAtAll": false
+                    }
+                }
             )
             res.send({ code: 200, data: [], msg: `` })
         })
@@ -324,11 +319,17 @@ router.post('/reportChance', (req, res) => {
                                                         sendRobot(
                                                             results_e[0].secret,
                                                             results_e[0].url,
-                                                            `${params.talent_name} ${params.operate}`,
-                                                            `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.talent_name} \n\n ### 审批人员：@${results_e[0].phone}`,
-                                                            `http://1.15.89.163:5173`,
-                                                            [results_e[0].phone],
-                                                            false
+                                                            {
+                                                                "msgtype": "markdown",
+                                                                "markdown": {
+                                                                    "title": `${params.talent_name} ${params.operate}`,
+                                                                    "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.talent_name} \n\n ### 审批人员：@${results_e[0].phone} \n> ##### 网址：http://1.15.89.163:5173`
+                                                                },
+                                                                "at": {
+                                                                    "atMobiles": [results_e[0].phone],
+                                                                    "isAtAll": false
+                                                                }
+                                                            }
                                                         )
                                                         res.send({ code: 200, data: [], msg: `报备成功` })
                                                     })
@@ -343,16 +344,6 @@ router.post('/reportChance', (req, res) => {
                 })
             })
         }
-    })
-})
-
-// 修改商机
-router.post('/editNote', (req, res) => {
-    let params = req.body
-    let sql = `UPDATE chance SET note = '${params.note}' WHERE cid = '${params.cid}'`
-    db.query(sql, (err, results) => {
-        if (err) throw err;
-        res.send({ code: 200, data: [], msg: `修改成功` })
     })
 })
 

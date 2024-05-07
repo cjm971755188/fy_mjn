@@ -225,20 +225,13 @@ function UserList() {
             console.error(err)
         })
     }
-    // 获取下拉框
-    const getSalemanItems = () => {
+    // 下拉框
+    const getUserItems = (type) => {
         request({
             method: 'post',
-            url: '/user/getSalemanItems',
+            url: '/user/getUserItems',
             data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
+                type
             }
         }).then((res) => {
             if (res.status == 200) {
@@ -267,10 +260,6 @@ function UserList() {
     }
 
     useEffect(() => {
-        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
-            navigate('/login')
-            message.error('账号错误，请重新登录')
-        }
         getUserListAPI();
     }, [JSON.stringify(tableParams)])
     return (
@@ -348,7 +337,7 @@ function UserList() {
                         <Input placeholder="请输入" maxLength={11} />
                     </Form.Item>
                     <Form.Item label="岗位" name="combine" rules={[{ required: true, message: '不能为空' }]}>
-                        <Cascader placeholder="请选择" options={combine} onClick={() => { getSalemanItems(); }} />
+                        <Cascader placeholder="请选择" options={combine} onClick={() => { getUserItems('saleman'); }} />
                     </Form.Item>
                 </Form>
             </Modal>

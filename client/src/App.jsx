@@ -10,7 +10,7 @@ import LiveCalendar from './pages/liveCalendar.jsx'
 import LiveList from './pages/liveList.jsx'
 import MiddlemanList from './pages/middlemanList.jsx'
 import UserList from './pages/userList.jsx'
-import SetList from './pages/setList.jsx'
+import BaseList from './pages/baseList.jsx'
 
 function App() {
     return (
@@ -25,13 +25,15 @@ function App() {
                 <Route path='/talent/live_list' element={<LiveList />} />
                 <Route path='/talent/middleman_list' element={<MiddlemanList />} />
                 <Route path='/user' element={<UserList />} />
-                <Route path='/set/project' element={<SetList />} />
-                <Route path='/set/company' element={<SetList />} />
-                <Route path='/set/platform' element={<SetList />} />
-                <Route path='/set/store' element={<SetList />} />
-                <Route path='/set/liveroom' element={<SetList />} />
-                <Route path='/set/liaison' element={<SetList />} />
-                <Route path='/set/account' element={<SetList />} />
+                <Route path='/info/company' element={<BaseList />} />
+                <Route path='/info/store' element={<BaseList />} />
+                <Route path='/info/notice' element={<BaseList />} />
+                <Route path='/info/mechanism' element={<BaseList />} />
+                <Route path='/base/project' element={<BaseList />} />
+                <Route path='/base/platform' element={<BaseList />} />
+                <Route path='/base/liveroom' element={<BaseList />} />
+                <Route path='/base/liaison' element={<BaseList />} />
+                <Route path='/base/account' element={<BaseList />} />
             </Routes>
         </MyLayout>
     )

@@ -170,10 +170,6 @@ function TalentStatistics() {
     const [dateSelect, setDateSelect] = useState()
 
     useEffect(() => {
-        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
-            navigate('/login')
-            message.error('账号错误，请重新登录')
-        }
         getCount();
         getPlatformTalentAPI();
         getClassTalentAPI();

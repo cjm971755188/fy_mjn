@@ -2,7 +2,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import request from '../service/request'
 import { Card, Table, Space, Form, Input, Button, Modal, message, Tooltip } from 'antd';
 import { PlusOutlined, ClockCircleTwoTone, PauseCircleTwoTone } from '@ant-design/icons';
-import AEBlack from '../components/modals/AEBlack'
+import AENote from '../components/modals/AENote'
 
 const { TextArea } = Input;
 
@@ -10,18 +10,18 @@ function TalentBlackList() {
     // 操作权限
     const editPower = (localStorage.getItem('company') === '总公司' && localStorage.getItem('department') === '事业部') || localStorage.getItem('position') === '管理员' ? true : false
     const examPower = (localStorage.getItem('position') === '副总' && localStorage.getItem('department') === '事业部') || localStorage.getItem('position') === '管理员' ? true : false
-    const releasePower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '助理' || localStorage.getItem('position') === '管理员' ? true : false
+    const recoverPower = localStorage.getItem('position') === '商务' || localStorage.getItem('position') === '助理' || localStorage.getItem('position') === '管理员' ? true : false
 
     // 表格：格式
     let columns = [
-        { title: '编号', dataIndex: 'bid', key: 'bid' },
+        { title: '编号', dataIndex: 'tbid', key: 'tbid' },
         { title: '达人昵称', dataIndex: 'name', key: 'name' },
         {
             title: '拉黑原因',
-            dataIndex: 'reason_b',
-            key: 'reason_b',
+            dataIndex: 'b_reason',
+            key: 'b_reason',
             render: (_, record) => (
-                <Tooltip title={record.reason_b}>
+                <Tooltip title={record.b_reason}>
                     <div style={{
                         textOverflow: 'ellipsis',
                         overflow: 'hidden',
@@ -29,18 +29,18 @@ function TalentBlackList() {
                         cursor: 'pointer'
                     }}
                     >
-                        {record.reason_b}
+                        {record.b_reason}
                     </div>
                 </Tooltip>
             )
         },
-        { title: '拉黑人', dataIndex: 'u_name_b', key: 'u_name_b' },
+        { title: '拉黑人', dataIndex: 'b_name', key: 'b_name' },
         {
             title: '释放原因',
-            dataIndex: 'reason_r',
-            key: 'reason_r',
+            dataIndex: 'r_reason',
+            key: 'r_reason',
             render: (_, record) => (
-                <Tooltip title={record.reason_r}>
+                <Tooltip title={record.r_reason}>
                     <div style={{
                         textOverflow: 'ellipsis',
                         overflow: 'hidden',
@@ -48,12 +48,12 @@ function TalentBlackList() {
                         cursor: 'pointer'
                     }}
                     >
-                        {record.reason_r}
+                        {record.r_reason}
                     </div>
                 </Tooltip>
             )
         },
-        { title: '释放人', dataIndex: 'u_name_r', key: 'u_name_r' },
+        { title: '释放人', dataIndex: 'r_name', key: 'r_name' },
         {
             title: '状态',
             dataIndex: 'status',
@@ -61,7 +61,7 @@ function TalentBlackList() {
             render: (_, record) => (
                 <Space size="small">
                     {record.status && (record.status.match('待审批') ? <ClockCircleTwoTone twoToneColor="#ee9900" /> :
-                        record.status === '已拉黑' ? <PauseCircleTwoTone twoToneColor="#4ec990" /> : null)}
+                        record.status === '正常' ? <PauseCircleTwoTone twoToneColor="#4ec990" /> : null)}
                     <span>{record.status}</span>
                 </Space>
             )
@@ -73,43 +73,25 @@ function TalentBlackList() {
                 record.status && <Space size="large">
                     {examPower && record.status.match('待审批') ? <Space size="large">
                         <a onClick={() => {
-                            if (record.status.match('拉黑')) {
-                                if (record.bid[0] === 'B') {
-                                    examBlackAPI(record.bid, record.u_id_b, record.status, true, null);
-                                } else {
-                                    examTalentAPI(record.bid, record.u_id_b, record.status, true, null);
-                                }
+                            if (record.tbid[0] === 'T') {
+                                examTalentAPI(record.tbid, record.status, true, null);
                             } else {
-                                if (record.bid[0] === 'B') {
-                                    examBlackAPI(record.bid, record.u_id_r, record.status, true, null);
-                                } else {
-
-                                }
+                                examBlackAPI(record.tbid, '拉黑达人', true, null);
                             }
                         }}>通过</a>
                         <a onClick={() => {
-                            setClickBid(record.bid);
-                            setClickUid(record.status === '拉黑待审批' ? record.u_id_b : record.u_id_r);
+                            setClickTbid(record.tbid);
                             setClickStatus(record.status);
-                            setReasonType('refund');
+                            setReasonType('驳回原因');
                             setIsShowReason(true);
                         }}>驳回</a>
                     </Space> : null}
-                    {editPower && !record.status.match('待审批') && record.bid[0] === 'B' ? <a onClick={() => {
-                        setClickBid(record.bid);
-                        setEditOri({
-                            bid: record.bid,
-                            name: record.name,
-                            reason: record.reason_b
-                        });
+                    {editPower && !record.status.match('待审批') && record.tbid[0] !== 'T' ? <a onClick={() => {
                         setType('edit');
                         setIsShow(true);
-                        form.setFieldsValue({
-                            ...record,
-                            reason: record.reason_b
-                        })
+                        form.setFieldsValue(record);
                     }}>修改信息</a> : null}
-                    {releasePower && !record.status.match('待审批') ? <a onClick={() => { setClickBid(record.bid); setReasonType('release'); setIsShowReason(true); }}>申请释放</a> : null}
+                    {recoverPower && !record.status.match('待审批') ? <a onClick={() => { setClickTbid(record.tbid); setClickStatus(record.status); setReasonType('释放原因'); setIsShowReason(true); }}>申请释放</a> : null}
                 </Space>
             )
         }
@@ -118,7 +100,6 @@ function TalentBlackList() {
     const [data, setData] = useState();
     const [loading, setLoading] = useState(false);
     const [tableParams, setTableParams] = useState({
-        filtersDate: [],
         filters: {},
         pagination: {
             current: 1,
@@ -175,7 +156,6 @@ function TalentBlackList() {
                 ...pagination
             },
             filters: tableParams.filters,
-            filtersDate: tableParams.filtersDate,
             ...sorter,
         });
         if (pagination.pageSize !== tableParams.pagination?.pageSize) {
@@ -185,10 +165,14 @@ function TalentBlackList() {
     // 查询、清空筛选
     const [filterForm] = Form.useForm()
 
-    // 添加新达人黑名单
+    // 添加、修改、释放、审批
     const [type, setType] = useState('add')
     const [isShow, setIsShow] = useState(false)
     const [form] = Form.useForm()
+    const [isShowReason, setIsShowReason] = useState(false)
+    const [reasonType, setReasonType] = useState()
+    const [clickTbid, setClickTbid] = useState()
+    const [clickStatus, setClickStatus] = useState()
     const addBlackAPI = (payload) => {
         request({
             method: 'post',
@@ -220,24 +204,12 @@ function TalentBlackList() {
             console.error(err)
         })
     }
-    const [editOri, setEditOri] = useState(false)
-    const editBlackAPI = (operate, ori, payload) => {
+    const editBlackAPI = (payload) => {
         request({
             method: 'post',
             url: '/black/editBlack',
             data: {
-                bid: clickBid,
-                operate,
-                ori,
-                new: payload,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
+                ...payload
             }
         }).then((res) => {
             if (res.status == 200) {
@@ -255,13 +227,47 @@ function TalentBlackList() {
             console.error(err)
         })
     }
-    // 释放
-    const releaseTalentAPI = (bid, reason) => {
+    const recoverBlackAPI = (r_reason) => {
         request({
             method: 'post',
-            url: '/black/releaseTalent',
+            url: '/black/recoverBlack',
             data: {
-                bid,
+                tbid: clickTbid,
+                r_reason,
+                userInfo: {
+                    uid: localStorage.getItem('uid'),
+                    up_uid: localStorage.getItem('up_uid'),
+                    name: localStorage.getItem('name'),
+                    company: localStorage.getItem('company'),
+                    department: localStorage.getItem('department'),
+                    position: localStorage.getItem('position')
+                }
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    setIsShowReason(false);
+                    setClickTbid();
+                    getTalentBlackListAPI();
+                    message.success(res.data.msg)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const examBlackAPI = (tbid, type, exam, reason) => {
+        request({
+            method: 'post',
+            url: '/black/examBlack',
+            data: {
+                tbid, 
+                type,
+                exam,
                 reason,
                 userInfo: {
                     uid: localStorage.getItem('uid'),
@@ -276,9 +282,8 @@ function TalentBlackList() {
             if (res.status == 200) {
                 if (res.data.code == 200) {
                     setIsShowReason(false);
-                    setReason();
-                    setClickBid();
-                    setClickUid();
+                    setClickTbid();
+                    setClickStatus();
                     getTalentBlackListAPI();
                     message.success(res.data.msg)
                 } else {
@@ -296,7 +301,7 @@ function TalentBlackList() {
             method: 'post',
             url: '/talent/editTalent',
             data: {
-                tid: clickBid,
+                tid: clickTbid,
                 operate,
                 ori,
                 new: payload,
@@ -313,9 +318,8 @@ function TalentBlackList() {
             if (res.status == 200) {
                 if (res.data.code == 200) {
                     setIsShowReason(false);
-                    setReason();
-                    setClickBid();
-                    setClickUid();
+                    setClickTbid();
+                    setClickStatus();
                     getTalentBlackListAPI();
                     message.success(res.data.msg)
                 } else {
@@ -328,52 +332,7 @@ function TalentBlackList() {
             console.error(err)
         })
     }
-    // 审批
-    const [isShowReason, setIsShowReason] = useState(false)
-    const [reasonType, setReasonType] = useState()
-    const [reason, setReason] = useState()
-    const [clickBid, setClickBid] = useState()
-    const [clickUid, setClickUid] = useState()
-    const [clickStatus, setClickStatus] = useState()
-    const examBlackAPI = (bid, uid, type, exam, reason) => {
-        request({
-            method: 'post',
-            url: '/black/examBlack',
-            data: {
-                bid,
-                exam,
-                reason,
-                uid,
-                type,
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    setIsShowReason(false);
-                    setReason();
-                    setClickBid();
-                    setClickUid();
-                    getTalentBlackListAPI();
-                    message.success(res.data.msg)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const examTalentAPI = (tid, uid, status, exam, note) => {
+    const examTalentAPI = (tid, status, exam, note) => {
         request({
             method: 'post',
             url: '/talent/examTalent',
@@ -382,7 +341,7 @@ function TalentBlackList() {
                 status,
                 exam,
                 note: exam ? null : note,
-                uid,
+                uid: localStorage.getItem('uid'),
                 userInfo: {
                     uid: localStorage.getItem('uid'),
                     up_uid: localStorage.getItem('up_uid'),
@@ -396,9 +355,8 @@ function TalentBlackList() {
             if (res.status == 200) {
                 if (res.data.code == 200) {
                     setIsShowReason(false);
-                    setReason();
-                    setClickBid();
-                    setClickUid();
+                    setClickTbid();
+                    setClickStatus();
                     getTalentBlackListAPI();
                     message.success(res.data.msg)
                 } else {
@@ -413,10 +371,6 @@ function TalentBlackList() {
     }
 
     useEffect(() => {
-        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
-            navigate('/login')
-            message.error('账号错误，请重新登录')
-        }
         getTalentBlackListAPI();
     }, [JSON.stringify(tableParams)])
     return (
@@ -425,6 +379,7 @@ function TalentBlackList() {
                 <Form
                     layout="inline"
                     form={filterForm}
+                    wrapperCol={{ style: { width: '120px', marginBottom: '20px' } }}
                     onFinish={(values) => {
                         setTableParams({
                             ...tableParams,
@@ -436,17 +391,16 @@ function TalentBlackList() {
                         })
                     }}
                 >
-                    <Form.Item label='编号' name='bid' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
-                    <Form.Item label='达人昵称' name='name' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
-                    <Form.Item label='拉黑人' name='u_name' style={{ margin: '0 10px 10px 0' }}><Input style={{ width: 120 }} /></Form.Item>
-                    <Form.Item style={{ margin: '0 10px 10px 0' }}>
-                        <Space size={'large'}>
+                    <Form.Item label='编号' name='tbid'><Input /></Form.Item>
+                    <Form.Item label='达人昵称' name='name'><Input /></Form.Item>
+                    <Form.Item label='拉黑人' name='b_name'><Input /></Form.Item>
+                    <Form.Item>
+                        <Space size={'middle'}>
                             <Button type="primary" htmlType="submit">查询</Button>
                             <Button type="primary" onClick={() => {
                                 filterForm.resetFields();
                                 setTableParams({
                                     ...tableParams,
-                                    filtersDate: [],
                                     filters: {}
                                 })
                             }}>清空筛选</Button>
@@ -455,7 +409,7 @@ function TalentBlackList() {
                 </Form>
                 <Table
                     style={{ margin: '20px auto' }}
-                    rowKey={(data) => data.bid}
+                    rowKey={(data) => data.tbid}
                     columns={columns}
                     dataSource={data}
                     pagination={tableParams.pagination}
@@ -463,54 +417,45 @@ function TalentBlackList() {
                     onChange={handleTableChange}
                 />
             </Card>
-            <AEBlack
-                isShow={isShow}
-                type={type}
-                form={form}
-                onOK={(values) => {
-                    if (type === 'add') {
-                        addBlackAPI(values);
-                    } else {
-                        let ori = editOri
-                        let z = {}, y = {}
-                        for (const o in ori) {
-                            if (Object.hasOwnProperty.call(ori, o)) {
-                                for (const v in values) {
-                                    if (Object.hasOwnProperty.call(values, v)) {
-                                        if (o === v && ori[o] !== values[v]) {
-                                            z[o] = ori[o]
-                                            y[o] = values[o]
-                                        }
-                                    }
-                                }
-                            }
+            <Modal
+                title={type === 'add' ? '拉黑新达人' : '修改拉黑信息'}
+                open={isShow}
+                maskClosable={false}
+                onOk={() => { form.submit(); }}
+                onCancel={() => { setIsShow(false); form.resetFields(); }}
+            >
+                <Form form={form} onFinish={(values) => { type === 'add' ? addBlackAPI(values) : editBlackAPI(values) }}>
+                    {type === 'edit' ? <Form.Item label="编号" name="tbid" rules={[{ required: true, message: '不能为空' }]}>
+                        <Input disabled={true} />
+                    </Form.Item> : null}
+                    <Form.Item label="达人昵称" name="name" rules={[{ required: true, message: '不能为空' }]}>
+                        <Input placeholder="请输入" />
+                    </Form.Item>
+                    <Form.Item label="拉黑原因" name="b_reason">
+                        <TextArea placeholder="请输入" maxLength={255} />
+                    </Form.Item>
+                </Form>
+            </Modal>
+            <AENote
+                title={reasonType}
+                isShow={isShowReason}
+                onOk={(values) => {
+                    if (clickStatus === '正常') {
+                        if (clickTbid[0] === 'T') {
+                            editTalentAPI('拉黑释放', null, values)
+                        } else {
+                            recoverBlackAPI(values);
                         }
-                        editBlackAPI('修改信息', JSON.stringify(z), y);
+                    } else if (clickStatus.match('待审批')) {
+                        if (clickTbid[0] === 'T') {
+                            examTalentAPI(clickTbid, '拉黑待审批', false, values)
+                        } else {
+                            examBlackAPI(clickTbid, clickStatus === '拉黑待审批' ? '拉黑达人' : '释放达人', false, values);
+                        }
                     }
                 }}
-                onCancel={() => { setIsShow(false); form.resetFields(); }}
+                onCancel={() => { setIsShowReason(false); }}
             />
-            <Modal title={reasonType && reasonType === 'refund' ? "驳回原因" : "释放原因"} open={isShowReason} onOk={() => {
-                if (reasonType === 'refund') {
-                    if (clickBid[0] === 'B') {
-                        examBlackAPI(clickBid, clickUid, clickStatus, false, reason);
-                    } else {
-                        examTalentAPI(clickBid, clickUid, clickStatus, false, reason);
-                    }
-                } else if (reasonType === 'release') {
-                    if (!reason || reason === '') {
-                        message.error('请输入释放原因')
-                    } else {
-                        if (clickBid[0] === 'B') {
-                            releaseTalentAPI(clickBid, reason);
-                        } else {
-                            editTalentAPI('拉黑释放', null, { black_note: reason });
-                        }
-                    }
-                }
-            }} onCancel={() => { setIsShowReason(false); setReason(''); }}>
-                <TextArea placeholder="请输入" maxLength={255} value={reason} onChange={(e) => { setReason(e.target.value); }} />
-            </Modal>
         </Fragment>
     )
 }

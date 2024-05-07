@@ -157,7 +157,7 @@ function AEFile(props) {
             console.error(err)
         })
     }
-    // 下载
+    // 下载、删除
     const downloadAPI = (url) => {
         request({
             method: 'get',
@@ -181,7 +181,6 @@ function AEFile(props) {
             console.error(err)
         })
     }
-    // 删除
     const deleteFileAPI = (url) => {
         request({
             method: 'post',

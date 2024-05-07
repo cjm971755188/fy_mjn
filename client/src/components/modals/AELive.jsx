@@ -71,154 +71,6 @@ function AELive(props) {
             console.error(err)
         })
     }
-    const [authorsItems, setAuthorsItems] = useState()
-    const getAuthorsItemsAPI = (type) => {
-        request({
-            method: 'post',
-            url: '/user/getAnthorItems',
-            data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    if (type) {
-                        setAuthorsItems(res.data.data)
-                    } else {
-                        let items = [
-                            { label: null, value: null },
-                            ...res.data.data
-                        ]
-                        setAuthorsItems(items)
-                    }
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [controlsItems, setControlsItems] = useState()
-    const getControlsItemsAPI = (type) => {
-        request({
-            method: 'post',
-            url: '/user/getControlItems',
-            data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    if (type) {
-                        setControlsItems(res.data.data)
-                    } else {
-                        let items = [
-                            { label: null, value: null },
-                            ...res.data.data
-                        ]
-                        setControlsItems(items)
-                    }
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [salemansItems, setSalemansItems] = useState()
-    const getSalemansItemsAPI = (type) => {
-        request({
-            method: 'post',
-            url: '/user/getSalemanItems',
-            data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    if (type) {
-                        setSalemansItems(res.data.data)
-                    } else {
-                        let items = [
-                            { label: null, value: null },
-                            ...res.data.data
-                        ]
-                        setSalemansItems(items)
-                    }
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
-    const [salemanAssistantsItems, setSalemanAssistantsItems] = useState()
-    const getSalemanAssistantsItemsAPI = (type) => {
-        request({
-            method: 'post',
-            url: '/user/getSalemanAssistantItems',
-            data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status == 200) {
-                if (res.data.code == 200) {
-                    if (type) {
-                        setSalemanAssistantsItems(res.data.data)
-                    } else {
-                        let items = [
-                            { label: null, value: null },
-                            ...res.data.data
-                        ]
-                        setSalemanAssistantsItems(items)
-                    }
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
     const getCommissionsAPI = (value) => {
         if (value.length === 0) {
             form.setFieldValue('commission_normal_on', null);
@@ -282,18 +134,49 @@ function AELive(props) {
         console.log('e: ', value[value.length - 1]);
 
     }
+    // 下拉框
     const [baseSets, setBaseSets] = useState([])
-    const getBaseSetItems = (payload) => {
+    const getBaseSetItems = (type) => {
         request({
             method: 'post',
             url: '/base/getBaseSetItems',
             data: {
-                type: payload
+                type
             }
         }).then((res) => {
             if (res.status === 200) {
                 if (res.data.code === 200) {
                     setBaseSets(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const [users, setUsers] = useState()
+    const getUserItems = (type) => {
+        request({
+            method: 'post',
+            url: '/user/getUserItems',
+            data: {
+                type
+            }
+        }).then((res) => {
+            if (res.status == 200) {
+                if (res.data.code == 200) {
+                    if (type) {
+                        setUsers(res.data.data)
+                    } else {
+                        let items = [
+                            { label: null, value: null },
+                            ...res.data.data
+                        ]
+                        setUsers(items)
+                    }
                 } else {
                     message.error(res.data.msg)
                 }
@@ -385,16 +268,16 @@ function AELive(props) {
                     <Select placeholder="请选择" options={baseSets} onClick={() => { getBaseSetItems('liveroom'); }} />
                 </Form.Item>
                 <Form.Item label="主播" name="a_id_1" rules={[{ required: true, message: '不能为空' }]}>
-                    <Select placeholder="请选择" options={authorsItems} onFocus={() => { getAuthorsItemsAPI(true); }} />
+                    <Select placeholder="请选择" options={users} onFocus={() => { getUserItems('author'); }} />
                 </Form.Item>
                 <Form.Item label="副播" name="a_id_2">
-                    <Select placeholder="请选择" options={authorsItems} onFocus={() => { getAuthorsItemsAPI(false); }} />
+                    <Select placeholder="请选择" options={users} onFocus={() => { getUserItems('author'); }} />
                 </Form.Item>
                 <Form.Item label="中控" name="c_id_1" rules={[{ required: true, message: '不能为空' }]}>
-                    <Select placeholder="请选择" options={controlsItems} onFocus={() => { getControlsItemsAPI(true); }} />
+                    <Select placeholder="请选择" options={users} onFocus={() => { getUserItems('control'); }} />
                 </Form.Item>
                 <Form.Item label="服务商务" name="u_id_3" >
-                    <Select placeholder="请选择" options={salemansItems} onFocus={() => { getSalemansItemsAPI(false); }} />
+                    <Select placeholder="请选择" options={users} onFocus={() => { getUserItems('saleman'); }} />
                 </Form.Item>
                 <Form.Item label="预估销售额（万）" name="goal" rules={[{ required: true, message: '不能为空' }]}>
                     <InputNumber placeholder="请输入" min={0} />
@@ -440,7 +323,7 @@ function AELive(props) {
                 </Card>
                 <Space size='large'>
                     <Form.Item label="主商务" name="u_id_1" rules={[{ required: true, message: '不能为空' }]} >
-                        <Select style={{ width: 160 }} placeholder="请选择" options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(true); }} />
+                        <Select style={{ width: 160 }} placeholder="请选择" options={users} onFocus={() => { getUserItems('saleman'); }} />
                     </Form.Item>
                     <Form.Item label="主商务提成点（%）[例：0.5]" name="u_point_1" rules={[{ required: true, message: '不能为空' }]}>
                         <InputNumber min={0} max={100} />
@@ -448,7 +331,7 @@ function AELive(props) {
                 </Space>
                 <Space size='large'>
                     <Form.Item label="副商务" name="u_id_2" >
-                        <Select style={{ width: 160 }} placeholder="请选择" options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(false); }} />
+                        <Select style={{ width: 160 }} placeholder="请选择" options={users} onFocus={() => { getUserItems('salemanAssistant'); }} />
                     </Form.Item>
                     <Form.Item label="副商务提成点（%）[例：0.5]" name="u_point_2" >
                         <InputNumber min={0} max={100} />

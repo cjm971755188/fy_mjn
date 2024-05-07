@@ -79,10 +79,6 @@ function LiveCalendar() {
     const [form] = Form.useForm()
 
     useEffect(() => {
-        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
-            navigate('/login')
-            message.error('账号错误，请重新登录')
-        }
         getLiveCalendarAPI()
         console.log(dayjs(tableParams.filtersDate).format('YYYY-MM'), dayjs(tableParams.filtersDate).daysInMonth());
     }, [JSON.stringify(tableParams)])

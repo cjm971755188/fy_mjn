@@ -68,28 +68,6 @@ function AETalent(props) {
             console.error(err)
         })
     }
-    const [baseSets, setBaseSets] = useState([])
-    const getBaseSetItems = (payload) => {
-        request({
-            method: 'post',
-            url: '/base/getBaseSetItems',
-            data: {
-                type: payload
-            }
-        }).then((res) => {
-            if (res.status === 200) {
-                if (res.data.code === 200) {
-                    setBaseSets(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
     const [hasOnlyShop, setHasOnlyShop] = useState(false)
     const [payType, setPayType] = useState('')
     const [hasFuSaleman, setHasFuSaleman] = useState(false)
@@ -99,35 +77,6 @@ function AETalent(props) {
     const [hasGroupFuSaleman, setGroupHasFuSaleman] = useState(false)
     const [hasProvideFuSaleman, setProvideHasFuSaleman] = useState(false)
     const [hasCustomFuSaleman, setCustomHasFuSaleman] = useState(false)
-    const [salemanAssistantsItems, setSalemanAssistantsItems] = useState()
-    const getSalemanAssistantsItemsAPI = () => {
-        request({
-            method: 'post',
-            url: '/user/getSalemanAssistantItems',
-            data: {
-                userInfo: {
-                    uid: localStorage.getItem('uid'),
-                    up_uid: localStorage.getItem('up_uid'),
-                    name: localStorage.getItem('name'),
-                    company: localStorage.getItem('company'),
-                    department: localStorage.getItem('department'),
-                    position: localStorage.getItem('position')
-                }
-            }
-        }).then((res) => {
-            if (res.status === 200) {
-                if (res.data.code === 200) {
-                    setSalemanAssistantsItems(res.data.data)
-                } else {
-                    message.error(res.data.msg)
-                }
-            } else {
-                message.error(res.data.msg)
-            }
-        }).catch((err) => {
-            console.error(err)
-        })
-    }
     const [middlemansItems, setMiddlemansItems] = useState()
     const getmiddlemansItemsAPI = () => {
         request({
@@ -183,8 +132,52 @@ function AETalent(props) {
             if (res.status === 200) {
                 if (res.data.code === 200) {
                     setIsShowMid(false)
-                    getMiddlemanListAPI()
                     formMid.resetFields()
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    // 下拉框
+    const [baseSets, setBaseSets] = useState([])
+    const getBaseSetItems = (type) => {
+        request({
+            method: 'post',
+            url: '/base/getBaseSetItems',
+            data: {
+                type
+            }
+        }).then((res) => {
+            if (res.status === 200) {
+                if (res.data.code === 200) {
+                    setBaseSets(res.data.data)
+                } else {
+                    message.error(res.data.msg)
+                }
+            } else {
+                message.error(res.data.msg)
+            }
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+    const [users, setUsers] = useState()
+    const getUserItems = (type) => {
+        request({
+            method: 'post',
+            url: '/user/getUserItems',
+            data: {
+                type
+            }
+        }).then((res) => {
+            if (res.status === 200) {
+                if (res.data.code === 200) {
+                    setUsers(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -211,7 +204,7 @@ function AETalent(props) {
         setGroupHasFuSaleman(false);
         setProvideHasFuSaleman(false);
         setCustomHasFuSaleman(false);
-        setSalemanAssistantsItems();
+        setUsers();
         setTypeMid('add');
         setIsShowMid(false);
         formMid.resetFields();
@@ -409,7 +402,7 @@ function AETalent(props) {
                         </Form.Item>
                             {hasYuanSaleman ? <Space size='large'>
                                 <Form.Item label="原商务" name="u_id_0" rules={[{ required: true, message: '不能为空' }]}>
-                                    <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                                    <Select style={{ width: 160 }} options={users} onFocus={() => { getUserItems('saleman'); }} />
                                 </Form.Item>
                                 <Form.Item label="原商务提成点（%）[例：0.5]" name="u_point_0" rules={[{ required: true, message: '不能为空' }]}>
                                     <InputNumber min={0} max={100} />
@@ -449,12 +442,8 @@ function AETalent(props) {
                                 <>
                                     {fields.map(({ key, name, ...restField }) => (
                                         <Card key={key} title={`第 ${name + 1} 个账号`} extra={type.match('修改') ? null : <MinusCircleOutlined onClick={() => { remove(name); setHasOnlyShop(false); setHasFuSaleman(false); }} />} style={{ marginBottom: '20px' }}>
-                                            <Form.Item label="平台" {...restField} name={[name, "platforms"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                <Select
-                                                    placeholder="请选择"
-                                                    options={type === '报备达人' ? form.getFieldValue('baseSetsList') : baseSets}
-                                                    onFocus={() => { getBaseSetItems('platform'); }}
-                                                />
+                                            <Form.Item label="平台" {...restField} name={[name, "platform"]} rules={[{ required: true, message: '不能为空' }]}>
+                                                <Select placeholder="请选择" options={baseSets} onFocus={() => { getBaseSetItems('platform'); }} />
                                             </Form.Item>
                                             <Form.Item label="店铺类型" {...restField} name={[name, "shop_type"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <Select
@@ -509,15 +498,6 @@ function AETalent(props) {
                                             <Form.Item label="福利品线上佣金比例（%）[例：20]" {...restField} name={[name, "commission_welfare"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <InputNumber placeholder="请输入" min={0} max={100} />
                                             </Form.Item>
-                                            {/* <Space>
-                                                <Form.Item label="福利品线上佣金比例（%）[例：20]" {...restField} name={[name, "commission_welfare_min"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <InputNumber placeholder="请输入" min={0} max={100} />
-                                                </Form.Item>
-                                                <p> ~ </p>
-                                                <Form.Item {...restField} name={[name, "commission_welfare_max"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <InputNumber placeholder="请输入" min={0} max={100} />
-                                                </Form.Item>
-                                            </Space> */}
                                             <Form.Item label="爆品线上佣金比例（%）[例：20]" {...restField} name={[name, "commission_bao"]} rules={[{ required: true, message: '不能为空' }]}>
                                                 <InputNumber placeholder="请输入" min={0} max={100} />
                                             </Form.Item>
@@ -526,7 +506,7 @@ function AETalent(props) {
                                             </Form.Item>
                                             <Space size='large'>
                                                 <Form.Item label="主商务" {...restField} name={[name, "u_id_1"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                                                    <Select style={{ width: 160 }} options={users} onFocus={() => { getUserItems('saleman'); }} />
                                                 </Form.Item>
                                                 <Form.Item label="主商务提成点（%）[例：0.5]" {...restField} name={[name, "u_point_1"]} rules={[{ required: true, message: '不能为空' }]}>
                                                     <InputNumber placeholder="请输入" min={0} max={100} />
@@ -540,7 +520,7 @@ function AETalent(props) {
                                             </Form.Item>
                                             {hasFuSaleman ? <Space size='large'>
                                                 <Form.Item label="副商务" {...restField} name={[name, "u_id_2"]} rules={[{ required: true, message: '不能为空' }]}>
-                                                    <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                                                    <Select style={{ width: 160 }} options={users} onFocus={() => { getUserItems('salemanAssistant'); }} />
                                                 </Form.Item>
                                                 <Form.Item label="副商务提成点（%）[例：0.5]" {...restField} name={[name, "u_point_2"]} rules={[{ required: true, message: '不能为空' }]}>
                                                     <InputNumber min={0} max={100} />
@@ -588,7 +568,7 @@ function AETalent(props) {
                         </Form.Item>
                         <Space size='large'>
                             <Form.Item label="主商务" name="group_u_id_1" rules={[{ required: true, message: '不能为空' }]}>
-                                <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                                <Select style={{ width: 160 }} options={users} onFocus={() => { getUserItems('saleman'); }} />
                             </Form.Item>
                             <Form.Item label="主商务提成点（%）[例：0.5]" name="group_u_point_1" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber placeholder="请输入" min={0} max={100} />
@@ -602,7 +582,7 @@ function AETalent(props) {
                         </Form.Item>
                         {hasGroupFuSaleman ? <Space size='large'>
                             <Form.Item label="副商务" name={"group_u_id_2"} rules={[{ required: true, message: '不能为空' }]} >
-                                <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                                <Select style={{ width: 160 }} options={users} onFocus={() => { getUserItems('salemanAssistant'); }} />
                             </Form.Item>
                             <Form.Item label="副商务提成点（%）[例：0.5]" name={"group_u_point_2"} rules={[{ required: true, message: '不能为空' }]} >
                                 <InputNumber min={0} max={100} />
@@ -637,7 +617,7 @@ function AETalent(props) {
                         </Form.Item>
                         <Space size='large'>
                             <Form.Item label="主商务" name="provide_u_id_1" rules={[{ required: true, message: '不能为空' }]}>
-                                <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                                <Select style={{ width: 160 }} options={users} onFocus={() => { getUserItems('saleman'); }} />
                             </Form.Item>
                             <Form.Item label="主商务提成点（%）[例：0.5]" name="provide_u_point_1" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber placeholder="请输入" min={0} max={100} />
@@ -651,7 +631,7 @@ function AETalent(props) {
                         </Form.Item>
                         {hasProvideFuSaleman ? <Space size='large'>
                             <Form.Item label="副商务" name={"provide_u_id_2"} rules={[{ required: true, message: '不能为空' }]} >
-                                <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                                <Select style={{ width: 160 }} options={users} onFocus={() => { getUserItems('salemanAssistant'); }} />
                             </Form.Item>
                             <Form.Item label="副商务提成点（%）[例：0.5]" name={"provide_u_point_2"} rules={[{ required: true, message: '不能为空' }]} >
                                 <InputNumber min={0} max={100} />
@@ -704,7 +684,7 @@ function AETalent(props) {
                         </Space> : null}
                         <Space size='large'>
                             <Form.Item label="主商务" name="custom_u_id_1" rules={[{ required: true, message: '不能为空' }]}>
-                                <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                                <Select style={{ width: 160 }} options={users} onFocus={() => { getUserItems('saleman'); }} />
                             </Form.Item>
                             <Form.Item label="主商务提成点（%）[例：0.5]" name="custom_u_point_1" rules={[{ required: true, message: '不能为空' }]}>
                                 <InputNumber placeholder="请输入" min={0} max={100} />
@@ -718,7 +698,7 @@ function AETalent(props) {
                         </Form.Item>
                         {hasCustomFuSaleman ? <Space size='large'>
                             <Form.Item label="副商务" name={"custom_u_id_2"} rules={[{ required: true, message: '不能为空' }]} >
-                                <Select style={{ width: 160 }} options={salemanAssistantsItems} onFocus={() => { getSalemanAssistantsItemsAPI(); }} />
+                                <Select style={{ width: 160 }} options={users} onFocus={() => { getUserItems('salemanAssistant'); }} />
                             </Form.Item>
                             <Form.Item label="副商务提成点（%）[例：0.5]" name={"custom_u_point_2"} rules={[{ required: true, message: '不能为空' }]} >
                                 <InputNumber min={0} max={100} />

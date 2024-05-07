@@ -101,7 +101,7 @@ function UpLoadImg(props) {
                     marginTop: 8,
                 }}
             >
-                上传证明
+                上传
             </div>
         </Button>
     );
@@ -122,28 +122,6 @@ function UpLoadImg(props) {
     }, [props])
     return (
         <Fragment>
-            {/* <Upload
-                name={`${localStorage.getItem('name')}_${dayjs().valueOf()}_${props.name}`}
-                listType="picture-card"
-                className="avatar-uploader"
-                showUploadList={false}
-                // 上传的后端地址
-                action={`${BASE_URL}/file/upload`}
-                beforeUpload={beforeUpload}
-                onChange={handleChange}
-            >
-                {imageUrl ? (
-                    <img
-                        src={imageUrl}
-                        alt="avatar"
-                        style={{
-                            width: '40px',
-                        }}
-                    />
-                ) : (
-                    uploadButton
-                )}
-            </Upload> */}
             <Upload
                 // 上传的后端地址
                 action={`${BASE_URL}/file/upload`}

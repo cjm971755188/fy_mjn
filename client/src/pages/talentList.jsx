@@ -8,6 +8,7 @@ import AETalent from '../components/modals/AETalent'
 import dayjs from 'dayjs'
 import FileSaver from 'file-saver'
 import MyECharts from '../components/MyECharts'
+import AENote from '../components/modals/AENote'
 
 const { TextArea } = Input;
 
@@ -182,7 +183,7 @@ function TalentList() {
             key: 'action',
             render: (_, record) => (
                 <Space size="large">
-                    {examPower && record.status.match('待审批') ? <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> :
+                    {examPower && record.status.match('待审批') && record.status !== '拉黑待审批' ? <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid }}>审批</NavLink> :
                         record.status === '报备驳回' || record.status === '已撤销' ? null :
                             <NavLink to='/admin/talent/talent_list/talent_detail' state={{ tid: record.tid, tableParams: { ...tableParams, pagination: { ...tableParams.pagination, showTotal: null } } }}>查看详情</NavLink>}
                     {editPower && record.status.match('待审批') ? <Popconfirm
@@ -206,7 +207,7 @@ function TalentList() {
                     {record.status === '报备驳回' ? <><a onClick={() => { getRefundReasonAPI({ tid: record.tid }); }}>查看驳回备注</a>
                         <a onClick={() => { setClickCid(record.cid); setClickTid(record.tid); getReportInfo({ tid: record.tid }); }}>重新报备</a></> : null}
                     {record.status === '已撤销' ? <a onClick={() => { setClickCid(record.cid); setClickTid(record.tid); getReportInfo({ tid: record.tid }); }}>重新报备</a> : null}
-                    {editPower && record.status === '合作中' ? <a style={{ color: 'red' }} onClick={() => { setClickTid(record.tid); setIsShowBlock(true); }}>拉黑</a> : null}
+                    {editPower && record.status === '合作中' ? <a style={{ color: 'red' }} onClick={() => { setClickTid(record.tid); setIsShowBlack(true); }}>拉黑</a> : null}
                 </Space>
             )
         }
@@ -655,8 +656,7 @@ function TalentList() {
         FileSaver.saveAs(blob, `CRM系统达人导出-${+new Date()}.xls`);
     }
     // 拉黑达人
-    const [isShowBlock, setIsShowBlock] = useState(false)
-    const [blockReason, setBlockReason] = useState()
+    const [isShowBlack, setIsShowBlack] = useState(false)
     const editTalentAPI = (operate, ori, payload) => {
         request({
             method: 'post',
@@ -678,7 +678,7 @@ function TalentList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setIsShowBlock(false);
+                    setIsShowBlack(false);
                     getTalentListAPI();
                     message.success(res.data.msg)
                 } else {
@@ -694,12 +694,12 @@ function TalentList() {
 
     // 获取下拉框
     const [baseSets, setBaseSets] = useState([])
-    const getBaseSetItems = (payload) => {
+    const getBaseSetItems = (type) => {
         request({
             method: 'post',
             url: '/base/getBaseSetItems',
             data: {
-                type: payload
+                type
             }
         }).then((res) => {
             if (res.status === 200) {
@@ -715,11 +715,11 @@ function TalentList() {
             console.error(err)
         })
     }
-    const [salemans, setSalemans] = useState()
-    const getSalemanItems = () => {
+    const [users, setUsers] = useState()
+    const getUserItems = () => {
         request({
             method: 'post',
-            url: '/user/getSalemanItems',
+            url: '/user/getUserItems',
             data: {
                 userInfo: {
                     uid: localStorage.getItem('uid'),
@@ -733,7 +733,7 @@ function TalentList() {
         }).then((res) => {
             if (res.status == 200) {
                 if (res.data.code == 200) {
-                    setSalemans(res.data.data)
+                    setUsers(res.data.data)
                 } else {
                     message.error(res.data.msg)
                 }
@@ -746,10 +746,6 @@ function TalentList() {
     }
 
     useEffect(() => {
-        if (localStorage.getItem('uid') && localStorage.getItem('uid') === null) {
-            navigate('/login')
-            message.error('账号错误，请重新登录')
-        }
         getTalentListAPI();
     }, [JSON.stringify(tableParams)])
     return (
@@ -862,7 +858,7 @@ function TalentList() {
             <Modal title="移交达人" open={isShowGive} onOk={() => { giveTalent(); }} onCancel={() => { setIsShowGive(false); }}>
                 <Form form={formGive}>
                     <Form.Item label="承接商务" name="u_id" rules={[{ required: true, message: '不能为空' }]}>
-                        <Select placeholder="请选择" options={salemans} onFocus={() => { getSalemanItems(); }} />
+                        <Select placeholder="请选择" options={users} onFocus={() => { getUserItems('saleman'); }} />
                     </Form.Item>
                     <Form.Item label="原商务（自己）提点（%）" name="u_point" rules={[{ required: true, message: '不能为空' }]}>
                         <Select placeholder="请选择" options={uPoint0} />
@@ -872,9 +868,12 @@ function TalentList() {
             <Modal title="报备驳回备注" open={isShowCheckNo} onOk={() => { setIsShowCheckNo(false); }} onCancel={() => { setIsShowCheckNo(false); }}>
                 <TextArea placeholder="请输入" value={checkNoReason} disabled={true} />
             </Modal>
-            <Modal title="拉黑原因" open={isShowBlock} onOk={() => { editTalentAPI('拉黑达人', null, { block_note: blockReason }); setBlockReason(); }} onCancel={() => { setIsShowBlock(false); setBlockReason(); }}>
-                <TextArea placeholder="请输入" value={blockReason} onChange={(e) => { setBlockReason(e.target.value); }} />
-            </Modal>
+            <AENote
+                title={"拉黑原因"}
+                isShow={isShowBlack}
+                onOk={(values) => { editTalentAPI('拉黑达人', null, { black_note: values }); }}
+                onCancel={() => { setIsShowBlack(false); }}
+            />
         </Fragment>
     )
 }

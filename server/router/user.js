@@ -181,61 +181,19 @@ router.post('/deleteUser', (req, res) => {
     })
 })
 
-
-// 获取商务下拉框
-router.post('/getSalemanItems', (req, res) => {
-    let sql = `SELECT * FROM user where status != '失效' and department = '事业部' and position != '助理' and position != '副总'`
-    db.query(sql, (err, results) => {
-        if (err) throw err;
-        let r = []
-        for (let i = 0; i < results.length; i++) {
-            const element = results[i];
-            r.push({
-                label: element.name,
-                value: element.uid
-            })
-        }
-        res.send({ code: 200, data: r, msg: `` })
-    })
-})
-
-// 获取商务+助理下拉框
-router.post('/getSalemanAssistantItems', (req, res) => {
-    let sql = `SELECT * FROM user where status != '失效' and department = '事业部' and position != '副总'`
-    db.query(sql, (err, results) => {
-        if (err) throw err;
-        let r = []
-        for (let i = 0; i < results.length; i++) {
-            const element = results[i];
-            r.push({
-                label: element.name,
-                value: element.uid
-            })
-        }
-        res.send({ code: 200, data: r, msg: `` })
-    })
-})
-
-// 获取主播下拉框
-router.post('/getAnthorItems', (req, res) => {
-    let sql = `SELECT * FROM user where status != '失效' and department = '直播部' and position != '中控'`
-    db.query(sql, (err, results) => {
-        if (err) throw err;
-        let r = []
-        for (let i = 0; i < results.length; i++) {
-            const element = results[i];
-            r.push({
-                label: element.name,
-                value: element.uid
-            })
-        }
-        res.send({ code: 200, data: r, msg: `` })
-    })
-})
-
-// 获取中控下拉框
-router.post('/getControlItems', (req, res) => {
-    let sql = `SELECT * FROM user where status != '失效' and position = '中控'`
+// 获取用户下拉框
+router.post('/getUserItems', (req, res) => {
+    let params = req.body
+    let sql = `SELECT * FROM user where status != '失效'`
+    if (params.type === 'saleman') {    // 商务
+        sql += ` and department = '事业部' and position != '助理' and position != '副总'`
+    } else if (params.type === 'salemanAssistant') {    // 商务+助理
+        sql += ` and department = '事业部' and position != '副总'`
+    } else if (params.type === 'author') {  // 主播
+        sql += ` and department = '直播部' and position != '中控'`
+    } else if (params.type === 'control') {  // 中控
+        sql += ` and position = '中控'`
+    } 
     db.query(sql, (err, results) => {
         if (err) throw err;
         let r = []

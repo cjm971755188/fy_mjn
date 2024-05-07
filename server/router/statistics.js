@@ -133,8 +133,9 @@ router.post('/getClassTalent', (req, res) => {
                     LEFT JOIN talent_model tm ON tm.tid = t.tid
                     LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' and create_time >= '${start_time}' and create_time < '${end_time}' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                     LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
-                    INNER JOIN (SELECT * FROM user WHERE status != '失效') u ON u.uid = tms1.u_id_1 OR u.uid = tms1.u_id_2
-                ${power(['u'], params.userInfo)} and t.status != '已失效' and t.status != '报备驳回' and t.status != '已撤销' and t.status != '已拉黑'
+                    LEFT JOIN user u1 ON u1.uid = tms1.u_id_1 
+                    LEFT JOIN user u2 ON u2.uid = tms1.u_id_2
+                ${power(['u1', 'u2'], params.userInfo)} and t.status != '已失效' and t.status != '报备驳回' and t.status != '已撤销' and t.status != '已拉黑'
                 GROUP BY t.type
                 ORDER BY sum DESC`
     db.query(sql, (err, results) => {

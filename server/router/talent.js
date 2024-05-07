@@ -28,8 +28,8 @@ router.post('/getTalentList', (req, res) => {
                             GROUP_CONCAT(DISTINCT tms.u_id_2) as u_id_2, GROUP_CONCAT(DISTINCT u2.name) as u_name_2, GROUP_CONCAT(DISTINCT tms.u_point_2) as u_point_2,
                             GROUP_CONCAT(DISTINCT ts.u_id_0) as u_id_0, GROUP_CONCAT(DISTINCT u0.name) as u_name_0, GROUP_CONCAT(DISTINCT ts.u_point_0) as u_point_0,
                             CONCAT(GROUP_CONCAT(DISTINCT u1.name), IF(GROUP_CONCAT(DISTINCT u2.name) IS NULL, '', GROUP_CONCAT(DISTINCT u2.name)), IF(GROUP_CONCAT(DISTINCT u0.name) IS NULL, '', GROUP_CONCAT(DISTINCT u0.name))) as u_names, 
-                            GROUP_CONCAT(DISTINCT tms.u_note) as u_note, GROUP_CONCAT(DISTINCT tms.gmv_belong) as gmv_belong,
-                            IF(ts.yearbox_start_date IS NULL, '暂无', '生效中') as yearbox_status, ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels, t.status
+                            GROUP_CONCAT(DISTINCT tms.u_note) as u_note, GROUP_CONCAT(DISTINCT tms.gmv_belong) as gmv_belong, t.status, 
+                            IF(ts.yearbox_start_date IS NULL, '暂无', IF(DATEDIFF(now(), FROM_UNIXTIME(ROUND(yearbox_start_date/1000, 0))) > 365, '已失效', '生效中')) as yearbox_status, ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels
                         FROM talent t
                             LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE status != '已失效' or operate = '达人报备' GROUP BY tid) ts0 ON ts0.tid = t.tid
                             LEFT JOIN talent_schedule ts ON ts.tsid = ts0.tsid
@@ -48,7 +48,7 @@ router.post('/getTalentList', (req, res) => {
                     GROUP BY a.tid, a.cid, a.name, a.year_deal, a.type, a.models, a.platforms, a.account_type, a.account_models, a.account_name, a.m_name_1, a.m_point_1, a.m_name_2, a.m_point_2, a.m_names, a.u_id_1, a.u_name_1, 
                         a.u_point_1, a.u_id_2, a.u_name_2, a.u_point_2, a.u_id_0, a.u_name_0, a.u_point_0, a.u_names, a.u_note, a.gmv_belong, a.yearbox_status, a.yearbox_start_date, a.yearbox_cycle, a.yearbox_lavels_base, a.yearbox_lavels
                 ) z
-                ${filter('talent', params.filters)} and z.status != '已拉黑' and z.status != '拉黑待审批'
+                ${filter('talent', params.filters)} and z.status != '已拉黑'
                 ORDER BY z.${params.sorter.sort ? params.sorter.sort : 'tid'} DESC, z.tid DESC
                 LIMIT ${pageSize} OFFSET ${current * pageSize}`
     db.query(sql, (err, results) => {
@@ -248,11 +248,18 @@ router.post('/editTalent', (req, res) => {
                                 sendRobot(
                                     results_e[0].secret,
                                     results_e[0].url,
-                                    `${results_t[0].name} ${params.operate}`,
-                                    `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`,
-                                    `http://1.15.89.163:5173`,
-                                    [results_e[0].phone],
-                                    false
+                                    {
+                                        "msgtype": "markdown",
+                                        "markdown": {
+                                            "title": `${results_t[0].name} ${params.operate}`,
+                                            "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone} \n> 
+                                                ###### 网址：http://1.15.89.163:5173`
+                                        },
+                                        "at": {
+                                            "atMobiles": [results_e[0].phone],
+                                            "isAtAll": false
+                                        }
+                                    }
                                 )
                                 res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                             })
@@ -304,11 +311,19 @@ router.post('/examTalent', (req, res) => {
                                     sendRobot(
                                         results_u[0].secret,
                                         results_u[0].url,
-                                        `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
-                                        `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${note}`}`,
-                                        `http://1.15.89.163:5173`,
-                                        [results_u[0].phone],
-                                        false
+                                        {
+                                            "msgtype": "markdown",
+                                            "markdown": {
+                                                "title": `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
+                                                "text": `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n 
+                                                    ### 驳回理由：${note}`} \n> 
+                                                    ###### 网址：http://1.15.89.163:5173`
+                                            },
+                                            "at": {
+                                                "atMobiles": [results_u[0].phone],
+                                                "isAtAll": false
+                                            }
+                                        }
                                     )
                                     res.send({ code: 200, data: [], msg: `` })
                                 })
@@ -322,11 +337,18 @@ router.post('/examTalent', (req, res) => {
                         sendRobot(
                             results_u[0].secret,
                             results_u[0].url,
-                            `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
-                            `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${note}`}`,
-                            `http://1.15.89.163:5173`,
-                            [results_u[0].phone],
-                            false
+                            {
+                                "msgtype": "markdown",
+                                "markdown": {
+                                    "title": `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
+                                    "text": `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n 
+                                        ### 驳回理由：${note}`} \n> ##### 网址：http://1.15.89.163:5173`
+                                },
+                                "at": {
+                                    "atMobiles": [results_u[0].phone],
+                                    "isAtAll": false
+                                }
+                            }
                         )
                         res.send({ code: 200, data: [], msg: `` })
                     })
@@ -425,11 +447,18 @@ router.post('/addTalentModel', (req, res) => {
                             sendRobot(
                                 results_e[0].secret,
                                 results_e[0].url,
-                                `${params.talent_name} ${params.operate}`,
-                                `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.talent_name} \n\n ### 审批人员：@${results_e[0].phone}`,
-                                `http://1.15.89.163:5173`,
-                                [results_e[0].phone],
-                                false
+                                {
+                                    "msgtype": "markdown",
+                                    "markdown": {
+                                        "title": `${params.talent_name} ${params.operate}`,
+                                        "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.talent_name} \n\n ### 审批人员：@${results_e[0].phone} \n> 
+                                            ###### 网址：http://1.15.89.163:5173`
+                                    },
+                                    "at": {
+                                        "atMobiles": [results_e[0].phone],
+                                        "isAtAll": false
+                                    }
+                                }
                             )
                             res.send({ code: 200, data: [], msg: `新合作报备成功` })
                         })
@@ -548,11 +577,18 @@ router.post('/editTalentModel', (req, res) => {
                                     sendRobot(
                                         results_e[0].secret,
                                         results_e[0].url,
-                                        `${results_t[0].name} ${params.operate}`,
-                                        `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`,
-                                        `http://1.15.89.163:5173`,
-                                        [results_e[0].phone],
-                                        false
+                                        {
+                                            "msgtype": "markdown",
+                                            "markdown": {
+                                                "title": `${results_t[0].name} ${params.operate}`,
+                                                "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone} \n> 
+                                                    ###### 网址：http://1.15.89.163:5173`
+                                            },
+                                            "at": {
+                                                "atMobiles": [results_e[0].phone],
+                                                "isAtAll": false
+                                            }
+                                        }
                                     )
                                     res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                 })
@@ -586,11 +622,18 @@ router.post('/editTalentModel', (req, res) => {
                                         sendRobot(
                                             results_e[0].secret,
                                             results_e[0].url,
-                                            `${results_t[0].name} ${params.operate}`,
-                                            `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`,
-                                            `http://1.15.89.163:5173`,
-                                            [results_e[0].phone],
-                                            false
+                                            {
+                                                "msgtype": "markdown",
+                                                "markdown": {
+                                                    "title": `${results_t[0].name} ${params.operate}`,
+                                                    "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone} \n> 
+                                                        ###### 网址：http://1.15.89.163:5173`
+                                                },
+                                                "at": {
+                                                    "atMobiles": [results_e[0].phone],
+                                                    "isAtAll": false
+                                                }
+                                            }
                                         )
                                         res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                     })
@@ -638,11 +681,18 @@ router.post('/examTalentModel', (req, res) => {
                         sendRobot(
                             results_u[0].secret,
                             results_u[0].url,
-                            `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
-                            `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${note}`}`,
-                            `http://1.15.89.163:5173`,
-                            [results_u[0].phone],
-                            false
+                            {
+                                "msgtype": "markdown",
+                                "markdown": {
+                                    "title": `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
+                                    "text": `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n 
+                                        ### 驳回理由：${note}`} \n> ##### 网址：http://1.15.89.163:5173`
+                                },
+                                "at": {
+                                    "atMobiles": [results_u[0].phone],
+                                    "isAtAll": false
+                                }
+                            }
                         )
                         res.send({ code: 200, data: [], msg: `` })
                     })
@@ -785,11 +835,18 @@ router.post('/giveTalent', (req, res) => {
                                                 sendRobot(
                                                     results_e[0].secret,
                                                     results_e[0].url,
-                                                    `${results_t[0].name} ${params.operate}`,
-                                                    `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`,
-                                                    `http://1.15.89.163:5173`,
-                                                    [results_e[0].phone],
-                                                    false
+                                                    {
+                                                        "msgtype": "markdown",
+                                                        "markdown": {
+                                                            "title": `${results_t[0].name} ${params.operate}`,
+                                                            "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone} \n> 
+                                                                ###### 网址：http://1.15.89.163:5173`
+                                                        },
+                                                        "at": {
+                                                            "atMobiles": [results_e[0].phone],
+                                                            "isAtAll": false
+                                                        }
+                                                    }
                                                 )
                                                 res.send({ code: 200, data: [], msg: `${params.operate}成功` })
                                             })

@@ -6,7 +6,7 @@ import {
     MenuUnfoldOutlined,
     RollbackOutlined,
     UserOutlined,
-    LineChartOutlined,
+    BookOutlined,
     TeamOutlined,
     DollarOutlined,
     SettingOutlined
@@ -71,36 +71,51 @@ const menuItemsTotal = [
         label: '用户管理'
     },
     {
-        key: '/admin/set',
-        label: '系统设定',
+        key: '/admin/info',
+        label: '登记资料',
+        icon: <BookOutlined />,
+        children: [
+            {
+                key: '/admin/info/store',
+                label: '店铺信息'
+            },
+            {
+                key: '/admin/info/company',
+                label: '营业执照'
+            },
+            {
+                key: '/admin/info/notice',
+                label: '历史通知'
+            },
+            {
+                key: '/admin/info/mechanism',
+                label: '提点&报备机制'
+            },
+        ]
+    },
+    {
+        key: '/admin/base',
+        label: '基础设定',
         icon: <SettingOutlined />,
         children: [
             {
-                key: '/admin/set/project',
+                key: '/admin/base/project',
                 label: '项目'
             },
             {
-                key: '/admin/set/company',
-                label: '公司'
-            },
-            {
-                key: '/admin/set/platform',
+                key: '/admin/base/platform',
                 label: '平台'
             },
             {
-                key: '/admin/set/store',
-                label: '店铺'
-            },
-            {
-                key: '/admin/set/liveroom',
+                key: '/admin/base/liveroom',
                 label: '直播间'
             },
             {
-                key: '/admin/set/liaison',
+                key: '/admin/base/liaison',
                 label: '联系人类型'
             },
             {
-                key: '/admin/set/account',
+                key: '/admin/base/account',
                 label: '达人账号类型'
             }
         ]
@@ -120,8 +135,7 @@ const getMenuItems = (company, department, position) => {
         if (menu.label === '达人详情') {
             continue
         } else if (menu.label === '业务管理' && position !== '管理员' && department === '财务部') {
-            let m = menu
-            let c = []
+            let m = menu, c = []
             for (let i = 0; i < menu.children.length; i++) {
                 if (menu.children[i].label === '日常统计' || menu.children[i].label === '达人列表' || menu.children[i].label === '专场列表' || menu.children[i].label === '中间人列表') {
                     c.push(menu.children[i])
@@ -129,13 +143,22 @@ const getMenuItems = (company, department, position) => {
             }
             m.children = c
             arrObj.push(m)
+        } else if (menu.label === '登记资料') {
+            if (position !== '管理员' && position !== '总裁' && (company !== '总公司' && department === '事业部')) {
+                let m = menu, c = []
+                for (let i = 0; i < menu.children.length; i++) {
+                    if (menu.children[i].label === '历史通知' || menu.children[i].label === '提点&报备机制') {
+                        c.push(menu.children[i])
+                    }
+                }
+                m.children = c
+                arrObj.push(m)
+            } else {
+                arrObj.push(menu)
+            }
+        } else if (menu.label === '基础设定' && position !== '管理员' && position !== '总裁' && position !== '副总') {
+            continue
         } else if (menu.label === '用户管理' && position !== '管理员' && position !== '总裁' && position !== '副总' && position !== '主管') {
-            continue
-        } else if (menu.label === '系统设定' && company === '总公司' && department === '事业部') {
-            arrObj.push(menu)
-        } else if (menu.label === '系统设定' && position !== '管理员' && position !== '总裁') {
-            continue
-        } else if (menu.label === '结算管理' && position !== '管理员' && department !== '财务部') {
             continue
         } else {
             arrObj.push(menu)
@@ -199,8 +222,8 @@ const MyLayout = ({ children }) => {
                 phone: localStorage.getItem('phone')
             })
         } else if (key == 'logOut') {
-            localStorage.clear()
-            navigate('/')
+            localStorage.clear();
+            navigate('/');
         } else {
             message.error('error: Dropdown onClick')
         }
