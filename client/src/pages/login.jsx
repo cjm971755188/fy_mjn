@@ -24,7 +24,7 @@ function Login() {
                     localStorage.setItem('e_id', res.data.data.e_id)
                     localStorage.setItem('up_uid', res.data.data.up_uid)
                     message.success('登录成功')
-                    navigate('/admin/talent/statistics')
+                    navigate('/admin/data/statistics')
                 } else if (res.data.code == 202) {
                     navigate('/login')
                     message.error(res.data.msg)

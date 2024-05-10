@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const dayjs = require('dayjs');
 const db = require('../config/db')
 const { power, filter } = require('../function/power')
 
-// 达人管理-日常统计
+// 数量
 router.post('/getCount', (req, res) => {
     let params = req.body
     let start_time = params.filtersDate.length === 2 ? params.filtersDate[0] : ''
@@ -11,7 +12,7 @@ router.post('/getCount', (req, res) => {
     let sql = `SELECT u.name, c.status, COUNT(*) as count
                 FROM chance c
                     INNER JOIN (SELECT * FROM user WHERE status != '失效') u ON u.uid = c.u_id 
-                ${power(['u'], params.userInfo)} and c.status != '已失效' and (c.create_time >= '${start_time}' and c.create_time < '${end_time}' OR c.advance_time >= '${start_time}' and c.advance_time < '${end_time}' OR c.report_time >= '${start_time}' and c.report_time < '${end_time}')
+                WHERE ${power(['u'], params.userInfo)} and c.status != '已失效' and (c.create_time >= '${start_time}' and c.create_time < '${end_time}' OR c.advance_time >= '${start_time}' and c.advance_time < '${end_time}' OR c.report_time >= '${start_time}' and c.report_time < '${end_time}')
                 GROUP BY u.name, c.status
                 ORDER BY u.name, c.status`
     db.query(sql, (err, results) => {
@@ -55,7 +56,7 @@ router.post('/getCount', (req, res) => {
                         LEFT JOIN talent_model_schedule tms ON tms.tmsid = tms0.tmsid
                         LEFT JOIN (SELECT * FROM user WHERE status != '失效') u1 ON u1.uid = tms.u_id_1
                         LEFT JOIN (SELECT * FROM user WHERE status != '失效') u2 ON u2.uid = tms.u_id_2
-                    ${power(['u1', 'u2'], params.userInfo)} and t.status != '已失效' and t.status != '报备驳回' and t.status != '已撤销' and t.status != '已拉黑' and t.status != '拉黑待审批' and t.cid = 'undefined'
+                    WHERE ${power(['u1', 'u2'], params.userInfo)} and t.status != '已失效' and t.status != '报备驳回' and t.status != '已撤销' and t.status != '已拉黑' and t.status != '拉黑待审批' and t.cid = 'undefined'
                     GROUP BY u1.name
                     ORDER BY u1.name`
         db.query(sql, (err, results) => {
@@ -73,7 +74,7 @@ router.post('/getCount', (req, res) => {
                             SUM(IF(c.status = '待推进', 0, IF(c.report_time IS NULL, NOW(), c.report_time) - c.create_time))/COUNT(IF(c.status = '待推进', 0, 1)) as report_diff
                         FROM chance c
                             INNER JOIN (SELECT * FROM user WHERE status != '失效') u ON u.uid = c.u_id 
-                        ${power(['u'], params.userInfo)} and c.status != '已失效'
+                        WHERE ${power(['u'], params.userInfo)} and c.status != '已失效'
                         GROUP BY u.name`
             db.query(sql, (err, results) => {
                 if (err) throw err;
@@ -94,7 +95,7 @@ router.post('/getCount', (req, res) => {
     })
 })
 
-// 达人管理-各平台达人占比
+// 各平台达人占比
 router.post('/getPlatformTalent', (req, res) => {
     let params = req.body
     let start_time = params.filtersDate.length === 2 ? params.filtersDate[0] : ''
@@ -105,7 +106,7 @@ router.post('/getPlatformTalent', (req, res) => {
                     LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' and create_time >= '${start_time}' and create_time < '${end_time}' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                     LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                     LEFT JOIN (SELECT * FROM user WHERE status != '失效') u ON u.uid = tms1.u_id_1 OR u.uid = tms1.u_id_2
-                ${power(['u'], params.userInfo)} and tm.status != '已失效'
+                WHERE ${power(['u'], params.userInfo)} and tm.status != '已失效'
                 GROUP BY tm.platform
                 ORDER BY sum DESC`
     db.query(sql, (err, results) => {
@@ -121,7 +122,7 @@ router.post('/getPlatformTalent', (req, res) => {
     })
 })
 
-// 达人管理-各个层级达人占比
+// 各个层级达人占比
 router.post('/getClassTalent', (req, res) => {
     let params = req.body
     let start_time = params.filtersDate.length === 2 ? params.filtersDate[0] : ''
@@ -135,7 +136,7 @@ router.post('/getClassTalent', (req, res) => {
                     LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                     LEFT JOIN user u1 ON u1.uid = tms1.u_id_1 
                     LEFT JOIN user u2 ON u2.uid = tms1.u_id_2
-                ${power(['u1', 'u2'], params.userInfo)} and t.status != '已失效' and t.status != '报备驳回' and t.status != '已撤销' and t.status != '已拉黑'
+                WHERE ${power(['u1', 'u2'], params.userInfo)} and t.status != '已失效' and t.status != '报备驳回' and t.status != '已撤销' and t.status != '已拉黑'
                 GROUP BY t.type
                 ORDER BY sum DESC`
     db.query(sql, (err, results) => {
@@ -151,7 +152,7 @@ router.post('/getClassTalent', (req, res) => {
     })
 })
 
-// 达人管理-线上达人类型占比
+// 线上达人类型占比
 router.post('/getTypeTalent', (req, res) => {
     let params = req.body
     let start_time = params.filtersDate.length === 2 ? params.filtersDate[0] : ''
@@ -162,7 +163,7 @@ router.post('/getTypeTalent', (req, res) => {
                     LEFT JOIN (SELECT tmid, MAX(tmsid) as tmsid FROM talent_model_schedule WHERE status != '已失效' and create_time >= '${start_time}' and create_time < '${end_time}' GROUP BY tmid) tms0 ON tms0.tmid = tm.tmid
                     LEFT JOIN talent_model_schedule tms1 ON tms1.tmsid = tms0.tmsid
                     INNER JOIN (SELECT * FROM user WHERE status != '失效') u ON u.uid = tms1.u_id_1 OR u.uid = tms1.u_id_2
-                ${power(['u'], params.userInfo)} and tm.model = '线上平台'
+                WHERE ${power(['u'], params.userInfo)} and tm.model = '线上平台'
                 GROUP BY tm.account_type
                 ORDER BY sum DESC`
     db.query(sql, (err, results) => {
@@ -178,20 +179,16 @@ router.post('/getTypeTalent', (req, res) => {
     })
 })
 
-// 达人管理-各省份达人占比
+// 各省份达人占比
 router.post('/getProvinceTalent', (req, res) => {
     let params = req.body
-    let start_time = params.filtersDate.length === 2 ? params.filtersDate[0] : ''
-    let end_time = params.filtersDate.length === 2 ? params.filtersDate[1] : '2000000000000'
     let sql = `SELECT t.province, COUNT(DISTINCT t.tid) as sum
                 FROM talent t
                     LEFT JOIN talent_schedule ts ON ts.tid = t.tid
                 WHERE t.status != '已失效' and t.status != '报备驳回' and t.status != '已撤销' and t.status != '已拉黑'
                     and ts.status != '已失效'
                     and ts.operate = '达人报备' 
-                    and ts.examine_result = '通过' 
-                    and ts.create_time >= '${start_time}'
-                    and ts.create_time < '${end_time}'
+                    and ts.examine_result = '通过'
                 GROUP BY t.province
                 ORDER BY province DESC`
     db.query(sql, (err, results) => {
@@ -209,9 +206,7 @@ router.post('/getProvinceTalent', (req, res) => {
                     WHERE t.status = '合作中'
                         and ts.status != '已失效'
                         and ts.operate = '达人报备' 
-                        and ts.examine_result = '通过' 
-                        and ts.create_time >= '${start_time}'
-                        and ts.create_time < '${end_time}'
+                        and ts.examine_result = '通过'
                     GROUP BY t.province
                     ORDER BY sum DESC
                     LIMIT 1`
@@ -219,6 +214,35 @@ router.post('/getProvinceTalent', (req, res) => {
             if (err) throw err;
             res.send({ code: 200, data: { data: r, max: max.length > 0 ? max[0].sum : 0 }, msg: '' })
         })
+    })
+})
+
+// 
+router.post('/getBISaleman', (req, res) => {
+    let params = req.body
+    let start_time = params.filtersDate.length === 2 ? dayjs(params.filtersDate[0]).format('YYYY-MM') : ''
+    let sql = `SELECT bi_saleman.* 
+                FROM bi_saleman 
+                    LEFT JOIN user u ON u.name = bi_saleman.name 
+                WHERE ((${power(['u'], params.userInfo)}) ${params.userInfo.uid === 'MJN00025' ? `or u.name IS NULL` : ''})and goal IS NOT NULL and month = '${start_time}'
+                ORDER BY CASE bi_saleman.name
+                    WHEN '合计' THEN 1
+                    WHEN '自然流量' THEN 2
+                    ELSE 3
+                END ASC, goal DESC`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        res.send({ code: 200, data: results, msg: '' })
+    })
+})
+
+// 添加
+router.post('/addGoal', (req, res) => {
+    let params = req.body
+    let sql = `UPDATE bi_saleman SET goal = '${params.goal}' WHERE name = '${params.name}' and month = '${dayjs(params.month).format('YYYY-MM')}'`
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        res.send({ code: 200, data: [], msg: `添加成功` })
     })
 })
 

@@ -29,7 +29,7 @@ router.post('/getTalentBlackList', (req, res) => {
                         LEFT JOIN user u2 ON u2.uid = ts3.create_uid
                     WHERE t.status = '已拉黑' or t.status = '拉黑待审批' or t.status = '释放待审批')
                 ) z 
-                ${filter('normal', params.filters)}
+                WHERE ${filter('normal', params.filters)}
                 ORDER BY z.b_time DESC
                 LIMIT ${pageSize} OFFSET ${current * pageSize}`
     db.query(sql, (err, results) => {
@@ -59,7 +59,7 @@ router.post('/addBlack', (req, res) => {
                     "msgtype": "markdown",
                     "markdown": {
                         "title": `${params.userInfo.name} 拉黑 ${params.name}`,
-                        "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：拉黑达人 \n\n ### 拉黑原因：${params.b_reason || '无'} \n\n ### 达人昵称：${params.name} \n\n ### 审批人员：@${results_e[0].phone} \n> ##### 网址：http://1.15.89.163:5173`
+                        "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：拉黑达人 \n\n ### 拉黑原因：${params.b_reason || '无'} \n\n ### 达人昵称：${params.name} \n\n ### 审批人员：@${results_e[0].phone}`
                     },
                     "at": {
                         "atMobiles": [results_e[0].phone],
@@ -115,7 +115,7 @@ router.post('/examBlack', (req, res) => {
                         "msgtype": "markdown",
                         "markdown": {
                             "title": `${params.userInfo.name} ${params.type} ${results_b[0].name}`,
-                            "text": `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${params.type} \n\n ### 达人昵称：${results_b[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${params.reason || '无'}`} \n> ##### 网址：http://1.15.89.163:5173`
+                            "text": `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${params.type} \n\n ### 达人昵称：${results_b[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${params.reason || '无'}`}`
                         },
                         "at": {
                             "atMobiles": [results_u[0].phone],
@@ -149,7 +149,7 @@ router.post('/recoverBlack', (req, res) => {
                         "msgtype": "markdown",
                         "markdown": {
                             "title": `${params.userInfo.name} 释放 ${results_b[0].name}`,
-                            "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：拉黑释放 \n\n ### 释放原因：${params.r_reason || '无'} \n\n ### 达人昵称：${results_b[0].name} \n\n ### 审批人员：@${results_e[0].phone} \n> ##### 网址：http://1.15.89.163:5173`
+                            "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：拉黑释放 \n\n ### 释放原因：${params.r_reason || '无'} \n\n ### 达人昵称：${results_b[0].name} \n\n ### 审批人员：@${results_e[0].phone}`
                         },
                         "at": {
                             "atMobiles": [results_e[0].phone],

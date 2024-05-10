@@ -14,7 +14,7 @@ router.post('/getBaseSets', (req, res) => {
     let pageSize = params.pagination.pageSize ? params.pagination.pageSize : 10
     let sql = `SELECT SQL_CALC_FOUND_ROWS z.* 
                 FROM base_${['company', 'store', 'notice'].indexOf(params.type) > -1 ? `${params.type} z` : 'set z'} 
-                ${filter('normal', params.filters)} ${['company', 'store', 'notice'].indexOf(params.type) > -1 ? `` : `and z.type = '${params.type}'`}
+                WHERE ${filter('normal', params.filters)} ${['company', 'store', 'notice'].indexOf(params.type) > -1 ? `` : `and z.type = '${params.type}'`}
                 LIMIT ${pageSize} OFFSET ${current * pageSize}`
     db.query(sql, (err, results) => {
         if (err) throw err;
@@ -101,7 +101,7 @@ router.post('/noticeBaseSet', (req, res) => {
                 "msgtype": "markdown",
                 "markdown": {
                     "title": `【通知】${params.name}`,
-                    "text": `## 【通知】${params.name} \n ##### 发布人：${params.userInfo.name} \t 发布时间：${dayjs().format('YYYY-MM-DD')} \n ${params.value.replace(/(\r\n|\r|\n)/g, '$1  \n')} \n > ##### 网址：http://1.15.89.163:5173`
+                    "text": `## 【通知】${params.name} \n ##### 发布人：${params.userInfo.name} \t 发布时间：${dayjs().format('YYYY-MM-DD')} \n ${params.value.replace(/(\r\n|\r|\n)/g, '$1  \n')}`
                 },
                 "at": {
                     "atMobiles": [],

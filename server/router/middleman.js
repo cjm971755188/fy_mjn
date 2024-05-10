@@ -15,9 +15,9 @@ router.post('/getMiddlemanList', (req, res) => {
                     SELECT m.*, u.name as u_name
                     FROM middleman m
                         LEFT JOIN user u ON u.uid  = m.u_id
-                    ${power(['u'], params.userInfo)}
+                    WHERE ${power(['u'], params.userInfo)}
                 ) z
-                ${filter('normal', params.filters)}
+                WHERE ${filter('normal', params.filters)}
                 ORDER BY z.mid DESC
                 LIMIT ${pageSize} OFFSET ${current * pageSize}`
     db.query(sql, (err, results) => {

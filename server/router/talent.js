@@ -19,7 +19,7 @@ router.post('/getTalentList', (req, res) => {
                             IF(DATEDIFF(now(), MAX(b.lastsale)) > 150 && DATEDIFF(now(), MAX(b.lastsale)) <= 180, '即将过期', '已过期')))) as sale_type,
                         SUM(b.price) as price, SUM(b.done) as done, SUM(b.eback) as eback, SUM(b.noeback) as noeback, SUM(b.wait) as wait, SUM(b.daily_price) as daily_price, SUM(b.daily_done) as daily_done, SUM(b.daily_eback) as daily_eback, 
                         SUM(b.daily_noeback) as daily_noeback, SUM(b.daily_wait) as daily_wait, SUM(b.live_price) as live_price, SUM(b.live_done) as live_done, SUM(b.live_eback) as live_eback, SUM(b.live_noeback) as live_noeback, 
-                        SUM(b.live_wait) as live_wait, SUM(b.year_price) as year_price, SUM(b.Jan) as Jan, SUM(b.Feb) as Feb, SUM(b.Mar) as Mar, SUM(b.Apr) as Apr
+                        SUM(b.live_wait) as live_wait, SUM(b.year_price) as year_price, SUM(b.Jan) as Jan, SUM(b.Feb) as Feb, SUM(b.Mar) as Mar, SUM(b.Apr) as Apr, SUM(b.May) as May
                     FROM (
                         SELECT t.tid, t.cid, t.name, t.year_deal, t.type, GROUP_CONCAT(DISTINCT tm.model) as models, GROUP_CONCAT(DISTINCT tm.platform) as platforms, GROUP_CONCAT(DISTINCT tm.account_type) as account_type, 
                             GROUP_CONCAT(DISTINCT tm.account_models) as account_models, GROUP_CONCAT(DISTINCT tm.account_name) as account_name, 
@@ -41,14 +41,14 @@ router.post('/getTalentList', (req, res) => {
                             LEFT JOIN talent_model_schedule tms ON tms.tmsid = tms0.tmsid
                             LEFT JOIN user u1 ON u1.uid = tms.u_id_1
                             LEFT JOIN user u2 ON u2.uid = tms.u_id_2
-                        ${power(['u0', 'u1', 'u2'], params.userInfo)}
+                        WHERE ${power(['u0', 'u1', 'u2'], params.userInfo)}
                         GROUP BY t.tid, t.cid, t.name, t.year_deal, t.type, m1.name, ts.m_point_1, m2.name, ts.m_point_2, yearbox_status, ts.yearbox_start_date, ts.yearbox_cycle, ts.yearbox_lavels_base, ts.yearbox_lavels
                     ) a
-                        LEFT JOIN join_bi b ON b.name = a.name
+                        LEFT JOIN bi_talent b ON b.name = a.name
                     GROUP BY a.tid, a.cid, a.name, a.year_deal, a.type, a.models, a.platforms, a.account_type, a.account_models, a.account_name, a.m_name_1, a.m_point_1, a.m_name_2, a.m_point_2, a.m_names, a.u_id_1, a.u_name_1, 
                         a.u_point_1, a.u_id_2, a.u_name_2, a.u_point_2, a.u_id_0, a.u_name_0, a.u_point_0, a.u_names, a.u_note, a.gmv_belong, a.yearbox_status, a.yearbox_start_date, a.yearbox_cycle, a.yearbox_lavels_base, a.yearbox_lavels
                 ) z
-                ${filter('talent', params.filters)} and z.status != '已拉黑'
+                WHERE ${filter('talent', params.filters)} and z.status != '已拉黑'
                 ORDER BY z.${params.sorter.sort ? params.sorter.sort : 'tid'} DESC, z.tid DESC
                 LIMIT ${pageSize} OFFSET ${current * pageSize}`
     db.query(sql, (err, results) => {
@@ -252,8 +252,7 @@ router.post('/editTalent', (req, res) => {
                                         "msgtype": "markdown",
                                         "markdown": {
                                             "title": `${results_t[0].name} ${params.operate}`,
-                                            "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone} \n> 
-                                                ###### 网址：http://1.15.89.163:5173`
+                                            "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`
                                         },
                                         "at": {
                                             "atMobiles": [results_e[0].phone],
@@ -315,9 +314,7 @@ router.post('/examTalent', (req, res) => {
                                             "msgtype": "markdown",
                                             "markdown": {
                                                 "title": `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
-                                                "text": `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n 
-                                                    ### 驳回理由：${note}`} \n> 
-                                                    ###### 网址：http://1.15.89.163:5173`
+                                                "text": `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${note}`}`
                                             },
                                             "at": {
                                                 "atMobiles": [results_u[0].phone],
@@ -341,8 +338,7 @@ router.post('/examTalent', (req, res) => {
                                 "msgtype": "markdown",
                                 "markdown": {
                                     "title": `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
-                                    "text": `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n 
-                                        ### 驳回理由：${note}`} \n> ##### 网址：http://1.15.89.163:5173`
+                                    "text": `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${note}`}`
                                 },
                                 "at": {
                                     "atMobiles": [results_u[0].phone],
@@ -451,8 +447,7 @@ router.post('/addTalentModel', (req, res) => {
                                     "msgtype": "markdown",
                                     "markdown": {
                                         "title": `${params.talent_name} ${params.operate}`,
-                                        "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.talent_name} \n\n ### 审批人员：@${results_e[0].phone} \n> 
-                                            ###### 网址：http://1.15.89.163:5173`
+                                        "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.talent_name} \n\n ### 审批人员：@${results_e[0].phone}`
                                     },
                                     "at": {
                                         "atMobiles": [results_e[0].phone],
@@ -581,8 +576,7 @@ router.post('/editTalentModel', (req, res) => {
                                             "msgtype": "markdown",
                                             "markdown": {
                                                 "title": `${results_t[0].name} ${params.operate}`,
-                                                "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone} \n> 
-                                                    ###### 网址：http://1.15.89.163:5173`
+                                                "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`
                                             },
                                             "at": {
                                                 "atMobiles": [results_e[0].phone],
@@ -626,8 +620,7 @@ router.post('/editTalentModel', (req, res) => {
                                                 "msgtype": "markdown",
                                                 "markdown": {
                                                     "title": `${results_t[0].name} ${params.operate}`,
-                                                    "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone} \n> 
-                                                        ###### 网址：http://1.15.89.163:5173`
+                                                    "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`
                                                 },
                                                 "at": {
                                                     "atMobiles": [results_e[0].phone],
@@ -685,8 +678,7 @@ router.post('/examTalentModel', (req, res) => {
                                 "msgtype": "markdown",
                                 "markdown": {
                                     "title": `${results_t[0].name} ${results_t[0].operate} 审批${params.exam ? '通过' : '驳回'}`,
-                                    "text": `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n 
-                                        ### 驳回理由：${note}`} \n> ##### 网址：http://1.15.89.163:5173`
+                                    "text": `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：${results_t[0].operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${note}`}`
                                 },
                                 "at": {
                                     "atMobiles": [results_u[0].phone],
@@ -839,8 +831,7 @@ router.post('/giveTalent', (req, res) => {
                                                         "msgtype": "markdown",
                                                         "markdown": {
                                                             "title": `${results_t[0].name} ${params.operate}`,
-                                                            "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone} \n> 
-                                                                ###### 网址：http://1.15.89.163:5173`
+                                                            "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${results_t[0].name} \n\n ### 审批人员：@${results_e[0].phone}`
                                                         },
                                                         "at": {
                                                             "atMobiles": [results_e[0].phone],
@@ -1047,7 +1038,7 @@ router.post('/getExportTalentList', (req, res) => {
                         GROUP BY tm.tid
                     ) tm ON tm.tid = t.tid
                         LEFT JOIN live l ON l.tid = t.tid
-                        LEFT JOIN join_bi b ON b.talent = t.name
+                        LEFT JOIN bi_talent b ON b.talent = t.name
                 GROUP BY t.cid, t.crowd_name, t.liaison_name, t.liaison_phone, t.liaison_type, t.liaison_v, m_ids, ts.m_name_1, ts.m_name_2, m_names, tm.model_status, tm.models, t.name, t.province, t.status, t.tid, t.type, u_ids, ts.u_name_0, tm.u_name_1, 
                     tm.u_name_2, u_names, t.year_deal, ts.yearbox_cycle, ts.yearbox_lavels, ts.yearbox_lavels_base, ts.yearbox_start_date, tm.platforms, tm.account_type, sale_type, days, stagnate_lavel, b.price, b.done, b.eback, b.noeback, b.wait, b.daily_price, 
                     b.daily_done, b.daily_eback, b.daily_noeback, b.daily_wait, b.live_price, b.live_done, b.live_eback, b.live_noeback, b.live_wait

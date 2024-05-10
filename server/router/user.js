@@ -68,9 +68,9 @@ router.post('/getUserList', (req, res) => {
                     SELECT u.uid, u.name, u.phone, u.company, u.department, u.position, u.up_uid, u1.name as up_name, u.status 
                     FROM user u 
                         LEFT JOIN user u1 ON u1.uid = u.up_uid 
-                    ${power(['u'], params.userInfo)} and u.uid != '${params.userInfo.uid}'
+                    WHERE ${power(['u'], params.userInfo)} and u.uid != '${params.userInfo.uid}'
                 ) z
-                ${filter('normal', params.filters)}
+                WHERE ${filter('normal', params.filters)}
                 LIMIT ${pageSize} OFFSET ${current * pageSize}`
     db.query(sql, (err, results) => {
         if (err) throw err;
@@ -193,15 +193,16 @@ router.post('/getUserItems', (req, res) => {
         sql += ` and department = '直播部' and position != '中控'`
     } else if (params.type === 'control') {  // 中控
         sql += ` and position = '中控'`
-    } 
+    } else if (params.type === 'bi_saleman') {  // bi
+        sql = `SELECT * FROM bi_saleman WHERE month = '${dayjs(params.month).format('YYYY-MM')}'`
+    }
     db.query(sql, (err, results) => {
         if (err) throw err;
         let r = []
         for (let i = 0; i < results.length; i++) {
-            const element = results[i];
             r.push({
-                label: element.name,
-                value: element.uid
+                label: results[i].name,
+                value: results[i].uid || results[i].name
             })
         }
         res.send({ code: 200, data: r, msg: `` })

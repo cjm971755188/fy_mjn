@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Space, Select, DatePicker, TimePicker } from 'antd';
 import locale from 'antd/es/date-picker/locale/zh_CN';
 import dayjs from 'dayjs';
@@ -7,7 +7,7 @@ const { Option } = Select;
 
 function MyDateSelect(props) {
     // 日期选择
-    const [type, setType] = useState('date');
+    const [type, setType] = useState();
     const [dateValue, setDateValue] = useState();
     const PickerWithType = ({ type, onChange }) => {
         if (type === 'time') return <TimePicker locale={locale} value={dateValue} onChange={onChange} />;
@@ -30,14 +30,18 @@ function MyDateSelect(props) {
             return 'error'
         }
     }
+
+    useEffect(() => {
+        setType(props.selectType);
+        setDateValue(dayjs());
+    }, [JSON.stringify(props.selectType)])
     return (
         <Space>
-            <Select value={type} onChange={(value) => { setType(value); setDateValue() }}>
-                {props.selectType && props.selectType.match('date') ? <Option value="date">日</Option> : null}
-                {props.selectType && props.selectType.match('week') ? <Option value="week">周</Option> : null}
-                {props.selectType && props.selectType.match('month') ? <Option value="month">月</Option> : null}
-                {props.selectType && props.selectType.match('quarter') ? <Option value="quarter">季</Option> : null}
-                {props.selectType && props.selectType.match('year') ? <Option value="year">年</Option> : null}
+            <Select value={type} onChange={(value) => { setType(value); setDateValue() }} style={{ width: '60px' }}>
+                {props.selectType && props.selectType === 'month' ? null : <Option value="week">周</Option>}
+                <Option value="month">月</Option>
+                {props.selectType && props.selectType === 'month' ? null : <Option value="quarter">季</Option>}
+                {props.selectType && props.selectType === 'month' ? null : <Option value="year">年</Option>}
             </Select>
             <PickerWithType
                 type={type}

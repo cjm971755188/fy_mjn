@@ -1,5 +1,5 @@
 const power = (items, userInfo) => {
-    let where = 'where'
+    let where = ''
     for (let i = 0; i < items.length; i++) {
         if (i === 0) {
             where += ` (${items[i]}.status != '失效' OR ${items[i]}.status IS NULL)`
@@ -36,7 +36,7 @@ const power = (items, userInfo) => {
 }
 
 const filter = (type, filters) => {
-    let where = `where z.status != '已失效'`
+    let where = ` z.status != '已失效'`
     for (let i = 0; i < Object.getOwnPropertyNames(filters).length; i++) {
         if (Object.keys(filters)[i].split('_')[1] == 'id') {
             where += ` and z.${Object.keys(filters)[i]} = '${Object.values(filters)[i]}'`

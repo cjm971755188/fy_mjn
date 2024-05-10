@@ -22,12 +22,12 @@ router.post('/getLiveList', (req, res) => {
                         LEFT JOIN user u4 ON u4.uid = l.u_id_3
                         LEFT JOIN user u5 ON u5.uid = l.u_id_1
                         LEFT JOIN user u6 ON u6.uid = l.u_id_2
-                    ${power(['u1', 'u2', 'u3', 'u4', 'u5', 'u6'], params.userInfo)}
+                        WHERE ${power(['u1', 'u2', 'u3', 'u4', 'u5', 'u6'], params.userInfo)}
                     GROUP BY l.lid, l.tid, l.tmids, l.count_type, l.start_time, l.end_time, l.place, l.room, l.a_id_1, l.a_id_2, l.c_id_1, l.u_id_3, l.goal, l.sales, l.commission_normal_on, l.commission_welfare_on, l.commission_bao_on, 
                         l.commission_note_on, l.commission_normal_down, l.commission_welfare_down, l.commission_bao_down, l.commission_note_down, l.u_id_1, l.u_point_1, l.u_id_2, l.u_point_2, l.u_note, t.name, 
                         a_name_1, a_name_2, c_name_1, u_name_3, u_name_1, u_name_2
                 ) z
-                ${filter('normal', params.filters)}
+                WHERE ${filter('normal', params.filters)}
                 ORDER BY z.start_time DESC
                 LIMIT ${pageSize} OFFSET ${current * pageSize}`
     db.query(sql, (err, results) => {

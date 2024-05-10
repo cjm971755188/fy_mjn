@@ -45,7 +45,7 @@ function BaseList() {
                 title: '创建日期',
                 dataIndex: 'create_time',
                 key: 'create_time',
-                width: 120, 
+                width: 120,
                 render: (_, record) => (
                     <span>{dayjs(Number(record.create_time)).format('YYYY-MM-DD')}</span>
                 )
@@ -54,12 +54,12 @@ function BaseList() {
                 title: '内容',
                 dataIndex: 'value',
                 key: 'value',
-                width: 600, 
+                width: 500,
                 render: (_, record) => (
                     <Popover title={record.name} content={<p style={{ width: '800px', whiteSpace: 'pre-wrap' }}>{record.value}</p>}>
                         <div
                             style={{
-                                width: '600px',
+                                width: '500px',
                                 textOverflow: 'ellipsis',
                                 overflow: 'hidden',
                                 whiteSpace: 'nowrap',
@@ -76,7 +76,7 @@ function BaseList() {
                 title: '文件',
                 dataIndex: 'files',
                 key: 'files',
-                width: 160, 
+                width: 160,
                 render: (_, record) => (
                     record.files && record.files.split(',').map((file, index) => {
                         return <FilePreview key={index} fileUrl={file} fileType={'excel'} />
@@ -90,7 +90,7 @@ function BaseList() {
             title: '状态',
             dataIndex: 'status',
             key: 'status',
-            width: 120, 
+            width: 120,
             render: (_, record) => (
                 <Space size="small">
                     {['正常', '已通知'].indexOf(record.status) > -1 ? <PauseCircleTwoTone twoToneColor="#4ec990" /> : <CloseCircleTwoTone twoToneColor="#f81d22" />}
@@ -105,6 +105,7 @@ function BaseList() {
                 <Space size="middle">
                     {editPower ? <a onClick={() => { form.setFieldsValue(record.files ? { ...record, files: record.files.split(',') } : record); setType('edit'); setIsShow(true); }}>修改信息</a> : null}
                     {editPower && record.status === '未通知' ? <Popconfirm title="确认要通知吗" okText="通知" cancelText="取消" onConfirm={() => { noticeAPI({ id: record.id, name: record.name, value: record.value, files: record.files }); }}><a>通知</a></Popconfirm> : null}
+                    {record.files === null ? null : <a onClick={() => { downloadAPI(record.files); }}>下载</a>}
                     {editPower && record.status === '正常' ? <Popconfirm title="确认要禁用吗" okText="禁用" cancelText="取消" onConfirm={() => { deleteAPI({ id: record.id, name: record.name }); }}><a>禁用</a></Popconfirm> : null}
                     {editPower && record.status === '失效' ? <Popconfirm title="确认要恢复正常吗" okText="恢复" cancelText="取消" onConfirm={() => { recoverAPI({ id: record.id, name: record.name }); }}><a>恢复正常</a></Popconfirm> : null}
                 </Space>
@@ -300,6 +301,33 @@ function BaseList() {
             console.error(err)
         })
     }
+    // 导出
+    const downloadAPI = (urls) => {
+        for (let i = 0; i < urls.split(',').length; i++) {
+            console.log(urls.split(',')[i]);
+            request({
+                method: 'get',
+                url: '/file/download',
+                params: { url: urls.split(',')[i].split('/')[3] },
+                responseType: 'blob'
+            }).then((res) => {
+                if (res.status == 200) {
+                    const url = window.URL.createObjectURL(
+                        new Blob([res.data]),
+                    );
+                    const link = document.createElement('a');
+                    link.style.display = 'none';
+                    link.href = url;
+                    link.setAttribute('download', res.config.params.url.split('_')[3]);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            }).catch((err) => {
+                console.error(err)
+            })
+        }
+    }
     // 获取下拉框
     const [baseSets, setBaseSets] = useState('')
     const getBaseSetItems = (type) => {
@@ -413,17 +441,8 @@ function BaseList() {
                         <Input placeholder="请输入" disabled={true} />
                     </Form.Item>}
                     <Form.Item label={`${name}名`} name='name' rules={[{ required: true, message: '不能为空' }]}>
-                        <Input placeholder="请输入" />
+                        <Input placeholder="请输入" disabled={name === '商务目标' ? true : false} />
                     </Form.Item>
-
-                    {['通知', '机制'].indexOf(name) > -1 ? <>
-                        <Form.Item label="内容" name='value' rules={[{ required: true, message: '不能为空' }]}>
-                            <TextArea placeholder="请输入" maxLength={5000} autoSize={{ minRows: 10, maxRows: 30 }} disabled={type === 'look' ? true : false} />
-                        </Form.Item>
-                        <Form.Item label="文件" name='files'>
-                            <UpLoadImg type={'历史通知'} setPicUrl={(values) => { form.setFieldValue('files', values) }} disabled={type === 'look' ? true : false} />
-                        </Form.Item>
-                    </> : null}
 
                     {name === '公司' ? <>
                         <Form.Item label='类型' name='type' rules={[{ required: true, message: '不能为空' }]}>
@@ -470,6 +489,15 @@ function BaseList() {
                         </Form.Item>
                         <Form.Item label='归属项目' name='project' rules={[{ required: true, message: '不能为空' }]}>
                             <Select placeholder="请选择" options={baseSets} onClick={() => { getBaseSetItems('project'); }} />
+                        </Form.Item>
+                    </> : null}
+
+                    {['通知', '机制'].indexOf(name) > -1 ? <>
+                        {name === '机制' ? null : <Form.Item label="内容" name='value' rules={[{ required: true, message: '不能为空' }]}>
+                            <TextArea placeholder="请输入" maxLength={5000} autoSize={{ minRows: 10, maxRows: 30 }} disabled={type === 'look' ? true : false} />
+                        </Form.Item>}
+                        <Form.Item label="文件" name='files'>
+                            <UpLoadImg type={'历史通知'} setPicUrl={(values) => { form.setFieldValue('files', values) }} disabled={type === 'look' ? true : false} />
                         </Form.Item>
                     </> : null}
                 </Form>

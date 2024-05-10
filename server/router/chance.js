@@ -21,9 +21,9 @@ router.post('/getChanceList', (req, res) => {
                         LEFT JOIN (SELECT cid, MAX(tid) as tid FROM talent WHERE status = '已失效' GROUP BY cid) t ON t.cid = c.cid
                         LEFT JOIN (SELECT tid, MAX(tsid) as tsid FROM talent_schedule WHERE operate = '达人报备' and examine_result = '驳回' GROUP BY tid) ts0 ON ts0.tid = t.tid
                         LEFT JOIN talent_schedule ts1 ON ts1.tsid = ts0.tsid
-                        ${power(['u'], params.userInfo)}
+                        WHERE ${power(['u'], params.userInfo)}
                 ) z 
-                ${filter('chance', params.filters)} and z.status != '报备通过'
+                WHERE ${filter('chance', params.filters)} and z.status != '报备通过'
                 ORDER BY z.cid DESC
                 LIMIT ${pageSize} OFFSET ${current * pageSize}`
     db.query(sql, (err, results) => {
@@ -145,8 +145,7 @@ router.post('/advanceChance', (req, res) => {
                     "msgtype": "markdown",
                     "markdown": {
                         "title": `${params.names} ${params.operate}`,
-                        "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.names} \n\n ### 审批人员：@${results_e[0].phone} \n> 
-                            ##### 网址：http://1.15.89.163:5173`
+                        "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.names} \n\n ### 审批人员：@${results_e[0].phone}`
                     },
                     "at": {
                         "atMobiles": [results_e[0].phone],
@@ -180,7 +179,7 @@ router.post('/examChance', (req, res) => {
                     "msgtype": "markdown",
                     "markdown": {
                         "title": `${params.names} 推进商机 审批${params.exam ? '通过' : '驳回'}`,
-                        "text": `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：推进商机 \n\n ### 达人昵称：${params.names} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${isNull(params.note, 'normal')}`} \n> ##### 网址：http://1.15.89.163:5173`
+                        "text": `### 申请人员：@${results_u[0].phone} \n\n ### 申请操作：推进商机 \n\n ### 达人昵称：${params.names} \n\n ### 审批人员：${params.userInfo.name} \n\n ### 审批结果：${params.exam ? '通过' : '驳回'} ${params.exam ? `` : `\n\n ### 驳回理由：${isNull(params.note, 'normal')}`}`
                     },
                     "at": {
                         "atMobiles": [results_u[0].phone],
@@ -323,7 +322,7 @@ router.post('/reportChance', (req, res) => {
                                                                 "msgtype": "markdown",
                                                                 "markdown": {
                                                                     "title": `${params.talent_name} ${params.operate}`,
-                                                                    "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.talent_name} \n\n ### 审批人员：@${results_e[0].phone} \n> ##### 网址：http://1.15.89.163:5173`
+                                                                    "text": `### 申请人员：${params.userInfo.name} \n\n ### 申请操作：${params.operate} \n\n ### 达人昵称：${params.talent_name} \n\n ### 审批人员：@${results_e[0].phone}`
                                                                 },
                                                                 "at": {
                                                                     "atMobiles": [results_e[0].phone],

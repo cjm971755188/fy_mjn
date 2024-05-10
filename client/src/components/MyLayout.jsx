@@ -8,7 +8,7 @@ import {
     UserOutlined,
     BookOutlined,
     TeamOutlined,
-    DollarOutlined,
+    AreaChartOutlined,
     SettingOutlined
 } from '@ant-design/icons';
 import { Layout, Menu, Button, theme, Dropdown, Breadcrumb, Form, Modal, Input, message, Col, Row } from 'antd';
@@ -31,14 +31,25 @@ const items = [
 // 左侧菜单 menus
 const menuItemsTotal = [
     {
+        key: '/admin/data',
+        label: '数据统计',
+        icon: <AreaChartOutlined />,
+        children: [
+            {
+                key: '/admin/data/statistics',
+                label: '系统操作'
+            },
+            {
+                key: '/admin/data/goal',
+                label: '月目标达成情况'
+            }
+        ]
+    },
+    {
         key: '/admin/talent',
         label: '业务管理',
         icon: <TeamOutlined />,
         children: [
-            {
-                key: '/admin/talent/statistics',
-                label: '日常统计'
-            },
             {
                 key: '/admin/talent/chance_list',
                 label: '商机列表'
@@ -137,7 +148,7 @@ const getMenuItems = (company, department, position) => {
         } else if (menu.label === '业务管理' && position !== '管理员' && department === '财务部') {
             let m = menu, c = []
             for (let i = 0; i < menu.children.length; i++) {
-                if (menu.children[i].label === '日常统计' || menu.children[i].label === '达人列表' || menu.children[i].label === '专场列表' || menu.children[i].label === '中间人列表') {
+                if (menu.children[i].label === '系统操作' || menu.children[i].label === '达人列表' || menu.children[i].label === '专场列表' || menu.children[i].label === '中间人列表') {
                     c.push(menu.children[i])
                 }
             }

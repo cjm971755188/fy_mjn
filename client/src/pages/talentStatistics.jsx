@@ -3,6 +3,7 @@ import request from '../service/request'
 import { Row, Col, Statistic, Card, Form, Space, Button, Empty } from "antd";
 import MyDateSelect from '../components/MyDateSelect'
 import MyECharts from '../components/MyECharts'
+import dayjs from 'dayjs'
 
 function TalentStatistics() {
     // 表格：获取数据、分页
@@ -190,7 +191,7 @@ function TalentStatistics() {
                     }}
                 >
                     <Form.Item label='日期选择' name='date' style={{ marginBottom: '20px' }}>
-                        <MyDateSelect selectType="date,week,month,quarter,year" setDate={(value) => { setDateSelect(value); }} />
+                        <MyDateSelect selectType="year" setDate={(value) => { setDateSelect(value); }} />
                     </Form.Item>
                     <Form.Item style={{ marginBottom: '20px' }}>
                         <Space size={'large'}>

@@ -162,7 +162,7 @@ function TalentList() {
                                     {
                                         name: '销售额',
                                         type: 'line',
-                                        data: [record.Jan, record.Feb, record.Mar, record.Apr],
+                                        data: [record.Jan, record.Feb, record.Mar, record.Apr, record.May],
                                     }
                                 ]
                             }} />
